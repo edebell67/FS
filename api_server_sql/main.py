@@ -11,6 +11,11 @@ from pydantic import BaseModel, Field
 import decimal
 import datetime
 import traceback
+import json
+from pathlib import Path
+
+# [V20260126_0900] File for persisting live grid selections
+GRID_LIVE_FILE = Path(r"C:\Users\edebe\eds\grid_live.json")
 
 # Configure Python logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -75,6 +80,12 @@ class TradeLifecycleSnapshotData(BaseModel):
     close_price: Optional[float] = None
     strategy_config: str
     trade_signal: Optional[str] = Field(None, max_length=8)
+
+# --- Pydantic Model for Grid Live Toggle ---
+class GridLiveToggle(BaseModel):
+    group: str
+    active: bool
+    models: List[Dict[str, str]] # List of {model: str, product: str}
 
 # --- Database helper functions ---
 def connect_to_db(database_name: str):
@@ -430,3 +441,38 @@ async def post_trade_lifecycle_snapshots(snapshots: List[TradeLifecycleSnapshotD
         raise HTTPException(status_code=500, detail=f"Error processing snapshots: {e}")
     finally:
         conn.close()
+
+# --- [V20260126_0900] Grid Live Trading Endpoints ---
+@app.get("/api/grid_live")
+async def get_grid_live():
+    if not GRID_LIVE_FILE.exists():
+        return {"success": True, "live_models": {}}
+    try:
+        with open(GRID_LIVE_FILE, "r") as f:
+            data = json.load(f)
+        return {"success": True, "live_models": data}
+    except Exception as e:
+        logger.error(f"Failed to read grid_live.json: {e}")
+        return {"success": False, "message": str(e)}
+
+@app.post("/api/grid_live/toggle")
+async def toggle_grid_live(payload: GridLiveToggle):
+    try:
+        data = {}
+        if GRID_LIVE_FILE.exists():
+            with open(GRID_LIVE_FILE, "r") as f:
+                data = json.load(f)
+        
+        if payload.active:
+            data[payload.group] = payload.models
+        elif payload.group in data:
+            del data[payload.group]
+            
+        with open(GRID_LIVE_FILE, "w") as f:
+            json.dump(data, f, indent=4)
+            
+        logger.info(f"Grid Live Toggle: {payload.group} set to {payload.active}")
+        return {"success": True}
+    except Exception as e:
+        logger.error(f"Failed to toggle grid_live.json: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
