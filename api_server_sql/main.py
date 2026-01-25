@@ -15,7 +15,7 @@ import json
 from pathlib import Path
 
 # [V20260126_0900] File for persisting live grid selections
-GRID_LIVE_FILE = Path(r"C:\Users\edebe\eds\grid_live.json")
+GRID_LIVE_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live.json")
 
 # Configure Python logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
