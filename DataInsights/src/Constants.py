@@ -1,2 +1,2 @@
 # Application Constants
-VERSION = "V20260126_0900" # Updated after adding Live Grid Trading and Monitor Service - 2026-01-26 09:00
+VERSION = "V20260126_1000" # Updated after refining Live Grid Toggle UI - 2026-01-26 10:00
