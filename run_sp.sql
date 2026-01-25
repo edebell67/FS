@@ -1,0 +1,1 @@
+EXEC sp_001_create_trades_v9_setbased

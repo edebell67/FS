@@ -1,0 +1,15 @@
+api_server_sql/venv/
+TradeApps/
+algo_viewer/
+a2ui/
+context7/
+GHRepo/
+Game_trader/
+myreact/
+OpenManus/
+tradingdashboard4/
+firecrawl-mcp-server/
+node_modules/
+__pycache__/
+*.log
+TradeApps - Copy/
