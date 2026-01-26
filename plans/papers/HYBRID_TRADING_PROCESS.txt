@@ -1,0 +1,604 @@
+✅
+ HYBRID TRADING PROCESS — FULL PSEUDOCODE WITH SAFETY &amp; RCE
+0. High-Level Architecture (Modules)
+We define four modules:
+BaseEngine            
+   (
+your existing trade generator)
+MetricsAggregator
+     
+   (
+rolling statistics)
+RegimeClassificationEngine
+ (RCE)
+HybridController
+       
+   (
+Ghost, Stuffing, Flip)
+RiskManager
+           
+   (
+exposure caps)
+1. Rolling Metrics Aggregation Layer
+function 
+update_
+metrics
+(
+trade_history
+, 
+window_minutes
+ = 30):
+    WINDOW_START = now - 
+window_minutes
+    
+recent_trades
+ = 
+filter(
+trade_history
+, 
+t.last
+_update
+ &gt;= WINDOW_START)
+    
+buy_
+trades
+  =
+ 
+filter(
+recent_trades
+, 
+t.signal
+ == "BUY")
+    
+sell_trades
+ = 
+filter(
+recent_trades
+, 
+t.signal
+ == "SELL")
+    metrics = {}
+    
+metrics.buy_
+count
+  =
+ 
+len
+(
+buy_trades
+)
+    
+metrics.sell
+_count
+ = 
+len
+(
+sell_trades
+)
+    
+metrics.avg_dur_
+buy
+  =
+ 
+mean(
+[
+t.trade
+_duration
+ for t in 
+buy_trades
+]) or INF
+    
+metrics.avg_dur_sell
+ = 
+mean(
+[
+t.trade
+_duration
+ for t in 
+sell_trades
+]) or INF
+    
+metrics.buy_real_
+pnl
+  =
+ 
+sum(
+[
+t.alt_net_return
+ for t in 
+buy_trades
+])
+    
+metrics.sell
+_real_pnl
+ = 
+sum(
+[
+t.alt_net_return
+ for t in 
+sell_trades
+])
+    
+metrics.buy_ghost_
+ratio
+  =
+ (# ghosted BUY trades in 
+window)  /
+ 
+max(
+1, 
+metrics.buy_count
+)
+    
+metrics.sell
+_ghost_ratio
+ = (# ghosted SELL trades in window) / 
+max(
+1, 
+metrics.sell
+_count
+)
+    # Symmetry ratios
+    
+metrics.dur_ratio
+   = 
+max(
+avg_dur_buy
+, 
+avg_dur_sell
+) / 
+min(
+avg_dur_buy
+, 
+avg_dur_sell
+)
+    
+metrics.count
+_ratio
+ = 
+max(
+buy_count
+, 
+sell_count
+) / 
+min(
+buy_count
+, 
+sell_count
+)
+    return metrics
+2. Regime Classification Engine (RCE)
+Handles 
+CHOP
+, 
+COMPRESSED
+, 
+TRANSITION
+, 
+TREND_BUY
+, 
+TREND_SELL
+, 
+UNKNOWN
+ states.
+function 
+classify_
+regime
+(
+metrics, 
+prev_state
+):
+    # --- base conditions ---
+    if 
+metrics.total
+_count
+ &lt; MIN_TRADES_REQUIRED:
+        return UNKNOWN, NONE, NONE
+    # --- CHOP detection ---
+    if 
+metrics.dur_ratio
+ &lt; DUR_RATIO_TREND_MIN
+       and 
+metrics.count
+_ratio
+ &lt; COUNT_RATIO_TREND_MIN:
+           return CHOP, NONE, NONE
+    # --- COMPRESSED detection ---
+    if 
+metrics.avg_dur_
+buy
+  &lt;
+ FAST_DURATION_CAP
+       and 
+metrics.avg_dur_sell
+ &lt; FAST_DURATION_CAP
+       and 
+abs(
+metrics.buy_count
+ - 
+metrics.sell
+_count
+) &lt; COMPRESSED_COUNT_TOLERANCE:
+           return COMPRESSED, NONE, NONE
+    # --- Determine candidate fast side ---
+    if 
+metrics.avg_dur_buy
+ &lt; 
+metrics.avg_dur_sell
+:
+         
+candidate_fast
+ = BUY
+         
+candidate_slow
+ = SELL
+    else:
+         
+candidate_fast
+ = SELL
+         
+candidate_slow
+ = BUY
+    # --- Validate candidate using real 
+PnL
+ ---
+    
+fast_real_pnl
+ = 
+metrics.buy_real_pnl
+ if 
+candidate_fast
+ == BUY else 
+metrics.sell
+_real_pnl
+    
+slow_real_pnl
+ = 
+metrics.sell
+_real_pnl
+ if 
+candidate_fast
+ == BUY else 
+metrics.buy_real_pnl
+    if 
+fast_real_pnl
+ &lt; REAL_FAST_PNL_MIN:    # fast side must be profitable
+         return CHOP, NONE, NONE
+    # --- Is persistent asymmetry strong enough? ---
+    if 
+metrics.dur_ratio
+ &gt;= DUR_RATIO_TREND_MIN
+       and 
+metrics.count
+_ratio
+ &gt;= COUNT_RATIO_TREND_MIN:
+             return 
+TREND(
+candidate_fast
+), 
+candidate_fast
+, 
+candidate_slow
+    # --- TRANSITION state logic ---
+    if 
+prev_state
+ in {TREND_BUY, TREND_SELL}:
+         return TRANSITION, 
+candidate_fast
+, 
+candidate_slow
+    return UNKNOWN, NONE, NONE
+3. Hybrid Controller (Ghost Close + Stuffing + Flip)
+This layer 
+acts
+ on the regime classification.
+function 
+hybrid_
+controller
+(
+regime_state
+, 
+fast_side
+, 
+slow_side
+, metrics):
+    # --- 1. CHOP MODE ---
+    if 
+regime_state
+ == CHOP:
+        
+disable_
+stuffing
+(
+)
+        
+disable_ghost_
+close
+(
+)
+        
+disable_
+flip
+(
+)
+        return
+    # --- 2. COMPRESSED MODE ---
+    if 
+regime_state
+ == COMPRESSED:
+        
+disable_
+stuffing
+(
+)
+        
+disable_ghost_
+close
+(
+)
+        
+disable_
+flip
+(
+)
+        return
+    # --- 3. TREND MODE (BUY or SELL) ---
+    if 
+regime_state
+ in {TREND_BUY, TREND_SELL}:
+        # Stuffing allowed but controlled by 
+RiskManager
+        
+enable_stuffing
+(
+fast_side
+)
+        # Ghost close slow side trades that exceed SLOW_DURATION_THRESHOLD
+        for trade in 
+open_trades
+:
+            if 
+trade.side
+ == 
+slow_side
+ and 
+trade.duration
+ &gt; SLOW_DURATION_THRESHOLD:
+                
+ghost_close
+(trade)
+        # Auto-flip monitoring
+        
+recent_fast_durations
+ = 
+last_N_
+durations
+(
+fast_side
+, N_FAST_CHECK)
+        if 
+count(
+dur &gt; FAST_BREAKDOWN_THRESHOLD for dur in 
+recent_fast_durations
+) &gt;= K_REQUIRED:
+            
+enter_transition_
+mode
+(
+)
+            
+disable_
+stuffing
+(
+)
+            return
+        return
+    # --- 4. TRANSITION MODE ---
+    if 
+regime_state
+ == TRANSITION:
+        
+disable_
+stuffing
+(
+)
+        
+enable_ghost_close_
+safely
+(
+)
+        # Wait for confirmation
+        if 
+transition_confirms_new_fast_
+side
+(
+):
+             
+flip_
+sides
+(
+)      # BUY ↔ SELL
+             return
+        # If not confirmed: revert to CHOP
+        
+revert_to_
+chop
+(
+)
+        return
+4. Ghost Close Implementation
+function 
+ghost_close
+(trade):
+    if not 
+trade.is_ghosted
+:
+        
+trade.real
+_exit_time
+ = now
+        
+trade.real
+_exit_
+pnl
+  =
+ 
+trade.alt_net_return_at
+(now)
+        
+trade.is_ghosted
+     = True
+        
+close_real_broker_position
+(trade)
+    # Stats-world instance continues normally to +/-TP/SL.
+5. Stuffing Implementation (Safe Version)
+function 
+attempt_stuff
+(
+fast_side
+):
+    if 
+RiskManager.is_fast_exposure_safe
+(
+fast_side
+):
+        
+create_shell_trade
+(
+fast_side
+)
+        # automatically 
+real-trade
+ via 
+alt_net_return
+        
+execute_real_trade_on_fast_side
+(
+fast_side
+)
+6. Risk Manager
+function 
+is_fast_exposure_safe
+(
+fast_side
+):
+    
+open_fast
+ = 
+open_positions
+(side=
+fast_side
+)
+    if 
+len
+(
+open_fast
+) &gt;= MAX_FAST_OPEN:
+         return False
+    
+total_risk
+ = sum(
+worst_case_loss
+(p) for 
+p in
+ 
+open_fast
+)
+    if 
+total_risk
+ &gt;= MAX_FAST_RISK:
+         return False
+    return True
+7. Auto Flip Logic (Detailed)
+function 
+transition_confirms_new_fast_
+side
+(
+):
+    
+new_metrics
+ = 
+update_
+metrics
+(
+)
+    
+    
+new_fast
+ = 
+side_with_shorter_avg_duration
+(
+new_metrics
+)
+    
+new_fast_confirmed
+ = (
+         
+new_metrics.dur_ratio
+ &gt;= DUR_RATIO_TREND_MIN and
+         
+new_
+metrics.count
+_ratio
+ &gt;= COUNT_RATIO_TREND_MIN and
+         
+real_pnl
+(
+new_fast
+) &gt; REAL_FAST_PNL_MIN
+    )
+    return 
+new_fast_confirmed
+8. Full Hybrid Loop (Final Integration)
+loop forever:
+    
+trade_history
+ = 
+fetch_recent_
+trades
+(
+)
+    metrics = 
+update_metrics
+(
+trade_history
+)
+    
+prev_regime
+ = 
+current_regime
+    
+regime_state
+, 
+fast_side
+, 
+slow_side
+ = 
+classify_
+regime
+(
+metrics, 
+prev_regime
+)
+    
+hybrid_
+controller
+(
+regime_state
+, 
+fast_side
+, 
+slow_side
+, metrics)
+    if 
+regime_state
+ in {TREND_BUY, TREND_SELL}:
+         
+attempt_stuff
+(
+fast_side
+)
+    
+sleep(
+BASE_INTERVAL)

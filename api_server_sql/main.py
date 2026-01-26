@@ -118,8 +118,8 @@ def get_all_views(conn):
         logger.error("Error fetching views: %s", e)
         return []
 
-def get_view_data(conn, view_name: str, page: int = 1, page_size: int = 100, model: Optional[str] = None, signal: Optional[str] = None, tradeable: Optional[int] = None, trade_reason: Optional[str] = None, product: Optional[str] = None, session_id: Optional[str] = None, _sort: Optional[str] = None, _limit: Optional[int] = None, created_gt: Optional[str] = None): # 2025-08-23, V1.2: Added created_gt parameter. # 2025-12-08, V20251208_01: Added session_id and _limit parameters.
-    logger.debug("Fetching data from view %s, page=%d, page_size=%d, model=%s, signal=%s, tradeable=%s, trade_reason=%s, product=%s, _sort=%s, _limit=%s, created_gt=%s", view_name, page, page_size, model, signal, tradeable, trade_reason, product, _sort, _limit, created_gt) # 2025-08-23, V1.2: Added created_gt to log. # 2025-12-08, V20251208_01: Added _limit to log.
+def get_view_data(conn, view_name: str, page: int = 1, page_size: int = 100, model: Optional[str] = None, signal: Optional[str] = None, tradeable: Optional[int] = None, trade_reason: Optional[str] = None, product: Optional[str] = None, session_id: Optional[str] = None, _sort: Optional[str] = None, _limit: Optional[int] = None, created_gt: Optional[str] = None, created_lt: Optional[str] = None): # 2025-08-23, V1.2: Added created_gt parameter. # 2025-12-08, V20251208_01: Added session_id and _limit parameters. # 2026-01-25, V20260125_2245: Added created_lt.
+    logger.debug("Fetching data from view %s, page=%d, page_size=%d, model=%s, signal=%s, tradeable=%s, trade_reason=%s, product=%s, _sort=%s, _limit=%s, created_gt=%s, created_lt=%s", view_name, page, page_size, model, signal, tradeable, trade_reason, product, _sort, _limit, created_gt, created_lt) # 2025-08-23, V1.2: Added created_gt to log. # 2025-12-08, V20251208_01: Added _limit to log. # 2026-01-25: Added created_lt to log.
     try:
         cursor = conn.cursor()
         
@@ -149,6 +149,9 @@ def get_view_data(conn, view_name: str, page: int = 1, page_size: int = 100, mod
         # 2025-08-23, V1.2: Add created_gt filter
         if created_gt:
             where_clauses.append(f"created >= '{created_gt}'")
+        # 2026-01-25, V20260125_2245: Add created_lt filter
+        if created_lt:
+            where_clauses.append(f"created < '{created_lt}'")
             
         if where_clauses:
             query += " WHERE " + " AND ".join(where_clauses)
@@ -318,7 +321,7 @@ async def get_rt_group_metrics_sp(request: Request, db: str = fastapi.Query("tra
             conn.close()
 
 @app.get("/api/{view_name}")
-async def get_view(view_name: str, request: Request, db: str = fastapi.Query("tradedb"), page: int = fastapi.Query(1, gt=0), page_size: int = fastapi.Query(100, gt=0), model: Optional[str] = fastapi.Query(None), signal: Optional[str] = fastapi.Query(None), tradeable: Optional[int] = fastapi.Query(None), trade_reason: Optional[str] = fastapi.Query(None), product: Optional[str] = fastapi.Query(None), session_id: Optional[str] = fastapi.Query(None), _sort: Optional[str] = fastapi.Query(None), _limit: Optional[int] = fastapi.Query(None, gt=0), created_gt: Optional[str] = fastapi.Query(None)): # 2025-08-23, V1.2: Added created_gt query parameter. # 2025-12-08, V20251208_01: Added session_id and _limit query parameters.
+async def get_view(view_name: str, request: Request, db: str = fastapi.Query("tradedb"), page: int = fastapi.Query(1, gt=0), page_size: int = fastapi.Query(100, gt=0), model: Optional[str] = fastapi.Query(None), signal: Optional[str] = fastapi.Query(None), tradeable: Optional[int] = fastapi.Query(None), trade_reason: Optional[str] = fastapi.Query(None), product: Optional[str] = fastapi.Query(None), session_id: Optional[str] = fastapi.Query(None), _sort: Optional[str] = fastapi.Query(None), _limit: Optional[int] = fastapi.Query(None, gt=0), created_gt: Optional[str] = fastapi.Query(None), created_lt: Optional[str] = fastapi.Query(None)): # 2025-08-23, V1.2: Added created_gt query parameter. # 2025-12-08, V20251208_01: Added session_id and _limit query parameters. # 2026-01-25: Added created_lt query parameter.
     conn = connect_to_db(db)
     if not conn:
         raise HTTPException(status_code=500, detail="Database connection failed")
@@ -333,7 +336,7 @@ async def get_view(view_name: str, request: Request, db: str = fastapi.Query("tr
         except Exception as e:
             logger.warning("Cache sync failed (non-critical): %s", e)
 
-    data = get_view_data(conn, view_name, page, page_size, model, signal, tradeable, trade_reason, product, session_id, _sort, _limit, created_gt) # 2025-08-23, V1.2: Passed created_gt to get_view_data. # 2025-12-08, V20251208_01: Passed session_id and _limit to get_view_data.
+    data = get_view_data(conn, view_name, page, page_size, model, signal, tradeable, trade_reason, product, session_id, _sort, _limit, created_gt, created_lt) # 2025-08-23, V1.2: Passed created_gt to get_view_data. # 2025-12-08, V20251208_01: Passed session_id and _limit to get_view_data. # 2026-01-25: Passed created_lt.
     if data is None:
         conn.close()
         raise HTTPException(status_code=500, detail=f"Failed to fetch data from view: {view_name}")

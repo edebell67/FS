@@ -1,0 +1,397 @@
+# C-Trade API Implementation - Final Documentation
+**Version:** v20251205_01  
+**Date Completed:** 2025-12-05  
+**Status:** ✅ COMPLETE
+
+---
+
+## Overview
+
+C-Trade determination using API endpoint to check recent closed trades against dynamic profit target threshold.
+
+**Logic**: `IF alt_pnl < (profit_target * -1) THEN generate C-trade (JSON)`
+
+**Result**: ~149 lines of complex logic → ~30 lines (85% reduction)
+
+---
+
+## Implementation Checklist
+
+### API Layer
+- [x] Created endpoint: `vw_105_tbl_105_trade_lifecycle_snapshots`
+- [x] Added `APIClient.fetch_recent_snapshots(session_id, lookback)` method
+- [x] Returns DataFrame of recent closed trades filtered by session
+
+#### Endpoint Details
+**Constant Definition** (constants.py, Lines 47-48):
+```python
+ENDPOINT_TBL105_LIFECYCLE: Final[str] = f"{API_BASE_URL}/vw_105_tbl_105_trade_lifecycle_snapshots"
+ENDPOINT_TBL105_LIFECYCLE_SIM: Final[str] = 'http://127.0.0.1:8000/api/vw_105_tbl_105_trade_lifecycle_snapshots'
+```
+
+**Live Mode URL**: `http://127.0.0.1:8001/api/vw_105_tbl_105_trade_lifecycle_snapshots`  
+**Sim Mode URL**: `http://127.0.0.1:8000/api/vw_105_tbl_105_trade_lifecycle_snapshots`
+
+**Database Source**: `dbo.tbl_105_trade_lifecycle_snapshots` table via view `vw_105_tbl_105_trade_lifecycle_snapshots`
+
+**API Method Usage**:
+```python
+# From api.py
+def fetch_recent_snapshots(self, session_id: str, lookback: int) -> pd.DataFrame:
+    """
+    Fetches recent closed trade snapshots filtered by session.
+    
+    Parameters:
+        session_id: Current session GUID
+        lookback: Number of recent closed trades to fetch
+    
+    Returns:
+        DataFrame with columns: timestamp, alt_pnl, product, trade_type, etc.
+    """
+    endpoint = ENDPOINT_TBL105_LIFECYCLE_SIM if self.is_simulation_mode else ENDPOINT_TBL105_LIFECYCLE
+    params = {
+        'session_id': session_id,
+        'event_type': 'close',
+        'limit': lookback,
+        'ordering': '-timestamp'  # Most recent first
+    }
+    return self._fetch_data_from_url(endpoint, **params)
+```
+
+### Trade Engine - New Method
+- [x] **Created `_should_open_as_c_trade(config)`** (Lines 1673-1704)
+  - Fetches recent snapshots via API
+  - Checks for `alt_pnl < (profit_target * -1)` in lookback window
+  - Returns `True` if threshold exceeded, else `False`
+
+#### Complete Implementation Logic
+
+**Input Parameters:**
+1. `session_id`: Current screen instance identifier (from `self.session_guid`)
+2. `lookback`: Number of recent trades to check (from `s09_lookback_var` config)
+3. `profit_target_var`: UI profit target setting (e.g., 100)
+
+**Threshold Calculation:**
+```python
+profit_target = float(config.get('profit_target_var', 100))
+threshold = profit_target * -1
+
+# Examples:
+# If profit_target_var = 100 → threshold = -100
+# If profit_target_var = 50  → threshold = -50
+# If profit_target_var = 200 → threshold = -200
+```
+
+**C-Trade Trigger Condition:**
+```
+IF any recent closed trade has alt_pnl < threshold
+THEN mark next open trade as 'C' trade (generate JSON)
+ELSE do not generate JSON
+```
+
+**Step-by-Step Flow:**
+1. Get `s09_lookback_var` from config (default: 1)
+2. Get `profit_target_var` from config (default: 100)
+3. Calculate threshold: `threshold = profit_target_var * -1`
+4. Call API: `fetch_recent_snapshots(session_id, lookback)`
+5. Extract `alt_pnl` column from returned DataFrame
+6. Convert to numeric (handle errors gracefully)
+7. Check: `(alt_pnl_values < threshold).any()`
+8. Return `True` if condition met, `False` otherwise
+
+**Complete Method Implementation:**
+```python
+def _should_open_as_c_trade(self, config: Dict[str, Any]) -> bool:
+    """
+    Determines if a 'C' trade should be generated based on recent closed trades.
+    
+    Logic:
+        - Fetches last N closed trades (N = s09_lookback_var)
+        - Checks if any have alt_pnl < (profit_target_var * -1)
+        - Returns True if threshold exceeded (trigger C-trade)
+    
+    Parameters:
+        config: UI configuration dictionary containing:
+            - s09_lookback_var: Number of recent trades to check (default: 1)
+            - profit_target_var: Profit target from UI (default: 100)
+    
+    Returns:
+        bool: True if C-trade should be generated, False otherwise
+    
+    Example:
+        If profit_target_var = 100 and last trade had alt_pnl = -120:
+        → threshold = -100
+        → -120 < -100 is True
+        → Return True (trigger C-trade)
+    """
+    try:
+        # Step 1: Get lookback parameter (with validation)
+        try:
+            lookback = int(config.get('s09_lookback_var', 1))
+        except (ValueError, TypeError):
+            lookback = 1
+        
+        if lookback <= 0:
+            logger_trade_manager.debug("_should_open_as_c_trade: Invalid lookback, skipping.")
+            return False
+        
+        # Step 2: Get profit target from config
+        try:
+            profit_target = float(config.get('profit_target_var', 100))
+        except (ValueError, TypeError):
+            profit_target = 100.0
+            logger_trade_manager.warning(
+                f"Invalid profit_target_var in config, using default: {profit_target}"
+            )
+        
+        # Step 3: Calculate threshold (negative of profit target)
+        threshold = profit_target * -1
+        logger_trade_manager.debug(
+            f"C-trade threshold: alt_pnl < {threshold} (profit_target={profit_target})"
+        )
+
+        # Step 4: Fetch recent closed snapshots for current session
+        recent_snapshots = self.api_client.fetch_recent_snapshots(
+            self.session_guid, 
+            lookback
+        )
+
+        if recent_snapshots.empty:
+            logger_trade_manager.debug("_should_open_as_c_trade: No recent snapshots found.")
+            return False
+
+        # Step 5: Extract and validate alt_pnl column
+        if 'alt_pnl' not in recent_snapshots.columns:
+            logger_trade_manager.warning("_should_open_as_c_trade: 'alt_pnl' column not in snapshots.")
+            return False
+        
+        # Step 6: Convert to numeric, coercing errors to NaN
+        alt_pnl_values = pd.to_numeric(recent_snapshots['alt_pnl'], errors='coerce')
+        
+        # Step 7: Check if any value is below threshold
+        if (alt_pnl_values < threshold).any():
+            logger_trade_manager.info(
+                f"C-Trade condition MET: Found alt_pnl < {threshold} within last {lookback} closed trade(s). "
+                f"Values: {alt_pnl_values.tolist()}"
+            )
+            return True
+        
+        logger_trade_manager.debug(
+            f"_should_open_as_c_trade: No alt_pnl below threshold. "
+            f"Values: {alt_pnl_values.tolist()}, Threshold: {threshold}"
+        )
+        return False
+    
+    except Exception as e:
+        logger_trade_manager.error(
+            f"Error in _should_open_as_c_trade: {e}", 
+            exc_info=True
+        )
+        return False  # Default to no C-trade on error
+```
+
+**Configuration Dependencies:**
+| Parameter | Source | Default | Purpose |
+|-----------|--------|---------|---------|
+| `s09_lookback_var` | UI config | 1 | Number of recent trades to check |
+| `profit_target_var` | UI config | 100 | Base threshold for comparison |
+| `session_guid` | TradeManager | Auto-generated | Filter trades by session |
+
+**Real-World Examples:**
+
+**Example 1: Trigger C-Trade**
+```
+Config:
+  - profit_target_var = 100
+  - s09_lookback_var = 2
+
+Recent Trades (from API):
+  Trade 1: alt_pnl = -120  ← Below -100 threshold
+  Trade 2: alt_pnl = 50
+
+Result: Return True (Trade 1 meets condition)
+Action: Next open trade → JSON generated (C-trade)
+```
+
+**Example 2: Do NOT Trigger C-Trade**
+```
+Config:
+  - profit_target_var = 100
+  - s09_lookback_var = 2
+
+Recent Trades (from API):
+  Trade 1: alt_pnl = -80   ← Not below -100 threshold
+  Trade 2: alt_pnl = 20
+
+Result: Return False (No trade meets condition)
+Action: Next open trade → No JSON (not C-trade unless manual)
+```
+
+**Example 3: Higher Threshold**
+```
+Config:
+  - profit_target_var = 200
+  - s09_lookback_var = 1
+
+Recent Trades (from API):
+  Trade 1: alt_pnl = -150  ← Not below -200 threshold
+
+Result: Return False
+Action: No C-trade
+```
+
+### Trade Engine - BUY Logic Simplified
+- [x] **Refactored `execute_automated_buy_trade()`** (Lines 986-998)
+  - Replaced multi-path CSV logic with single condition
+  - Logic: `if manual_buy_trigger OR should_generate_c_trade → JSON`
+
+### Trade Engine - SELL Logic Simplified  
+- [x] **Refactored `execute_automated_sell_trade()`** (Lines 1166-1178)
+  - Same simplification as BUY
+
+### Code Cleanup
+- [x] **Removed obsolete methods** (~149 lines deleted):
+  - `_write_trade_event_file()`
+  - `_write_csv_file()`
+
+### Configuration
+- [x] Added `ENDPOINT_TBL105_LIFECYCLE` to constants
+- [x] Removed obsolete `CSV_RULE_CHOICES`
+
+### UI
+- [x] Removed CSV rule dropdown (no longer needed)
+
+---
+
+## Key Code
+
+### New Core Method
+```python
+def _should_open_as_c_trade(self, config: Dict[str, Any]) -> bool:
+    """Check if C-trade should be generated based on recent negative alt_pnl."""
+    try:
+        lookback = int(config.get('s09_lookback_var', 1))
+    except (ValueError, TypeError):
+        lookback = 1
+    
+    if lookback <= 0:
+        return False
+
+    recent_snapshots = self.api_client.fetch_recent_snapshots(
+        self.session_guid, 
+        lookback
+    )
+
+    if recent_snapshots.empty:
+        return False
+
+    if 'alt_pnl' in recent_snapshots.columns:
+        alt_pnl_values = pd.to_numeric(recent_snapshots['alt_pnl'], errors='coerce')
+        if (alt_pnl_values < 0).any():
+            logger_trade_manager.info(
+                f"C-Trade condition MET: Negative alt_pnl found within last {lookback} closed trade(s)."
+            )
+            return True
+    
+    return False
+```
+
+### Simplified Trade Logic
+```python
+# NEW Simplified C-Trade/JSON Logic (BUY & SELL)
+manual_trigger = str(triggered_by).lower() == 'manual_buy_button_ui'  # or sell
+should_generate_c_trade = self._should_open_as_c_trade(config)
+
+generated_on_open = False
+if manual_trigger or should_generate_c_trade:
+    logger_trade_manager.info(
+        f"Triggering JSON generation. Manual: {manual_trigger}, C-Trade: {should_generate_c_trade}"
+    )
+    generated_on_open = self._write_trade_event_to_json(
+        'open', new_trade, entry_price_to_use, entry_time, signal, config
+    )
+```
+
+---
+
+## Files Modified
+
+| File | Changes | Lines |
+|------|---------|-------|
+| `constants.py` | Added endpoint, removed `CSV_RULE_CHOICES` | +1, -old |
+| `api.py` | Added `fetch_recent_snapshots()` | +new method |
+| `trade_engine.py` | Added `_should_open_as_c_trade()` | 1673-1704 |
+| `trade_engine.py` | Simplified BUY logic | 986-998 |
+| `trade_engine.py` | Simplified SELL logic | 1166-1178 |
+| `trade_engine.py` | Removed obsolete methods | -149 lines |
+| `main_window.py` | Removed CSV rule dropdown | -UI element |
+
+---
+
+## Data Flow
+
+```
+Trade Opens
+    ↓
+_should_open_as_c_trade(config)
+    ↓
+Get profit_target_var from config → Calculate threshold = profit_target * -1
+    ↓
+api_client.fetch_recent_snapshots(session_guid, lookback)
+    ↓
+Query: trade_lifecycle_snapshots WHERE event_type='close' AND session_id=... TOP(lookback)
+    ↓
+Check: (alt_pnl < threshold).any()
+    ↓
+Return True/False → Trigger JSON if True (or Manual)
+```
+
+---
+
+## Testing Verification
+
+### Manual Test
+- [x] Manual trade → JSON generated
+- [x] Trade after negative alt_pnl close → JSON generated (C-trade)
+- [x] Trade after positive alt_pnl close → No JSON
+
+### SQL Verification
+```sql
+SELECT TOP 5 timestamp, session_id, alt_pnl, product
+FROM tbl_105_trade_lifecycle_snapshots
+WHERE event_type = 'close' AND session_id LIKE '%<your_session>%'
+ORDER BY timestamp DESC;
+```
+
+---
+
+## Benefits
+
+- ✅ **Simplicity**: 85% code reduction
+- ✅ **Reliability**: Database-backed (survives restarts)
+- ✅ **Consistency**: All instances see same data
+- ✅ **Maintainability**: Single method to understand
+
+---
+
+## Configuration
+
+**Required config parameter:**
+- `s09_lookback_var`: Number of recent closed trades to check (default: 1)
+
+**Session identification:**
+- Uses `self.session_guid` automatically
+
+---
+
+**Implementation Complete** ✅
+
+---
+
+## 2025-12-06: Trade Monitor Summaries
+- [x] Split the closed-trade summaries so the main table carries only per-title totals while a new `Closed Trades Summary by Trade Title (C-Trades)` section lists the subset of strategies that generated JSON files, complete with drill-down/export commands (`ct#` / `ect`).
+- [x] Add a synthetic `C-Trades` aggregate row to **Open Trades Summary by Trade Title**, including RT/Proc placeholders and guarding against drill-down on the informational row.
+- [x] Insert the same `C-Trades` aggregate beneath the `negative Alt_nets` helper on **Closed Trades Summary by Trade Title**.
+- [x] Mirror the aggregate row in both sections of **Open & Closed Trades Summary by Trade Title** so operators can see total C-trade performance at a glance.
+
+- [x] Split the closed-trade summaries so the main table carries only per-title totals while a new  section lists the subset of strategies that generated JSON files, complete with drill-down/export commands ( / ).

@@ -1,0 +1,28 @@
+--- Starting new cycle at 2026-01-01 23:31:54 ---
+Config loaded. Run mode is set to: 'sim'
+Processing files in: C:\Users\edebe\eds\TradeApps\breakout\json\sim\2026-01-01
+[RESUME] ✅ Restored open trade #171 for AUD (breakout_R_Rev_4_tp20.0_sl10.0, window=4). Resuming...
+[INFO] No open trades found for AUD (breakout_R_4_tp20.0_sl10.0, window=4). Counter restored to 184.
+[PERSIST] Found open trade #173 in breakout_Rev_4_tp20.0_sl10.0_AUD_20260101_193346_4_0.00015_20.0_10.0.json
+[PERSIST] Found open trade #174 in breakout_R_Rev_2_tp3.0_sl6.0_EUR_20260101_193024_2_0.00015_3.0_6.0.json
+Successfully wrote summary to: C:\Users\edebe\eds\TradeApps\breakout\json\sim\2026-01-01\_top_one.json
+[INFO] No open trades found for AUD (breakout_4_tp20.0_sl10.0, window=4). Counter restored to 184.
+[RESUME] ✅ Restored open trade #173 for AUD (breakout_Rev_4_tp20.0_sl10.0, window=4). Resuming...
+[INFO] No open trades found for EUR (breakout_R_2_tp3.0_sl6.0, window=2). Counter restored to 184.
+[PERSIST] Found open trade #176 in breakout_Rev_2_tp3.0_sl6.0_EUR_20260101_193327_2_0.00015_3.0_6.0.json
+[RESUME] ✅ Restored open trade #174 for EUR (breakout_R_Rev_2_tp3.0_sl6.0, window=2). Resuming...
+[PERSIST] Found open trade #172 in breakout_R_Rev_2_tp3.0_sl10.0_EUR_20260101_193024_2_0.00015_3.0_10.0.json
+[INFO] No open trades found for EUR (breakout_2_tp3.0_sl6.0, window=2). Counter restored to 184.
+[RESUME] ✅ Restored open trade #176 for EUR (breakout_Rev_2_tp3.0_sl6.0, window=2). Resuming...
+[PERSIST] Found open trade #176 in breakout_Rev_2_tp3.0_sl10.0_EUR_20260101_193327_2_0.00015_3.0_10.0.json
+[INFO] No open trades found for EUR (breakout_R_2_tp3.0_sl10.0, window=2). Counter restored to 184.
+[RESUME] ✅ Restored open trade #172 for EUR (breakout_R_Rev_2_tp3.0_sl10.0, window=2). Resuming...
+2026-01-01 23:32:06,210 INFO: c:\Users\edebe\eds\TradeApps\breakout\breakout.py is already running
+2026-01-01 23:32:06,212 INFO: c:\Users\edebe\eds\TradeApps\breakout\breakout_R.py is already running
+2026-01-01 23:32:06,212 INFO: c:\Users\edebe\eds\TradeApps\breakout\breakout_Rev.py is already running
+2026-01-01 23:32:06,213 INFO: c:\Users\edebe\eds\TradeApps\breakout\breakout_R_Rev.py is already running
+2026-01-01 23:32:06,213 INFO: c:\Users\edebe\eds\TradeApps\breakout\top_one_generator.py is already running
+2026-01-01 23:32:06,214 INFO: c:\Users\edebe\eds\TradeApps\breakout\trade_viewer_api.py is already running
+[PERSIST] Found open trade #173 in breakout_R_Rev_2_tp10.0_sl6.0_EUR_20260101_193024_2_0.00015_10.0_6.0.json
+
+--- Starting new cycle at 2026-01-01 23:32:08 ---

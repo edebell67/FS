@@ -1,0 +1,58 @@
+--------------------------------------------------
+       Closed Trades Summary by Trade Title   (no change)
+--------------------------------------------------
+No. | Trade Title                                     | Total Net P&L ($) | Total Alt Net ($)
+----+-------------------------------------------------+-------------------+------------------
+1   | negative Alt_nets                               | 2235.0            | -2415.0   (no change)
+
+
+================================================================================================================
+
+--------------------------------------------------
+       Negative Alt Net Trades by Position
+--------------------------------------------------
+No. | Position | Count | Total Net P&L ($) | Total Alt Net ($)
+----+----------+-------+-------------------+------------------
+1   | SELL     | 4     | 1265.0            | -1365.0
+2   | BUY      | 3     | 970.0             | -1050.0
+
+
+
+--------------------------------------------------
+       Negative Alt Net Trades (triggered) by Position  (New Data)
+--------------------------------------------------
+No. | Position | Count | Total Net P&L ($) | Total Alt Net ($)
+----+----------+-------+-------------------+------------------
+1   | SELL     | 4     | -1265.0           | 1365.0
+2   | BUY      | 3     | -970.0            | 1050.0
+
+
+(no menu change)
+Enter # for trades, 'b' (back), 'e' (export). Jump to: [90] Main Menu, [91] Open Trades Summary, [92] Closed Trades Summary, [93] Configure Real-Time (RT) Trades, [94] Refresh Data, [95] Open & Closed Trades Summary, [96] Trade Execution Console, [99] Quit:
+================================================================================================================
+
+
+--------------------------------------------------
+          Negative Alt Net Trades - SELL
+--------------------------------------------------
+No. | Trade Title                                     | Position | Entry Time                 | Exit Time                  | Net P&L ($) | Alt Net ($)
+----+-------------------------------------------------+----------+----------------------------+----------------------------+-------------+------------
+1   | EUR_TPUSD250_TLUSDneg70_period3_buffer0.0       | SELL     | 2025-11-27T01:49:54.897699 | 2025-11-27T09:14:42.593844 | 290.0       | -310.0
+2   | GBP_TPUSD250_TLUSDneg60_period3_buffer0.0       | SELL     | 2025-11-27T06:56:10.693581 | 2025-11-27T09:03:51.279709 | 245.0       | -265.0
+3   | GBPEUR_C_TPUSD500_TLUSDneg100_period3_buffer0.0 | SELL     | 2025-11-27T01:49:54.897652 | 2025-11-27T07:44:21.266048 | 490.0       | -530.0
+4   | GBP_TPUSD250_TLUSDneg60_period3_buffer0.0       | SELL     | 2025-11-27T04:33:34.551747 | 2025-11-27T06:56:10.693581 | 240.0       | -260.0
+
+
+
+--------------------------------------------------
+          Negative Alt Net Trades Triggered - SELL (New data)
+--------------------------------------------------
+No. | Trade Title                                     | Position | Entry Time                 | Exit Time                  | Net P&L ($) | Alt Net ($)
+----+-------------------------------------------------+----------+----------------------------+----------------------------+-------------+------------
+1   | EUR_TPUSD250_TLUSDneg70_period3_buffer0.0       | SELL     | 2025-11-27T01:49:54.897699 | 2025-11-27T09:14:42.593844 | -290.0       | 310.0
+2   | GBP_TPUSD250_TLUSDneg60_period3_buffer0.0       | SELL     | 2025-11-27T06:56:10.693581 | 2025-11-27T09:03:51.279709 | -245.0       | 265.0
+3   | GBPEUR_C_TPUSD500_TLUSDneg100_period3_buffer0.0 | SELL     | 2025-11-27T01:49:54.897652 | 2025-11-27T07:44:21.266048 | -490.0       | 80.0
+4   | GBP_TPUSD250_TLUSDneg60_period3_buffer0.0       | SELL     | 2025-11-27T04:33:34.551747 | 2025-11-27T06:56:10.693581 | -240.0       | 260.0
+
+(no menu change)
+'b' (back), 'e' (export). Jump to: [90] Main Menu, [91] Open Trades Summary, [92] Closed Trades Summary, [93] Configure Real-Time (RT) Trades, [94] Refresh Data, [95] Open & Closed Trades Summary, [96] Trade Execution Console, [99] Quit:

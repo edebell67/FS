@@ -1,0 +1,2783 @@
+
+│                                                        │
+│ model:     gpt-5-codex   /model to change              │
+  /model - choose what model and reasoning effort to use
+
+▌ review C:\Users\edebe\eds\plans\20251022_1406_live_data_snapshot_plan.md and generate implmentation plan
+
+• Updated Plan
+  └ Review the provided plan document to understand context and requirements, then synthesize an actionable
+    implementation plan.
+    □ Inspect C:\Users\edebe\eds\plans\20251022_1406_live_data_snapshot_plan.md to understand scope and requirements
+    □ Draft an implementation plan based on the document's guidance
+
+• Proposed Command
+  └ powershell.exe -NoLogo -Command "Get-Content -Raw -Path 'C:\\Users\\edebe\\eds\\plans\
+\20251022_1406_live_data_snapshot_plan.md'"
+
+✗ You canceled the request to run powershell.exe -NoLogo -Command "Get-Content -Raw -Path 'C:\\Users\\edebe\\ed...
+
+■ Conversation interrupted - tell the model what to do differently
+
+▌ continue
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Get-Content -Path 'C:\\Users\\edebe\\eds\\plans\
+        \20251022_1406_live_data_snapshot_plan.md'"
+
+• Updated Plan
+  └ ✔ Inspect C:\Users\edebe\eds\plans\20251022_1406_live_data_snapshot_plan.md to understand scope and requirements
+    □ Draft an implementation plan based on the document's guidance
+
+• I'll create a phased implementation plan covering configuration, scheduler setup, snapshot and retention logic, admin
+  interfaces, restoration workflows, observability, documentation, and testing. Since I don’t know the exact codebase,
+  I’ll propose likely file paths and dependencies and include a step to update the plan status after delivering the
+  final message.
+
+• Updated Plan
+  └ ✔ Inspect C:\Users\edebe\eds\plans\20251022_1406_live_data_snapshot_plan.md to understand scope and requirements
+    ✔ Draft an implementation plan based on the document's guidance
+
+  phases like configuration, scheduling, retention, admin, restore, and docs/testing. I’ll also add next steps about
+  verification and testing at the end.
+
+> Implementation Plan
+
+  - Configuration groundwork: inventory current config loading; add LIVE_DATA_SNAPSHOT_INTERVAL and
+  LIVE_DATA_SNAPSHOT_RETENTION defaults (60s, 20) plus override via env/admin; document expected directories under
+  Game_trader.
+  - Snapshot job service: decide on host (in-app background thread vs. external worker); implement singleton scheduler
+  with locking to skip overlapping runs; log start/finish/failure.
+  - Snapshot execution: create temp folder live_data_snapshots/tmp_live_data_<ts>; perform copy (preserving permissions,
+  filtering only live state); verify integrity then atomically rename to live_data_<ts>; emit metrics/events on success/
+  failure.
+  - Retention pruning: after each snapshot list live_data_*; delete oldest until within retention; handle IO errors with
+  and agree on locking approach.
+
+
+ Compress-Archive
+    The archive file 'C:\Users\edebe\eds_backup_20251022_163622.zip' creation is in progress...
+    [ooooooooo                                                                                                   ]
+
+
+• Updated Plan
+  └ Create a backup before modifying files, then implement the live data snapshot workflow features outlined in the
+    plan.
+    □ Create timestamped backup of C:\Users\edebe\eds directory
+    □ Review repository structure and existing code relevant to live data snapshot functionality
+    □ Implement configurable scheduled snapshot creation with retention management and controls
+    □ Document changes and suggest verification steps
+
+• Ran
+▌ create back up of "C:\Users\edebe\eds\Game_trader" and the proceed with implementation of plan
+
+• I’m updating the plan because the approval policy remains 'never,' so I must proceed without asking for approval. The
+  task now is to back up the Game_trader directory using a shell command—likely with a timestamped copy or zip—before
+  continuing with inspecting and implementing features. Given this is a big multi-step job, I'll set up a clear plan
+  covering backup, repo review, and implementation.
+  └ powershell.exe -NoProfile -Command '$ErrorActionPreference='"'Stop'; "'$ts = Get-Date -Format '"'yyyyMMdd_HHmmss';
+        "'$src = '"'C:\\Users\\edebe\\eds\\Game_trader'; "'$dst = "C:'"\\Users\\edebe\\eds\\Game_trader_backup_"'$ts";
+        "'$src = '"'C:\\Users\\edebe\\eds\\Game_trader'; "'$dst = "C:'"\\Users\\edebe\\eds\\Game_trader_backup_"'$ts";
+        Copy-Item -Path $src -Destination $dst -Recurse -Force; Write-Output "Backup created at $dst"'
+
+• Updated Plan
+  └ ✔ Create a timestamped backup of C:\Users\edebe\eds\Game_trader
+
+
+• Ran
+        'Snapshot' -Context 2,8"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\config.py' -TotalCount
+        120"
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path = '"'C:\\Users\\edebe\\eds\\Game_trader\\config.py';
+        "'$text = Get-Content -Path $path -Raw; if ($text -notmatch '"'LIVE_DATA_SNAPSHOT_ROOT') { "'$needle =
+        "EXPERT_DATA_FILE = os.path.join(DATA_DIR, '"'expert_data.jsonl')\"; "'$insertionBlock = "# --- Snapshot
+        Configuration ---`r`ndef _safe_positive_int(env_var, default_value):`r`n    try:`r`n        candidate =
+        int(os.environ.get(env_var, default_value))`r`n        if candidate > 0:`r`n            return candidate`r`n
+        except (TypeError, ValueError):`r`n        pass`r`n    return default_value`r`n`r`nLIVE_DATA_SNAPSHOT_ROOT
+        = os.environ.get('"'LIVE_DATA_SNAPSHOT_ROOT', 'live_data_snapshots')"'`r`nLIVE_DATA_SNAPSHOT_SOURCE_DIR
+        = os.environ.get('"'LIVE_DATA_SNAPSHOT_SOURCE_DIR', DATA_DIR)"'`r`nLIVE_DATA_SNAPSHOT_INTERVAL_SECONDS
+        = _safe_positive_int('"'LIVE_DATA_SNAPSHOT_INTERVAL_SECONDS', 60)"'`r`nLIVE_DATA_SNAPSHOT_RETENTION
+        = _safe_positive_int('"'LIVE_DATA_SNAPSHOT_RETENTION', 20)"'`r`n"; $replacement =
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path = '"'C:\\Users\\edebe\\eds\\Game_trader\\snapshot_manager.py'; "'$content
+        = @"""Live data snapshot scheduling and restore helpers."""
+    import os
+    import shutil
+    import threading
+    import time
+    from datetime import datetime
+    from typing import Dict, List, Optional
+
+    import config
+    from data_persistence import log_event
+
+    _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+    def _resolve_path(path: str) -> str:
+        return path if os.path.isabs(path) else os.path.join(_PROJECT_ROOT, path)
+
+
+    class LiveDataSnapshotManager:
+        """Coordinates snapshot scheduling, creation, retention, and restore."""
+
+        _SNAPSHOT_PREFIX = '"'live_data_'
+        _TMP_PREFIX = 'tmp_live_data_'
+
+        def __init__(self, source_dir: str, snapshot_root: str, interval_seconds: int, retention_limit: int):
+            self.source_dir = _resolve_path(source_dir)
+            self.snapshot_root = _resolve_path(snapshot_root)
+            self.interval_seconds = interval_seconds if interval_seconds > 0 else 0
+            self.retention_limit = max(1, retention_limit)
+            self._scheduler_thread: Optional[threading.Thread] = None
+            self._stop_event = threading.Event()
+            self._snapshot_lock = threading.Lock()
+            self._scheduler_lock = threading.Lock()
+            os.makedirs(self.snapshot_root, exist_ok=True)
+            os.makedirs(self.source_dir, exist_ok=True)
+
+        def start(self) -> bool:
+            \"\"\"Start the background scheduler if it is not already running.\"\"\"
+            with self._scheduler_lock:
+                if self._scheduler_thread and self._scheduler_thread.is_alive():
+                    return False
+                if self.interval_seconds <= 0:
+                    return False
+                self._stop_event.clear()
+                self._scheduler_thread = threading.Thread(
+                    target=self._run_scheduler,
+                    name='LiveDataSnapshotScheduler',
+                    daemon=True,
+                )
+                self._scheduler_thread.start()
+                return True
+
+        def stop(self) -> bool:
+            \"\"\"Stop the background scheduler if it is running.\"\"\"
+            with self._scheduler_lock:
+                if not self._scheduler_thread:
+                    return False
+                self._stop_event.set()
+                thread = self._scheduler_thread
+                self._scheduler_thread = None
+            thread.join(timeout=5)
+            return True
+
+        def is_running(self) -> bool:
+            thread = self._scheduler_thread
+            return bool(thread and thread.is_alive())
+
+        def update_settings(self, *, interval_seconds: Optional[int] = None, retention_limit: Optional[int] = None)
+        -> None:
+            if interval_seconds is not None:
+                if interval_seconds <= 0:
+                    self.interval_seconds = 0
+                    self.stop()
+                else:
+                    self.interval_seconds = interval_seconds
+            if retention_limit is not None and retention_limit > 0:
+                self.retention_limit = retention_limit
+
+        def get_settings(self) -> Dict[str, int]:
+            return {
+                'interval_seconds': self.interval_seconds,
+                'retention_limit': self.retention_limit,
+            }
+
+        def trigger_snapshot(self, trigger: str = 'manual') -> Dict[str, object]:
+            return self._create_snapshot(trigger)
+
+        def list_snapshots(self) -> List[Dict[str, Optional[str]]]:
+            snapshots = []
+            for entry in self._scan_snapshots():
+                snapshots.append(
+                    {
+                        'name': entry['name'],
+                        'path': entry['path'],
+                        'created_at': entry['timestamp'].isoformat(),
+                    }
+                )
+            return snapshots
+
+        def latest_snapshot(self) -> Optional[Dict[str, Optional[str]]]:
+            entries = self._scan_snapshots()
+            if not entries:
+                return None
+            top = entries[0]
+            return {
+                'name': top['name'],
+                'path': top['path'],
+                'created_at': top['timestamp'].isoformat(),
+            }
+
+        def restore_snapshot(self, snapshot_name: str) -> Dict[str, Optional[str]]:
+            if not snapshot_name:
+                raise ValueError('snapshot_name is required')
+            with self._snapshot_lock:
+                target_path = os.path.abspath(os.path.join(self.snapshot_root, snapshot_name))
+                root_path = os.path.abspath(self.snapshot_root)
+                if not target_path.startswith(root_path):
+                    raise ValueError('snapshot_name must reside under snapshot root')
+                if not os.path.isdir(target_path):
+                    raise FileNotFoundError(f'Snapshot {snapshot_name} not found')
+
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                tmp_restore_dir = os.path.join(self.snapshot_root, f'tmp_restore_{timestamp}')
+                backup_dir = None
+                try:
+                    shutil.copytree(target_path, tmp_restore_dir)
+                    if os.path.exists(self.source_dir):
+                        backup_dir = os.path.join(self.snapshot_root, f'live_data_backup_{timestamp}')
+                        os.rename(self.source_dir, backup_dir)
+                    os.replace(tmp_restore_dir, self.source_dir)
+                except Exception as exc:
+                    shutil.rmtree(tmp_restore_dir, ignore_errors=True)
+                    if backup_dir and not os.path.exists(self.source_dir) and os.path.exists(backup_dir):
+                        os.rename(backup_dir, self.source_dir)
+                    raise exc
+
+                log_event(
+                    'live_data_snapshot_restored',
+                    {
+                        'snapshot_name': snapshot_name,
+                        'restored_to': self.source_dir,
+                        'backup_path': backup_dir,
+                    },
+                )
+                return {
+                    'snapshot': snapshot_name,
+                    'restored_to': self.source_dir,
+                    'backup_path': backup_dir,
+                }
+
+        def _run_scheduler(self) -> None:
+            while not self._stop_event.is_set():
+                if self.interval_seconds <= 0:
+                    break
+                if self._stop_event.wait(self.interval_seconds):
+                    break
+                try:
+                    self._create_snapshot('scheduler')
+                except Exception as exc:
+                    print(f'Live data snapshot scheduler error: {exc}')
+
+        def _create_snapshot(self, trigger: str) -> Dict[str, object]:
+            with self._snapshot_lock:
+                os.makedirs(self.snapshot_root, exist_ok=True)
+                os.makedirs(self.source_dir, exist_ok=True)
+                suffix = self._generate_snapshot_suffix()
+                tmp_dir = os.path.join(self.snapshot_root, f'{self._TMP_PREFIX}{suffix}')
+                final_name = f'{self._SNAPSHOT_PREFIX}{suffix}'
+                final_dir = os.path.join(self.snapshot_root, final_name)
+                started = time.time()
+                try:
+                    shutil.copytree(self.source_dir, tmp_dir)
+                    os.replace(tmp_dir, final_dir)
+                except Exception as exc:
+                    shutil.rmtree(tmp_dir, ignore_errors=True)
+                    raise exc
+                self._enforce_retention()
+                duration = round(time.time() - started, 3)
+                log_event(
+                    'live_data_snapshot_created',
+                    {
+                        'snapshot_name': final_name,
+                        'trigger': trigger,
+                        'source_dir': self.source_dir,
+                        'snapshot_root': self.snapshot_root,
+                        'duration_seconds': duration,
+                    },
+                )
+                return {
+                    'name': final_name,
+                    'path': final_dir,
+                    'duration_seconds': duration,
+                    'trigger': trigger,
+                }
+
+        def _generate_snapshot_suffix(self) -> str:
+            base = datetime.now().strftime('%Y%m%d_%H%M%S')
+            suffix = base
+            counter = 0
+            while True:
+                tmp_candidate = os.path.join(self.snapshot_root, f'{self._TMP_PREFIX}{suffix}')
+                final_candidate = os.path.join(self.snapshot_root, f'{self._SNAPSHOT_PREFIX}{suffix}')
+                if not os.path.exists(tmp_candidate) and not os.path.exists(final_candidate):
+                    return suffix
+                counter += 1
+                suffix = f'{base}_{counter:02d}'
+
+        def _enforce_retention(self) -> None:
+            if self.retention_limit <= 0:
+                return
+            entries = self._scan_snapshots()
+            if len(entries) <= self.retention_limit:
+                return
+            for entry in entries[self.retention_limit:]:
+                shutil.rmtree(entry['path'], ignore_errors=True)
+                log_event(
+                    'live_data_snapshot_pruned',
+                    {
+                        'snapshot_name': entry['name'],
+                        'snapshot_root': self.snapshot_root,
+                    },
+                )
+
+        def _scan_snapshots(self) -> List[Dict[str, object]]:
+            records: List[Dict[str, object]] = []
+            if not os.path.isdir(self.snapshot_root):
+                return records
+            for name in os.listdir(self.snapshot_root):
+                if not name.startswith(self._SNAPSHOT_PREFIX):
+                    continue
+                path = os.path.join(self.snapshot_root, name)
+                if not os.path.isdir(path):
+                    continue
+                timestamp = self._extract_timestamp(name)
+                if not timestamp:
+                    continue
+                records.append({'name': name, 'path': path, 'timestamp': timestamp})
+            records.sort(key=lambda item: item['timestamp'], reverse=True)
+            return records
+
+        @classmethod
+        def _extract_timestamp(cls, name: str) -> Optional[datetime]:
+            prefix_len = len(cls._SNAPSHOT_PREFIX)
+            if not name.startswith(cls._SNAPSHOT_PREFIX) or len(name) <= prefix_len:
+                return None
+            raw = name[prefix_len:]
+            base = raw[:15]
+            try:
+                return datetime.strptime(base, '%Y%m%d_%H%M%S')
+            except ValueError:
+                return None
+
+
+    _manager_lock = threading.Lock()
+    _manager_instance: Optional[LiveDataSnapshotManager] = None
+
+
+    def get_snapshot_manager() -> LiveDataSnapshotManager:
+        global _manager_instance
+        with _manager_lock:
+            if _manager_instance is None:
+                _manager_instance = LiveDataSnapshotManager(
+                    source_dir=config.LIVE_DATA_SNAPSHOT_SOURCE_DIR,
+                    snapshot_root=config.LIVE_DATA_SNAPSHOT_ROOT,
+                    interval_seconds=config.LIVE_DATA_SNAPSHOT_INTERVAL_SECONDS,
+                    retention_limit=config.LIVE_DATA_SNAPSHOT_RETENTION,
+                )
+            return _manager_instance
+
+
+    def start_scheduler() -> bool:
+        return get_snapshot_manager().start()
+
+
+    def stop_scheduler() -> bool:
+        return get_snapshot_manager().stop()
+
+
+    def trigger_snapshot(trigger: str = 'manual') -> Dict[str, object]:
+        return get_snapshot_manager().trigger_snapshot(trigger)
+
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path = '"'C:\\Users\\edebe\\eds\\Game_trader\\snapshot_manager.py'; "'$content
+        = @'"'
+    \"\"\"Live data snapshot scheduling and restore helpers.\"\"\"
+    import os
+    import shutil
+    import threading
+    import time
+    from datetime import datetime
+    from typing import Dict, List, Optional
+
+    import config
+    from data_persistence import log_event
+
+    _PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+
+
+    def _resolve_path(path: str) -> str:
+        return path if os.path.isabs(path) else os.path.join(_PROJECT_ROOT, path)
+
+
+    class LiveDataSnapshotManager:
+        \"\"\"Coordinates snapshot scheduling, creation, retention, and restore.\"\"\"
+
+        _SNAPSHOT_PREFIX = 'live_data_'
+        _TMP_PREFIX = 'tmp_live_data_'
+
+        def __init__(self, source_dir: str, snapshot_root: str, interval_seconds: int, retention_limit: int):
+            self.source_dir = _resolve_path(source_dir)
+            self.snapshot_root = _resolve_path(snapshot_root)
+            self.interval_seconds = interval_seconds if interval_seconds > 0 else 0
+            self.retention_limit = max(1, retention_limit)
+            self._scheduler_thread: Optional[threading.Thread] = None
+            self._stop_event = threading.Event()
+            self._snapshot_lock = threading.Lock()
+            self._scheduler_lock = threading.Lock()
+            os.makedirs(self.snapshot_root, exist_ok=True)
+            os.makedirs(self.source_dir, exist_ok=True)
+
+        def start(self) -> bool:
+            \"\"\"Start the background scheduler if it is not already running.\"\"\"
+            with self._scheduler_lock:
+                if self._scheduler_thread and self._scheduler_thread.is_alive():
+                    return False
+                if self.interval_seconds <= 0:
+                    return False
+                self._stop_event.clear()
+                self._scheduler_thread = threading.Thread(
+                    target=self._run_scheduler,
+                    name='LiveDataSnapshotScheduler',
+                    daemon=True,
+                )
+                self._scheduler_thread.start()
+                return True
+
+        def stop(self) -> bool:
+            \"\"\"Stop the background scheduler if it is running.\"\"\"
+            with self._scheduler_lock:
+                if not self._scheduler_thread:
+                    return False
+                self._stop_event.set()
+                thread = self._scheduler_thread
+                self._scheduler_thread = None
+            thread.join(timeout=5)
+            return True
+
+        def is_running(self) -> bool:
+            thread = self._scheduler_thread
+            return bool(thread and thread.is_alive())
+
+        def update_settings(self, *, interval_seconds: Optional[int] = None, retention_limit: Optional[int] = None)
+        -> None:
+            if interval_seconds is not None:
+                if interval_seconds <= 0:
+                    self.interval_seconds = 0
+                    self.stop()
+                else:
+                    self.interval_seconds = interval_seconds
+            if retention_limit is not None and retention_limit > 0:
+                self.retention_limit = retention_limit
+
+        def get_settings(self) -> Dict[str, int]:
+            return {
+                'interval_seconds': self.interval_seconds,
+                'retention_limit': self.retention_limit,
+            }
+
+        def trigger_snapshot(self, trigger: str = 'manual') -> Dict[str, object]:
+            return self._create_snapshot(trigger)
+
+        def list_snapshots(self) -> List[Dict[str, Optional[str]]]:
+            snapshots = []
+            for entry in self._scan_snapshots():
+                snapshots.append(
+                    {
+                        'name': entry['name'],
+                        'path': entry['path'],
+                        'created_at': entry['timestamp'].isoformat(),
+                    }
+                )
+            return snapshots
+
+        def latest_snapshot(self) -> Optional[Dict[str, Optional[str]]]:
+            entries = self._scan_snapshots()
+            if not entries:
+                return None
+            top = entries[0]
+            return {
+                'name': top['name'],
+                'path': top['path'],
+                'created_at': top['timestamp'].isoformat(),
+            }
+
+        def restore_snapshot(self, snapshot_name: str) -> Dict[str, Optional[str]]:
+            if not snapshot_name:
+                raise ValueError('snapshot_name is required')
+            with self._snapshot_lock:
+                target_path = os.path.abspath(os.path.join(self.snapshot_root, snapshot_name))
+                root_path = os.path.abspath(self.snapshot_root)
+                if not target_path.startswith(root_path):
+                    raise ValueError('snapshot_name must reside under snapshot root')
+                if not os.path.isdir(target_path):
+                    raise FileNotFoundError(f'Snapshot {snapshot_name} not found')
+
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                tmp_restore_dir = os.path.join(self.snapshot_root, f'tmp_restore_{timestamp}')
+                backup_dir = None
+                try:
+                    shutil.copytree(target_path, tmp_restore_dir)
+                    if os.path.exists(self.source_dir):
+                        backup_dir = os.path.join(self.snapshot_root, f'live_data_backup_{timestamp}')
+                        os.rename(self.source_dir, backup_dir)
+                    os.replace(tmp_restore_dir, self.source_dir)
+                except Exception as exc:
+                    shutil.rmtree(tmp_restore_dir, ignore_errors=True)
+                    if backup_dir and not os.path.exists(self.source_dir) and os.path.exists(backup_dir):
+                        os.rename(backup_dir, self.source_dir)
+                    raise exc
+
+                log_event(
+                    'live_data_snapshot_restored',
+                    {
+                        'snapshot_name': snapshot_name,
+                        'restored_to': self.source_dir,
+                        'backup_path': backup_dir,
+                    },
+                )
+                return {
+                    'snapshot': snapshot_name,
+                    'restored_to': self.source_dir,
+                    'backup_path': backup_dir,
+                }
+
+        def _run_scheduler(self) -> None:
+            while not self._stop_event.is_set():
+                if self.interval_seconds <= 0:
+                    break
+                if self._stop_event.wait(self.interval_seconds):
+                    break
+                try:
+                    self._create_snapshot('scheduler')
+                except Exception as exc:
+                    print(f'Live data snapshot scheduler error: {exc}')
+
+        def _create_snapshot(self, trigger: str) -> Dict[str, object]:
+            with self._snapshot_lock:
+                os.makedirs(self.snapshot_root, exist_ok=True)
+                os.makedirs(self.source_dir, exist_ok=True)
+                suffix = self._generate_snapshot_suffix()
+                tmp_dir = os.path.join(self.snapshot_root, f'{self._TMP_PREFIX}{suffix}')
+                final_name = f'{self._SNAPSHOT_PREFIX}{suffix}'
+                final_dir = os.path.join(self.snapshot_root, final_name)
+                started = time.time()
+                try:
+                    shutil.copytree(self.source_dir, tmp_dir)
+                    os.replace(tmp_dir, final_dir)
+                except Exception as exc:
+                    shutil.rmtree(tmp_dir, ignore_errors=True)
+                    raise exc
+                self._enforce_retention()
+                duration = round(time.time() - started, 3)
+                log_event(
+                    'live_data_snapshot_created',
+                    {
+                        'snapshot_name': final_name,
+                        'trigger': trigger,
+                        'source_dir': self.source_dir,
+                        'snapshot_root': self.snapshot_root,
+                        'duration_seconds': duration,
+                    },
+                )
+                return {
+                    'name': final_name,
+                    'path': final_dir,
+                    'duration_seconds': duration,
+                    'trigger': trigger,
+                }
+
+        def _generate_snapshot_suffix(self) -> str:
+            base = datetime.now().strftime('%Y%m%d_%H%M%S')
+            suffix = base
+            counter = 0
+            while True:
+                tmp_candidate = os.path.join(self.snapshot_root, f'{self._TMP_PREFIX}{suffix}')
+                final_candidate = os.path.join(self.snapshot_root, f'{self._SNAPSHOT_PREFIX}{suffix}')
+                if not os.path.exists(tmp_candidate) and not os.path.exists(final_candidate):
+                    return suffix
+                counter += 1
+                suffix = f'{base}_{counter:02d}'
+
+        def _enforce_retention(self) -> None:
+            if self.retention_limit <= 0:
+                return
+            entries = self._scan_snapshots()
+            if len(entries) <= self.retention_limit:
+                return
+            for entry in entries[self.retention_limit:]:
+                shutil.rmtree(entry['path'], ignore_errors=True)
+                log_event(
+                    'live_data_snapshot_pruned',
+                    {
+                        'snapshot_name': entry['name'],
+                        'snapshot_root': self.snapshot_root,
+                    },
+                )
+
+        def _scan_snapshots(self) -> List[Dict[str, object]]:
+            records: List[Dict[str, object]] = []
+            if not os.path.isdir(self.snapshot_root):
+                return records
+            for name in os.listdir(self.snapshot_root):
+                if not name.startswith(self._SNAPSHOT_PREFIX):
+                    continue
+                path = os.path.join(self.snapshot_root, name)
+                if not os.path.isdir(path):
+                    continue
+                timestamp = self._extract_timestamp(name)
+                if not timestamp:
+                    continue
+                records.append({'name': name, 'path': path, 'timestamp': timestamp})
+            records.sort(key=lambda item: item['timestamp'], reverse=True)
+            return records
+
+        @classmethod
+        def _extract_timestamp(cls, name: str) -> Optional[datetime]:
+            prefix_len = len(cls._SNAPSHOT_PREFIX)
+            if not name.startswith(cls._SNAPSHOT_PREFIX) or len(name) <= prefix_len:
+                return None
+            raw = name[prefix_len:]
+            base = raw[:15]
+            try:
+                return datetime.strptime(base, '%Y%m%d_%H%M%S')
+            except ValueError:
+                return None
+
+
+    _manager_lock = threading.Lock()
+    _manager_instance: Optional[LiveDataSnapshotManager] = None
+
+
+    def get_snapshot_manager() -> LiveDataSnapshotManager:
+        global _manager_instance
+        with _manager_lock:
+            if _manager_instance is None:
+                _manager_instance = LiveDataSnapshotManager(
+                    source_dir=config.LIVE_DATA_SNAPSHOT_SOURCE_DIR,
+                    snapshot_root=config.LIVE_DATA_SNAPSHOT_ROOT,
+                    interval_seconds=config.LIVE_DATA_SNAPSHOT_INTERVAL_SECONDS,
+                    retention_limit=config.LIVE_DATA_SNAPSHOT_RETENTION,
+                )
+            return _manager_instance
+
+
+    def start_scheduler() -> bool:
+        return get_snapshot_manager().trigger_snapshot(trigger)
+
+
+    def list_snapshots() -> List[Dict[str, Optional[str]]]:
+        return get_snapshot_manager().list_snapshots()
+
+
+    def latest_snapshot() -> Optional[Dict[str, Optional[str]]]:
+        return get_snapshot_manager().latest_snapshot()
+• Ran
+  └ powershell.exe -NoProfile -Command '$path = '"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'; "'$text
+        = Get-Content -Path $path -Raw; if ($text -notmatch '"'_ensure_snapshot_scheduler') { "'$insert = "def
+        _ensure_snapshot_scheduler(origin: str) -> None:`r`n    manager = snapshot_manager.get_snapshot_manager()`r`n
+        if snapshot_manager.start_scheduler():`r`n        settings = manager.get_settings()`r`n        print(f'"'[{'{'}
+        origin{'}'}] Live data snapshot scheduler started (interval={ '{'}settings['interval_seconds']{'}'}s,
+        retention={ '{'}settings['retention_limit']{'}'}).')"'`r`n`r`nif os.environ.get('"'WERKZEUG_RUN_MAIN') in
+    +                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    Unexpected token 'interval_seconds']}s, retention={settings['retention_limit']}).")'' in expression or statement.
+        + CategoryInfo          : ParserError: (:) [], ParentContainsErrorRecordException
+        + FullyQualifiedErrorId : UnexpectedToken
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command "python - <<'PY'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = \"\"\"
+    @app.route('/admin/snapshots', methods=['GET'])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            'snapshots': manager.list_snapshots(),
+            'settings': manager.get_settings(),
+            'scheduler_running': manager.is_running(),
+        }), 200
+
+
+    @app.route('/admin/snapshots/latest', methods=['GET'])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({'snapshot': None, 'message': 'No snapshots available.'}), 200
+        return jsonify({'snapshot': latest}), 200
+
+
+    @app.route('/admin/snapshots/trigger', methods=['POST'])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get('reason') if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = 'manual'
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({'status': 'Snapshot created.', 'snapshot': result}), 201
+        except Exception as exc:
+            print(f'Error creating live data snapshot: {exc}')
+            return jsonify({'error': f'Failed to create snapshot: {exc}'}), 500
+
+
+    @app.route('/admin/snapshots/settings', methods=['GET', 'POST'])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == 'GET':
+            return jsonify({
+                'settings': manager.get_settings(),
+                'scheduler_running': manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({'error': 'Request body must be a JSON object.'}), 400
+
+        updates = {}
+        errors = []
+
+        if 'interval_seconds' in payload:
+            try:
+                interval = int(payload['interval_seconds'])
+                if interval <= 0:
+                    errors.append('interval_seconds must be greater than zero.')
+                else:
+                    updates['interval_seconds'] = interval
+            except (TypeError, ValueError):
+                errors.append('interval_seconds must be an integer value.')
+
+        if 'retention_limit' in payload:
+            try:
+                retention = int(payload['retention_limit'])
+                if retention <= 0:
+                    errors.append('retention_limit must be greater than zero.')
+                else:
+                    updates['retention_limit'] = retention
+            except (TypeError, ValueError):
+                errors.append('retention_limit must be an integer value.')
+
+        if errors:
+            return jsonify({'errors': errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get('interval_seconds'),
+            retention_limit=updates.get('retention_limit'),
+        )
+
+        settings = manager.get_settings()
+        if settings['interval_seconds'] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            'settings': settings,
+            'scheduler_running': manager.is_running(),
+            'status': 'Snapshot settings updated.',
+        }), 200
+
+
+    @app.route('/admin/snapshots/<snapshot_name>/restore', methods=['POST'])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state['simulation_running']:
+            return jsonify({'error': 'Stop the simulation before restoring a snapshot.'}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event('manual_snapshot_restore', {'snapshot_name': snapshot_name, 'timestamp': time.time()})
+            return jsonify({'status': 'Snapshot restored.', 'details': result}), 200
+        except FileNotFoundError:
+            return jsonify({'error': f'Snapshot {snapshot_name} not found.'}), 404
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+        except Exception as exc:
+            print(f'Error restoring live data snapshot {snapshot_name}: {exc}')
+            return jsonify({'error': f'Failed to restore snapshot: {exc}'}), 500
+
+
+    \"\"\"
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = \"\"\"
+    @app.route('/admin/snapshots', methods=['GET'])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            'snapshots': manager.list_snapshots(),
+            'settings': manager.get_settings(),
+            'scheduler_running': manager.is_running(),
+        }), 200
+
+
+    @app.route('/admin/snapshots/latest', methods=['GET'])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({'snapshot': None, 'message': 'No snapshots available.'}), 200
+        return jsonify({'snapshot': latest}), 200
+
+
+    @app.route('/admin/snapshots/trigger', methods=['POST'])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get('reason') if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = 'manual'
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({'status': 'Snapshot created.', 'snapshot': result}), 201
+        except Exception as exc:
+            print(f'Error creating live data snapshot: {exc}')
+            return jsonify({'error': f'Failed to create snapshot: {exc}'}), 500
+
+
+    @app.route('/admin/snapshots/settings', methods=['GET', 'POST'])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == 'GET':
+            return jsonify({
+                'settings': manager.get_settings(),
+                'scheduler_running': manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({'error': 'Request body must be a JSON object.'}), 400
+
+        updates = {}
+        errors = []
+
+        if 'interval_seconds' in payload:
+            try:
+                interval = int(payload['interval_seconds'])
+                if interval <= 0:
+                    errors.append('interval_seconds must be greater than zero.')
+                else:
+                    updates['interval_seconds'] = interval
+            except (TypeError, ValueError):
+                errors.append('interval_seconds must be an integer value.')
+
+        if 'retention_limit' in payload:
+            try:
+                retention = int(payload['retention_limit'])
+                if retention <= 0:
+                    errors.append('retention_limit must be greater than zero.')
+                else:
+                    updates['retention_limit'] = retention
+            except (TypeError, ValueError):
+                errors.append('retention_limit must be an integer value.')
+
+        if errors:
+            return jsonify({'errors': errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get('interval_seconds'),
+            retention_limit=updates.get('retention_limit'),
+        )
+
+        settings = manager.get_settings()
+        if settings['interval_seconds'] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            'settings': settings,
+            'scheduler_running': manager.is_running(),
+            'status': 'Snapshot settings updated.',
+        }), 200
+
+
+    @app.route('/admin/snapshots/<snapshot_name>/restore', methods=['POST'])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state['simulation_running']:
+            return jsonify({'error': 'Stop the simulation before restoring a snapshot.'}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event('manual_snapshot_restore', {'snapshot_name': snapshot_name, 'timestamp': time.time()})
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = \"\"\"
+    @app.route('/admin/snapshots', methods=['GET'])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            'snapshots': manager.list_snapshots(),
+            'settings': manager.get_settings(),
+            'scheduler_running': manager.is_running(),
+        }), 200
+
+
+    @app.route('/admin/snapshots/latest', methods=['GET'])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({'snapshot': None, 'message': 'No snapshots available.'}), 200
+        return jsonify({'snapshot': latest}), 200
+
+
+    @app.route('/admin/snapshots/trigger', methods=['POST'])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get('reason') if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = 'manual'
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({'status': 'Snapshot created.', 'snapshot': result}), 201
+        except Exception as exc:
+            print(f'Error creating live data snapshot: {exc}')
+            return jsonify({'error': f'Failed to create snapshot: {exc}'}), 500
+
+
+    @app.route('/admin/snapshots/settings', methods=['GET', 'POST'])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == 'GET':
+            return jsonify({
+                'settings': manager.get_settings(),
+                'scheduler_running': manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({'error': 'Request body must be a JSON object.'}), 400
+
+        updates = {}
+        errors = []
+
+        if 'interval_seconds' in payload:
+            try:
+                interval = int(payload['interval_seconds'])
+                if interval <= 0:
+                    errors.append('interval_seconds must be greater than zero.')
+                else:
+                    updates['interval_seconds'] = interval
+            except (TypeError, ValueError):
+                errors.append('interval_seconds must be an integer value.')
+
+        if 'retention_limit' in payload:
+            try:
+                retention = int(payload['retention_limit'])
+                if retention <= 0:
+                    errors.append('retention_limit must be greater than zero.')
+                else:
+                    updates['retention_limit'] = retention
+            except (TypeError, ValueError):
+                errors.append('retention_limit must be an integer value.')
+
+        if errors:
+            return jsonify({'errors': errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get('interval_seconds'),
+            retention_limit=updates.get('retention_limit'),
+        )
+
+        settings = manager.get_settings()
+        if settings['interval_seconds'] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            'settings': settings,
+            'scheduler_running': manager.is_running(),
+            'status': 'Snapshot settings updated.',
+        }), 200
+
+
+    @app.route('/admin/snapshots/<snapshot_name>/restore', methods=['POST'])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state['simulation_running']:
+            return jsonify({'error': 'Stop the simulation before restoring a snapshot.'}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event('manual_snapshot_restore', {'snapshot_name': snapshot_name, 'timestamp': time.time()})
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = \"\"\"
+    @app.route('/admin/snapshots', methods=['GET'])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            'snapshots': manager.list_snapshots(),
+            'settings': manager.get_settings(),
+            'scheduler_running': manager.is_running(),
+        }), 200
+
+
+    @app.route('/admin/snapshots/latest', methods=['GET'])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({'snapshot': None, 'message': 'No snapshots available.'}), 200
+        return jsonify({'snapshot': latest}), 200
+
+
+    @app.route('/admin/snapshots/trigger', methods=['POST'])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get('reason') if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = 'manual'
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({'status': 'Snapshot created.', 'snapshot': result}), 201
+        except Exception as exc:
+            print(f'Error creating live data snapshot: {exc}')
+            return jsonify({'error': f'Failed to create snapshot: {exc}'}), 500
+
+
+    @app.route('/admin/snapshots/settings', methods=['GET', 'POST'])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == 'GET':
+            return jsonify({
+                'settings': manager.get_settings(),
+                'scheduler_running': manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({'error': 'Request body must be a JSON object.'}), 400
+
+        updates = {}
+        errors = []
+
+        if 'interval_seconds' in payload:
+            try:
+                interval = int(payload['interval_seconds'])
+                if interval <= 0:
+                    errors.append('interval_seconds must be greater than zero.')
+                else:
+                    updates['interval_seconds'] = interval
+            except (TypeError, ValueError):
+                errors.append('interval_seconds must be an integer value.')
+
+        if 'retention_limit' in payload:
+            try:
+                retention = int(payload['retention_limit'])
+                if retention <= 0:
+                    errors.append('retention_limit must be greater than zero.')
+                else:
+                    updates['retention_limit'] = retention
+            except (TypeError, ValueError):
+                errors.append('retention_limit must be an integer value.')
+
+        if errors:
+            return jsonify({'errors': errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get('interval_seconds'),
+            retention_limit=updates.get('retention_limit'),
+        )
+
+        settings = manager.get_settings()
+        if settings['interval_seconds'] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            'settings': settings,
+            'scheduler_running': manager.is_running(),
+            'status': 'Snapshot settings updated.',
+        }), 200
+
+
+    @app.route('/admin/snapshots/<snapshot_name>/restore', methods=['POST'])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state['simulation_running']:
+            return jsonify({'error': 'Stop the simulation before restoring a snapshot.'}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event('manual_snapshot_restore', {'snapshot_name': snapshot_name, 'timestamp': time.time()})
+            return jsonify({'status': 'Snapshot restored.', 'details': result}), 200
+        except FileNotFoundError:
+            return jsonify({'error': f'Snapshot {snapshot_name} not found.'}), 404
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        lines = [
+            \"@app.route('/admin/snapshots', methods=['GET'])\",
+            \"def list_live_data_snapshots():\",
+            \"    manager = snapshot_manager.get_snapshot_manager()\",
+            \"    return jsonify({\",
+            \"        'snapshots': manager.list_snapshots(),\",
+            \"        'settings': manager.get_settings(),\",
+            \"        'scheduler_running': manager.is_running(),\",
+            \"    }), 200\",
+            \"\",
+            \"\",
+            \"@app.route('/admin/snapshots/latest', methods=['GET'])\",
+            \"def get_latest_live_data_snapshot():\",
+            \"    manager = snapshot_manager.get_snapshot_manager()\",
+            \"    latest = manager.latest_snapshot()\",
+            \"    if not latest:\",
+            \"        return jsonify({'snapshot': None, 'message': 'No snapshots available.'}), 200\",
+            \"    return jsonify({'snapshot': latest}), 200\",
+            \"\",
+            \"\",
+            \"@app.route('/admin/snapshots/trigger', methods=['POST'])\",
+            \"def trigger_live_data_snapshot():\",
+            \"    payload = request.get_json(silent=True) or {}\",
+            \"    reason = payload.get('reason') if isinstance(payload, dict) else None\",
+            \"    if not isinstance(reason, str) or not reason.strip():\",
+            \"        reason = 'manual'\",
+            \"    reason = reason.strip()\",
+            \"    try:\",
+            \"        result = snapshot_manager.trigger_snapshot(reason)\",
+            \"        return jsonify({'status': 'Snapshot created.', 'snapshot': result}), 201\",
+            \"    except Exception as exc:\",
+            \"        print(f'Error creating live data snapshot: {exc}')\",
+            \"        return jsonify({'error': f'Failed to create snapshot: {exc}'}), 500\",
+            \"\",
+            \"\",
+            \"@app.route('/admin/snapshots/settings', methods=['GET', 'POST'])\",
+            \"def configure_snapshot_settings():\",
+            \"    manager = snapshot_manager.get_snapshot_manager()\",
+            \"    if request.method == 'GET':\",
+            \"        return jsonify({\",
+            \"            'settings': manager.get_settings(),\",
+            \"            'scheduler_running': manager.is_running(),\",
+            \"        }), 200\",
+            \"\",
+            \"    payload = request.get_json(silent=True) or {}\",
+            \"    if not isinstance(payload, dict):\",
+            \"        return jsonify({'error': 'Request body must be a JSON object.'}), 400\",
+            \"\",
+            \"    updates = {}\",
+            \"    errors = []\",
+            \"\",
+            \"    if 'interval_seconds' in payload:\",
+            \"        try:\",
+            \"            interval = int(payload['interval_seconds'])\",
+            \"            if interval <= 0:\",
+            \"                errors.append('interval_seconds must be greater than zero.')\",
+            \"            else:\",
+            \"                updates['interval_seconds'] = interval\",
+            \"        except (TypeError, ValueError):\",
+            \"            errors.append('interval_seconds must be an integer value.')\",
+            \"\",
+            \"    if 'retention_limit' in payload:\",
+            \"        try:\",
+            \"            retention = int(payload['retention_limit'])\",
+            \"            if retention <= 0:\",
+            \"                errors.append('retention_limit must be greater than zero.')\",
+            \"            else:\",
+            \"                updates['retention_limit'] = retention\",
+            \"        except (TypeError, ValueError):\",
+            \"            errors.append('retention_limit must be an integer value.')\",
+            \"\",
+            \"    if errors:\",
+            \"        return jsonify({'errors': errors}), 400\",
+            \"\",
+            \"    manager.update_settings(\",
+            \"        interval_seconds=updates.get('interval_seconds'),\",
+            \"        retention_limit=updates.get('retention_limit'),\",
+            \"    )\",
+            \"\",
+            \"    settings = manager.get_settings()\",
+            \"    if settings['interval_seconds'] > 0:\",
+            \"        snapshot_manager.start_scheduler()\",
+            \"    else:\",
+            \"        manager.stop()\",
+            \"\",
+            \"    return jsonify({\",
+            \"        'settings': settings,\",
+            \"        'scheduler_running': manager.is_running(),\",
+            \"        'status': 'Snapshot settings updated.',\",
+            \"    }), 200\",
+            \"\",
+            \"\",
+            \"@app.route('/admin/snapshots/<snapshot_name>/restore', methods=['POST'])\",
+            \"def restore_live_data_snapshot(snapshot_name):\",
+            \"    if simulation_state['simulation_running']:\",
+            \"        return jsonify({'error': 'Stop the simulation before restoring a snapshot.'}), 409\",
+            \"    try:\",
+            \"        result = snapshot_manager.restore_snapshot(snapshot_name)\",
+            \"        log_event('manual_snapshot_restore', {'snapshot_name': snapshot_name, 'timestamp':
+        time.time()})\",
+            \"        return jsonify({'status': 'Snapshot restored.', 'details': result}), 200\",
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = '''
+    @app.route(\"/admin/snapshots\", methods=[\"GET\"])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            \"snapshots\": manager.list_snapshots(),
+            \"settings\": manager.get_settings(),
+            \"scheduler_running\": manager.is_running(),
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/latest\", methods=[\"GET\"])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({\"snapshot\": None, \"message\": \"No snapshots available.\"}), 200
+        return jsonify({\"snapshot\": latest}), 200
+
+
+    @app.route(\"/admin/snapshots/trigger\", methods=[\"POST\"])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get(\"reason\") if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = \"manual\"
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({\"status\": \"Snapshot created.\", \"snapshot\": result}), 201
+        except Exception as exc:
+            print(f\"Error creating live data snapshot: {exc}\")
+            return jsonify({\"error\": f\"Failed to create snapshot: {exc}\"}), 500
+
+
+    @app.route(\"/admin/snapshots/settings\", methods=[\"GET\", \"POST\"])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == \"GET\":
+            return jsonify({
+                \"settings\": manager.get_settings(),
+                \"scheduler_running\": manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({\"error\": \"Request body must be a JSON object.\"}), 400
+
+        updates = {}
+        errors = []
+
+        if \"interval_seconds\" in payload:
+            try:
+                interval = int(payload[\"interval_seconds\"])
+                if interval <= 0:
+                    errors.append(\"interval_seconds must be greater than zero.\")
+                else:
+                    updates[\"interval_seconds\"] = interval
+            except (TypeError, ValueError):
+                errors.append(\"interval_seconds must be an integer value.\")
+
+        if \"retention_limit\" in payload:
+            try:
+                retention = int(payload[\"retention_limit\"])
+                if retention <= 0:
+                    errors.append(\"retention_limit must be greater than zero.\")
+                else:
+                    updates[\"retention_limit\"] = retention
+            except (TypeError, ValueError):
+                errors.append(\"retention_limit must be an integer value.\")
+
+        if errors:
+            return jsonify({\"errors\": errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get(\"interval_seconds\"),
+            retention_limit=updates.get(\"retention_limit\"),
+        )
+
+        settings = manager.get_settings()
+        if settings[\"interval_seconds\"] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            \"settings\": settings,
+            \"scheduler_running\": manager.is_running(),
+            \"status\": \"Snapshot settings updated.\",
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/<snapshot_name>/restore\", methods=[\"POST\"])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state['simulation_running']:
+            return jsonify({\"error\": \"Stop the simulation before restoring a snapshot.\"}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event('manual_snapshot_restore', {\"snapshot_name\": snapshot_name, \"timestamp\": time.time()})
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = '''
+    @app.route(\"/admin/snapshots\", methods=[\"GET\"])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            \"snapshots\": manager.list_snapshots(),
+            \"settings\": manager.get_settings(),
+            \"scheduler_running\": manager.is_running(),
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/latest\", methods=[\"GET\"])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({\"snapshot\": None, \"message\": \"No snapshots available.\"}), 200
+        return jsonify({\"snapshot\": latest}), 200
+
+
+    @app.route(\"/admin/snapshots/trigger\", methods=[\"POST\"])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get(\"reason\") if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = \"manual\"
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({\"status\": \"Snapshot created.\", \"snapshot\": result}), 201
+        except Exception as exc:
+            print(f\"Error creating live data snapshot: {exc}\")
+            return jsonify({\"error\": f\"Failed to create snapshot: {exc}\"}), 500
+
+
+    @app.route(\"/admin/snapshots/settings\", methods=[\"GET\", \"POST\"])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == \"GET\":
+            return jsonify({
+                \"settings\": manager.get_settings(),
+                \"scheduler_running\": manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({\"error\": \"Request body must be a JSON object.\"}), 400
+
+        updates = {}
+        errors = []
+
+        if \"interval_seconds\" in payload:
+            try:
+                interval = int(payload[\"interval_seconds\"])
+                if interval <= 0:
+                    errors.append(\"interval_seconds must be greater than zero.\")
+                else:
+                    updates[\"interval_seconds\"] = interval
+            except (TypeError, ValueError):
+                errors.append(\"interval_seconds must be an integer value.\")
+
+        if \"retention_limit\" in payload:
+            try:
+                retention = int(payload[\"retention_limit\"])
+                if retention <= 0:
+                    errors.append(\"retention_limit must be greater than zero.\")
+                else:
+                    updates[\"retention_limit\"] = retention
+            except (TypeError, ValueError):
+                errors.append(\"retention_limit must be an integer value.\")
+
+        if errors:
+            return jsonify({\"errors\": errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get(\"interval_seconds\"),
+            retention_limit=updates.get(\"retention_limit\"),
+        )
+
+        settings = manager.get_settings()
+        if settings[\"interval_seconds\"] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            \"settings\": settings,
+            \"scheduler_running\": manager.is_running(),
+            \"status\": \"Snapshot settings updated.\",
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/<snapshot_name>/restore\", methods=[\"POST\"])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state[\"simulation_running\"]:
+            return jsonify({\"error\": \"Stop the simulation before restoring a snapshot.\"}), 409
+        try:
+            result = snapshot_manager.restore_snapshot(snapshot_name)
+            log_event(\"manual_snapshot_restore\", {\"snapshot_name\": snapshot_name, \"timestamp\": time.time()})
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$script = @'"'
+    import pathlib
+
+    path = pathlib.Path(r'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py')
+    text = path.read_text()
+    if 'list_live_data_snapshots' not in text:
+        block = '''
+    @app.route(\"/admin/snapshots\", methods=[\"GET\"])
+    def list_live_data_snapshots():
+        manager = snapshot_manager.get_snapshot_manager()
+        return jsonify({
+            \"snapshots\": manager.list_snapshots(),
+            \"settings\": manager.get_settings(),
+            \"scheduler_running\": manager.is_running(),
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/latest\", methods=[\"GET\"])
+    def get_latest_live_data_snapshot():
+        manager = snapshot_manager.get_snapshot_manager()
+        latest = manager.latest_snapshot()
+        if not latest:
+            return jsonify({\"snapshot\": None, \"message\": \"No snapshots available.\"}), 200
+        return jsonify({\"snapshot\": latest}), 200
+
+
+    @app.route(\"/admin/snapshots/trigger\", methods=[\"POST\"])
+    def trigger_live_data_snapshot():
+        payload = request.get_json(silent=True) or {}
+        reason = payload.get(\"reason\") if isinstance(payload, dict) else None
+        if not isinstance(reason, str) or not reason.strip():
+            reason = \"manual\"
+        reason = reason.strip()
+        try:
+            result = snapshot_manager.trigger_snapshot(reason)
+            return jsonify({\"status\": \"Snapshot created.\", \"snapshot\": result}), 201
+        except Exception as exc:
+            print(f\"Error creating live data snapshot: {exc}\")
+            return jsonify({\"error\": f\"Failed to create snapshot: {exc}\"}), 500
+
+
+    @app.route(\"/admin/snapshots/settings\", methods=[\"GET\", \"POST\"])
+    def configure_snapshot_settings():
+        manager = snapshot_manager.get_snapshot_manager()
+        if request.method == \"GET\":
+            return jsonify({
+                \"settings\": manager.get_settings(),
+                \"scheduler_running\": manager.is_running(),
+            }), 200
+
+        payload = request.get_json(silent=True) or {}
+        if not isinstance(payload, dict):
+            return jsonify({\"error\": \"Request body must be a JSON object.\"}), 400
+
+        updates = {}
+        errors = []
+
+        if \"interval_seconds\" in payload:
+            try:
+                interval = int(payload[\"interval_seconds\"])
+                if interval <= 0:
+                    errors.append(\"interval_seconds must be greater than zero.\")
+                else:
+                    updates[\"interval_seconds\"] = interval
+            except (TypeError, ValueError):
+                errors.append(\"interval_seconds must be an integer value.\")
+
+        if \"retention_limit\" in payload:
+            try:
+                retention = int(payload[\"retention_limit\"])
+                if retention <= 0:
+                    errors.append(\"retention_limit must be greater than zero.\")
+                else:
+                    updates[\"retention_limit\"] = retention
+            except (TypeError, ValueError):
+                errors.append(\"retention_limit must be an integer value.\")
+
+        if errors:
+            return jsonify({\"errors\": errors}), 400
+
+        manager.update_settings(
+            interval_seconds=updates.get(\"interval_seconds\"),
+            retention_limit=updates.get(\"retention_limit\"),
+        )
+
+        settings = manager.get_settings()
+        if settings[\"interval_seconds\"] > 0:
+            snapshot_manager.start_scheduler()
+        else:
+            manager.stop()
+
+        return jsonify({
+            \"settings\": settings,
+            \"scheduler_running\": manager.is_running(),
+            \"status\": \"Snapshot settings updated.\",
+        }), 200
+
+
+    @app.route(\"/admin/snapshots/<snapshot_name>/restore\", methods=[\"POST\"])
+    def restore_live_data_snapshot(snapshot_name):
+        if simulation_state[\"simulation_running\"]:
+            path.write_text(text)
+        else:
+            raise SystemExit('Marker for snapshot insertion not found.')
+    '@
+    Set-Content -Path 'C:\\Users\\edebe\\eds\\tmp_script.py' -Value "'$script -NoNewline'
+
+• Ran powershell.exe -NoProfile -Command "python 'C:\\Users\\edebe\\eds\\tmp_script.py'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'list_live_data_snapshots' -Context 0,20"
+
+• Ran powershell.exe -NoProfile -Command "Remove-Item 'C:\\Users\\edebe\\eds\\tmp_script.py'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Add-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' -Value
+    Diff output format options
+        -p, --patch           generate patch
+    … +120 lines
+                              look for differences that change the number of occurrences of the specified object
+        --diff-filter [(A|C|D|M|R|T|U|X|B)...[*]]
+                              select files by diff type
+        --output <file>       output to a specific file
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\config.py' -Pattern '#
+        --- Snapshot Configuration ---').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern '_ensure_snapshot_scheduler').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\snapshot_manager.py'
+        -Pattern 'def _create_snapshot').LineNumber"
+
+• I’m organizing the final summary to explain all changes clearly, including config updates, the new snapshot_manager
+  module, and testing steps like compilation and endpoint checks. I’m also planning to suggest next steps for the user
+  to verify functionality by running the server, hitting endpoints, and reviewing logs. Once ready, I’ll update the plan
+  to mark the documentation step complete.
+
+• Updated Plan
+  └ ✔ Create a timestamped backup of C:\Users\edebe\eds\Game_trader
+    ✔ Assess existing Game_trader codebase for snapshot integration points
+    ✔ Implement snapshot scheduling, retention, and operational controls per plan
+    ✔ Document changes and outline verification steps
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\snapshot_manager.py'
+        -Pattern 'def restore_snapshot').LineNumber"
+
+• I’m putting together a final message that highlights the method and module-level changes in snapshot_manager.py and
+  trader_game.py, including import modifications and a new backup file created as requested. I’ll also mention tests run
+  and suggest numbered next steps for verifying the changes, keeping the tone aligned with the user’s style and avoiding
+  unnecessary questions.
+
+  while preserving your original data via a timestamped backup at C:\Users\edebe\eds\Game_trader_backup_20251022_163839.
+
+  - Added snapshot configuration knobs (LIVE_DATA_SNAPSHOT_*) with validation helpers so interval, retention, source,
+  and root can be overridden via environment variables (config.py:19).
+  - Introduced LiveDataSnapshotManager with scheduling, atomic snapshot creation, retention pruning, and restore/backup
+  helpers, plus module-level conveniences (snapshot_manager.py:19, snapshot_manager.py:110, snapshot_manager.py:161,
+  snapshot_manager.py:287).
+  - Auto-start the snapshot scheduler on process startup and again before the first request to avoid missing cycles,
+  with clear logging of active settings (trader_game.py:24).
+  - Exposed admin APIs to list/latest snapshots, trigger captures, adjust settings, and restore safely when the
+  simulation is stopped (trader_game.py:320, trader_game.py:338, trader_game.py:360).
+
+  Tests
+
+  - python -m compileall C:\Users\edebe\eds\Game_trader\snapshot_manager.py C:\Users\edebe\eds\Game_trader\trader_game.py
+
+  Next step options: 1) Launch the Flask app and hit /admin/snapshots plus /admin/snapshots/trigger to confirm the
+  scheduler status and manual snapshots; 2) Monitor Game_trader/live_data_snapshots while the server runs to confirm
+  rolling snapshots and retention cleanup behave as expected before exercising the restore flow.
+  plan tool before diving into implementation.
+
+• Updated Plan
+  └ Extend system to capture trades executed by the top-ranked human participant (#1 bucket) while maintaining new
+    business logic.
+    □ Review trading execution flow and leaderboard logic to locate integration points for #1 bucket capture
+    □ Design and implement tracking of current #1 human participant and logging of their trades to the new bucket
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern \"current_leader_id' =\" -Context 0,2"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' -Starting
+        520 -Ending 620"
+    Get-Content : A parameter cannot be found that matches parameter name 'Starting'.
+    At line:1 char:67
+    + ... ath 'C:\Users\edebe\eds\Game_trader\trader_game.py' -Starting 520 -En ...
+        + FullyQualifiedErrorId : NamedParameterNotFound,Microsoft.PowerShell.Commands.GetContentCommand
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' |
+        Select-Object -Skip 520 -First 120"
+
+• I'm mapping out how to track trades executed by the top-ranked human participant, including maintaining state with
+  sets of trade IDs and handling logging to a JSON lines file. Since execute_trade and close_position are called in
+  trading_engine without full participant context, I'll need to compute the top human in trader_game before trade
+  execution and log trades afterward. I'll create helper functions and possibly a new module to maintain and update the
+  top human state, handle transitions, and track closures of trades opened while #1, making sure the logic integrates
+  safely with existing call sites without circular dependencies.
+  centralize top human tracking without causing circular imports. I'm considering introducing a new module to maintain
+  global leaderboard state accessible from key places, while investigating existing structures in market_simulator and
+  participant data management to find the best integration points.
+
+  log their trades in a dedicated “number_one_bucket” module, and maintain thread-safe tracking for later closures—
+  even after they lose the top spot. This includes enhancing execute_trade to return trade records, refreshing leader
+  info before logging, and syncing tracked trades reliably across relevant modules. I’m considering performance and data
+  consistency carefully while planning integration points and data structures.
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\market_simulator.py'
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\data_persistence.py';
+        "'$text=Get-Content -Path $path -Raw; $text=$text -replace '"'from config import DATA_DIR, MARKET_DATA_FILE,
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\number_one_bucket.py';
+        "'$content=@'"'
+    \"\"\"Utilities for tracking the #1 human participant trade bucket.\"\"\"
+
+    import threading
+    import time
+    from typing import Dict, Optional
+
+    from participant_manager import get_participant_state_with_mtm
+    from data_persistence import append_number_one_bucket, log_event
+
+    _state_lock = threading.Lock()
+    _state = {
+        'leader_id': None,
+        'leader_state': None,
+        'tracked_trades': {}
+    }
+
+
+    def reset():
+        \"\"\"Reset leader tracking and any tracked trades.\"\"\"
+        with _state_lock:
+            _state['leader_id'] = None
+            _state['leader_state'] = None
+            _state['tracked_trades'].clear()
+        log_event('number_one_leader_reset', {'timestamp': time.time()})
+
+
+    def _normalise_leader_state(state: Optional[Dict]) -> Optional[Dict]:
+        if state is None:
+            return None
+        return {
+            'id': state.get('id'),
+            'net_equity': state.get('net_equity'),
+            'open_pl': state.get('open_pl'),
+            'realized_pl': state.get('realized_pl'),
+            'cash': state.get('cash'),
+            'status': state.get('status')
+        }
+
+
+    def set_current_leader(leader_id: Optional[str], leader_state: Optional[Dict] = None) -> Optional[Dict]:
+        \"\"\"Set the current #1 human leader based on provided snapshot.\"\"\"
+        leader_state = _normalise_leader_state(leader_state)
+        with _state_lock:
+            previous = _state['leader_id']
+            _state['leader_id'] = leader_id
+            if leader_state is not None:
+                _state['leader_state'] = leader_state
+            elif leader_id is None:
+                _state['leader_state'] = None
+        if previous "'!= leader_id:
+            event_name = '"'number_one_leader_changed' if leader_id else 'number_one_leader_cleared'
+            log_event(event_name, {'previous_leader': previous, 'new_leader': leader_id, 'timestamp': time.time()})
+        return current_leader()
+
+
+    def current_leader() -> Optional[Dict]:
+        with _state_lock:
+            if not _state['leader_id']:
+                return None
+            leader_state = _state['leader_state'].copy() if _state['leader_state'] else None
+            return {
+                'id': _state['leader_id'],
+                'state': leader_state
+            }
+
+
+    def refresh_leader(participants: Dict[str, Dict], current_bid: float, current_ask: float) -> Optional[Dict]:
+        \"\"\"Recompute the current top-ranked human participant.\"\"\"
+        best_id = None
+        best_equity = None
+        best_state = None
+        for pid, participant in participants.items():
+            if not isinstance(participant, dict):
+                continue
+            if participant.get('is_rl_agent', False):
+                continue
+            state = get_participant_state_with_mtm(participant, current_bid, current_ask)
+            if not state:
+                continue
+            equity = state.get('net_equity')
+            if equity is None:
+                continue
+            if best_equity is None or equity > best_equity:
+                best_equity = equity
+                best_id = pid
+                best_state = {
+                    'id': state.get('id'),
+                    'net_equity': equity,
+                    'open_pl': state.get('open_pl'),
+                    'realized_pl': state.get('realized_pl'),
+                    'cash': state.get('cash'),
+                    'status': state.get('status')
+                }
+        return set_current_leader(best_id, best_state)
+
+
+    def record_open_trade(participant: Dict, trade_record: Optional[Dict], leader_snapshot: Optional[Dict] = None) ->
+        None:
+        \"\"\"Capture details for a trade opened while the participant was #1.\"\"\"
+        if not trade_record or not isinstance(participant, dict):
+            return
+        participant_id = participant.get('id')
+        if not participant_id or participant.get('is_rl_agent', False):
+            return
+        trade_id = trade_record.get('trade_id')
+        if not trade_id:
+            return
+        with _state_lock:
+            if participant_id "'!= _state.get('"'leader_id'):
+                return
+            tracked_trades = _state['tracked_trades']
+            leader_state = leader_snapshot if leader_snapshot is not None else
+        _normalise_leader_state(_state.get('leader_state'))
+            captured_at = time.time()
+            tracked_trades[trade_id] = {
+                'participant_id': participant_id,
+                'trade': dict(trade_record),
+                'leader_snapshot': leader_state,
+                'opened_at': captured_at
+            }
+        bucket_record = {
+            'event': 'number_one_trade_open',
+            'participant_id': participant_id,
+            'trade_id': trade_id,
+            'trade': trade_record,
+            'leader_snapshot': leader_state,
+            'captured_at': captured_at
+        }
+        append_number_one_bucket(bucket_record)
+
+
+    def record_close_trade(close_record: Optional[Dict]) -> None:
+        \"\"\"Capture trade closure if the trade was opened while #1.\"\"\"
+        if not close_record:
+            return
+        trade_id = close_record.get('trade_id')
+        if not trade_id:
+            return
+        with _state_lock:
+            tracked = _state['tracked_trades'].get(trade_id)
+            if not tracked:
+            'participant_id': close_record.get('participant_id'),
+            'trade_id': trade_id,
+            'close_record': dict(close_record),
+            'opened_record': tracked.get('trade') if tracked else None,
+            'leader_snapshot_at_open': tracked.get('leader_snapshot') if tracked else None,
+            'opened_at': tracked.get('opened_at') if tracked else None,
+  └ powershell.exe -NoProfile -Command "Add-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trading_engine.py' -Value
+        ''"
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; if ($text -notmatch '"'import number_one_bucket') { "'$text = $text
+        -replace "import snapshot_manager", "import snapshot_manager`r`nimport number_one_bucket"; Set-Content -Path
+        $path -Value $text -NoNewline }'
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; $old=@"
+        participant = participants.get(participant_id)
+        if not participant or participant['"'status'] "'!= '"'Active':
+             return jsonify({'success': False, 'message': 'Participant not found or not active.'}), 400
+        result = execute_trade(participant, trade_type, notional_size, simulation_state['current_bid'],
+        simulation_state['current_ask'])
+        save_participant_state(participant)
+        if result['success']:
+            return jsonify(result), 200
+        else:
+            status_code = 400
+            if 'Insufficient margin' in result['message']:
+                status_code = 403
+            return jsonify(result), status_code
+    \"@; "'$new=@"
+        participant = participants.get(participant_id)
+        if not participant or participant['"'status'] "'!= '"'Active':
+             return jsonify({'success': False, 'message': 'Participant not found or not active.'}), 400
+
+        leader_snapshot = _refresh_number_one_leader()
+        is_human = not participant.get('is_rl_agent', False)
+        capture_number_one = bool(leader_snapshot and leader_snapshot.get('id') == participant_id and is_human)
+        leader_state = leader_snapshot.get('state') if capture_number_one and leader_snapshot else None
+
+        result = execute_trade(
+            participant,
+            trade_type,
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; $old=@"
+        result = close_position(participant, position_id, simulation_state['"'current_bid'],
+        simulation_state['current_ask'])
+        save_participant_state(participant)
+        if result['success']:
+            return jsonify(result), 200
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; $needle=@"    leaderboard_data = sorted(leaderboard_data, key=lambda x:
+        x['"'net_equity'], reverse=True)
+        for i, entry in enumerate(leaderboard_data):
+            entry['rank'] = i + 1
+        return jsonify(leaderboard_data), 200
+    \"@; if ("'$text.Contains($needle)) { $replacement=@"    leaderboard_data = sorted(leaderboard_data, key=lambda x:
+        x['"'net_equity'], reverse=True)
+        for i, entry in enumerate(leaderboard_data):
+            entry['rank'] = i + 1
+
+        top_human = next((entry for entry in leaderboard_data if not entry.get('is_rl_agent', False)), None)
+        if top_human:
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:\\\\Users\\\\edebe\\\\eds\\\\Game_trader\\\\trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(''C:/Users/edebe/eds/Game_trader/trader_game.py'')
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+        i, entry in enumerate(leaderboard_data):\\n        entry['rank'] = i + 1\\n    return jsonify(leaderboard_data),
+        200\\n\"
+    if needle not in text:
+        raise SystemExit('target block not found')
+    replacement = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'],
+        reverse=True)\\n    for i, entry in enumerate(leaderboard_data):\\n        entry['rank'] = i + 1\
+        \n\\n    top_human = next((entry for entry in leaderboard_data if not entry.get('is_rl_agent',
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+        i, entry in enumerate(leaderboard_data):\\n        entry['rank'] = i + 1\\n    return jsonify(leaderboard_data),
+        200\\n\"
+    if needle not in text:
+        raise SystemExit('target block not found')
+    replacement = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'],
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$temp='"'C:\\Users\\edebe\\eds\\tmp_edit.py'; "'$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    leaderboard_data = sorted(leaderboard_data, key=lambda x: x['net_equity'], reverse=True)\\n    for
+        i, entry in enumerate(leaderboard_data):\\n        entry['rank'] = i + 1\\n    return jsonify(leaderboard_data),
+        simulation_state['current_leader_id'] = None\\n        number_one_bucket.set_current_leader(None, None)\\n\\n
+        return jsonify(leaderboard_data), 200\\n\"
+    text = text.replace(needle, replacement)
+    path.write_text(text)
+    '@;
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; $needle="    simulation_state['"'current_leader_id'] = None\\r\
+        \n    simulation_state['game_start_time'] = None\\r\\n    simulation_state['simulation_running'] = False\\r\
+        \n    simulation_state['current_bid'] = INITIAL_GBP_USD - SPREAD / 2\\r\\n    simulation_state['current_ask'] =
+        INITIAL_GBP_USD + SPREAD / 2\\r\\n    simulation_state['previous_mid_price'] = (simulation_state['current_bid']
+        + simulation_state['current_ask']) / 2\\r\\n    simulation_state['current_leader_id'] = None\\r\\n\\r\\n
+        log_event('manual_discard', {'timestamp': time.time()})\\r\\n    print(\"Current simulation data discarded.\")\
+        \r\\n    return jsonify({'status': 'Current simulation data discarded (participant rules preserved).'}), 200\
+        \r\\n\"; if ("'$text.Contains($needle)) { $replacement="    simulation_state['"'current_leader_id'] = None\\r\
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    simulation_state['current_leader_id'] = None\\n    simulation_state['game_start_time'] = None\\n
+        simulation_state['simulation_running'] = False\\n    simulation_state['current_bid'] =
+        INITIAL_GBP_USD - SPREAD / 2\\n    simulation_state['current_ask'] = INITIAL_GBP_USD + SPREAD / 2\\n
+        simulation_state['previous_mid_price'] = (simulation_state['current_bid'] + simulation_state['current_ask']) /
+  └ powershell.exe -NoProfile -Command "Add-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' -Value
+        ''"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'Simulation resumed' -Context 0,10"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'resume_simulation' -Context 0,5"
+
+
+
+• Ran
+    text = path.read_text()
+    needle = \"    print(\\\"Simulation resumed.\\\")\\n    log_event('simulation_resumed', {'tick':
+        simulation_state['price_tick_count'], 'timestamp': time.time()})\\n    threading.Timer\"
+    if needle not in text:
+        raise SystemExit('resume block not found')
+
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    participant = participants.get(participant_id)\\n    if not participant or participant['status'] "'!
+        = '"'Active':\\n         return jsonify({'success': False, 'message': 'Participant not found or not active.'}),
+        400\\n    result = execute_trade(participant, trade_type, notional_size, simulation_state['current_bid'],
+        simulation_state['current_ask'])\\n    save_participant_state(participant)\\n    if result['success']:\
+        \n        return jsonify(result), 200\\n    else:\\n        status_code = 400\\n        if 'Insufficient margin'
+        in result['message']:\\n            status_code = 403\\n        return jsonify(result), status_code\\n\"
+    if needle not in text:
+        raise SystemExit('api_execute_trade block not found')
+    replacement = \"    participant = participants.get(participant_id)\\n    if not participant or
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+        status_code\\n\"
+    text = text.replace(needle, replacement)
+    path.write_text(text)
+    '@;
+    "'$temp='"'C:\\Users\\edebe\\eds\\tmp_edit.py';
+    Set-Content -Path "'$temp -Value $pythonScript -NoNewline;
+    python $temp;
+    Remove-Item $temp'
+
+• Ran
+
+
+• Ran
+    Set-Content -Path "'$temp -Value $pythonScript -NoNewline;
+    python $temp;
+    Remove-Item $temp'
+
+
+• Ran
+
+
+• Ran
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trading_engine.py'
+        -Pattern 'close_record = dict'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trading_engine.py'
+        -Pattern 'record_close_trade'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern '_refresh_number_one_leader'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'top_human'"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\number_one_bucket.py'
+        -Pattern 'def reset'"
+
+• I’m gathering all relevant line numbers and file paths to create a clear summary of the code modifications,
+  including new constants, persistence functions, the new number_one_bucket module, and updated trading logic scattered
+  across several files. I’m also reviewing how the locking and variable scope works in certain functions to confirm
+  correctness. Next, I’ll mention tests run—especially compile checks—and clean-up steps before drafting the final
+  detailed response.
+
+> #1 Bucket Capture
+
+  - Added NUMBER_ONE_BUCKET_FILE so #1-trade logs live alongside other persistence artifacts (config.py:18,
+  data_persistence.py:10, data_persistence.py:30). A new append_number_one_bucket helper appends JSONL records and is
+  included in archival flows (data_persistence.py:150-162).
+  - Introduced number_one_bucket.py to manage leader tracking, trade capture, and safe closure logging
+  (number_one_bucket.py:18, number_one_bucket.py:67, number_one_bucket.py:97, number_one_bucket.py:130). It records
+  leader changes, stores open-trade metadata, and writes standardized bucket events.
+  - Hooked trade execution/closure to the tracker: execute_trade now accepts an optional capture flag and
+  trading_engine.py:143, trading_engine.py:210-218).
+  - Wired the Flask app to maintain leader context: global import plus helper refresh (trader_game.py:9,
+  trader_game.py:38), start/stop/discard workflows reset or clear the tracker as appropriate (trader_game.py:123-132,
+  trader_game.py:292, trader_game.py:309, trader_game.py:476), and resumptions refresh the leader (trader_game.py:261,
+  trader_game.py:614). Manual trade/close endpoints now refresh/flag captures so only the #1 human’s trades are
+  recorded and closures are still logged once they fall from the top (trader_game.py:577-604, trader_game.py:607-614).
+  Leaderboard responses keep the tracker’s snapshot aligned with the latest human leader (trader_game.py:679-685).
+
+  Tests
+
+  - python -m compileall C:\Users\edebe\eds\Game_trader\config.py C:\Users\edebe\eds\Game_trader\data_persistence.py
+  C:\Users\edebe\eds\Game_trader\number_one_bucket.py C:\Users\edebe\eds\Game_trader\trading_engine.py C:
+  └ Generalize trade capture from single #1 human to configurable top-N humans.
+    □ Extend configuration and persistence to support generic top-N leader bucket data
+    □ Implement new top-rank bucket tracker and integrate with trade execution and leaderboard refresh logic
+    □ Validate updates and summarize changes with next-step guidance
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\config.py'; "'$text=Get-Content
+• Ran
+    +                                                          ~~~~~~~~
+        + CategoryInfo          : InvalidOperation: (System.Object[]:Object[]) [], RuntimeException
+        + FullyQualifiedErrorId : BadReplaceArgument
+
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\top_rank_bucket.py';
+        "'$content=@'"'
+    \"\"\"Utilities for tracking top-ranked human participants and their trades.\"\"\"
+
+    import threading
+    import time
+    from typing import Dict, List, Optional
+
+    import config
+    from participant_manager import get_participant_state_with_mtm
+    from data_persistence import append_top_leader_bucket, log_event
+
+    _state_lock = threading.Lock()
+    _state = {
+        'leader_limit': max(1, getattr(config, 'TOP_LEADER_BUCKET_LIMIT', 1)),
+        'leaders': [],  # List[Dict[str, object]] with keys: id, rank, state
+        'tracked_trades': {},  # trade_id -> Dict
+    }
+
+
+    def _clone_leaders(leaders: List[Dict]) -> List[Dict]:
+        return [
+            {
+                'id': leader.get('id'),
+                'rank': leader.get('rank'),
+                'state': dict(leader.get('state') or {}),
+                'captured_at': leader.get('captured_at'),
+            }
+            for leader in leaders
+        ]
+
+
+    def _set_leader_limit(limit: int) -> None:
+        with _state_lock:
+            _state['leader_limit'] = max(1, int(limit or 1))
+
+
+    def get_leader_limit() -> int:
+        with _state_lock:
+            return _state['leader_limit']
+
+
+    def reset() -> None:
+        \"\"\"Reset tracked leaders and pending trades.\"\"\"
+        with _state_lock:
+            _state['leaders'] = []
+            _state['tracked_trades'].clear()
+        log_event('top_leader_bucket_reset', {'timestamp': time.time()})
+
+
+    def current_leaders() -> List[Dict]:
+        with _state_lock:
+            return _clone_leaders(_state['leaders'])
+
+
+    def set_leaders(leaders: List[Dict]) -> List[Dict]:
+        \"\"\"Persist the current top-ranked human leaders.\"\"\"
+        limit = max(1, getattr(config, 'TOP_LEADER_BUCKET_LIMIT', get_leader_limit()))
+        _set_leader_limit(limit)
+
+        timestamp = time.time()
+        normalised: List[Dict] = []
+        seen_ids = set()
+        for idx, leader in enumerate(leaders[:limit], start=1):
+            pid = leader.get('id')
+            if not pid or pid in seen_ids:
+                continue
+            seen_ids.add(pid)
+            normalised.append(
+                {
+                    'id': pid,
+                    'rank': leader.get('rank', idx),
+                    'state': dict(leader.get('state') or {}),
+                    'captured_at': timestamp,
+                }
+            )
+
+        with _state_lock:
+            previous_ids = {entry['id'] for entry in _state['leaders']}
+            _state['leaders'] = _clone_leaders(normalised)
+            new_ids = {entry['id'] for entry in normalised}
+
+        if previous_ids "'!= new_ids:
+            log_event(
+                '"'top_leader_bucket_changed',
+                {
+                    'timestamp': timestamp,
+                    'previous_leaders': sorted(previous_ids),
+                    'current_leaders': sorted(new_ids),
+                    'limit': limit,
+                },
+            )
+
+        return current_leaders()
+
+
+    def refresh_leaders(participants: Dict[str, Dict], current_bid: float, current_ask: float) -> List[Dict]:
+        \"\"\"Compute and store the current top-N human participants.\"\"\"
+        if not isinstance(participants, dict):
+            return set_leaders([])
+
+        leaderboard: List[Dict] = []
+        for pid, participant in participants.items():
+            if not isinstance(participant, dict):
+                continue
+            if participant.get('is_rl_agent', False):
+                continue
+            state = get_participant_state_with_mtm(participant, current_bid, current_ask)
+            if not state:
+                continue
+            leaderboard.append(
+                {
+                    'id': state.get('id') or pid,
+                    'state': {
+                        'net_equity': state.get('net_equity'),
+                        'open_pl': state.get('open_pl'),
+                        'realized_pl': state.get('realized_pl'),
+                        'cash': state.get('cash'),
+                        'status': state.get('status'),
+                    },
+                }
+            )
+
+        leaderboard.sort(key=lambda item: item['state'].get('net_equity', float('-inf')), reverse=True)
+        ranked: List[Dict] = []
+        for idx, entry in enumerate(leaderboard, start=1):
+            entry_copy = {
+                'id': entry['id'],
+                'rank': idx,
+                'state': entry['state'],
+            }
+            ranked.append(entry_copy)
+
+        return set_leaders(ranked)
+
+
+    def _lookup_leader_entry(participant_id: str) -> Optional[Dict]:
+        with _state_lock:
+            for entry in _state['leaders']:
+                if entry.get('id') == participant_id:
+                    return {
+                        'id': entry.get('id'),
+                        'rank': entry.get('rank'),
+                        'state': dict(entry.get('state') or {}),
+                        'captured_at': entry.get('captured_at'),
+                    }
+        return None
+
+
+    def record_open_trade(participant: Dict, trade_record: Optional[Dict], leader_snapshot: Optional[Dict] = None) ->
+        None:
+        \"\"\"Capture a trade opened while the participant is within the tracked top-N.\"\"\"
+        if not trade_record or not isinstance(participant, dict):
+            return
+        participant_id = participant.get('id')
+        trade_id = trade_record.get('trade_id')
+        if not participant_id or not trade_id or participant.get('is_rl_agent', False):
+            return
+
+        leader_entry = None
+        if leader_snapshot and leader_snapshot.get('id') == participant_id:
+            leader_entry = {
+                'id': leader_snapshot.get('id'),
+                'rank': leader_snapshot.get('rank'),
+                'state': dict(leader_snapshot.get('state') or {}),
+            }
+        if leader_entry is None:
+            leader_entry = _lookup_leader_entry(participant_id)
+        if leader_entry is None:
+            return
+
+        captured_at = time.time()
+        with _state_lock:
+            _state['tracked_trades'][trade_id] = {
+                'participant_id': participant_id,
+                'rank_at_open': leader_entry.get('rank'),
+                'leader_snapshot': leader_entry,
+                'trade': dict(trade_record),
+                'opened_at': captured_at,
+            }
+
+        bucket_record = {
+            'event': 'top_leader_trade_open',
+            'participant_id': participant_id,
+            'rank_at_open': leader_entry.get('rank'),
+            'trade_id': trade_id,
+            'trade': trade_record,
+            'leader_snapshot': leader_entry,
+            'captured_at': captured_at,
+        }
+        append_top_leader_bucket(bucket_record)
+
+
+    def record_close_trade(close_record: Optional[Dict]) -> None:
+        \"\"\"Capture the closure of a tracked trade.\"\"\"
+        if not close_record:
+            return
+        trade_id = close_record.get('trade_id')
+        if not trade_id:
+            return
+
+        with _state_lock:
+            tracked = _state['tracked_trades'].pop(trade_id, None)
+        if not tracked:
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"def _refresh_top_leader_bucket():\\n    \\\"\\\"\\\"Recompute the top-ranked human participant
+        (#1).\\\"\\\"\\\"\\n    return top_rank_bucket.refresh_leader(participants, simulation_state['current_bid'],
+        simulation_state['current_ask'])\\n\"
+    if \"return number_one_bucket\" in text:
+        text = text.replace(\"return number_one_bucket.refresh_leader(participants, simulation_state['current_bid'],
+        simulation_state['current_ask'])\", \"leaders = top_rank_bucket.refresh_leaders(participants,
+        simulation_state['current_bid'], simulation_state['current_ask'])\\n    leaders_copy = [dict(entry) for entry in
+  └ powershell.exe -NoProfile -Command '$path='"'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py';
+        "'$text=Get-Content -Path $path -Raw; $text = $text -replace '"'number_one_bucket','top_rank_bucket';
+        Set-Content -Path "'$path -Value $text -NoNewline'
+
+• Ran
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+    needle = \"    leader_snapshot = _refresh_top_leader_bucket()\\n    is_human = not participant.get('is_rl_agent',
+        False)\\n    capture_number_one = bool(leader_snapshot and leader_snapshot.get('id') == participant_id
+        and is_human)\\n    leader_state = leader_snapshot.get('state') if capture_number_one and
+        leader_snapshot else None\\n\\n    result = execute_trade(\\n        participant,\\n        trade_type,\
+        \n        notional_size,\\n        simulation_state['current_bid'],\\n        simulation_state['current_ask'],
+        \\n        simulation_state['export_agent_01_trades'],\\n        simulation_state['export_agent_02_trades'],\\n
+        capture_number_one=capture_number_one,\\n        leader_snapshot=leader_state\\n    )\\n\"
+    if needle not in text:
+        raise SystemExit('trade capture block not found')
+
+
+
+
+• Ran
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    text = text.replace(needle, replacement)
+    path.write_text(text)
+    '@;
+    "'$temp='"'C:\\Users\\edebe\\eds\\tmp_edit.py';
+    Set-Content -Path "'$temp -Value $pythonScript -NoNewline;
+  └ powershell.exe -NoProfile -Command "Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'set_leaders'"
+
+• Ran
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+        \top_rank_bucket.py\" \"C:\\Users\\edebe\\eds\\Game_trader\\trading_engine.py\" \"C:\\Users\\edebe\\eds\
+        \Game_trader\\trader_game.py\""
+
+• Ran
+  └ powershell.exe -NoProfile -Command "Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\config.py' |
+    □ Validate updates and summarize changes with next-step guidance
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\config.py' -Pattern
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/config.py\")
+    text = path.read_text()
+    if \"TOP_LEADER_BUCKET_FILE\" not in text:
+        text = text.replace(\"EXPERT_DATA_FILE = os.path.join(DATA_DIR, 'expert_data.jsonl')\\n\\n\",
+        \"EXPERT_DATA_FILE = os.path.join(DATA_DIR, 'expert_data.jsonl')\\nTOP_LEADER_BUCKET_FILE =
+        os.path.join(DATA_DIR, 'top_leader_bucket.jsonl')\\n\\n\")
+    if \"def _safe_positive_int\" not in text:
+        snapshot_block = \"# --- Snapshot Configuration ---\\n\" \\
+            \"def _safe_positive_int(env_var, default_value):\\n\" \\
+            \"    try:\\n\" \\
+            \"        candidate = int(os.environ.get(env_var, default_value))\\n\" \\
+            \"        if candidate > 0:\\n\" \\
+            \"            return candidate\\n\" \\
+            \"    except (TypeError, ValueError):\\n\" \\
+            \"        pass\\n\" \\
+            \"    return default_value\\n\\n\" \\
+            \"LIVE_DATA_SNAPSHOT_ROOT = os.environ.get('LIVE_DATA_SNAPSHOT_ROOT', 'live_data_snapshots')\\n\" \\
+            \"LIVE_DATA_SNAPSHOT_SOURCE_DIR = os.environ.get('LIVE_DATA_SNAPSHOT_SOURCE_DIR', DATA_DIR)\\n\" \\
+    else:
+        if \"TOP_LEADER_BUCKET_LIMIT\" not in text:
+            text = text.replace(\"LIVE_DATA_SNAPSHOT_RETENTION = _safe_positive_int('LIVE_DATA_SNAPSHOT_RETENTION',
+        20)\\n\", \"LIVE_DATA_SNAPSHOT_RETENTION = _safe_positive_int('LIVE_DATA_SNAPSHOT_RETENTION', 20)\
+        \nTOP_LEADER_BUCKET_LIMIT = _safe_positive_int('TOP_LEADER_BUCKET_LIMIT', 1)\\n\")
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\top_rank_bucket.py'
+        -Pattern 'def record_close_trade').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trading_engine.py'
+        -Pattern 'execute_trade').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'def _refresh_top_leader_bucket').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern \"'current_leaders'\").LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'leaders_snapshot = _refresh_top_leader_bucket').LineNumber"
+
+> - Added configurable top-N capture by introducing TOP_LEADER_BUCKET_FILE and TOP_LEADER_BUCKET_LIMIT defaults
+  (config.py:18, config.py:34) plus persistence plumbing so archival sweeps include the new JSONL log and
+  append_top_leader_bucket handles writes (data_persistence.py:30, data_persistence.py:151).
+  - Replaced the single-leader helper with top_rank_bucket.py, which maintains the top-H human snapshot,
+  tracks openings/closures, and writes structured bucket events (top_rank_bucket.py:18, top_rank_bucket.py:95,
+  top_rank_bucket.py:148, top_rank_bucket.py:191); removed the old number_one_bucket.py.
+  - Extended execute_trade/close_position to accept a leader snapshot, mirror tracked opens and closes into the new
+  bucket, and return the captured trade payload (trading_engine.py:12, trading_engine.py:143, trading_engine.py:210).
+  - Updated the Flask app to keep an up-to-date list of tracked human leaders, reset it on all lifecycle paths, and
+  gate trade capture against the configurable top-N list (trader_game.py:38, trader_game.py:50, trader_game.py:134-138,
+  trader_game.py:299-317, trader_game.py:581-616, trader_game.py:679-698).
+
+  - python -m compileall C:\Users\edebe\eds\Game_trader\config.py C:\Users\edebe\eds\Game_trader\data_persistence.py
+  C:\Users\edebe\eds\Game_trader\top_rank_bucket.py C:\Users\edebe\eds\Game_trader\trading_engine.py C:
+  \Users\edebe\eds\Game_trader\trader_game.py
+
+  Next steps: 1) Set TOP_LEADER_BUCKET_LIMIT to your desired depth (e.g. 3) and run a simulated session to
+  confirm live_data/top_leader_bucket.jsonl logs opens/closures for those ranks; 2) Review log volume from
+  top_leader_bucket_changed events and adjust if you need quieter logging.
+
+▌ provide updated value of returns trades in the bucket
+
+> Top-leader bucket entries now log two event types:
+
+  - top_leader_trade_open: includes participant_id, rank_at_open, full trade dict (copy of execute log still containing
+  type, size, price, commission, trade_id, timestamp), leader_snapshot (id/rank/state at capture), and captured_at.
+  - top_leader_trade_closed: carries the original tracked details (participant_id, trade_id, rank_at_open, opened_at,
+  leader_snapshot_at_open, open_trade) alongside close_record (the close payload from the engine with type: 'CLOSE',
+  entry_type, size, entry_price, closing_price, pl, commission, original/close timestamps) and captured_at.
+
+  So each tracked trade’s open/close remains fully accessible in live_data/top_leader_bucket.jsonl, with consistent keys
+  for downstream processing.
+
+▌ did you implement functionality to increase the number of participant in top X bucket?
+
+> Yes. The single-leader tracking has been generalized into a configurable “top‑N” system:
+
+
+
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$pythonScript = @'"'
+    import pathlib
+
+    path = pathlib.Path(r\"C:/Users/edebe/eds/Game_trader/trader_game.py\")
+    text = path.read_text()
+
+
+• Ran
+  └ powershell.exe -NoProfile -Command '$content = @'"'
+    <"'!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Top Leader Bucket</title>
+        <script src="https://cdn.tailwindcss.com"></script>
+    </head>
+    <body class="bg-slate-100 text-slate-800">
+        <div class="max-w-6xl mx-auto px-4 py-10">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-8">
+                <h1 class="text-3xl font-bold">Top Leader Bucket</h1>
+                <div class="flex flex-wrap items-center gap-3">
+                    <label for="record-limit" class="text-sm font-medium text-slate-600">Records</label>
+                    <input id="record-limit" type="number" min="1" max="1000" value="200" class="w-24 rounded border
+        border-slate-300 px-2 py-1 text-sm focus:outline-none focus:ring focus:ring-indigo-200" />
+                    <button id="refresh-btn" class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm
+        font-semibold rounded shadow hover:bg-indigo-700 transition">Refresh Now</button>
+                    <a href="/" class="inline-flex items-center px-4 py-2 bg-slate-600 text-white text-sm font-semibold
+        rounded shadow hover:bg-slate-700 transition">Main Viewer</a>
+                </div>
+            </div>
+
+            <div id="status-panel" class="bg-white shadow rounded-lg p-6 mb-6">
+                <div class="grid md:grid-cols-2 gap-4 text-sm">
+                    <div><span class="font-semibold">Leader limit:</span> <span id="leader-limit">-</span></div>
+                    <div><span class="font-semibold">Tracked open trades:</span> <span id="tracked-count">-</span></div>
+                    <div><span class="font-semibold">Records returned:</span> <span id="record-count">-</span></div>
+                    <div><span class="font-semibold">Bucket file:</span> <span id="bucket-file" class="break-all"></
+        span></div>
+                    <div><span class="font-semibold">Last refreshed:</span> <span id="last-refreshed">-</span></div>
+                </div>
+            </div>
+
+            <section class="mb-8">
+                <h2 class="text-xl font-semibold mb-4">Current Tracked Leaders</h2>
+                <div class="overflow-x-auto bg-white shadow rounded-lg">
+                    <table class="min-w-full text-sm">
+                        <thead class="bg-slate-50 text-slate-600 uppercase tracking-wide">
+                            <tr>
+                                <th class="px-4 py-3 text-left">Rank</th>
+                                <th class="px-4 py-3 text-left">Participant</th>
+                                <th class="px-4 py-3 text-left">Net Equity</th>
+                                <th class="px-4 py-3 text-left">Open P/L</th>
+                                <th class="px-4 py-3 text-left">Realized P/L</th>
+                                <th class="px-4 py-3 text-left">Cash</th>
+                                <th class="px-4 py-3 text-left">Status</th>
+                                <th class="px-4 py-3 text-left">Captured</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaders-body" class="divide-y divide-slate-200">
+                            <tr>
+                                <td colspan="8" class="px-4 py-4 text-center text-slate-500">No leaders tracked yet.</
+        td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-xl font-semibold mb-4">Bucket Records</h2>
+                <div id="records-container" class="space-y-4"></div>
+            </section>
+        </div>
+
+        <script>
+            const limitInput = document.getElementById('"'record-limit');
+            const refreshButton = document.getElementById('refresh-btn');
+            const recordCountEl = document.getElementById('record-count');
+            const leaderLimitEl = document.getElementById('leader-limit');
+            const trackedCountEl = document.getElementById('tracked-count');
+            const bucketFileEl = document.getElementById('bucket-file');
+            const lastRefreshedEl = document.getElementById('last-refreshed');
+            const leadersBody = document.getElementById('leaders-body');
+            const recordsContainer = document.getElementById('records-container');
+
+            async function fetchBucketData() {
+                const limitValue = Math.min(Math.max(parseInt(limitInput.value, 10) || 200, 1), 1000);
+                limitInput.value = limitValue;
+                const response = await fetch("'`/top_leader_bucket/data?limit=${limitValue}`);
+                if (!response.ok) {
+                    throw new Error('"'Failed to load bucket data');
+                }
+                return response.json();
+            }
+
+            function formatTimestamp(value) {
+                if (value === null || value === undefined) {
+                    return 'N/A';
+                }
+                const ts = typeof value === 'number' ? value * 1000 : Date.parse(value);
+                if (Number.isNaN(ts)) {
+                    return String(value);
+                }
+                return new Date(ts).toLocaleString();
+            }
+
+            function formatCurrency(value) {
+                if (value === null || value === undefined || Number.isNaN(Number(value))) {
+                    return '—';
+                }
+                return Number(value).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            }
+
+            function renderLeaders(leaders) {
+                if ("'!leaders.length) {
+                    leadersBody.innerHTML = '"'<tr><td colspan=\"8\" class=\"px-4 py-4 text-center text-slate-500\">No
+        leaders tracked yet.</td></tr>';
+                    return;
+                }
+                const rows = leaders.map((leader) => {
+                    const state = leader.state || {};
+                    return "'`
+                        <tr class="hover:bg-slate-50">
+                            <td class="px-4 py-3 font-semibold">${leader.rank ?? '"'—'}</td>
+                            <td class=\"px-4 py-3\">"'${leader.id ?? '"'Unknown'}</td>
+                            <td class=\"px-4 py-3\">"'${formatCurrency(state.net_equity)}</td>
+                            <td class="px-4 py-3">${formatCurrency(state.open_pl)}</td>
+                            <td class="px-4 py-3">${formatCurrency(state.realized_pl)}</td>
+                            <td class="px-4 py-3">${formatCurrency(state.cash)}</td>
+                            <td class="px-4 py-3">${state.status ?? '"'—'}</td>
+                            <td class=\"px-4 py-3\">"'${formatTimestamp(leader.captured_at)}</td>
+                        </tr>
+                    `;
+                });
+                leadersBody.innerHTML = rows.join('"'');
+            }
+
+            function renderRecords(records) {
+                if ("'!records.length) {
+                    recordsContainer.innerHTML = '"'<div class=\"bg-white p-6 rounded-lg shadow text-slate-500\">No
+        records found for the selected range.</div>';
+                    return;
+                }
+
+                const cards = [...records].reverse().map((record) => {
+                    const event = record.event || 'event';
+                    const participant = record.participant_id || 'unknown';
+                    const rank = record.rank_at_open ?? record?.leader_snapshot?.rank ?? '—';
+                    const captured = formatTimestamp(record.captured_at);
+                    const openedAt = formatTimestamp(record.opened_at);
+                    const leaderSnapshot = record.leader_snapshot_at_open || record.leader_snapshot || null;
+                    const tradeSummary = record.trade || record.open_trade || {};
+                    const closeRecord = record.close_record || null;
+
+                    return "'`
+                        <article class="bg-white rounded-lg shadow border border-slate-200">
+                            <header class="border-b border-slate-200 px-5 py-4 flex flex-wrap justify-between gap-2">
+                                <div>
+                                    <p class="text-sm uppercase tracking-wide text-slate-500">${event.replace(/_/g, '"'
+        ')}</p>
+                                    <h3 class=\"text-lg font-semibold text-slate-800\">Participant "'${participant}</h3>
+                                </div>
+                                <div class="text-sm text-right text-slate-500">
+                                    <p>Rank at open: <span class="font-semibold text-slate-700">${rank}</span></p>
+                                    <p>Captured: <span class="font-semibold text-slate-700">${captured}</span></p>
+                                </div>
+                            </header>
+                            <div class="px-5 py-4 space-y-3 text-sm">
+                                <div class="grid md:grid-cols-2 gap-4">
+                                    <div class="bg-slate-50 rounded p-3">
+                                        <h4 class="font-semibold text-slate-700 mb-2">Trade Details</h4>
+                                        <pre class="text-xs text-slate-700
+        whitespace-pre-wrap">${JSON.stringify(tradeSummary, null, 2)}</pre>
+                                    </div>
+                                    <div class="bg-slate-50 rounded p-3">
+                                        <h4 class="font-semibold text-slate-700 mb-2">Leader Snapshot</h4>
+                                        <pre class="text-xs text-slate-700
+        whitespace-pre-wrap">${JSON.stringify(leaderSnapshot, null, 2)}</pre>
+                                    </div>
+                                </div>
+                                ${closeRecord ? `
+                                    <div class="bg-emerald-50 border border-emerald-200 rounded p-3">
+                                        <h4 class="font-semibold text-emerald-700 mb-2">Close Record</h4>
+                                        <p class="text-xs text-emerald-700 mb-2">Closed at:
+        ${formatTimestamp(closeRecord.closing_timestamp)} (opened: ${openedAt})</p>
+                                        <pre class="text-xs text-emerald-700
+        whitespace-pre-wrap">${JSON.stringify(closeRecord, null, 2)}</pre>
+                                    </div>
+                                ` : '"''}
+                            </div>
+                        </article>
+                    "'`;
+                });
+
+                recordsContainer.innerHTML = cards.join('"'');
+            }
+
+            async function loadAndRender() {
+                try {
+                    const data = await fetchBucketData();
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'top_rank_bucket.reset\\(\\)').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'top_rank_bucket.set_leaders').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'capture_leader_bucket').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Select-String -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py'
+        -Pattern 'leaders_snapshot =').LineNumber"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' |
+        Select-Object -Skip 680 -First 20)"
+
+• Ran
+  └ powershell.exe -NoProfile -Command "(Get-Content -Path 'C:\\Users\\edebe\\eds\\Game_trader\\trader_game.py' |
+        Select-Object -Skip 720 -First 30)"
+
+• I’m gathering exact line numbers for key changes in scoreboard, routes, and trading engine files to include in the
+  final explanation. I’ll highlight the new front-end HTML, auto-refresh, button usage, relevant API additions, and
+  tests run, then craft a clear, bullet-point summary with file paths and line numbers for the user.
+
+> - Top-leader capture is now configurable and persistent: config.py:18 adds TOP_LEADER_BUCKET_FILE, while config.py:34
+  introduces TOP_LEADER_BUCKET_LIMIT for sizing the cohort; the archive helper now preserves the bucket log and writes
+  via append_top_leader_bucket (data_persistence.py:30, data_persistence.py:151).
+  - A new tracker module maintains the top-N human snapshot, handles resets, and records trade opens/closes for any
+  leader in that set (top_rank_bucket.py:12, top_rank_bucket.py:54, top_rank_bucket.py:95, top_rank_bucket.py:148,
+  top_rank_bucket.py:191).
+  - Trade execution/closure routes pass leader snapshots so captured trades land in the bucket, and closure logs mirror
+  into it (trading_engine.py:12, trading_engine.py:142, trading_engine.py:211).
+  - The Flask app now keeps simulation_state['current_leaders'] up to date, resets/clears the bucket during
+  lifecycle transitions, gates manual trade capture against the current top-N list, and exposes new UI/data
+  endpoints (trader_game.py:50, trader_game.py:134, trader_game.py:150, trader_game.py:152, trader_game.py:302,
+  trader_game.py:315, trader_game.py:333, trader_game.py:501, trader_game.py:605, trader_game.py:615,
+  trader_game.py:648, trader_game.py:667, trader_game.py:749).
+  - Added a dedicated bucket dashboard (top_leader_bucket.html) with auto-refreshing data from /top_leader_bucket/
+  data, including current leaders, tracked trade count, and recent events, plus a navigation button on the main viewer
+  (trading_activity_viewer_frontend.html:187) to open it in a new tab.
+
+  Tests
+
+  - python -m compileall C:\Users\edebe\eds\Game_trader\config.py C:\Users\edebe\eds\Game_trader\data_persistence.py
+  C:\Users\edebe\eds\Game_trader\top_rank_bucket.py C:\Users\edebe\eds\Game_trader\trading_engine.py C:
+  \Users\edebe\eds\Game_trader\trader_game.py
+
+  Next steps: 1) Run the Flask app and visit the main viewer to use the new “View Top Leader Bucket” button;
+  the dashboard will auto-refresh every 5 s and you can adjust the record limit. 2) Trigger a few trades with
+  TOP_LEADER_BUCKET_LIMIT set (e.g., 3) to confirm opens/closures appear on the new page and that the leaders table
+  matches your expectations.
