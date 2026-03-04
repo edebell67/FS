@@ -1,0 +1,24 @@
+# Task: Add Top X Strategies to Multi-Chart from Top 20
+
+- **Source**: User request
+- **Task Summary**: Create a new workflow automation similar to `profile_match_workflow` that extracts the top strategies from the Top 20 list and pushes them directly to the Multi-Chart viewport.
+- **Context**: 
+  - The workflow will run continuously alongside `profile_match_workflow` but will use simplified criteria: it only cares about pulling the best elements directly from the Top 20 array.
+  - It will feature a configuration UI in `workflow_automation.html` with a text input for `Top X` (number of charts to load, < 20).
+  - It will feature two checkboxes: `[ ] Scalper` and `[ ] Rev Scalper` to denote which strategy types to include from the Top 20. If both are checked, include a mix of both types.
+  - It will have standard Start / End time scheduling, Enabled state, Save, and Run Now buttons exactly like `profile_match_workflow`.
+- **Implementation Plan**:
+  - [x] **Backend Config**: Add the new workflow (e.g., `top_x_multi_chart_workflow`) to `trade_viewer_api.py` initialization (`WORKFLOWS` dict).
+  - [x] **Frontend UI**: Update `workflow_automation.html` to render the specific config fields (`Top X`, `Scalper`, `Rev Scalper`) when `w.id === 'top_x_multi_chart_workflow'`.
+  - [x] **Backend Engine**: Create `_run_top_x_multi_chart_workflow(mode, date_str, wf)` in `trade_viewer_api.py`.
+  - [x] **Engine Logic**: Fetch the current date's Top 20 list, filter by the checked types, sort by total net, slice the top `X`, and package it into the `multi_chart_payload` JSON.
+  - [x] **Frontend Consumers**: Update `multi_chart.js` (and v2/v3) so they recognize payloads from `"source": "top_x_multi_chart_workflow"`, clear out the old prefix overlays, and inject the new ones just like `profile_match_workflow`.
+- **Changes Made**: 
+  - Added new backend workflow dict entry and processing function `_run_top_x_multi_chart_workflow`.
+  - Added frontend template config specifically for `top_x_multi_chart_workflow`.
+  - Wired all three UI JS scripts (`multi_chart.js`, `v2`, `v3`) to handle `isTopXWorkflow` clearing.
+- **Validation**:
+  - [ ] Verify the workflow appears in the Automation screen.
+  - [ ] Verify the input fields save and persist cleanly to `config.json`.
+  - [ ] Verify clicking "Run Now" successfully updates the Multi-Chart view with the correct filtered strategies.
+- **Completion Status**: Testing Required. (In `200_inprogress`)

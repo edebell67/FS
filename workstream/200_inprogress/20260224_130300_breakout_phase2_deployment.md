@@ -1,0 +1,119 @@
+Priority: 2
+
+# Task: Breakout Phase 2 - Deployment
+
+## Status
+IN_PROGRESS (Ready for manual steps)
+
+## Source
+- **Backlog**: `workstream/000_backlog/20260224_124302_20260224_1100_Breakout_Market_Narrative_Distribution.md`
+- **Phase**: Phase 2 from backlog execution plan
+- **Project**: Breakout / PipHunter
+
+## Description
+Deploy the Breakout Live Hub website to production with custom domain, SSL, and CDN.
+
+## Objective
+Make the website publicly accessible at a branded domain with professional hosting infrastructure.
+
+## Sub-tasks
+- [ ] Acquire domain (MANUAL)
+  - Check availability: `piphunter.io`, `piphunter.app`, `piphunter.com`
+  - Purchase preferred domain
+  - Configure DNS records
+- [x] Prepare Vercel deployment config
+  - Created `vercel.json` with routes and headers ✓
+- [x] Prepare Netlify deployment config
+  - Created `netlify.toml` with redirects and headers ✓
+- [x] Create deployment documentation
+  - Created `DEPLOYMENT.md` with full instructions ✓
+- [ ] Set up hosting account (MANUAL)
+  - Create Vercel or Netlify account
+  - Connect to git repository or drag-drop deploy
+- [ ] Configure DNS and SSL (MANUAL)
+  - Point domain to hosting provider
+  - Enable HTTPS/SSL certificate
+  - Set up www redirect
+- [ ] Deploy and test live (MANUAL)
+  - Push to production
+  - Verify all pages load
+  - Test on multiple devices/browsers
+  - Verify API connectivity from deployed site
+
+## Implementation Log
+
+### 2026-02-24 13:40
+- Created `vercel.json` with:
+  - Route configuration (/ → breakout-live-hub.html)
+  - Security headers (X-Content-Type-Options, X-Frame-Options, X-XSS-Protection)
+  - Cache headers for assets (1 year immutable)
+
+- Created `netlify.toml` with:
+  - Publish directory configuration
+  - Redirects for clean URLs
+  - Security and cache headers
+
+- Created `DEPLOYMENT.md` with:
+  - Step-by-step Vercel deployment
+  - Step-by-step Netlify deployment
+  - DNS configuration for both platforms
+  - API configuration and CORS setup
+  - Post-deployment checklist
+  - Troubleshooting guide
+
+## Deliverables
+
+| Deliverable | Path | Status |
+|-------------|------|--------|
+| Vercel Config | `landing/vercel.json` | ✓ |
+| Netlify Config | `landing/netlify.toml` | ✓ |
+| Deployment Guide | `landing/DEPLOYMENT.md` | ✓ |
+| Live Website | TBD | Pending manual deploy |
+
+## Manual Steps Required
+
+### 1. Domain Purchase
+- Go to Namecheap, GoDaddy, or Cloudflare Registrar
+- Search for: `piphunter.io`, `piphunter.app`, `piphunter.com`
+- Purchase preferred domain (~$10-50/year)
+
+### 2. Vercel Deployment (Recommended)
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Navigate to landing folder
+cd TradeApps/breakout/piphunter/landing
+
+# Deploy
+vercel
+
+# Follow prompts to link to account
+```
+
+### 3. Add Custom Domain
+- In Vercel dashboard → Project → Settings → Domains
+- Add purchased domain
+- Update DNS records as shown
+
+### 4. Update API URL
+Edit `breakout-live-hub.html` line 787:
+```javascript
+const API_BASE = 'https://your-api-url.com';
+```
+
+## Verification Test
+1. Website accessible at custom domain - Pending
+2. HTTPS enforced (no mixed content warnings) - Pending
+3. Auto-deploy triggers on git push - Pending
+4. Preview deploys work for PRs - Pending
+5. Site loads in < 2 seconds globally - Pending
+
+## Risks/Notes
+- Domain purchase requires payment
+- DNS propagation can take 24-48 hours
+- API needs CORS configuration for cross-origin requests
+- Consider deploying API to same domain or subdomain to avoid CORS
+
+## Completion Date
+(To be filled after manual deployment)
