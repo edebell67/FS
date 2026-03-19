@@ -1,0 +1,471 @@
+# =====================================================
+# AI AGENT CONTROLLER
+# =====================================================
+
+$root = "C:\Users\edebe\eds\workstream"
+$skillsRoot = "C:\Users\edebe\eds\skills"
+$lifecycleFile = "$skillsRoot\workstream-task-lifecycle\SKILL.md"
+
+$todoRoot = "$root\100_backlog"
+$workingRoot = "$root\200_inprogress"
+$completeRoot = "$root\300_complete"
+$failedRoot = "$root\400_failed"
+$maxConcurrentTasksPerDate = 3
+
+$logDir = "$root\logs"
+$lockFile = "$root\agent.lock"
+$taskGateUtilsPath = "$root\task_gate_utils.ps1"
+$workerLogFile = "$logDir\agent_worker.log"
+
+
+# =====================================================
+# LOCK FILE PROTECTION
+# =====================================================
+
+if (Test-Path $lockFile) {
+    $existingPidRaw = ""
+    try {
+        $existingPidRaw = (Get-Content $lockFile -Raw).Trim()
+    } catch {
+        $existingPidRaw = ""
+    }
+
+    $isActiveLock = $false
+    if ($existingPidRaw -match '^\d+$') {
+        try {
+            $existingProcess = Get-Process -Id ([int]$existingPidRaw) -ErrorAction Stop
+            if ($null -ne $existingProcess) {
+                $isActiveLock = $true
+            }
+        } catch {
+            $isActiveLock = $false
+        }
+    }
+
+    if ($isActiveLock) {
+        Write-Host "Another controller instance appears to be running."
+        Write-Host "Lock file found at $lockFile"
+        Write-Host "Active PID: $existingPidRaw"
+        exit
+    }
+
+    try {
+        Remove-Item $lockFile -Force
+        Write-Host "Removed stale controller lock file."
+    } catch {
+        Write-Host "Unable to remove stale lock file at $lockFile"
+        exit
+    }
+
+}
+
+Set-Content -Path $lockFile -Value $PID -NoNewline
+
+# Ensure lock removed on exit
+Register-EngineEvent PowerShell.Exiting -Action {
+    if (Test-Path $lockFile) {
+        Remove-Item $lockFile -Force
+    }
+} | Out-Null
+
+
+# =====================================================
+# LOGGING
+# =====================================================
+
+if (!(Test-Path $logDir)) {
+    New-Item $logDir -ItemType Directory | Out-Null
+}
+
+Start-Transcript -Path "$logDir\agent_controller.log" -Append
+
+Write-Host ""
+Write-Host ("AI Agent Controller Starting: {0}" -f (Get-Date -Format 'yyyyMMdd_HHmmss'))
+Write-Host "--------------------------------"
+
+
+# =====================================================
+# LOAD SKILLS
+# =====================================================
+
+$workflow = Get-Content $lifecycleFile -Raw
+
+$skillFiles = Get-ChildItem $skillsRoot -Recurse -Filter *.md |
+Where-Object { $_.FullName -ne $lifecycleFile }
+
+$supportSkills = ""
+
+foreach ($skill in $skillFiles) {
+
+    $supportSkills += "`n----- SKILL: $($skill.Name) -----`n"
+    $supportSkills += Get-Content $skill.FullName -Raw
+
+}
+
+
+# =====================================================
+# WORKER FUNCTION
+# =====================================================
+
+function Run-AgentWorker {
+
+param(
+[string]$agentName,
+[string]$cliCommand
+)
+
+$todo = "$todoRoot\$agentName"
+$working = "$workingRoot\$agentName"
+
+if (!(Test-Path $working)) {
+    New-Item $working -ItemType Directory | Out-Null
+}
+
+Write-Host "$agentName worker started."
+
+while ($true) {
+
+    try {
+
+        $task = Get-ChildItem $todo -Filter *.md |
+        Sort-Object LastWriteTime |
+        Select-Object -First 1
+
+        if ($task -eq $null) {
+
+            Start-Sleep 10
+            continue
+
+        }
+
+        Write-Host ""
+        Write-Host "[$agentName] Starting task $($task.Name)"
+
+        $workingTask = "$working\$($task.Name)"
+
+        Move-Item $task.FullName $workingTask -Force
+
+        $taskText = Get-Content $workingTask -Raw
+
+
+
+$prompt = @"
+SYSTEM ROLE
+---------------------------------------
+You are an autonomous execution agent working inside a structured task workflow.
+
+You must strictly follow lifecycle.md and complete the assigned task.
+Do not invent workflow steps or ignore lifecycle rules.
+
+
+
+PRIMARY WORKFLOW (MANDATORY)
+---------------------------------------
+$workflow
+
+
+
+SUPPORTING SKILLS (REFERENCE)
+---------------------------------------
+$supportSkills
+
+
+
+TASK INPUT
+---------------------------------------
+$taskText
+
+
+
+WORKING DIRECTORY
+---------------------------------------
+C:\Users\edebe\eds\workstream
+
+
+
+TASK LIFECYCLE RULES
+---------------------------------------
+
+1. Tasks originate from:
+C:\Users\edebe\eds\workstream\100_backlog\<agent>
+
+2. When execution begins the task has been moved to:
+C:\Users\edebe\eds\workstream\200_inprogress\<agent>
+
+3. Complete the work described in TASK INPUT.
+
+4. IMPORTANT - Epic Output Folder:
+If the task contains **Epic Output Folder:** metadata, write ALL code and deliverable artifacts to that folder:
+- solution/ for implementation code
+- verification/ for test evidence
+- workstreams/{Letter}/ for workstream-specific files
+Task files (.md) stay in workstream folders. Code goes to Epic Output Folder.
+
+5. When the task is finished write output to:
+
+C:\Users\edebe\eds\workstream\200_inprogress\<task_name>.result.md
+
+6. The result file must contain:
+
+- summary
+- steps taken
+- final deliverables
+- any files generated (with full paths)
+
+7. Do not modify lifecycle folders.
+
+8. Do not invent new workflow processes.
+
+9. If a blocker occurs create:
+
+C:\Users\edebe\eds\workstream\200_inprogress\<task_name>.blocker.md
+
+10. Continue execution until task completion.
+
+11. Planning alone is not completion — the task must be executed.
+
+
+
+OUTPUT RULES
+---------------------------------------
+
+All deliverables must be written to the result file.
+Terminal output is not considered completion.
+
+
+
+EXECUTION GOAL
+---------------------------------------
+
+Complete the assigned task fully using lifecycle workflow and supporting skills.
+
+"@
+
+
+
+
+        Write-Host "[$agentName] Running CLI..."
+
+        $prompt | Invoke-Expression $cliCommand
+
+        Move-Item $workingTask "$completeRoot\$($task.Name)" -Force
+
+        Write-Host "[$agentName] Completed task"
+
+    }
+
+    catch {
+
+        Write-Host "[$agentName] ERROR: $_"
+
+        if (Test-Path $workingTask) {
+
+            Move-Item $workingTask "$failedRoot\$($task.Name)" -Force
+
+        }
+
+        Start-Sleep 10
+
+    }
+
+}
+
+}
+
+
+# =====================================================
+# START AGENTS
+# =====================================================
+
+Write-Host "Starting Gemini worker..."
+
+Start-Job -ScriptBlock {
+
+param($workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate)
+
+. $taskGateUtilsPath
+
+function Write-WorkerLog {
+    param([string]$AgentName, [string]$Message, [string]$workerLogFile)
+    $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+    Add-Content -Path $workerLogFile -Value "[$ts] [$AgentName] $Message"
+}
+
+while ($true) {
+
+$todo="$todoRoot\gemini"
+$working="$workingRoot\gemini"
+
+if (!(Test-Path $working)) {
+    New-Item $working -ItemType Directory | Out-Null
+}
+
+        $claim = Claim-NextRunnableTaskForWorker -WorkerName 'gemini' -TodoRoot $todoRoot -WorkingDirectory $working -WorkingRoot $workingRoot -CompleteRoot $completeRoot -MaxConcurrentTasksPerDate $maxConcurrentTasksPerDate
+
+if ($null -eq $claim) { Start-Sleep 10; continue }
+
+$task = $claim.OriginalTask
+$workingTask = $claim.WorkingTaskPath
+Write-WorkerLog -AgentName 'gemini' -Message "claimed $($task.FullName) -> $workingTask" -workerLogFile $workerLogFile
+
+$taskText=Get-Content $workingTask -Raw
+
+$prompt=@"
+PRIMARY WORKFLOW
+---------------------------------------
+$workflow
+
+SUPPORTING SKILLS
+---------------------------------------
+$supportSkills
+
+TASK
+---------------------------------------
+$taskText
+"@
+
+$result = $prompt | gemini --headless
+$result | Out-File "$workingTask.result.md"
+
+Move-Item $workingTask "$completeRoot\$($task.Name)"
+Write-WorkerLog -AgentName 'gemini' -Message "completed $($task.Name)" -workerLogFile $workerLogFile
+
+}
+
+} -ArgumentList $workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate
+
+
+
+Write-Host "Starting Codex worker..."
+
+Start-Job -ScriptBlock {
+
+param($workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate)
+
+. $taskGateUtilsPath
+
+function Write-WorkerLog {
+    param([string]$AgentName, [string]$Message, [string]$workerLogFile)
+    $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+    Add-Content -Path $workerLogFile -Value "[$ts] [$AgentName] $Message"
+}
+
+while ($true) {
+
+$todo="$todoRoot\codex"
+$working="$workingRoot\codex"
+
+if (!(Test-Path $working)) {
+    New-Item $working -ItemType Directory | Out-Null
+}
+
+        $claim = Claim-NextRunnableTaskForWorker -WorkerName 'codex' -TodoRoot $todoRoot -WorkingDirectory $working -WorkingRoot $workingRoot -CompleteRoot $completeRoot -MaxConcurrentTasksPerDate $maxConcurrentTasksPerDate
+
+if ($null -eq $claim) { Start-Sleep 10; continue }
+
+$task = $claim.OriginalTask
+$workingTask = $claim.WorkingTaskPath
+Write-WorkerLog -AgentName 'codex' -Message "claimed $($task.FullName) -> $workingTask" -workerLogFile $workerLogFile
+
+$taskText=Get-Content $workingTask -Raw
+
+$prompt=@"
+PRIMARY WORKFLOW
+---------------------------------------
+$workflow
+
+SUPPORTING SKILLS
+---------------------------------------
+$supportSkills
+
+TASK
+---------------------------------------
+$taskText
+"@
+
+
+$result = $prompt | codex exec
+$result | Out-File "$workingTask.result.md"
+
+Move-Item $workingTask "$completeRoot\$($task.Name)"
+Write-WorkerLog -AgentName 'codex' -Message "completed $($task.Name)" -workerLogFile $workerLogFile
+
+}
+
+} -ArgumentList $workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate
+
+
+
+Write-Host "Starting Claude worker..."
+
+Start-Job -ScriptBlock {
+
+param($workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate)
+
+. $taskGateUtilsPath
+
+function Write-WorkerLog {
+    param([string]$AgentName, [string]$Message, [string]$workerLogFile)
+    $ts = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'
+    Add-Content -Path $workerLogFile -Value "[$ts] [$AgentName] $Message"
+}
+
+while ($true) {
+
+$todo="$todoRoot\claude"
+$working="$workingRoot\claude"
+
+if (!(Test-Path $working)) {
+    New-Item $working -ItemType Directory | Out-Null
+}
+
+        $claim = Claim-NextRunnableTaskForWorker -WorkerName 'claude' -TodoRoot $todoRoot -WorkingDirectory $working -WorkingRoot $workingRoot -CompleteRoot $completeRoot -MaxConcurrentTasksPerDate $maxConcurrentTasksPerDate
+
+if ($null -eq $claim) { Start-Sleep 10; continue }
+
+$task = $claim.OriginalTask
+$workingTask = $claim.WorkingTaskPath
+Write-WorkerLog -AgentName 'claude' -Message "claimed $($task.FullName) -> $workingTask" -workerLogFile $workerLogFile
+
+$taskText=Get-Content $workingTask -Raw
+
+$prompt=@"
+PRIMARY WORKFLOW
+---------------------------------------
+$workflow
+
+SUPPORTING SKILLS
+---------------------------------------
+$supportSkills
+
+TASK
+---------------------------------------
+$taskText
+"@
+
+
+$result = $prompt | wsl claude --dangerously-skip-permissions
+$result | Out-File "$workingTask.result.md"
+
+
+Move-Item $workingTask "$completeRoot\$($task.Name)"
+Write-WorkerLog -AgentName 'claude' -Message "completed $($task.Name)" -workerLogFile $workerLogFile
+
+}
+
+} -ArgumentList $workflow,$supportSkills,$todoRoot,$workingRoot,$completeRoot,$failedRoot,$taskGateUtilsPath,$workerLogFile,$maxConcurrentTasksPerDate
+
+
+
+# =====================================================
+# KEEP CONTROLLER RUNNING
+# =====================================================
+
+Write-Host ""
+Write-Host "Agents running..."
+
+while ($true) {
+
+Start-Sleep 60
+
+}

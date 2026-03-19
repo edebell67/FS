@@ -1,0 +1,11 @@
+{
+  "success": true,
+  "destination_folder": "workstream/verification/epic_destination_folder_validation/output",
+  "tasks_created_count": 1,
+  "first_task_exists": true,
+  "first_task_path": "C:\\Users\\edebe\\eds\\workstream\\verification\\epic_destination_folder_validation\\output\\20260319_171128_validation_epic_workstreamA_create_first_validation_task.md",
+  "manifest_exists": true,
+  "manifest_path": "C:\\Users\\edebe\\eds\\ep_validation_epic\\decomposition_manifest.json",
+  "epic_output_folder_exists": true,
+  "epic_output_folder": "C:\\Users\\edebe\\eds\\ep_validation_epic"
+}

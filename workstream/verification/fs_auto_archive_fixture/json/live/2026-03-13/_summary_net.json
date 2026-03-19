@@ -1,0 +1,24 @@
+{
+  "last_update": "2026-03-13T10:00:00",
+  "session_max_net": 0.0,
+  "strategies": {
+    "alpha": {
+      "EUR": [
+        {
+          "t": "2026-03-13T09:00:00",
+          "net": 10.0,
+          "buy_net": 10.0,
+          "sell_net": 0.0,
+          "buy_alt": -2.0,
+          "sell_alt": 0.0,
+          "live_buy": 0.0,
+          "live_sell": 0.0,
+          "b_c": 1,
+          "s_c": 0,
+          "buyPercent": 100.0,
+          "sellPercent": 0.0
+        }
+      ]
+    }
+  }
+}

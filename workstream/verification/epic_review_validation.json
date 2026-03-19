@@ -1,0 +1,11 @@
+{
+  "RootHasEpicReviewButton": true,
+  "EpicReviewHasBackLink": true,
+  "EpicReviewHasAllocateAction": true,
+  "EpicCount": 12,
+  "FirstEpicSlug": "000_epic_20260316_135233_strategy_warehouse_autonomous_marketing_engine_md_task_b4",
+  "ModelsJson": "{\"models\": [{\"model\": \"gemini\", \"count\": 63}, {\"model\": \"claude\", \"count\": 49}, {\"model\": \"codex\", \"count\": 0}]}",
+  "TaskQuerySample": "{\"tasks\": [{\"path\": \"C:\\\\Users\\\\edebe\\\\eds\\\\workstream\\\\300_complete\\\\gemini\\\\20260316_232323_strategy_warehouse_marketing_engine_workstreamB_implement_linkedin_connector.md\", \"filename\": \"20260316_232323_strategy_warehouse_marketing_engine_workstreamB_implement_linkedin_connector.md\", \"title\": \"Task: Implement LinkedIn Connector (Workstream B)\", \"workstream\": \"Unknown\", \"workstream_group\": \"B\", \"",
+  "ScreenshotExists": false,
+  "ValidatedAt": "2026-03-19T16:58:32Z"
+}

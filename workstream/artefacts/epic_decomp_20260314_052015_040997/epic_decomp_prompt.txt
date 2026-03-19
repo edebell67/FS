@@ -1,0 +1,856 @@
+You are decomposing a product/engineering epic into executable markdown task files.
+
+Follow these instructions in order:
+1. Use the epic decomposition skill as the primary contract for structure, naming intent, metadata, and decomposition completeness.
+2. Apply the UI delivery viewability skill only when a generated task is user-facing UI, dashboard, screen, or operator workflow work. For those tasks, include verification criteria covering:
+   - an access/start script,
+   - the localhost URL to open,
+   - startup smoke validation,
+   - screenshot capture evidence.
+3. Decompose the epic into MANY deliverable tasks. Do not collapse whole product areas into one vague task. Split work into implementable increments that a model can execute independently.
+4. Preserve and infer missing detail conservatively. If the epic is under-specified, derive sensible tasks, dependencies, and verification based on the stated MVP goals.
+5. Ensure every task links cleanly to the source epic and is review/allocation ready.
+
+Output JSON only, matching the provided schema exactly.
+
+Epic path: C:\Users\edebe\eds\workstream\000_epic\20260305_185316_mvp_prd_quarterly_export_10min.md
+
+Epic Decomposition Skill:
+---
+name: epic-decomposition
+description: Decompose an epic into granular actionable task files organized by workstream for autonomous agent execution. Use when an epic document must be split into standalone epic task files with explicit metadata, dependency ordering, and validation criteria for cross-model execution.
+---
+
+# Epic Decomposition
+
+When given an epic document, decompose it into individual task files that can be executed autonomously by AI agents. Each task must contain enough context and ordering metadata for a model to decide whether it is ready to start.
+
+Preserve source text fidelity when copying epic metadata:
+- Keep UTF-8 punctuation and symbols from the source epic title and body.
+- Do not replace em dashes, smart quotes, or accented characters with `?`, `�`, or ASCII fallbacks unless the source file already contains corruption.
+
+## Input
+
+An epic markdown file containing:
+- Objective or goal
+- System architecture, optional
+- Workstreams labeled like `WORKSTREAM A - DATA LAYER`
+- Tasks within each workstream, such as `TASK A1 Define publishable signal schema`
+
+## Output
+
+Individual task files in the workstream's designated agent folder:
+
+```text
+workstream/100_backlog/{agent}/
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+'- ...
+```
+
+Example for `Autonomous Trading Signal Platform`:
+
+```text
+workstream/100_backlog/gemini/
+|- 20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md
+|- 20260309_120001_autonomous_trading_signal_platform_workstreamA_define_publishable_trade_result_schema.md
+'- ...
+```
+
+## File Naming Convention
+
+```text
+{yyyymmdd}_{hhmmss}_{epic_snake_case}_workstream{Letter}_{task_name_snake_case}.md
+```
+
+Rules:
+- Include the epic name in snake_case after the timestamp.
+- Use a consistent timestamp base for all tasks in one decomposition batch.
+- Increment seconds to preserve sort order within a workstream.
+- Use snake_case for all file-name components.
+- Keep task names concise but descriptive.
+- Ensure the epic name matches the `Epic:` metadata inside the task file.
+
+## Task File Template
+
+Each generated task file must follow this structure:
+
+```markdown
+# TASK {ID}: {Task Title}
+
+**Workstream:** {Letter} - {WORKSTREAM NAME}
+**Epic:** {Epic Title}
+**Epic Sequence:** {sequence_number}
+**Depends On:** {sequence numbers or `none`}
+**Blocks:** {sequence numbers or `none`}
+**Readiness:** {ready | blocked}
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+{Why this task exists - extracted from epic or inferred}
+
+## Input
+
+{What this task requires as input - data, dependencies, prior tasks}
+
+## Output
+
+{What this task produces - files, services, artifacts}
+
+## Fields / Components (if applicable)
+
+- {field_1}
+- {field_2}
+
+## Action (if applicable)
+
+{Specific action to perform}
+
+## Verification
+
+- [ ] {Verification criteria from epic}
+- [ ] {Additional verification if needed}
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+Ordering field rules:
+- `Epic Sequence` identifies the dependency layer within the epic, such as `1.1`, `1.2`, or `2.1`.
+- `Depends On` lists predecessor epic sequence numbers when known; otherwise set `none`.
+- `Blocks` lists downstream tasks only when the epic explicitly identifies them; otherwise set `none`.
+- `Readiness` is `ready` only when no predecessor work is required at task creation time.
+- If dependency edges are ambiguous, tell the assignee to use `$task-execution-ordering` before implementation starts.
+- Foundation tasks that establish schemas, contracts, shared models, migrations, or canonical enums must explicitly declare what they unblock.
+- If sibling tasks name a foundational task as input or dependency, the foundational task must not omit its downstream `Blocks` metadata unless the decomposition engine truly cannot infer the affected tasks.
+
+## Decomposition Process
+
+### Step 1: Parse Epic Structure
+
+Identify all workstreams by looking for patterns:
+- `# WORKSTREAM {LETTER} - {NAME}`
+- `## WORKSTREAM {LETTER} - {NAME}`
+- Numbered sections with clear boundaries
+
+### Step 2: Extract Tasks
+
+For each workstream, identify tasks by patterns:
+- `## TASK {ID} {Title}`
+- `### TASK {ID} {Title}`
+- Numbered task lists
+
+Extract from each task:
+
+| Field | Source Pattern |
+|-------|----------------|
+| Purpose | Purpose section or inferred from context |
+| Input | Input section |
+| Output | Output section |
+| Fields | Fields section, usually a bulleted list |
+| Action | Action section |
+| Verification | Verification section |
+| Epic Sequence | Dependency layer inferred from epic ordering |
+| Depends On | Explicit prerequisites or inferred predecessor tasks |
+| Blocks | Explicit downstream tasks, if stated |
+| Readiness | `ready` if no predecessors, otherwise `blocked` |
+| Status | Default to `[ ] Not Started` |
+
+Task-quality requirements during extraction:
+- Add a `Dependencies` section only when it improves execution clarity, but never omit dependency metadata in the header.
+- For foundational tasks, explicitly capture downstream consumers in `Blocks` when they are inferable from sibling tasks.
+- Make `Output` concrete. Prefer deliverable-shaped artifacts such as schema files, enum definitions, service contracts, field maps, migration specs, API endpoints, UI screens, or test suites over vague phrases like "logic" or "definitions".
+- Keep verification bullets implementation-facing and completion-oriented. Avoid generic restatements of purpose.
+- Deduplicate verification bullets after merging requirements from the epic and any auxiliary skills.
+- When a UI skill expands verification requirements, keep one canonical bullet per requirement. Do not repeat startup-script, localhost URL, smoke-test, or screenshot requirements with alternate wording.
+
+### Step 3: Generate Task Files
+
+For each extracted task:
+1. Generate the filename using the naming convention.
+2. Populate the template with extracted data and ordering metadata.
+3. Write the file to the appropriate agent folder based on workstream assignment.
+
+Assign ordering metadata during decomposition:
+1. Build a dependency graph for tasks inside the same epic using explicit dependencies first.
+2. Infer missing edges from phase order, required outputs, schema prerequisites, migration-before-consumer rules, and validation gates.
+3. Assign `Epic Sequence` by dependency layer.
+   - Parallel foundation tasks: `1.1`, `1.2`, `1.3`
+   - Tasks waiting on layer 1: `2.1`, `2.2`
+   - Continue incrementing major layers as dependencies deepen
+4. Set `Readiness: ready` only for tasks with `Depends On: none`.
+5. Set `Readiness: blocked` for tasks that have unresolved predecessors at creation time.
+6. When uncertainty remains, keep the more conservative dependency set and add a note telling the assignee to verify ordering with `$task-execution-ordering`.
+
+Before finalizing each generated task file:
+1. Check that `Input`, `Output`, `Dependencies`, `Depends On`, `Blocks`, and `Verification` are mutually consistent.
+2. If another task depends on this task's outputs, ensure this task's `Blocks` metadata names those downstream layers or tasks where inferable.
+3. Rewrite vague outputs into explicit artifacts or artifact families.
+4. Remove duplicate verification bullets and collapse overlapping requirements into one stronger bullet.
+5. Confirm copied epic metadata still matches the original source text byte-for-byte for visible punctuation and title wording.
+
+### Step 4: Organize by Agent
+
+Distribute workstreams to agent folders based on assignment:
+
+```text
+workstream/100_backlog/
+|- gemini/      # Assigned workstreams
+|- claude/      # Assigned workstreams
+|- codex/       # Assigned workstreams
+'- general/     # Unassigned or cross-cutting tasks
+```
+
+## Example Decomposition
+
+Epic input:
+
+```markdown
+# WORKSTREAM A - DATA LAYER
+
+Goal: Create the publishable dataset.
+
+## TASK A1 Define publishable signal schema
+
+Purpose: Define the minimal dataset exposed publicly.
+
+Input: local trading system signal data
+
+Output: publishable_signal_schema.json
+
+Fields:
+signal_id
+timestamp
+asset
+
+Verification: schema validated and documented
+
+STATUS [ ]
+```
+
+Generated task file `20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md`:
+
+```markdown
+# TASK A1: Define Publishable Signal Schema
+
+**Workstream:** A - DATA LAYER
+**Epic:** Autonomous Trading Signal Platform
+**Epic Sequence:** 1.1
+**Depends On:** none
+**Blocks:** 2.1
+**Readiness:** ready
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+Define the minimal dataset that will be exposed publicly.
+
+## Input
+
+Local trading system signal data
+
+## Output
+
+`publishable_signal_schema.json`
+
+## Fields
+
+- signal_id
+- timestamp
+- asset
+
+## Verification
+
+- [ ] Schema validated and documented
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+## Metadata Extraction Rules
+
+### Priority, Optional
+
+If the epic specifies priority, extract it:
+
+```text
+Priority: 1    -> High priority
+Priority: 2    -> Medium priority
+Priority: 3    -> Low priority, default
+```
+
+### Dependencies, Optional
+
+If tasks have dependencies, note them:
+
+```markdown
+## Dependencies
+
+- Requires: TASK A1, TASK A2
+- Blocks: TASK C1
+```
+
+Map dependency metadata into task headers:
+- Convert prerequisite tasks into `Depends On` epic sequence values.
+- Convert explicit blocked tasks into `Blocks` epic sequence values when known.
+- If the epic names task IDs but not sequence numbers, assign sequence numbers during decomposition and keep the original task IDs in notes or dependency text.
+
+### Workstream Goal
+
+Include the workstream's overall goal in each task for context:
+
+```markdown
+**Workstream Goal:** Create the publishable dataset used by all marketing and client applications.
+```
+
+## Agent Assignment Guidelines
+
+When distributing workstreams to agents, consider:
+
+| Agent | Best For |
+|-------|----------|
+| gemini | Data schemas, database work, backend infrastructure |
+| claude | Content generation, UI and UX, documentation, creative tasks |
+| codex | Mobile apps, client applications, integrations |
+| general | Unassigned or cross-cutting tasks |
+
+## Validation Checklist
+
+After decomposition, verify:
+- [ ] All tasks from the epic are represented.
+- [ ] Each task file has complete metadata: Epic, Workstream, Epic Sequence, Depends On, Blocks, Readiness, and Status.
+- [ ] Verification criteria are preserved from the epic.
+- [ ] Dependency layers are internally consistent and no task depends on a later sequence.
+- [ ] Only tasks with `Depends On: none` are marked `Readiness: ready`.
+- [ ] Foundation tasks that establish shared contracts, schemas, or canonical models explicitly identify downstream tasks they unblock.
+- [ ] `Output` sections name concrete artifacts or artifact classes, not only abstract implementation intent.
+- [ ] Verification bullets are deduplicated and do not repeat UI delivery requirements under different wording.
+- [ ] Epic titles and copied metadata preserve the original UTF-8 source text without mojibake.
+- [ ] File naming follows the convention.
+- [ ] Tasks are organized into the correct agent folders.
+- [ ] No orphaned tasks remain without a workstream assignment.
+
+## Integration with Agent Controller
+
+Generated task files are automatically picked up by `run_agent.ps1`:
+
+1. The agent polls `100_backlog/{agent}`.
+2. It reads the task file, extracts `Epic:`, ordering metadata, and `Epic Output Folder` metadata.
+3. It writes code and deliverable artifacts to the `Epic Output Folder` path.
+4. It executes the task with full context.
+5. It moves the task file to `300_complete` or `400_failed`.
+
+Important:
+- Task files remain in the `workstream` folders.
+- Code, tests, and deliverable artifacts must be written to the `Epic Output Folder` specified in the task metadata.
+
+## Epic Output Folder Structure
+
+When an epic is decomposed, a unified output folder is created:
+
+```text
+ep_{epic_slug}/
+|- solution/        # Implementation code
+|- verification/    # Test evidence and validation artifacts
+|- deploy/          # Deployment scripts and artifacts
+'- workstreams/
+   |- A/
+   '- B/
+```
+
+Each task file contains `Epic Output Folder` metadata pointing to this folder. Agents must:
+1. Read the `Epic Output Folder` field from the task file.
+2. Write implementation outputs to that folder.
+3. Use `solution` for code, `verification` for tests, and `workstreams/{Letter}` for workstream-specific files.
+
+
+UI Delivery Viewability Skill:
+---
+name: UI Delivery Viewability
+description: Standards for ensuring that UI deliverables (pages, screens, dashboards) are easily viewable and testable by the user out-of-the-box.
+---
+
+# UI Delivery Viewability
+
+When delivering a task that involves creating, updating, or launching a user interface (UI), web page, screen, dashboard, or frontend component, you MUST ensure the user can easily view and interact with the delivery locally without having to manually figure out how to start the required services.
+
+This skill mandates the creation of helper scripts and the validation of local environments to guarantee seamless UI testing.
+
+## Core Requirements
+
+1. **Provide a Starter Script**:
+   Whenever a UI is the primary deliverable, you must create or update a simple executable script (e.g., a `.bat`, `.ps1`, or `.sh` file) in the project root or relevant directory that starts all necessary backend and frontend services. 
+   - Example: `start_dashboard.bat` or `run_ui.bat`.
+   - The script must clearly output the local URL (e.g., `http://localhost:8000`) where the UI can be accessed.
+
+2. **Validate Environment Dependencies**:
+   Before finalizing the delivery or asking the user to verify the UI, check for common environment issues that cause immediate crashes:
+   - Ensure requisite packages (like `uvicorn`, `python-multipart`, `fastapi`, etc.) are either documented in a `requirements.txt` / `package.json` or explicitly installed.
+   - Run a quick smoke test of the startup sequence yourself to ensure it doesn't immediately crash due to missing dependencies.
+
+3. **Handle Blocking Errors Gracefully**:
+   If the UI depends on a database connection (like PostgreSQL) or an external API that might not be available during initial local testing, ensure the application startup is resilient. 
+   - E.g., catch missing database connection errors at startup and allow the UI to serve generic or cached data, rather than crashing the entire web server.
+
+4. **Document the Access Method in Checklist**:
+   In your task execution evidence, explicitly state the command or script the user should click/run, and provide the exact `localhost` URL they should open in their browser to verify the task.
+
+5. **Capture Screenshot Evidence**:
+   After successfully launching the UI, you MUST capture a screenshot as proof of delivery:
+   - Use an automated screenshot tool (e.g., Playwright, Puppeteer, or system screenshot utility)
+   - Save screenshot to the epic's `verification/` folder with naming: `{task_id}_screenshot.png`
+   - If multiple screens/states exist, capture each: `{task_id}_screenshot_01.png`, `{task_id}_screenshot_02.png`, etc.
+   - Screenshot must show the UI in a working state (not error pages)
+
+6. **Include Access Script in Evidence**:
+   The starter script itself is part of the deliverable evidence:
+   - Copy or reference the access script path in the verification output
+   - Include the full script content in the task result markdown
+   - Format example in result:
+     ```
+     ## Access Script
+     Path: C:\path\to\start_ui.bat
+
+     ```bat
+     @echo off
+     echo Starting UI...
+     python -m uvicorn main:app --port 8000
+     ```
+
+     Run this script and open http://localhost:8000
+     ```
+   - If the UI requires specific environment setup (env vars, config files), document those in the evidence
+
+## Screenshot Automation
+
+Use one of these methods to capture screenshots:
+
+### Option 1: Playwright (Recommended)
+```python
+# screenshot_capture.py
+from playwright.sync_api import sync_playwright
+
+def capture_screenshot(url, output_path):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={'width': 1920, 'height': 1080})
+        page.goto(url)
+        page.wait_for_load_state('networkidle')
+        page.screenshot(path=output_path, full_page=True)
+        browser.close()
+
+capture_screenshot('http://localhost:8000', 'verification/task_screenshot.png')
+```
+
+### Option 2: PowerShell (Windows)
+```powershell
+# capture_screenshot.ps1
+Add-Type -AssemblyName System.Windows.Forms
+Start-Process "http://localhost:8000"
+Start-Sleep 5
+[System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {
+    $bitmap = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
+    $bitmap.Save("verification\task_screenshot.png")
+}
+```
+
+### Option 3: Browser DevTools Protocol
+```bash
+# Using Chrome headless
+chrome --headless --screenshot="verification/task_screenshot.png" --window-size=1920,1080 http://localhost:8000
+```
+
+## Example Scenario
+
+**Task**: Create a new marketing landing page.
+
+**Delivery Actions**:
+- Write the HTML/JS/CSS templates and backend routes.
+- Create a file `start_landing_page.bat` with the contents:
+  ```bat
+  @echo off
+  echo Installing required packages...
+  python -m pip install -r requirements.txt
+  echo Starting web server on http://localhost:8000
+  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+  ```
+- Before marking as "Awaiting User Verification", execute the `.bat` file (or equivalent background process) to verify it boots successfully.
+- Capture screenshot of the running UI and save to `verification/landing_page_screenshot.png`
+- In your final task log, tell the user: "To view this, simply double click `start_landing_page.bat` and open http://localhost:8000 in your browser."
+
+**Evidence Package** (saved to epic's `verification/` folder):
+```
+verification/
+├── landing_page_screenshot.png      # Visual proof of working UI
+├── landing_page_evidence.md         # Evidence document
+└── start_landing_page.bat           # Copy of access script
+```
+
+**Evidence Document Format** (`landing_page_evidence.md`):
+```markdown
+# UI Delivery Evidence
+
+## Task
+Create a new marketing landing page
+
+## Screenshot
+![Landing Page](landing_page_screenshot.png)
+
+## Access Script
+Path: `C:\project\start_landing_page.bat`
+
+​```bat
+@echo off
+echo Installing required packages...
+python -m pip install -r requirements.txt
+echo Starting web server on http://localhost:8000
+python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+​```
+
+## Access Instructions
+1. Run `start_landing_page.bat`
+2. Open http://localhost:8000 in browser
+
+## Verification Timestamp
+2026-03-10 12:00:00
+```
+
+## Why this is important
+UI tasks require visual verification. If the underlying server crashes due to missing dependencies (like a missing `python-multipart` library) or lacking startup scripts, the user wastes time debugging the environment rather than reviewing your design. Always make UI deliverables instantly testable.
+
+Screenshot evidence provides:
+- Proof the UI was successfully rendered
+- Visual record for future reference
+- Baseline for regression testing
+- Documentation for stakeholders who cannot run locally
+
+
+Epic Markdown:
+```markdown
+# MVP PRD — Mobile Quarterly Export in 10 Minutes (UK Sole Traders, Bank-Feed First)
+
+## 0) One-line summary
+A mobile app that pulls Open Banking transactions, lets users resolve only “blocking” items via taps or voice, and exports an accountant-friendly **Quarterly Pack** (CSV + PDF). **No submission to HMRC.**
+
+---
+
+## 1) Target user
+- UK **cash-light** sole traders (majority of spend/income via bank/card)
+- Wants quarterly handoff to accountant / existing MTD-compatible software
+- Low tolerance for “doing bookkeeping”
+
+---
+
+## 2) Product promise
+**“Quarterly export in 10 minutes.”**
+- App reduces work to a short, ordered **exception queue**
+- Evidence/receipts are optional (helpful, but not blockers)
+
+---
+
+## 3) MVP goals and success metrics
+### Goals
+- Fast quarter close (minimal taps)
+- High confidence exports (traceable + audit-friendly)
+- Voice-driven micro-decisions (not long dictation)
+
+### Metrics (MVP)
+- Median time from opening Quarter screen → export generated: **≤ 10 minutes**
+- Export completion rate (quarter started → exported): **≥ 70%**
+- Average “blocking items” per quarter after 30 days active use: **≤ 15**
+- Voice command success rate (intent applied without edit): **≥ 80%**
+
+---
+
+## 4) What’s in scope / out of scope
+### In scope (MVP)
+- Open Banking read-only connection + transaction ingestion
+- Inbox triage with micro-decisions:
+  - category assignment (suggest + override)
+  - business vs personal tagging
+  - split transaction (% business)
+  - duplicate handling (dismiss/merge)
+- Quarter readiness engine + “Finish now” queue
+- Receipt/image capture and evidence store
+- Evidence ↔ bank transaction matching **with user confirmation**
+- Voice commands for core micro-decisions
+- Export Quarterly Pack (3 CSV + 1 PDF)
+- Simple merchant rules (“Always categorise X as Y”)
+
+### Out of scope (MVP)
+- Filing/submitting to HMRC
+- VAT features
+- Invoicing / AR / quoting
+- Landlords / property income
+- Complex tax adjustments (capital allowances etc.)
+- Multi-business
+- Payroll
+
+---
+
+## 5) Core user journeys
+### J1 — First-time setup (5 mins)
+1. Install → sign up
+2. Connect bank via Open Banking provider
+3. Choose: Sole trader (MVP only)
+4. App imports last ~90 days bank transactions
+
+### J2 — Ongoing triage (1–2 mins)
+1. Open Inbox
+2. Resolve only flagged items (tap/voice)
+3. Optional: attach receipts (camera/share/email later)
+
+### J3 — Quarter close (headline)
+1. Open Quarter screen
+2. See: readiness %, “items left”
+3. Tap **Finish now**
+4. App shows ordered blocking queue
+5. Resolve queue via quick actions/voice
+6. Tap **Export Quarterly Pack**
+
+### J4 — Evidence attach by voice (user confirms)
+1. User captures/shares receipt image
+2. App extracts amount/date/merchant (best-effort)
+3. App proposes top 3 candidate bank matches
+4. User taps to confirm (or “No match / Later”)
+
+---
+
+## 6) Blocking rules (the heart of the 10-minute promise)
+A transaction is **RESOLVED** if:
+- has `category_code`
+- has `business_personal` set (Business or Personal)
+- if `is_split = true`, then `split_business_pct` is set
+- if flagged as duplicate, it has a resolution (dismiss/merge)
+
+A transaction is **BLOCKING EXPORT** if any:
+- missing category
+- missing business/personal
+- split flagged but % missing
+- duplicate flagged but not resolved
+
+**Non-blocking:** evidence/receipt missing or unmatched.
+
+---
+
+## 7) Quarter readiness engine
+### Inputs
+- all transactions in selected quarter period
+
+### Outputs
+- `total_txns_in_period`
+- `blocking_txns_count`
+- `readiness_pct = round(100 * (1 - blocking_txns_count / total_txns_in_period))`
+- ordered `blocking_queue` (uncategorised → personal missing → split missing → duplicates)
+
+### UI requirements (Quarter screen)
+- Big: “92% ready — 8 items left”
+- CTA: “Finish now” (shows blocking queue only)
+- Export enabled only when `blocking_txns_count = 0`
+
+---
+
+## 8) Voice (MVP intent set)
+Voice is available on Inbox and Finish Now queue.
+
+### Supported commands
+- “Category: {X}”
+- “Business” / “Personal”
+- “Split {n}%”
+- “Attach receipt”
+- “Match first / second / third”
+- “No match”
+
+### Voice UX rule
+After voice action, show a single confirmation chip:
+- “Applied: Travel • Business • Split 70%” (tap to undo/edit)
+
+---
+
+## 9) Evidence matching (confirm-first)
+### Matching behavior
+- Receipt image ingested → extract (amount/date/merchant)
+- Suggest top 3 bank candidates using:
+  - amount exact match (or tolerance)
+  - date proximity window
+  - fuzzy merchant match
+- Always show confirmation bottom sheet:
+  - candidate #1 prominent; #2–#3 smaller
+  - “No match / Later”
+
+### Matching UX requirements
+- For each candidate show: merchant, date, amount + match-reason chips
+- One tap confirms link and removes related evidence task from any queue
+
+---
+
+## 10) Export deliverable — Quarterly Pack
+The pack must be accountant-friendly and tool-agnostic.
+
+### File 1: Transactions.csv
+Fields:
+- txn_id
+- date
+- merchant
+- amount
+- direction (in/out)
+- category_code
+- category_name
+- confidence (0–1)
+- business_personal (BUSINESS|PERSONAL)
+- is_split (true/false)
+- split_business_pct (0–100, nullable)
+- matched_evidence_ids (comma list)
+- bank_account_id
+- bank_txn_ref
+
+### File 2: EvidenceIndex.csv (export even if empty)
+Fields:
+- evidence_id
+- type (RECEIPT|INVOICE|OTHER)
+- captured_at
+- doc_date
+- merchant
+- amount
+- storage_link
+- extraction_confidence (0–1)
+- matched_bank_txn_id (nullable)
+- user_confirmed (true/false)
+
+### File 3: QuarterlySummary.csv
+Fields:
+- period_start
+- period_end
+- category_code
+- category_name
+- total_in
+- total_out
+- count
+- unresolved_count
+
+### File 4: QuarterlyPack.pdf (1–2 pages)
+- period + totals
+- readiness (should be 100% at export)
+- category totals highlights
+- audit counts (auto-categorised vs manual overrides)
+- evidence coverage (matched vs bank-only)
+
+---
+
+## 11) Category set (MVP)
+Keep it small, stable, and expandable. Use codes below.
+
+### Income
+- INCOME_SALES — Sales / Fees (main trading income)
+- INCOME_OTHER — Other income (refunds, misc)
+
+### Expenses
+- EXP_COGS — Cost of goods / stock (optional; hide if irrelevant)
+- EXP_SUBCONTRACTORS — Subcontractors / freelancers
+- EXP_TRAVEL — Travel (public transport, taxi, claimable fuel)
+- EXP_VEHICLE — Vehicle costs (repairs, insurance, parking)
+- EXP_MEALS — Meals
+- EXP_ACCOM — Accommodation
+- EXP_RENT_UTIL — Rent & utilities
+- EXP_COMMS — Phone & internet
+- EXP_SOFTWARE — Software / subscriptions
+- EXP_MARKETING — Marketing / advertising
+- EXP_INSURANCE — Business insurance
+- EXP_BANK_FEES — Bank/merchant fees (Stripe, PayPal, bank charges)
+- EXP_PROFESSIONAL — Accountancy/legal/professional fees
+- EXP_OFFICE — Office supplies & small equipment
+- EXP_TRAINING — Training / education (business-related)
+- EXP_MISC — Misc (discourage; should trend down over time)
+
+### Tags (NOT categories)
+- PERSONAL (boolean/tag)
+- REVIEW_REQUIRED (boolean/tag; drives blockers)
+
+---
+
+## 12) Data model (MVP)
+Entities (minimum):
+- User
+- BusinessProfile
+- BankAccount
+- BankTransaction
+- TransactionClassification (category_code, business_personal, split pct, confidence, audit)
+- Evidence
+- EvidenceLink (evidence_id, bank_txn_id, link_confidence, user_confirmed, confirmed_at, method)
+- Quarter
+- QuarterMetrics (total, blocking, readiness_pct)
+- Rule (merchant_pattern → category_code, defaults for personal/split)
+
+Audit fields required on any user edits:
+- changed_at, changed_by, previous_value, new_value
+
+---
+
+## 13) Non-functional requirements
+- Secure storage of credentials/tokens (provider-managed where possible)
+- Encryption in transit + at rest
+- Idempotent imports (no duplicates on refresh)
+- Inbox load < 2 seconds typical device
+- Clear disclaimer: not tax advice; user responsible
+
+---
+
+## 14) Build order (recommended)
+1) Open Banking ingestion + Inbox list
+2) Classification actions + blocker rules
+3) Quarter readiness + Finish Now queue
+4) Export (CSV + PDF)
+5) Evidence capture + match suggestions + confirm
+6) Voice intents + confirmation chip + undo
+7) Merchant rules (“always categorise”)
+
+---
+
+## 15) MVP acceptance tests
+- A quarter with 200 transactions and 8 blockers shows “8 items left”
+- Resolving those 8 enables Export immediately
+- Export produces all 4 artifacts with correct totals and traceability
+- Evidence attachment always requires user confirmation of match (or “No match”)
+- Voice “Category: Travel” applies and is undoable with one tap
+
+```
+
+Output requirements:
+- epic_name: the canonical epic title
+- epic_slug: snake_case slug matching epic_name
+- summary: short summary of the decomposition
+- warnings: any caveats, assumptions, or inferred areas
+- tasks: list of executable tasks
+
+Task requirements:
+- id: stable task id like A1, A2, B1, etc
+- title: concise but descriptive deliverable title
+- workstream_letter: single letter if available, otherwise assign a sensible letter grouping
+- workstream_name: meaningful workstream name
+- workstream_goal: optional overall goal for this workstream
+- purpose, input, output, action: concrete and implementation-oriented
+- fields: include only if materially useful
+- verification: checklist-ready items, at least 2 for normal tasks and more for risky/UI tasks
+- priority: 1, 2, or 3
+- dependencies: explicit task ids where appropriate
+- suggested_agent: optional recommendation from {codex, gemini, claude, general}
+- ui_viewability: true only for UI-visible deliverables
+
+Quality bar:
+- Cover the full epic, especially MVP-critical areas.
+- Prefer 10+ tasks for a large epic unless the document is genuinely tiny.
+- Make each task independently reviewable and allocatable.
+- Avoid placeholders like "implement feature" without scope.

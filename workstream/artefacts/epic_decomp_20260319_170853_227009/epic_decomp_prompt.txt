@@ -1,0 +1,1350 @@
+You are decomposing a product/engineering epic into executable markdown task files.
+
+Follow these instructions in order:
+1. Use the epic decomposition skill as the primary contract for structure, naming intent, metadata, and decomposition completeness.
+2. Apply the UI delivery viewability skill only when a generated task is user-facing UI, dashboard, screen, or operator workflow work. For those tasks, include verification criteria covering:
+   - an access/start script,
+   - the localhost URL to open,
+   - startup smoke validation,
+   - screenshot capture evidence.
+3. Decompose the epic into MANY deliverable tasks. Do not collapse whole product areas into one vague task. Split work into implementable increments that a model can execute independently.
+4. Preserve and infer missing detail conservatively. If the epic is under-specified, derive sensible tasks, dependencies, and verification based on the stated MVP goals.
+5. Ensure every task links cleanly to the source epic and is review/allocation ready.
+
+Output JSON only, matching the provided schema exactly.
+
+Epic path: C:\Users\edebe\eds\workstream\000_epic\general\20260224_124302_general_Breakout_Market_Narrative_Distribution.md
+
+Epic Decomposition Skill:
+---
+name: epic-decomposition
+description: Decompose an epic into granular actionable task files organized by workstream for autonomous agent execution. Use when an epic document must be split into standalone epic task files with explicit metadata, dependency ordering, and validation criteria for cross-model execution.
+---
+
+# Epic Decomposition
+
+When given an epic document, decompose it into individual task files that can be executed autonomously by AI agents. Each task must contain enough context and ordering metadata for a model to decide whether it is ready to start.
+
+Preserve source text fidelity when copying epic metadata:
+- Keep UTF-8 punctuation and symbols from the source epic title and body.
+- Do not replace em dashes, smart quotes, or accented characters with `?`, `�`, or ASCII fallbacks unless the source file already contains corruption.
+
+## Input
+
+An epic markdown file containing:
+- Objective or goal
+- System architecture, optional
+- Workstreams labeled like `WORKSTREAM A - DATA LAYER`
+- Tasks within each workstream, such as `TASK A1 Define publishable signal schema`
+
+## Output
+
+Individual task files in the workstream's designated agent folder:
+
+```text
+workstream/100_backlog/{agent}/
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+'- ...
+```
+
+Example for `Autonomous Trading Signal Platform`:
+
+```text
+workstream/100_backlog/gemini/
+|- 20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md
+|- 20260309_120001_autonomous_trading_signal_platform_workstreamA_define_publishable_trade_result_schema.md
+'- ...
+```
+
+## File Naming Convention
+
+```text
+{yyyymmdd}_{hhmmss}_{epic_snake_case}_workstream{Letter}_{task_name_snake_case}.md
+```
+
+Rules:
+- Include the epic name in snake_case after the timestamp.
+- Use a consistent timestamp base for all tasks in one decomposition batch.
+- Increment seconds to preserve sort order within a workstream.
+- Use snake_case for all file-name components.
+- Keep task names concise but descriptive.
+- Ensure the epic name matches the `Epic:` metadata inside the task file.
+
+## Task File Template
+
+Each generated task file must follow this structure:
+
+```markdown
+# TASK {ID}: {Task Title}
+
+**Workstream:** {Letter} - {WORKSTREAM NAME}
+**Epic:** {Epic Title}
+**Epic Sequence:** {sequence_number}
+**Depends On:** {sequence numbers or `none`}
+**Blocks:** {sequence numbers or `none`}
+**Readiness:** {ready | blocked}
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+{Why this task exists - extracted from epic or inferred}
+
+## Input
+
+{What this task requires as input - data, dependencies, prior tasks}
+
+## Output
+
+{What this task produces - files, services, artifacts}
+
+## Fields / Components (if applicable)
+
+- {field_1}
+- {field_2}
+
+## Action (if applicable)
+
+{Specific action to perform}
+
+## Verification
+
+- [ ] {Verification criteria from epic}
+- [ ] {Additional verification if needed}
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+Ordering field rules:
+- `Epic Sequence` identifies the dependency layer within the epic, such as `1.1`, `1.2`, or `2.1`.
+- `Depends On` lists predecessor epic sequence numbers when known; otherwise set `none`.
+- `Blocks` lists downstream tasks only when the epic explicitly identifies them; otherwise set `none`.
+- `Readiness` is `ready` only when no predecessor work is required at task creation time.
+- If dependency edges are ambiguous, tell the assignee to use `$task-execution-ordering` before implementation starts.
+- Foundation tasks that establish schemas, contracts, shared models, migrations, or canonical enums must explicitly declare what they unblock.
+- If sibling tasks name a foundational task as input or dependency, the foundational task must not omit its downstream `Blocks` metadata unless the decomposition engine truly cannot infer the affected tasks.
+
+## Decomposition Process
+
+### Step 1: Parse Epic Structure
+
+Identify all workstreams by looking for patterns:
+- `# WORKSTREAM {LETTER} - {NAME}`
+- `## WORKSTREAM {LETTER} - {NAME}`
+- Numbered sections with clear boundaries
+
+### Step 2: Extract Tasks
+
+For each workstream, identify tasks by patterns:
+- `## TASK {ID} {Title}`
+- `### TASK {ID} {Title}`
+- Numbered task lists
+
+Extract from each task:
+
+| Field | Source Pattern |
+|-------|----------------|
+| Purpose | Purpose section or inferred from context |
+| Input | Input section |
+| Output | Output section |
+| Fields | Fields section, usually a bulleted list |
+| Action | Action section |
+| Verification | Verification section |
+| Epic Sequence | Dependency layer inferred from epic ordering |
+| Depends On | Explicit prerequisites or inferred predecessor tasks |
+| Blocks | Explicit downstream tasks, if stated |
+| Readiness | `ready` if no predecessors, otherwise `blocked` |
+| Status | Default to `[ ] Not Started` |
+
+Task-quality requirements during extraction:
+- Add a `Dependencies` section only when it improves execution clarity, but never omit dependency metadata in the header.
+- For foundational tasks, explicitly capture downstream consumers in `Blocks` when they are inferable from sibling tasks.
+- Make `Output` concrete. Prefer deliverable-shaped artifacts such as schema files, enum definitions, service contracts, field maps, migration specs, API endpoints, UI screens, or test suites over vague phrases like "logic" or "definitions".
+- Keep verification bullets implementation-facing and completion-oriented. Avoid generic restatements of purpose.
+- Deduplicate verification bullets after merging requirements from the epic and any auxiliary skills.
+- When a UI skill expands verification requirements, keep one canonical bullet per requirement. Do not repeat startup-script, localhost URL, smoke-test, or screenshot requirements with alternate wording.
+
+### Step 3: Generate Task Files
+
+For each extracted task:
+1. Generate the filename using the naming convention.
+2. Populate the template with extracted data and ordering metadata.
+3. Write the file to the appropriate agent folder based on workstream assignment.
+
+Assign ordering metadata during decomposition:
+1. Build a dependency graph for tasks inside the same epic using explicit dependencies first.
+2. Infer missing edges from phase order, required outputs, schema prerequisites, migration-before-consumer rules, and validation gates.
+3. Assign `Epic Sequence` by dependency layer.
+   - Parallel foundation tasks: `1.1`, `1.2`, `1.3`
+   - Tasks waiting on layer 1: `2.1`, `2.2`
+   - Continue incrementing major layers as dependencies deepen
+4. Set `Readiness: ready` only for tasks with `Depends On: none`.
+5. Set `Readiness: blocked` for tasks that have unresolved predecessors at creation time.
+6. When uncertainty remains, keep the more conservative dependency set and add a note telling the assignee to verify ordering with `$task-execution-ordering`.
+
+Before finalizing each generated task file:
+1. Check that `Input`, `Output`, `Dependencies`, `Depends On`, `Blocks`, and `Verification` are mutually consistent.
+2. If another task depends on this task's outputs, ensure this task's `Blocks` metadata names those downstream layers or tasks where inferable.
+3. Rewrite vague outputs into explicit artifacts or artifact families.
+4. Remove duplicate verification bullets and collapse overlapping requirements into one stronger bullet.
+5. Confirm copied epic metadata still matches the original source text byte-for-byte for visible punctuation and title wording.
+
+### Step 4: Organize by Agent
+
+Distribute workstreams to agent folders based on assignment:
+
+```text
+workstream/100_backlog/
+|- gemini/      # Assigned workstreams
+|- claude/      # Assigned workstreams
+|- codex/       # Assigned workstreams
+'- general/     # Unassigned or cross-cutting tasks
+```
+
+## Example Decomposition
+
+Epic input:
+
+```markdown
+# WORKSTREAM A - DATA LAYER
+
+Goal: Create the publishable dataset.
+
+## TASK A1 Define publishable signal schema
+
+Purpose: Define the minimal dataset exposed publicly.
+
+Input: local trading system signal data
+
+Output: publishable_signal_schema.json
+
+Fields:
+signal_id
+timestamp
+asset
+
+Verification: schema validated and documented
+
+STATUS [ ]
+```
+
+Generated task file `20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md`:
+
+```markdown
+# TASK A1: Define Publishable Signal Schema
+
+**Workstream:** A - DATA LAYER
+**Epic:** Autonomous Trading Signal Platform
+**Epic Sequence:** 1.1
+**Depends On:** none
+**Blocks:** 2.1
+**Readiness:** ready
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+Define the minimal dataset that will be exposed publicly.
+
+## Input
+
+Local trading system signal data
+
+## Output
+
+`publishable_signal_schema.json`
+
+## Fields
+
+- signal_id
+- timestamp
+- asset
+
+## Verification
+
+- [ ] Schema validated and documented
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+## Metadata Extraction Rules
+
+### Priority, Optional
+
+If the epic specifies priority, extract it:
+
+```text
+Priority: 1    -> High priority
+Priority: 2    -> Medium priority
+Priority: 3    -> Low priority, default
+```
+
+### Dependencies, Optional
+
+If tasks have dependencies, note them:
+
+```markdown
+## Dependencies
+
+- Requires: TASK A1, TASK A2
+- Blocks: TASK C1
+```
+
+Map dependency metadata into task headers:
+- Convert prerequisite tasks into `Depends On` epic sequence values.
+- Convert explicit blocked tasks into `Blocks` epic sequence values when known.
+- If the epic names task IDs but not sequence numbers, assign sequence numbers during decomposition and keep the original task IDs in notes or dependency text.
+
+### Workstream Goal
+
+Include the workstream's overall goal in each task for context:
+
+```markdown
+**Workstream Goal:** Create the publishable dataset used by all marketing and client applications.
+```
+
+## Agent Assignment Guidelines
+
+When distributing workstreams to agents, consider:
+
+| Agent | Best For |
+|-------|----------|
+| gemini | Data schemas, database work, backend infrastructure |
+| claude | Content generation, UI and UX, documentation, creative tasks |
+| codex | Mobile apps, client applications, integrations |
+| general | Unassigned or cross-cutting tasks |
+
+## Mandatory Infrastructure Workstream
+
+Every epic decomposition MUST include a dedicated infrastructure/DevOps workstream (typically the last letter, e.g., Workstream Z) containing these required tasks:
+
+| Task | Output | Verification |
+|------|--------|--------------|
+| Automated Setup Script | `setup.sh` and/or `setup.bat` | Running script installs deps, creates DB, applies migrations, starts server |
+| Docker Compose | `docker-compose.yml` | `docker-compose up` starts all required services |
+| README Documentation | `README.md` | Contains install steps, env vars, API docs, usage examples |
+| Environment Template | `.env.example` | All required env vars documented with descriptions |
+| Database Initialization | `schema.sql`, `seed.sql`, migrations | Schema applied automatically by setup script |
+| Health Check | `/health` endpoint or `healthcheck.sh` | Returns success when all services operational |
+
+Infrastructure task requirements:
+- Priority 1 (high priority) - must be completed before application tasks
+- `Depends On: none` for foundation tasks
+- `Blocks:` all application workstream tasks that require working infrastructure
+- Concrete file paths and commands in Output section
+- Verification criteria that can be tested by running a single command
+
+Example infrastructure task:
+
+```markdown
+# TASK Z1: Create Automated Setup Script
+
+**Workstream:** Z - INFRASTRUCTURE
+**Epic:** {Epic Name}
+**Epic Sequence:** 1.1
+**Depends On:** none
+**Blocks:** 2.1, 2.2, 2.3
+**Readiness:** ready
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+Provide one-command setup for local development environment.
+
+## Output
+
+- `setup.sh` - Unix/Mac setup script
+- `setup.bat` - Windows setup script
+
+## Verification
+
+- [ ] Running `./setup.sh` on clean machine installs all dependencies
+- [ ] Script creates PostgreSQL database and applies schema
+- [ ] Script starts application server on configured port
+- [ ] Script outputs clear success/failure message with next steps
+```
+
+## Mandatory UI Workstream (When Applicable)
+
+When an epic describes user-facing functionality, dashboards, admin panels, or any human interaction beyond API calls, the decomposition MUST include a dedicated UI workstream containing these tasks:
+
+### Detection Criteria
+
+Include a UI workstream if the epic mentions ANY of:
+- Dashboard, admin panel, control panel, management interface
+- User interface, frontend, web app, mobile app
+- User interactions: login, forms, buttons, navigation
+- Visual elements: charts, tables, lists, cards
+- User roles: admin, operator, end-user, customer
+- Phrases like "users can see", "display", "show", "view", "browse"
+
+### Required UI Tasks
+
+| Task | Output | Verification |
+|------|--------|--------------|
+| UI Scaffold | `frontend/` directory with framework setup | `npm run dev` starts dev server |
+| Core Layout | Navigation, header, footer, routing | All routes accessible, no 404s |
+| Authentication UI | Login, logout, session management | Can login/logout successfully |
+| Primary Views | Main screens matching epic requirements | Each view renders with mock/real data |
+| API Integration | Connect UI to backend endpoints | Data flows from API to UI correctly |
+| Responsive Design | Mobile and desktop layouts | Renders correctly at 375px and 1920px |
+
+### UI Task Requirements
+
+- Depends on backend API tasks being complete (or use mock data)
+- Each view task should specify:
+  - Route/URL path
+  - Components to create
+  - API endpoints consumed
+  - User interactions supported
+- Verification must include visual confirmation (screenshot or localhost URL check)
+
+### Example UI Task
+
+```markdown
+# TASK F1: Create Client List View
+
+**Workstream:** F - FRONTEND
+**Epic:** {Epic Name}
+**Epic Sequence:** 3.1
+**Depends On:** 2.1 (Client API endpoints)
+**Blocks:** 3.2, 3.3
+**Readiness:** blocked
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+Display all clients in a searchable, sortable table with actions.
+
+## Input
+
+- GET /api/v1/clients endpoint
+- Design system components
+
+## Output
+
+- `frontend/src/pages/ClientList.jsx`
+- `frontend/src/components/ClientTable.jsx`
+
+## Route
+
+`/clients`
+
+## Verification
+
+- [ ] Navigate to http://localhost:3000/clients
+- [ ] Table displays client name, email, phone columns
+- [ ] Search filters results in real-time
+- [ ] Click row navigates to client detail
+- [ ] Screenshot captured showing populated table
+```
+
+### Framework Recommendations
+
+| Epic Type | Recommended Framework |
+|-----------|----------------------|
+| Admin dashboard | React + Vite + TailwindCSS |
+| Mobile-first app | React Native or Flutter |
+| Simple CRUD | HTML + Alpine.js or vanilla JS |
+| Complex SPA | Next.js or Nuxt.js |
+
+If the epic does not specify a framework, default to **React + Vite** for web applications.
+
+### Related Skills for UI Tasks
+
+When generating UI tasks, reference these skills to ensure quality implementation:
+
+| Skill | Path | Use For |
+|-------|------|---------|
+| **frontend-design** | `skills/skills-main/skills/frontend-design/SKILL.md` | Design aesthetics, typography, color, motion, spatial composition. Avoid generic "AI slop" aesthetics. |
+| **web-artifacts-builder** | `skills/skills-main/skills/web-artifacts-builder/SKILL.md` | React + TypeScript + Vite + Tailwind + shadcn/ui stack setup and bundling. |
+| **webapp-testing** | `skills/skills-main/skills/webapp-testing/SKILL.md` | Playwright-based UI testing, screenshot capture, automated verification. |
+| **theme-factory** | `skills/skills-main/skills/theme-factory/SKILL.md` | Professional font and color themes, consistent styling across artifacts. |
+| **ui-delivery-viewability** | `skills/ui-delivery-viewability/SKILL.md` | Starter scripts, local URL access, screenshot evidence, environment validation. |
+
+Each UI task should include a `Required Skills` section in its metadata:
+
+```markdown
+## Required Skills
+
+- `skills/skills-main/skills/frontend-design/SKILL.md` - Follow design guidelines
+- `skills/ui-delivery-viewability/SKILL.md` - Provide starter script and screenshot evidence
+```
+
+### UI Design Quality Standards
+
+From the `frontend-design` skill, UI tasks MUST avoid:
+- Generic fonts (Inter, Roboto, Arial, system fonts)
+- Cliché color schemes (purple gradients on white)
+- Predictable layouts and cookie-cutter patterns
+- Excessive centered layouts with uniform rounded corners
+
+UI tasks SHOULD include:
+- Distinctive typography choices (display + body font pairing)
+- Cohesive color palette with CSS variables
+- Motion and micro-interactions (CSS transitions, hover states)
+- Unexpected layouts (asymmetry, overlap, grid-breaking)
+- Atmospheric backgrounds (gradients, textures, patterns)
+
+## Validation Checklist
+
+After decomposition, verify:
+- [ ] All tasks from the epic are represented.
+- [ ] Each task file has complete metadata: Epic, Workstream, Epic Sequence, Depends On, Blocks, Readiness, and Status.
+- [ ] Verification criteria are preserved from the epic.
+- [ ] Dependency layers are internally consistent and no task depends on a later sequence.
+- [ ] Only tasks with `Depends On: none` are marked `Readiness: ready`.
+- [ ] Foundation tasks that establish shared contracts, schemas, or canonical models explicitly identify downstream tasks they unblock.
+- [ ] `Output` sections name concrete artifacts or artifact classes, not only abstract implementation intent.
+- [ ] Verification bullets are deduplicated and do not repeat UI delivery requirements under different wording.
+- [ ] Epic titles and copied metadata preserve the original UTF-8 source text without mojibake.
+- [ ] File naming follows the convention.
+- [ ] Tasks are organized into the correct agent folders.
+- [ ] No orphaned tasks remain without a workstream assignment.
+- [ ] Infrastructure workstream exists with setup script, docker-compose, README, .env.example, and health check tasks.
+- [ ] Infrastructure tasks block application tasks that depend on working environment.
+- [ ] If epic describes user-facing features, UI workstream exists with scaffold, layout, views, and API integration tasks.
+- [ ] UI tasks specify routes, components, and visual verification criteria.
+- [ ] UI tasks depend on corresponding backend API tasks.
+- [ ] UI tasks include "Required Skills" section referencing frontend-design and ui-delivery-viewability skills.
+- [ ] UI tasks avoid generic design patterns (Inter font, purple gradients, centered layouts).
+
+## Integration with Agent Controller
+
+Generated task files are automatically picked up by `run_agent.ps1`:
+
+1. The agent polls `100_backlog/{agent}`.
+2. It reads the task file, extracts `Epic:`, ordering metadata, and `Epic Output Folder` metadata.
+3. It writes code and deliverable artifacts to the `Epic Output Folder` path.
+4. It executes the task with full context.
+5. It moves the task file to `300_complete` or `400_failed`.
+
+Important:
+- Task files remain in the `workstream` folders.
+- Code, tests, and deliverable artifacts must be written to the `Epic Output Folder` specified in the task metadata.
+
+## Epic Output Folder Structure
+
+When an epic is decomposed, a unified output folder is created:
+
+```text
+ep_{epic_slug}/
+|- solution/        # Implementation code
+|- verification/    # Test evidence and validation artifacts
+|- deploy/          # Deployment scripts and artifacts
+'- workstreams/
+   |- A/
+   '- B/
+```
+
+Each task file contains `Epic Output Folder` metadata pointing to this folder. Agents must:
+1. Read the `Epic Output Folder` field from the task file.
+2. Write implementation outputs to that folder.
+3. Use `solution` for code, `verification` for tests, and `workstreams/{Letter}` for workstream-specific files.
+
+## Epic Augmentation
+
+When an epic has been decomposed and its solution is partially or fully implemented, additional tasks may be needed to fill gaps or add new functionality. Epic augmentation generates new tasks that build ON TOP OF the existing solution.
+
+### When to Use Augmentation
+
+Use augmentation when:
+- Original decomposition is missing key elements (no UI, no tests, no docs, no infrastructure)
+- New features need to be added to an existing solution
+- Coverage gaps are identified during review
+- Solution needs expansion based on user feedback
+
+### Augmentation vs New Decomposition
+
+| Scenario | Action |
+|----------|--------|
+| Epic has no solution folder | New decomposition |
+| Epic has solution folder + missing components | Augmentation |
+| Adding new feature to existing epic | Augmentation |
+| Complete rework of epic scope | New decomposition |
+
+### Augmentation Types
+
+| Type | Description | Output Path |
+|------|-------------|-------------|
+| UI | Create frontend for existing backend API | `ep_{slug}/solution/frontend/` |
+| Tests | Add test suites for existing code | `ep_{slug}/solution/{backend,frontend}/tests/` |
+| Docs | Create README, API docs, usage guides | `ep_{slug}/` |
+| Infra | Add setup scripts, Docker, CI/CD | `ep_{slug}/` |
+| Feature | New functionality building on existing code | Varies by feature scope |
+
+### Augmentation Task Template
+
+Augmentation tasks include additional metadata linking to the existing solution:
+
+```markdown
+# TASK {ID}: {Task Title}
+
+**Workstream:** {Letter} - {WORKSTREAM NAME}
+**Epic:** {Epic Slug}
+**Source:** Augmentation of existing solution at `ep_{slug}/`
+**Priority:** {1-3}
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+{Why this augmentation task exists}
+
+## Input
+
+{What this task consumes from the existing solution}
+
+## Output
+
+{What this task produces}
+
+## Existing Files to Reference
+
+- `ep_{slug}/solution/backend/src/app.js`
+- `ep_{slug}/solution/backend/src/routes/clientRoutes.js`
+- `ep_{slug}/solution/backend/src/models/Client.js`
+
+## New Files to Create
+
+- `ep_{slug}/solution/frontend/src/App.jsx`
+- `ep_{slug}/solution/frontend/src/pages/ClientList.jsx`
+- `ep_{slug}/solution/frontend/vite.config.js`
+
+## Action
+
+{Specific implementation action referencing existing code}
+
+## Verification
+
+- [ ] New code integrates with existing backend API
+- [ ] All referenced existing files remain unmodified unless explicitly required
+- [ ] New features follow existing code patterns and conventions
+
+---
+
+## Notes
+
+- Generated via epic augmentation on {timestamp}
+- Builds on existing solution: `ep_{slug}/`
+```
+
+### Solution Analysis
+
+Before generating augmentation tasks, the system analyzes the existing solution folder to understand:
+
+1. **Structure Detection**
+   - Has Backend: Express/FastAPI/Flask/etc.
+   - Has Frontend: React/Vue/vanilla
+   - Has Tests: Test files in `tests/` or `__tests__/`
+   - Has Infrastructure: Docker, setup scripts
+   - Has Documentation: README, docs/
+
+2. **Key Files Identification**
+   - `package.json` / `requirements.txt` - dependencies
+   - `app.js` / `main.py` - entry points
+   - `routes/` / `controllers/` - API structure
+   - `models/` - data models
+   - `schema.sql` - database schema
+
+3. **API Endpoint Discovery**
+   - Parse route definitions
+   - Extract endpoint paths, methods, handlers
+   - Identify data models consumed
+
+### Augmentation Requirements
+
+When generating augmentation tasks:
+
+1. **Reference Existing Files**: Every augmentation task MUST specify which existing files to reference
+2. **Preserve Existing Code**: New code builds ON TOP OF existing code, never replaces it
+3. **Follow Existing Patterns**: New code should match the existing code style, structure, and conventions
+4. **Integrate with Existing APIs**: UI tasks must consume existing backend endpoints
+5. **Use Existing Data Models**: New code should work with existing database schemas and models
+6. **Maintain Consistency**: Follow the same framework choices (if backend is Express, tests should use Jest)
+
+### Augmentation Task Output
+
+Generated augmentation tasks are written to:
+
+```text
+workstream/100_backlog/general/
+|- {timestamp}_{epic_slug}_augment_{task_slug}.md
+|- {timestamp}_{epic_slug}_augment_{task_slug}.md
+'- ...
+```
+
+Tasks can be reviewed and assigned to appropriate agents via the task review UI.
+
+### Augmentation Validation Checklist
+
+After generating augmentation tasks, verify:
+
+- [ ] Each task references specific existing files from the solution
+- [ ] New file paths are consistent with existing solution structure
+- [ ] Tasks do not duplicate functionality already in the solution
+- [ ] Integration points with existing code are clearly specified
+- [ ] Verification criteria include integration testing with existing code
+- [ ] Tasks can be executed independently but share the same solution folder
+
+
+UI Delivery Viewability Skill:
+---
+name: UI Delivery Viewability
+description: Standards for ensuring that UI deliverables (pages, screens, dashboards) are easily viewable and testable by the user out-of-the-box.
+---
+
+# UI Delivery Viewability
+
+When delivering a task that involves creating, updating, or launching a user interface (UI), web page, screen, dashboard, or frontend component, you MUST ensure the user can easily view and interact with the delivery locally without having to manually figure out how to start the required services.
+
+This skill mandates the creation of helper scripts and the validation of local environments to guarantee seamless UI testing.
+
+## Core Requirements
+
+1. **Provide a Starter Script**:
+   Whenever a UI is the primary deliverable, you must create or update a simple executable script (e.g., a `.bat`, `.ps1`, or `.sh` file) in the project root or relevant directory that starts all necessary backend and frontend services. 
+   - Example: `start_dashboard.bat` or `run_ui.bat`.
+   - The script must clearly output the local URL (e.g., `http://localhost:8000`) where the UI can be accessed.
+
+2. **Validate Environment Dependencies**:
+   Before finalizing the delivery or asking the user to verify the UI, check for common environment issues that cause immediate crashes:
+   - Ensure requisite packages (like `uvicorn`, `python-multipart`, `fastapi`, etc.) are either documented in a `requirements.txt` / `package.json` or explicitly installed.
+   - Run a quick smoke test of the startup sequence yourself to ensure it doesn't immediately crash due to missing dependencies.
+
+3. **Handle Blocking Errors Gracefully**:
+   If the UI depends on a database connection (like PostgreSQL) or an external API that might not be available during initial local testing, ensure the application startup is resilient. 
+   - E.g., catch missing database connection errors at startup and allow the UI to serve generic or cached data, rather than crashing the entire web server.
+
+4. **Document the Access Method in Checklist**:
+   In your task execution evidence, explicitly state the command or script the user should click/run, and provide the exact `localhost` URL they should open in their browser to verify the task.
+
+5. **Capture Screenshot Evidence**:
+   After successfully launching the UI, you MUST capture a screenshot as proof of delivery:
+   - Use an automated screenshot tool (e.g., Playwright, Puppeteer, or system screenshot utility)
+   - Save screenshot to the epic's `verification/` folder with naming: `{task_id}_screenshot.png`
+   - If multiple screens/states exist, capture each: `{task_id}_screenshot_01.png`, `{task_id}_screenshot_02.png`, etc.
+   - Screenshot must show the UI in a working state (not error pages)
+
+6. **Include Access Script in Evidence**:
+   The starter script itself is part of the deliverable evidence:
+   - Copy or reference the access script path in the verification output
+   - Include the full script content in the task result markdown
+   - Format example in result:
+     ```
+     ## Access Script
+     Path: C:\path\to\start_ui.bat
+
+     ```bat
+     @echo off
+     echo Starting UI...
+     python -m uvicorn main:app --port 8000
+     ```
+
+     Run this script and open http://localhost:8000
+     ```
+   - If the UI requires specific environment setup (env vars, config files), document those in the evidence
+
+## Screenshot Automation
+
+Use one of these methods to capture screenshots:
+
+### Option 1: Playwright (Recommended)
+```python
+# screenshot_capture.py
+from playwright.sync_api import sync_playwright
+
+def capture_screenshot(url, output_path):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={'width': 1920, 'height': 1080})
+        page.goto(url)
+        page.wait_for_load_state('networkidle')
+        page.screenshot(path=output_path, full_page=True)
+        browser.close()
+
+capture_screenshot('http://localhost:8000', 'verification/task_screenshot.png')
+```
+
+### Option 2: PowerShell (Windows)
+```powershell
+# capture_screenshot.ps1
+Add-Type -AssemblyName System.Windows.Forms
+Start-Process "http://localhost:8000"
+Start-Sleep 5
+[System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {
+    $bitmap = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
+    $bitmap.Save("verification\task_screenshot.png")
+}
+```
+
+### Option 3: Browser DevTools Protocol
+```bash
+# Using Chrome headless
+chrome --headless --screenshot="verification/task_screenshot.png" --window-size=1920,1080 http://localhost:8000
+```
+
+## Example Scenario
+
+**Task**: Create a new marketing landing page.
+
+**Delivery Actions**:
+- Write the HTML/JS/CSS templates and backend routes.
+- Create a file `start_landing_page.bat` with the contents:
+  ```bat
+  @echo off
+  echo Installing required packages...
+  python -m pip install -r requirements.txt
+  echo Starting web server on http://localhost:8000
+  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+  ```
+- Before marking as "Awaiting User Verification", execute the `.bat` file (or equivalent background process) to verify it boots successfully.
+- Capture screenshot of the running UI and save to `verification/landing_page_screenshot.png`
+- In your final task log, tell the user: "To view this, simply double click `start_landing_page.bat` and open http://localhost:8000 in your browser."
+
+**Evidence Package** (saved to epic's `verification/` folder):
+```
+verification/
+├── landing_page_screenshot.png      # Visual proof of working UI
+├── landing_page_evidence.md         # Evidence document
+└── start_landing_page.bat           # Copy of access script
+```
+
+**Evidence Document Format** (`landing_page_evidence.md`):
+```markdown
+# UI Delivery Evidence
+
+## Task
+Create a new marketing landing page
+
+## Screenshot
+![Landing Page](landing_page_screenshot.png)
+
+## Access Script
+Path: `C:\project\start_landing_page.bat`
+
+​```bat
+@echo off
+echo Installing required packages...
+python -m pip install -r requirements.txt
+echo Starting web server on http://localhost:8000
+python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+​```
+
+## Access Instructions
+1. Run `start_landing_page.bat`
+2. Open http://localhost:8000 in browser
+
+## Verification Timestamp
+2026-03-10 12:00:00
+```
+
+## Why this is important
+UI tasks require visual verification. If the underlying server crashes due to missing dependencies (like a missing `python-multipart` library) or lacking startup scripts, the user wastes time debugging the environment rather than reviewing your design. Always make UI deliverables instantly testable.
+
+Screenshot evidence provides:
+- Proof the UI was successfully rendered
+- Visual record for future reference
+- Baseline for regression testing
+- Documentation for stakeholders who cannot run locally
+
+
+Epic Markdown:
+```markdown
+# Breakout: Market Narrative & Distribution Platform
+
+**Created:** 2026-02-24
+**Project:** Breakout
+**Status:** Backlog
+
+---
+
+## 1. Objective
+
+Generate clear, descriptive, engaging market narratives in bite-sized chunks for multi-channel distribution:
+- Existing web app (TradeApps/breakout/fs)
+- Mobile app (pipHunter)
+- Social media platforms (X/Twitter, etc.)
+
+---
+
+## 2. Content Generation Engine
+
+### Source Skills (eds/skills/)
+- `strategy-boxing-battle` - Dramatic fight-style narration
+- `strategy-boxing-battle-pulse` - Compact interval updates
+- `strategy-battle-punchy-updates` - Short periodic battle narratives
+
+### Narrative Components
+1. **Bias Battle**: BUY vs SELL net with imbalance
+2. **Momentum**: Last 30m/1hr window scores
+3. **Winner Call**: Likely winner + confidence
+4. **Product Impact**: Top performer, weakest performer
+5. **Open Pressure**: Trade count, net exposure
+
+### Output Formats
+- Ultra-compact (social media - 280 chars)
+- Compact pulse (app notifications)
+- Full narrative (website news feed)
+
+---
+
+## 3. Distribution Strategy
+
+### 3.1 Social Media Posts
+**Content**: Summarized returns ONLY (teaser)
+- Overall session performance
+- Headline stats (BUY vs SELL, top performer)
+- CTA: "See full battle details" → link to new website
+
+**Restriction**: No detailed strategy names or trade-level data on public social
+
+### 3.2 Website (Full Detail)
+Link destination from social media posts
+
+### 3.3 App Integration
+- Embed narrative in existing fs dashboard
+- Push to pipHunter mobile
+
+---
+
+## 4. New Website: Breakout Live Hub
+
+### 4.1 Design Requirements - EXTREMELY MODERN & BEAUTIFUL
+- **Premium fintech aesthetic** - world-class visual design
+- News/media format (engaging, exciting)
+- Mobile-first responsive
+- Real-time updates with smooth transitions
+- **Dark mode primary** with vibrant accent colors
+- Glassmorphism / frosted glass effects
+- Subtle gradients and depth
+- Smooth micro-animations on all data updates
+- Number counters that animate on change
+- Skeleton loaders during fetch
+- Typography: Modern sans-serif (Inter / SF Pro Display)
+- Generous whitespace, clear visual hierarchy
+
+### 4.2 PipHunter (PH) Brand Identity
+
+#### Logo Concept
+```
+   ╔═══════════════════════════════════╗
+   ║                                   ║
+   ║      ┌──┐   ┌──┐                  ║
+   ║      │P ├───┤H │   ⊕              ║
+   ║      └──┘   └──┘                  ║
+   ║                                   ║
+   ║   PH monogram + crosshair motif   ║
+   ║   "Precision hunting" visual      ║
+   ╚═══════════════════════════════════╝
+```
+- **PH** bold geometric monogram
+- Crosshair / target element (hunting precision)
+- Scalable: favicon → hero → app icon
+- Works on dark and light backgrounds
+
+#### Color Palette
+| Role | Name | Hex | Usage |
+|------|------|-----|-------|
+| Background | Midnight | `#0A0F1C` | Primary dark bg |
+| Surface | Slate | `#141B2D` | Cards, panels |
+| Surface Elevated | Steel | `#1E293B` | Modals, dropdowns |
+| Border | Frost | `#334155` | Subtle borders |
+| Text Primary | Snow | `#F8FAFC` | Headlines |
+| Text Secondary | Silver | `#94A3B8` | Body text |
+| Accent Primary | Electric Blue | `#3B82F6` | CTAs, links |
+| Accent Glow | Cyan | `#06B6D4` | Highlights, focus |
+| BUY / Long | Emerald | `#10B981` | Positive, gains |
+| SELL / Short | Coral | `#EF4444` | Negative, losses |
+| Warning | Amber | `#F59E0B` | Alerts, near-target |
+| Premium | Gold | `#FBBF24` | Top performer highlight |
+
+#### Visual Effects
+- **Glassmorphism panels**: `backdrop-filter: blur(12px)` + subtle border
+- **Glow effects**: Box shadows with accent colors on key metrics
+- **Pulse animations**: Live data indicators
+- **Target rings**: Progress towards TP shown as concentric rings
+- **Crosshair cursor**: On interactive trading elements
+- **Gradient text**: Headlines with subtle blue→cyan gradient
+- **Particle effects**: Subtle background on hero (optional)
+
+#### Typography Scale
+```
+Hero:      48-64px  - Inter Bold
+H1:        32-40px  - Inter Semibold
+H2:        24-28px  - Inter Semibold
+H3:        18-20px  - Inter Medium
+Body:      14-16px  - Inter Regular
+Caption:   12px     - Inter Regular
+Mono/Data: 14px     - JetBrains Mono (numbers)
+```
+
+#### Iconography
+- Lucide Icons or Phosphor Icons (consistent line weight)
+- Custom crosshair/target icons for PH-specific elements
+
+#### Brand Taglines
+- **Primary**: "Hunt the Edge"
+- **Alt 1**: "Precision. Performance. Profit."
+- **Alt 2**: "Track. Target. Trade."
+- **Alt 3**: "Where Strategies Compete"
+
+#### Brand Voice
+- Confident, data-driven
+- Exciting but professional
+- Battle-ready energy
+- Never hypey or scammy
+
+#### Animation Guidelines
+- Ease: `cubic-bezier(0.4, 0, 0.2, 1)` (smooth deceleration)
+- Duration: 200-300ms for micro-interactions
+- Duration: 500ms for page transitions
+- Numbers should count up/down (not snap)
+- Stagger list item appearances
+
+### 4.3 Required Sections
+
+#### A. Live Narrative Feed (Hero Section)
+- Battle-style market commentary
+- Auto-updating pulse narratives
+- Timestamp per update
+- Visual bias indicator (BUY/SELL dominance)
+
+#### B. Top 10 Performers Leaderboard
+- Rank, Strategy Name, Net Return
+- Direction (BUY/SELL)
+- Trade Count
+- Win Rate %
+- Last update timestamp
+- Expandable detail on click
+
+#### C. Last Hour Performance Summary
+- Total trades closed
+- Net return (last 60 mins)
+- BUY vs SELL breakdown
+- Top product performance
+- Momentum indicator vs previous hour
+
+#### D. Open Trades Dashboard
+- Count of currently open trades
+- Summarized open return (unrealized)
+- % near target (within X% of TP)
+- Exposure by direction
+- Oldest open trade duration
+
+#### E. Mobile App CTA
+- "Get the App" prominent section
+- App store links (when available)
+- Feature highlights
+- Battle Mode vs Signal Pro teaser
+
+#### F. Subscribe / Notifications
+- Email subscription form
+- Notification preferences:
+  - Daily summary
+  - Major bias shifts
+  - New leader alerts
+  - Milestone achievements
+- Future: Push notification opt-in
+
+---
+
+## 5. Technical Architecture
+
+### 5.1 Data Sources
+- `fs/grid_live.json` - Live rankings
+- `fs/activations.json` - Active strategies
+- `fs/bias_history.json` - Bias tracking
+- `trade_viewer_api.py` - Existing API endpoints
+- `summary_net_generator.py` - PnL aggregation
+
+### 5.2 New Components Required
+
+| Component | Purpose |
+|-----------|---------|
+| `narrative_generator.py` | AI-powered narrative generation using skills |
+| `social_publisher.py` | Post to X/Twitter with rate limiting |
+| `breakout_live_hub.html` | New public website |
+| `subscriber_api.py` | Email capture + notification dispatch |
+| `hourly_summary_api.py` | Last hour aggregation endpoint |
+
+### 5.3 Integration Points
+- Existing `trade_viewer_api.py` for data
+- pipHunter Supabase for subscriber storage
+- Social media APIs (X/Twitter)
+
+---
+
+## 6. Social Media Workflow
+
+```
+[grid_live_monitor.py]
+    → detects significant event (leader change, milestone, etc.)
+    → [narrative_generator.py] produces teaser + full narrative
+    → [social_publisher.py] posts teaser to X/Twitter
+    → teaser includes link to breakout_live_hub.html
+    → website shows full detail
+```
+
+---
+
+## 7. Privacy / Restriction Rules
+
+| Channel | What to Show | What NOT to Show |
+|---------|--------------|------------------|
+| Social Media | Overall returns, bias, top performer name | Individual trade details, entry/exit prices |
+| Website | Top 10 leaderboard, hourly stats, open summary | Sensitive algo parameters |
+| App (authenticated) | Full detail | N/A |
+
+---
+
+## 8. Success Criteria
+
+- [ ] Narrative generator produces engaging content every 15-30 mins
+- [ ] Social posts drive clicks to website
+- [ ] Website loads < 2 seconds, auto-refreshes
+- [ ] Subscribe captures emails successfully
+- [ ] Mobile CTA visible and functional
+- [ ] Integration with existing fs infrastructure seamless
+
+---
+
+## 9. Website Deployment
+
+### Hosting Options
+| Option | Pros | Cons |
+|--------|------|------|
+| **Vercel** (Recommended) | Free tier, auto SSL, edge CDN, easy deploys | - |
+| Netlify | Similar to Vercel, good free tier | - |
+| Cloudflare Pages | Fast, free, good caching | Slightly more setup |
+| GitHub Pages | Free, simple | No server-side |
+
+### Domain
+- Primary: `piphunter.io` or `piphunter.app` (to be acquired)
+- Fallback: `breakout.piphunter.io` subdomain
+
+### Deployment Pipeline
+```
+[Git Push] → [Vercel/Netlify Build] → [Deploy to Edge] → [Live]
+```
+
+### Requirements
+- Auto-deploy on push to `main`
+- Preview deployments for PRs
+- SSL/HTTPS enforced
+- Custom domain with DNS setup
+- CDN caching for static assets
+- API routes or serverless functions for:
+  - Subscriber capture
+  - Data proxy (if needed)
+
+---
+
+## 10. Dependencies
+
+- Existing fs ranking engine (operational)
+- Skills folder narrative templates (available)
+- Social media API credentials (to be set up)
+- Email service (to be selected - SendGrid/Resend/etc.)
+- Domain name (to be acquired)
+- Hosting account (Vercel/Netlify)
+
+---
+
+## 11. Execution Phases
+
+### Phase 0: Brand & Design Foundation
+1. Finalize PH logo (monogram + crosshair)
+2. Create design system / component library
+3. Set up color tokens and typography
+4. Create favicon and social sharing images
+
+### Phase 1: Website Build
+5. Build `breakout_live_hub.html` with all sections
+6. Implement PH brand design system
+7. Wire to existing API endpoints
+8. Add real-time data updates with animations
+
+### Phase 2: Deployment
+9. Acquire domain (`piphunter.io` / `.app`)
+10. Set up Vercel/Netlify hosting
+11. Configure DNS and SSL
+12. Deploy and test live
+
+### Phase 3: Content Engine
+13. Build `narrative_generator.py` using skills templates
+14. Integrate narrative feed into website
+15. Test output quality and frequency
+
+### Phase 4: Social Distribution
+16. Set up X/Twitter API integration
+17. Build `social_publisher.py` with rate limiting
+18. Define trigger events for posting
+19. Create social post templates with PH branding
+
+### Phase 5: Engagement
+20. Add subscribe functionality (Supabase)
+21. Integrate mobile app CTA
+22. Set up notification dispatch
+23. Analytics tracking (Plausible/Vercel Analytics)
+
+### Phase 6: Polish
+24. Performance optimization (Lighthouse 90+)
+25. A/B test narrative styles
+26. Cross-browser/device testing
+
+---
+
+## References
+
+- Skills: `eds/skills/strategy-boxing-battle*`
+- Data: `TradeApps/breakout/fs/`
+- Mobile: `TradeApps/breakout/piphunter/`
+- pipHunter spec: `workstream/000_epic/20260222_205900_pipHunter_signal_marketplace*`
+
+---
+
+## Derived Tasks
+
+Tasks decomposed from this backlog (created 2026-02-24):
+
+| Phase | Task | Status | Location |
+|-------|------|--------|----------|
+| 0 | Brand & Design Foundation | COMPLETE | `300_complete/20260224_130100_breakout_phase0_brand_design_foundation.md` |
+| 1 | Website Build | COMPLETE | `300_complete/20260224_130200_breakout_phase1_website_build.md` |
+| 2 | Deployment | PENDING (Manual) | `200_inprogress/20260224_130300_breakout_phase2_deployment.md` |
+| 3 | Content Engine | COMPLETE | `300_complete/20260224_130400_breakout_phase3_content_engine.md` |
+| 4 | Social Distribution | COMPLETE | `300_complete/20260224_130500_breakout_phase4_social_distribution.md` |
+| 5 | Engagement Features | COMPLETE | `300_complete/20260224_130600_breakout_phase5_engagement.md` |
+| 6 | Polish & Optimization | COMPLETE | `300_complete/20260224_130700_breakout_phase6_polish.md` |
+
+**Total Tasks**: 7
+**Completed**: 6/7 (Code complete, Phase 2 awaiting manual deployment steps)
+
+---
+
+## Key Deliverables Created
+
+| Deliverable | Path | Description |
+|-------------|------|-------------|
+| PH Logo | `landing/assets/logo/ph-logo.svg` | PH monogram with crosshair |
+| Design Tokens | `landing/styles/design-tokens.css` | Color palette, typography, spacing |
+| Components | `landing/styles/components.css` | Buttons, cards, badges, tables |
+| Website | `landing/breakout-live-hub.html` | Full Live Hub with API integration |
+| Vercel Config | `landing/vercel.json` | Deployment configuration |
+| Netlify Config | `landing/netlify.toml` | Deployment configuration |
+| Deployment Guide | `landing/DEPLOYMENT.md` | Step-by-step instructions |
+| Narrative Generator | `fs/narrative_generator.py` | 4 output formats (social, pulse, full, html) |
+| Social Publisher | `fs/social_publisher.py` | Twitter integration with rate limiting |
+| Subscriber API | `fs/subscriber_api.py` | Email subscription management |
+| Supabase Schema | `landing/SUPABASE_SCHEMA.sql` | Subscriber table definition |
+| Twitter Guide | `landing/TWITTER_SETUP.md` | API setup instructions |
+
+---
+
+## Backlog Status
+
+**STATUS**: ACTIVE (Code Complete - Awaiting Deployment)
+**Completion Criteria**: All 7 tasks must be in `300_complete` with verification passed
+**Remaining Manual Steps**:
+1. Domain purchase (piphunter.io / piphunter.app)
+2. Vercel/Netlify deployment
+3. Twitter API credentials
+4. Supabase project setup
+**Completion Date**: (To be filled when all tasks complete)
+
+
+```
+
+Output requirements:
+- epic_name: the canonical epic title
+- epic_slug: snake_case slug matching epic_name
+- summary: short summary of the decomposition
+- warnings: any caveats, assumptions, or inferred areas
+- tasks: list of executable tasks
+
+Task requirements:
+- id: stable task id like A1, A2, B1, etc
+- title: concise but descriptive deliverable title
+- workstream_letter: single letter if available, otherwise assign a sensible letter grouping
+- workstream_name: meaningful workstream name
+- workstream_goal: optional overall goal for this workstream
+- purpose, input, output, action: concrete and implementation-oriented
+- fields: include only if materially useful
+- verification: checklist-ready items, at least 2 for normal tasks and more for risky/UI tasks
+- priority: 1, 2, or 3
+- dependencies: explicit task ids where appropriate
+- suggested_agent: optional recommendation from {codex, gemini, claude, general}
+- ui_viewability: true only for UI-visible deliverables
+
+Quality bar:
+- Cover the full epic, especially MVP-critical areas.
+- Prefer 10+ tasks for a large epic unless the document is genuinely tiny.
+- Make each task independently reviewable and allocatable.
+- Avoid placeholders like "implement feature" without scope.
+
+MANDATORY INFRASTRUCTURE TASKS:
+Every decomposition MUST include a dedicated infrastructure/DevOps workstream (typically Workstream Z or the last letter) containing these tasks:
+1. setup.sh / setup.bat - Automated setup script that installs dependencies, creates databases, applies migrations, and configures environment
+2. docker-compose.yml - Local development environment with all required services (database, cache, message queue, etc.)
+3. README.md - Installation instructions, environment variables, API documentation, and usage examples
+4. .env.example - Template for all required environment variables with descriptions
+5. Database initialization - Schema creation, seed data, and migration scripts that run automatically
+6. Health check / smoke test - Script or endpoint to verify the deployment is working
+
+These infrastructure tasks should:
+- Be marked as priority 1 (high priority)
+- Have clear verification criteria (e.g., "Running setup.sh creates database and starts server on port X")
+- Block application tasks that depend on working infrastructure
+- Include concrete file paths and commands in their Output section
+
+Do NOT generate a solution that requires manual setup steps not captured in scripts.
+
+MANDATORY UI WORKSTREAM (when applicable):
+If the epic describes ANY user-facing functionality (dashboards, admin panels, user interfaces, forms, visual displays, user interactions), you MUST include a dedicated UI/Frontend workstream containing:
+1. UI Scaffold - Framework setup (React + Vite recommended), directory structure, dev server
+2. Core Layout - Navigation, header, routing, shared components
+3. Authentication UI - Login/logout screens if auth is required
+4. Primary Views - One task per major screen/page described in the epic
+5. API Integration - Connect frontend to backend endpoints
+6. Responsive Design - Mobile and desktop layout support
+
+Detection: Include UI workstream if epic mentions: dashboard, admin panel, interface, frontend, user can see/view/browse, display, forms, buttons, tables, charts, or any visual interaction.
+
+UI task requirements:
+- Specify route/URL path for each view
+- List components to create
+- Reference API endpoints consumed
+- Include visual verification (localhost URL + expected behavior)
+- Depend on backend API tasks
+
+Do NOT generate a backend-only solution when the epic clearly describes user-facing features.
+
+UI SKILL REFERENCES:
+Each UI task MUST include a "Required Skills" section referencing:
+- skills/skills-main/skills/frontend-design/SKILL.md - Design aesthetics, avoid generic AI slop
+- skills/skills-main/skills/web-artifacts-builder/SKILL.md - React + Vite + Tailwind + shadcn/ui
+- skills/skills-main/skills/webapp-testing/SKILL.md - Playwright UI testing
+- skills/ui-delivery-viewability/SKILL.md - Starter scripts, screenshot evidence
+
+UI Design Quality (from frontend-design skill):
+AVOID: Generic fonts (Inter, Roboto), purple gradients, uniform rounded corners, centered layouts
+INCLUDE: Distinctive typography, cohesive color palettes, motion/animations, atmospheric backgrounds

@@ -1,0 +1,721 @@
+You are decomposing a product/engineering epic into executable markdown task files.
+
+Follow these instructions in order:
+1. Use the epic decomposition skill as the primary contract for structure, naming intent, metadata, and decomposition completeness.
+2. Apply the UI delivery viewability skill only when a generated task is user-facing UI, dashboard, screen, or operator workflow work. For those tasks, include verification criteria covering:
+   - an access/start script,
+   - the localhost URL to open,
+   - startup smoke validation,
+   - screenshot capture evidence.
+3. Decompose the epic into MANY deliverable tasks. Do not collapse whole product areas into one vague task. Split work into implementable increments that a model can execute independently.
+4. Preserve and infer missing detail conservatively. If the epic is under-specified, derive sensible tasks, dependencies, and verification based on the stated MVP goals.
+5. Ensure every task links cleanly to the source epic and is review/allocation ready.
+
+Output JSON only, matching the provided schema exactly.
+
+Epic path: C:\Users\edebe\eds\workstream\000_epic\20260227_022357_sFX_Technical_Design_Brief_v2.md
+
+Epic Decomposition Skill:
+---
+name: epic-decomposition
+description: Decompose an epic into granular actionable task files organized by workstream for autonomous agent execution. Use when an epic document must be split into standalone epic task files with explicit metadata, dependency ordering, and validation criteria for cross-model execution.
+---
+
+# Epic Decomposition
+
+When given an epic document, decompose it into individual task files that can be executed autonomously by AI agents. Each task must contain enough context and ordering metadata for a model to decide whether it is ready to start.
+
+## Input
+
+An epic markdown file containing:
+- Objective or goal
+- System architecture, optional
+- Workstreams labeled like `WORKSTREAM A - DATA LAYER`
+- Tasks within each workstream, such as `TASK A1 Define publishable signal schema`
+
+## Output
+
+Individual task files in the workstream's designated agent folder:
+
+```text
+workstream/100_backlog/{agent}/
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+|- {timestamp}_{epic}_workstream{X}_{task_name}.md
+'- ...
+```
+
+Example for `Autonomous Trading Signal Platform`:
+
+```text
+workstream/100_backlog/gemini/
+|- 20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md
+|- 20260309_120001_autonomous_trading_signal_platform_workstreamA_define_publishable_trade_result_schema.md
+'- ...
+```
+
+## File Naming Convention
+
+```text
+{yyyymmdd}_{hhmmss}_{epic_snake_case}_workstream{Letter}_{task_name_snake_case}.md
+```
+
+Rules:
+- Include the epic name in snake_case after the timestamp.
+- Use a consistent timestamp base for all tasks in one decomposition batch.
+- Increment seconds to preserve sort order within a workstream.
+- Use snake_case for all file-name components.
+- Keep task names concise but descriptive.
+- Ensure the epic name matches the `Epic:` metadata inside the task file.
+
+## Task File Template
+
+Each generated task file must follow this structure:
+
+```markdown
+# TASK {ID}: {Task Title}
+
+**Workstream:** {Letter} - {WORKSTREAM NAME}
+**Epic:** {Epic Title}
+**Epic Sequence:** {sequence_number}
+**Depends On:** {sequence numbers or `none`}
+**Blocks:** {sequence numbers or `none`}
+**Readiness:** {ready | blocked}
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+{Why this task exists - extracted from epic or inferred}
+
+## Input
+
+{What this task requires as input - data, dependencies, prior tasks}
+
+## Output
+
+{What this task produces - files, services, artifacts}
+
+## Fields / Components (if applicable)
+
+- {field_1}
+- {field_2}
+
+## Action (if applicable)
+
+{Specific action to perform}
+
+## Verification
+
+- [ ] {Verification criteria from epic}
+- [ ] {Additional verification if needed}
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+Ordering field rules:
+- `Epic Sequence` identifies the dependency layer within the epic, such as `1.1`, `1.2`, or `2.1`.
+- `Depends On` lists predecessor epic sequence numbers when known; otherwise set `none`.
+- `Blocks` lists downstream tasks only when the epic explicitly identifies them; otherwise set `none`.
+- `Readiness` is `ready` only when no predecessor work is required at task creation time.
+- If dependency edges are ambiguous, tell the assignee to use `$task-execution-ordering` before implementation starts.
+
+## Decomposition Process
+
+### Step 1: Parse Epic Structure
+
+Identify all workstreams by looking for patterns:
+- `# WORKSTREAM {LETTER} - {NAME}`
+- `## WORKSTREAM {LETTER} - {NAME}`
+- Numbered sections with clear boundaries
+
+### Step 2: Extract Tasks
+
+For each workstream, identify tasks by patterns:
+- `## TASK {ID} {Title}`
+- `### TASK {ID} {Title}`
+- Numbered task lists
+
+Extract from each task:
+
+| Field | Source Pattern |
+|-------|----------------|
+| Purpose | Purpose section or inferred from context |
+| Input | Input section |
+| Output | Output section |
+| Fields | Fields section, usually a bulleted list |
+| Action | Action section |
+| Verification | Verification section |
+| Epic Sequence | Dependency layer inferred from epic ordering |
+| Depends On | Explicit prerequisites or inferred predecessor tasks |
+| Blocks | Explicit downstream tasks, if stated |
+| Readiness | `ready` if no predecessors, otherwise `blocked` |
+| Status | Default to `[ ] Not Started` |
+
+### Step 3: Generate Task Files
+
+For each extracted task:
+1. Generate the filename using the naming convention.
+2. Populate the template with extracted data and ordering metadata.
+3. Write the file to the appropriate agent folder based on workstream assignment.
+
+Assign ordering metadata during decomposition:
+1. Build a dependency graph for tasks inside the same epic using explicit dependencies first.
+2. Infer missing edges from phase order, required outputs, schema prerequisites, migration-before-consumer rules, and validation gates.
+3. Assign `Epic Sequence` by dependency layer.
+   - Parallel foundation tasks: `1.1`, `1.2`, `1.3`
+   - Tasks waiting on layer 1: `2.1`, `2.2`
+   - Continue incrementing major layers as dependencies deepen
+4. Set `Readiness: ready` only for tasks with `Depends On: none`.
+5. Set `Readiness: blocked` for tasks that have unresolved predecessors at creation time.
+6. When uncertainty remains, keep the more conservative dependency set and add a note telling the assignee to verify ordering with `$task-execution-ordering`.
+
+### Step 4: Organize by Agent
+
+Distribute workstreams to agent folders based on assignment:
+
+```text
+workstream/100_backlog/
+|- gemini/      # Assigned workstreams
+|- claude/      # Assigned workstreams
+|- codex/       # Assigned workstreams
+'- general/     # Unassigned or cross-cutting tasks
+```
+
+## Example Decomposition
+
+Epic input:
+
+```markdown
+# WORKSTREAM A - DATA LAYER
+
+Goal: Create the publishable dataset.
+
+## TASK A1 Define publishable signal schema
+
+Purpose: Define the minimal dataset exposed publicly.
+
+Input: local trading system signal data
+
+Output: publishable_signal_schema.json
+
+Fields:
+signal_id
+timestamp
+asset
+
+Verification: schema validated and documented
+
+STATUS [ ]
+```
+
+Generated task file `20260309_120000_autonomous_trading_signal_platform_workstreamA_define_publishable_signal_schema.md`:
+
+```markdown
+# TASK A1: Define Publishable Signal Schema
+
+**Workstream:** A - DATA LAYER
+**Epic:** Autonomous Trading Signal Platform
+**Epic Sequence:** 1.1
+**Depends On:** none
+**Blocks:** 2.1
+**Readiness:** ready
+**Status:** [ ] Not Started
+
+---
+
+## Purpose
+
+Define the minimal dataset that will be exposed publicly.
+
+## Input
+
+Local trading system signal data
+
+## Output
+
+`publishable_signal_schema.json`
+
+## Fields
+
+- signal_id
+- timestamp
+- asset
+
+## Verification
+
+- [ ] Schema validated and documented
+
+---
+
+## Notes
+
+_Add implementation notes here_
+```
+
+## Metadata Extraction Rules
+
+### Priority, Optional
+
+If the epic specifies priority, extract it:
+
+```text
+Priority: 1    -> High priority
+Priority: 2    -> Medium priority
+Priority: 3    -> Low priority, default
+```
+
+### Dependencies, Optional
+
+If tasks have dependencies, note them:
+
+```markdown
+## Dependencies
+
+- Requires: TASK A1, TASK A2
+- Blocks: TASK C1
+```
+
+Map dependency metadata into task headers:
+- Convert prerequisite tasks into `Depends On` epic sequence values.
+- Convert explicit blocked tasks into `Blocks` epic sequence values when known.
+- If the epic names task IDs but not sequence numbers, assign sequence numbers during decomposition and keep the original task IDs in notes or dependency text.
+
+### Workstream Goal
+
+Include the workstream's overall goal in each task for context:
+
+```markdown
+**Workstream Goal:** Create the publishable dataset used by all marketing and client applications.
+```
+
+## Agent Assignment Guidelines
+
+When distributing workstreams to agents, consider:
+
+| Agent | Best For |
+|-------|----------|
+| gemini | Data schemas, database work, backend infrastructure |
+| claude | Content generation, UI and UX, documentation, creative tasks |
+| codex | Mobile apps, client applications, integrations |
+| general | Unassigned or cross-cutting tasks |
+
+## Validation Checklist
+
+After decomposition, verify:
+- [ ] All tasks from the epic are represented.
+- [ ] Each task file has complete metadata: Epic, Workstream, Epic Sequence, Depends On, Blocks, Readiness, and Status.
+- [ ] Verification criteria are preserved from the epic.
+- [ ] Dependency layers are internally consistent and no task depends on a later sequence.
+- [ ] Only tasks with `Depends On: none` are marked `Readiness: ready`.
+- [ ] File naming follows the convention.
+- [ ] Tasks are organized into the correct agent folders.
+- [ ] No orphaned tasks remain without a workstream assignment.
+
+## Integration with Agent Controller
+
+Generated task files are automatically picked up by `run_agent.ps1`:
+
+1. The agent polls `100_backlog/{agent}`.
+2. It reads the task file, extracts `Epic:`, ordering metadata, and `Epic Output Folder` metadata.
+3. It writes code and deliverable artifacts to the `Epic Output Folder` path.
+4. It executes the task with full context.
+5. It moves the task file to `300_complete` or `400_failed`.
+
+Important:
+- Task files remain in the `workstream` folders.
+- Code, tests, and deliverable artifacts must be written to the `Epic Output Folder` specified in the task metadata.
+
+## Epic Output Folder Structure
+
+When an epic is decomposed, a unified output folder is created:
+
+```text
+ep_{epic_slug}/
+|- solution/        # Implementation code
+|- verification/    # Test evidence and validation artifacts
+|- deploy/          # Deployment scripts and artifacts
+'- workstreams/
+   |- A/
+   '- B/
+```
+
+Each task file contains `Epic Output Folder` metadata pointing to this folder. Agents must:
+1. Read the `Epic Output Folder` field from the task file.
+2. Write implementation outputs to that folder.
+3. Use `solution` for code, `verification` for tests, and `workstreams/{Letter}` for workstream-specific files.
+
+
+UI Delivery Viewability Skill:
+---
+name: UI Delivery Viewability
+description: Standards for ensuring that UI deliverables (pages, screens, dashboards) are easily viewable and testable by the user out-of-the-box.
+---
+
+# UI Delivery Viewability
+
+When delivering a task that involves creating, updating, or launching a user interface (UI), web page, screen, dashboard, or frontend component, you MUST ensure the user can easily view and interact with the delivery locally without having to manually figure out how to start the required services.
+
+This skill mandates the creation of helper scripts and the validation of local environments to guarantee seamless UI testing.
+
+## Core Requirements
+
+1. **Provide a Starter Script**:
+   Whenever a UI is the primary deliverable, you must create or update a simple executable script (e.g., a `.bat`, `.ps1`, or `.sh` file) in the project root or relevant directory that starts all necessary backend and frontend services. 
+   - Example: `start_dashboard.bat` or `run_ui.bat`.
+   - The script must clearly output the local URL (e.g., `http://localhost:8000`) where the UI can be accessed.
+
+2. **Validate Environment Dependencies**:
+   Before finalizing the delivery or asking the user to verify the UI, check for common environment issues that cause immediate crashes:
+   - Ensure requisite packages (like `uvicorn`, `python-multipart`, `fastapi`, etc.) are either documented in a `requirements.txt` / `package.json` or explicitly installed.
+   - Run a quick smoke test of the startup sequence yourself to ensure it doesn't immediately crash due to missing dependencies.
+
+3. **Handle Blocking Errors Gracefully**:
+   If the UI depends on a database connection (like PostgreSQL) or an external API that might not be available during initial local testing, ensure the application startup is resilient. 
+   - E.g., catch missing database connection errors at startup and allow the UI to serve generic or cached data, rather than crashing the entire web server.
+
+4. **Document the Access Method in Checklist**:
+   In your task execution evidence, explicitly state the command or script the user should click/run, and provide the exact `localhost` URL they should open in their browser to verify the task.
+
+5. **Capture Screenshot Evidence**:
+   After successfully launching the UI, you MUST capture a screenshot as proof of delivery:
+   - Use an automated screenshot tool (e.g., Playwright, Puppeteer, or system screenshot utility)
+   - Save screenshot to the epic's `verification/` folder with naming: `{task_id}_screenshot.png`
+   - If multiple screens/states exist, capture each: `{task_id}_screenshot_01.png`, `{task_id}_screenshot_02.png`, etc.
+   - Screenshot must show the UI in a working state (not error pages)
+
+6. **Include Access Script in Evidence**:
+   The starter script itself is part of the deliverable evidence:
+   - Copy or reference the access script path in the verification output
+   - Include the full script content in the task result markdown
+   - Format example in result:
+     ```
+     ## Access Script
+     Path: C:\path\to\start_ui.bat
+
+     ```bat
+     @echo off
+     echo Starting UI...
+     python -m uvicorn main:app --port 8000
+     ```
+
+     Run this script and open http://localhost:8000
+     ```
+   - If the UI requires specific environment setup (env vars, config files), document those in the evidence
+
+## Screenshot Automation
+
+Use one of these methods to capture screenshots:
+
+### Option 1: Playwright (Recommended)
+```python
+# screenshot_capture.py
+from playwright.sync_api import sync_playwright
+
+def capture_screenshot(url, output_path):
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={'width': 1920, 'height': 1080})
+        page.goto(url)
+        page.wait_for_load_state('networkidle')
+        page.screenshot(path=output_path, full_page=True)
+        browser.close()
+
+capture_screenshot('http://localhost:8000', 'verification/task_screenshot.png')
+```
+
+### Option 2: PowerShell (Windows)
+```powershell
+# capture_screenshot.ps1
+Add-Type -AssemblyName System.Windows.Forms
+Start-Process "http://localhost:8000"
+Start-Sleep 5
+[System.Windows.Forms.Screen]::PrimaryScreen | ForEach-Object {
+    $bitmap = New-Object System.Drawing.Bitmap($_.Bounds.Width, $_.Bounds.Height)
+    $graphics = [System.Drawing.Graphics]::FromImage($bitmap)
+    $graphics.CopyFromScreen($_.Bounds.Location, [System.Drawing.Point]::Empty, $_.Bounds.Size)
+    $bitmap.Save("verification\task_screenshot.png")
+}
+```
+
+### Option 3: Browser DevTools Protocol
+```bash
+# Using Chrome headless
+chrome --headless --screenshot="verification/task_screenshot.png" --window-size=1920,1080 http://localhost:8000
+```
+
+## Example Scenario
+
+**Task**: Create a new marketing landing page.
+
+**Delivery Actions**:
+- Write the HTML/JS/CSS templates and backend routes.
+- Create a file `start_landing_page.bat` with the contents:
+  ```bat
+  @echo off
+  echo Installing required packages...
+  python -m pip install -r requirements.txt
+  echo Starting web server on http://localhost:8000
+  python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+  ```
+- Before marking as "Awaiting User Verification", execute the `.bat` file (or equivalent background process) to verify it boots successfully.
+- Capture screenshot of the running UI and save to `verification/landing_page_screenshot.png`
+- In your final task log, tell the user: "To view this, simply double click `start_landing_page.bat` and open http://localhost:8000 in your browser."
+
+**Evidence Package** (saved to epic's `verification/` folder):
+```
+verification/
+├── landing_page_screenshot.png      # Visual proof of working UI
+├── landing_page_evidence.md         # Evidence document
+└── start_landing_page.bat           # Copy of access script
+```
+
+**Evidence Document Format** (`landing_page_evidence.md`):
+```markdown
+# UI Delivery Evidence
+
+## Task
+Create a new marketing landing page
+
+## Screenshot
+![Landing Page](landing_page_screenshot.png)
+
+## Access Script
+Path: `C:\project\start_landing_page.bat`
+
+​```bat
+@echo off
+echo Installing required packages...
+python -m pip install -r requirements.txt
+echo Starting web server on http://localhost:8000
+python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+​```
+
+## Access Instructions
+1. Run `start_landing_page.bat`
+2. Open http://localhost:8000 in browser
+
+## Verification Timestamp
+2026-03-10 12:00:00
+```
+
+## Why this is important
+UI tasks require visual verification. If the underlying server crashes due to missing dependencies (like a missing `python-multipart` library) or lacking startup scripts, the user wastes time debugging the environment rather than reviewing your design. Always make UI deliverables instantly testable.
+
+Screenshot evidence provides:
+- Proof the UI was successfully rendered
+- Visual record for future reference
+- Baseline for regression testing
+- Documentation for stakeholders who cannot run locally
+
+
+Epic Markdown:
+```markdown
+# Synthetic Frontier sFX Derivatives Market -- Technical Design Brief (v2)
+
+## 1. Executive Summary
+
+sFX is a crypto-settled synthetic macro derivatives venue referencing
+African currency volatility indices.
+
+It is NOT: - A spot FX exchange - A remittance platform - A fiat
+conversion service - A currency custody provider
+
+It IS: - A volatility-driven perpetual derivatives market - Stablecoin
+margined and settled - Order-book based with DAO vault backstop -
+Algorithmically governed with transparent parameter bands
+
+The system is engineered for frontier macro instability and designed to
+survive volatility shocks.
+
+------------------------------------------------------------------------
+
+## 2. Instrument Design
+
+### 2.1 Contract Type
+
+-   Perpetual contracts (initially)
+-   Stablecoin collateral (e.g., USDC)
+-   No redeemable synthetic tokens
+-   Positions only, no currency balances
+
+### 2.2 Index Methodology
+
+Each instrument references a Macro Volatility Index constructed from: -
+Official reference rates - Offshore pricing (if available) - Parallel
+market proxies (where observable) - Volatility weighting and smoothing -
+Medianisation across sources
+
+The trading price is determined by order flow. The index is used for: -
+Funding rate calculation - Liquidation reference - Circuit breaker
+anchoring
+
+Price is not mechanically pegged to the index.
+
+------------------------------------------------------------------------
+
+## 3. Liquidity Architecture
+
+### 3.1 Core Order Book
+
+-   Central limit order book (CLOB)
+-   Professional MM participation
+-   Transparent depth visibility
+
+### 3.2 DAO Vault Backstop
+
+Vault provides: - Imbalance absorption - Liquidation counterparty -
+Funding participation
+
+Vault earns: - Trading fees - Funding spreads - Liquidation penalties
+
+Exposure caps apply.
+
+------------------------------------------------------------------------
+
+## 4. Risk Engine Framework
+
+### 4.1 Leverage Model
+
+Initial leverage: 1x--2x Dynamic band: up to predefined max (e.g., 5x)
+
+Leverage adjusts automatically based on: - Realized volatility - Vault
+imbalance - Order book depth - Stress velocity
+
+### 4.2 Funding Formula (Conceptual)
+
+Funding Rate = f(imbalance %, volatility, open interest velocity)
+
+Characteristics: - Continuous scaling (no cliff thresholds) - Aggressive
+amplification during imbalance - Transparent calculation
+
+### 4.3 Spread Elasticity
+
+Minimum spread widens dynamically based on: - Volatility acceleration
+(dVol/dt) - Order flow velocity - Vault imbalance - Liquidity thinning
+
+------------------------------------------------------------------------
+
+## 5. Stress Management Logic
+
+### 5.1 Stress Detection Metrics
+
+-   Volatility acceleration
+-   Imbalance slope change
+-   Liquidation clustering density
+-   Order book thinning rate
+
+### 5.2 Automatic Responses
+
+-   Leverage compression
+-   Funding multiplier increase
+-   Spread widening
+-   Position size caps tightening
+-   Open interest caps enforcement
+
+### 5.3 Circuit Breakers
+
+Triggered when: - Index divergence exceeds predefined band - Data source
+instability detected - Order book depth collapses beyond threshold
+
+Reopening is gradual and rule-based.
+
+------------------------------------------------------------------------
+
+## 6. Transparency Layer
+
+Live system state exposed publicly:
+
+-   Vault capital
+-   Long/short imbalance
+-   Open interest per instrument
+-   Current leverage band
+-   Funding rate
+-   Volatility metric
+-   Risk parameter bands
+
+Rules are deterministic and documented. Code may remain proprietary, but
+formulas are visible.
+
+------------------------------------------------------------------------
+
+## 7. Governance Model
+
+Governance controls: - Parameter bands (within predefined limits) - New
+instrument listings - Vault allocation caps - Oracle weighting
+adjustments
+
+Emergency override logic must be predefined. Discretionary manual market
+intervention is avoided.
+
+------------------------------------------------------------------------
+
+## 8. Instrument Isolation
+
+-   No cross-margin initially
+-   Separate vault exposure per instrument
+-   Contagion containment by design
+
+------------------------------------------------------------------------
+
+## 9. Launch Scope
+
+Phase 1: - 3--4 instruments (e.g., NGN, KES, GHS, ZAR macro indices) -
+Low leverage - Conservative exposure caps - Focus on liquidity quality,
+not volume
+
+Phase 2: - Leverage scaling - Additional instruments - Spread
+compression as depth improves
+
+------------------------------------------------------------------------
+
+## 10. Success Definition
+
+Success is defined as:
+
+-   Surviving first 30--50% macro shock
+-   Vault capital intact
+-   Liquidity functional
+-   Funding stabilizing imbalance
+-   Transparent rule execution
+-   No governance panic
+
+Long-term moat = survival + disciplined execution.
+
+------------------------------------------------------------------------
+
+This document outlines the technical and structural framework for a
+resilient synthetic frontier macro derivatives venue.
+
+```
+
+Output requirements:
+- epic_name: the canonical epic title
+- epic_slug: snake_case slug matching epic_name
+- summary: short summary of the decomposition
+- warnings: any caveats, assumptions, or inferred areas
+- tasks: list of executable tasks
+
+Task requirements:
+- id: stable task id like A1, A2, B1, etc
+- title: concise but descriptive deliverable title
+- workstream_letter: single letter if available, otherwise assign a sensible letter grouping
+- workstream_name: meaningful workstream name
+- workstream_goal: optional overall goal for this workstream
+- purpose, input, output, action: concrete and implementation-oriented
+- fields: include only if materially useful
+- verification: checklist-ready items, at least 2 for normal tasks and more for risky/UI tasks
+- priority: 1, 2, or 3
+- dependencies: explicit task ids where appropriate
+- suggested_agent: optional recommendation from {codex, gemini, claude, general}
+- ui_viewability: true only for UI-visible deliverables
+
+Quality bar:
+- Cover the full epic, especially MVP-critical areas.
+- Prefer 10+ tasks for a large epic unless the document is genuinely tiny.
+- Make each task independently reviewable and allocatable.
+- Avoid placeholders like "implement feature" without scope.

@@ -1,0 +1,104 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "epic_name": {
+      "type": "string"
+    },
+    "epic_slug": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "workstream_letter": {
+            "type": "string"
+          },
+          "workstream_name": {
+            "type": "string"
+          },
+          "workstream_goal": {
+            "type": "string"
+          },
+          "purpose": {
+            "type": "string"
+          },
+          "input": {
+            "type": "string"
+          },
+          "output": {
+            "type": "string"
+          },
+          "fields": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "action": {
+            "type": "string"
+          },
+          "verification": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "priority": {
+            "type": "integer"
+          },
+          "dependencies": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "suggested_agent": {
+            "type": "string"
+          },
+          "ui_viewability": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "workstream_letter",
+          "workstream_name",
+          "purpose",
+          "input",
+          "output",
+          "verification",
+          "priority",
+          "dependencies",
+          "ui_viewability"
+        ]
+      }
+    }
+  },
+  "required": [
+    "epic_name",
+    "epic_slug",
+    "summary",
+    "warnings",
+    "tasks"
+  ]
+}

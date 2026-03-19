@@ -1,0 +1,1 @@
+{"trade_id": 202, "status": "CLOSED", "product": "EUR", "source_strategy": "alpha", "strategy": "2_tp10.0_sl10.0", "direction": "LONG", "entry_time": "2026-03-13T09:10:00", "exit_time": "2026-03-13T09:15:00", "net_return": 15.0, "alt_net": -1.0}

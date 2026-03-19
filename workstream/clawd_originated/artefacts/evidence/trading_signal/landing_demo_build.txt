@@ -1,0 +1,19 @@
+Landing demo files: 
+ Volume in drive C is Windows
+ Volume Serial Number is CE8D-9B19
+
+ Directory of C:\Users\edebe\eds\workstream\clawd_originated\artefacts\projects
+
+08/03/2026  22:14             2,354 20260308_221600_trading_signal_landing_demo_index.html
+               1 File(s)          2,354 bytes
+               0 Dir(s)  81,729,544,192 bytes free
+ Volume in drive C is Windows
+ Volume Serial Number is CE8D-9B19
+
+ Directory of C:\Users\edebe\eds\workstream\clawd_originated\artefacts\projects
+
+08/03/2026  18:13            16,129 miniapp_feed_2026-03-06.json
+               1 File(s)         16,129 bytes
+               0 Dir(s)  81,729,536,000 bytes free
+Run command: 
+cd /d C:\Users\edebe\eds\workstream\clawd_originated\artefacts\projects && python -m http.server 8089

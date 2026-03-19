@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epic Task Review</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle Dark/Light Mode" aria-label="Toggle Dark and Light Mode">
+        <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    <a href="http://localhost:8080/" class="back-to-kanban" title="Back to Kanban Dashboard" style="position: fixed; top: 16px; left: 16px; z-index: 1000; padding: 10px 16px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border: none; border-radius: 12px; color: white; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; font-size: 0.9rem; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);">
+        <i class="fas fa-arrow-left"></i> Kanban
+    </a>
+    <div class="shell">
+        <header class="hero">
+            <div>
+                <p class="eyebrow">Workstream Orchestrator</p>
+                <h1>Epic Task Review</h1>
+                <p class="subtitle">Select an epic from `000_epic`, browse to the folder holding decomposed task files, review the resulting tasks, and move selected items into `100_backlog/general` or allocate backlog tasks to a model lane.</p>
+            </div>
+            <div class="hero-card">
+                <label for="epicSelect">Epic</label>
+                <select id="epicSelect"></select>
+                <div id="epicMeta" class="meta"></div>
+                <label for="folderPath" style="margin-top: 12px;">Task Source Folder</label>
+                <div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+                    <input id="folderPath" type="text" value="workstream/100_backlog" readonly style="flex:1; padding:10px 12px; border-radius:12px; border:1px solid rgba(255,255,255,0.12); background:rgba(15,23,42,0.55); color:#e2e8f0; font-family: 'JetBrains Mono', monospace; font-size:0.8rem;">
+                    <button id="browseFolderButton" class="ghost" type="button">Browse Folder</button>
+                    <button id="clearFolderButton" class="ghost" type="button">Reset</button>
+                </div>
+                <div style="display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap;">
+                    <button id="decomposeEpicBtn" onclick="window.location.href='/epic-decomposition'" style="padding: 10px 18px; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); border: none; border-radius: 12px; color: white; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-project-diagram"></i> Decompose Epic
+                    </button>
+                    <button id="augmentEpicBtn" style="padding: 10px 18px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border: none; border-radius: 12px; color: white; cursor: pointer; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-plus-circle"></i> Augment Epic
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <section class="filters">
+            <label>
+                Workstream
+                <select id="workstreamFilter">
+                    <option value="">All</option>
+                </select>
+            </label>
+            <label>
+                Status
+                <select id="statusFilter">
+                    <option value="">All</option>
+                    <option value="100_backlog">100_backlog</option>
+                    <option value="200_inprogress">200_inprogress</option>
+                    <option value="300_complete">300_complete</option>
+                    <option value="400_failed">400_failed</option>
+                </select>
+            </label>
+            <label>
+                Priority
+                <select id="priorityFilter">
+                    <option value="">All</option>
+                    <option value="1">P1</option>
+                    <option value="2">P2</option>
+                    <option value="3">P3</option>
+                </select>
+            </label>
+            <label>
+                Sort
+                <select id="sortBy">
+                    <option value="priority">Priority</option>
+                    <option value="workstream">Workstream</option>
+                    <option value="timestamp">Timestamp</option>
+                </select>
+            </label>
+        </section>
+
+        <main class="grid">
+            <section class="panel list-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Tasks</h2>
+                        <p id="taskSummary">0 tasks loaded</p>
+                    </div>
+                    <button id="selectAllButton" class="ghost">Toggle Visible</button>
+                </div>
+                <div id="taskGroups" class="task-groups"></div>
+            </section>
+
+            <section class="panel detail-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Detail</h2>
+                        <p id="detailMeta">Select a task</p>
+                    </div>
+                </div>
+                <div id="detailBody" class="detail-body empty">
+                    Select a task to inspect purpose, inputs, outputs, verification criteria, and raw markdown content.
+                </div>
+            </section>
+        </main>
+
+        <section class="actions">
+            <div class="panel action-bar">
+                <div>
+                    <h2>Actions</h2>
+                    <p id="selectionCount">0 selected</p>
+                </div>
+                <div class="action-controls">
+                    <label>
+                        Default model
+                        <select id="defaultModel">
+                            <option value="gemini">gemini</option>
+                            <option value="claude">claude</option>
+                            <option value="codex">codex</option>
+                        </select>
+                    </label>
+                    <button id="acceptSelectedButton">Accept Selected</button>
+                    <button id="allocateSelectedButton">Allocate Selected</button>
+                    <button id="allocateAcceptedButton" class="secondary">Allocate All Accepted</button>
+                    <button id="moveToGeneralButton" class="secondary">Move Selected to General Backlog</button>
+                    <button id="extendDecompositionButton" class="secondary"><i class="fas fa-expand-arrows-alt"></i> Extend Decomposition</button>
+                    <button id="deleteSelectedButton" class="danger"><i class="fas fa-trash-alt"></i> Delete Selected</button>
+                    <button id="rejectSelectedButton" class="danger">Reject Selected</button>
+                </div>
+            </div>
+            <div class="panel model-panel">
+                <div class="panel-head">
+                    <div>
+                        <h2>Model Status</h2>
+                        <p>Current `100_backlog/{model}` counts</p>
+                    </div>
+                </div>
+                <div id="modelStatus" class="model-status"></div>
+            </div>
+        </section>
+    </div>
+
+    <template id="taskCardTemplate">
+        <article class="task-card">
+            <div class="task-row">
+                <label class="check-wrap">
+                    <input type="checkbox" class="task-check">
+                    <span></span>
+                </label>
+                <div class="task-main">
+                    <div class="task-topline">
+                        <span class="ws-badge"></span>
+                        <span class="task-id"></span>
+                        <span class="task-priority"></span>
+                    </div>
+                    <h3 class="task-title"></h3>
+                    <p class="task-meta"></p>
+                    <p class="task-allocation-state"></p>
+                    <div class="task-controls">
+                        <button class="mini accept-button">Accept</button>
+                        <button class="mini reject-button">Reject</button>
+                        <label>
+                            Assign
+                            <select class="task-model">
+                                <option value="gemini">gemini</option>
+                                <option value="claude">claude</option>
+                                <option value="codex">codex</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </article>
+    </template>
+
+    <div id="folderBrowserModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.72); backdrop-filter: blur(8px); z-index:1000; align-items:center; justify-content:center;">
+        <div style="width:min(880px, 92vw); max-height:84vh; overflow:hidden; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:1.1rem;">Browse Source Folder</h3>
+                    <p id="folderBrowserPath" style="margin:4px 0 0; color:#94a3b8; font-family:'JetBrains Mono', monospace; font-size:0.8rem;"></p>
+                </div>
+                <button id="closeFolderBrowserButton" class="ghost" type="button">Close</button>
+            </div>
+            <div style="display:flex; gap:10px;">
+                <button id="chooseCurrentFolderButton" class="secondary" type="button">Use Current Folder</button>
+            </div>
+            <div id="folderBrowserList" style="display:flex; flex-direction:column; gap:8px; overflow:auto; padding-right:4px;"></div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteConfirmModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.72); backdrop-filter: blur(8px); z-index:1000; align-items:center; justify-content:center;">
+        <div style="width:min(600px, 92vw); max-height:84vh; overflow:hidden; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:1.1rem; color:#f43f5e;"><i class="fas fa-exclamation-triangle"></i> Confirm Deletion</h3>
+                    <p style="margin:4px 0 0; color:#94a3b8; font-size:0.9rem;">The following tasks will be permanently deleted:</p>
+                </div>
+                <button id="closeDeleteModalButton" class="ghost" type="button">Cancel</button>
+            </div>
+            <div id="deleteTaskList" style="display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:300px; padding:12px; background:rgba(0,0,0,0.2); border-radius:12px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; color:#e2e8f0;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="cancelDeleteButton" class="ghost" type="button">Cancel</button>
+                <button id="confirmDeleteButton" class="danger" type="button"><i class="fas fa-trash-alt"></i> Delete Permanently</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Extended Decomposition Modal -->
+    <div id="extendDecompModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.72); backdrop-filter: blur(8px); z-index:1000; align-items:center; justify-content:center;">
+        <div style="width:min(700px, 92vw); max-height:84vh; overflow:hidden; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:18px; display:flex; flex-direction:column; gap:14px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:1.1rem; color:#8b5cf6;"><i class="fas fa-expand-arrows-alt"></i> Extended Decomposition</h3>
+                    <p style="margin:4px 0 0; color:#94a3b8; font-size:0.9rem;">Generate more granular sub-tasks for the selected tasks:</p>
+                </div>
+                <button id="closeExtendModalButton" class="ghost" type="button">Close</button>
+            </div>
+            <div id="extendTaskList" style="display:flex; flex-direction:column; gap:8px; overflow:auto; max-height:200px; padding:12px; background:rgba(0,0,0,0.2); border-radius:12px; font-family:'JetBrains Mono', monospace; font-size:0.8rem; color:#e2e8f0;"></div>
+            <div style="padding:12px; background:rgba(139,92,246,0.1); border-radius:12px; border:1px solid rgba(139,92,246,0.3);">
+                <p style="margin:0 0 8px; color:#a78bfa; font-size:0.85rem; font-weight:600;">Decomposition Depth</p>
+                <p style="margin:0; color:#94a3b8; font-size:0.8rem;">Extended decomposition will force deeper LLM analysis to break each task into 3-5 independently implementable sub-tasks with concrete verification criteria.</p>
+            </div>
+            <div id="extendDecompProgress" style="display:none; padding:16px; text-align:center;">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; color:#8b5cf6;"></i>
+                <p style="margin:8px 0 0; color:#94a3b8;">Running extended decomposition...</p>
+            </div>
+            <div id="extendDecompResult" style="display:none; padding:12px; background:rgba(16,185,129,0.1); border-radius:12px; border:1px solid rgba(16,185,129,0.3); max-height:150px; overflow:auto;"></div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button id="cancelExtendButton" class="ghost" type="button">Cancel</button>
+                <button id="confirmExtendButton" class="secondary" type="button"><i class="fas fa-expand-arrows-alt"></i> Run Extended Decomposition</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Augment Epic Modal -->
+    <div id="augmentEpicModal" style="display:none; position:fixed; inset:0; background:rgba(2,6,23,0.72); backdrop-filter: blur(8px); z-index:1000; align-items:center; justify-content:center;">
+        <div style="width:min(800px, 94vw); max-height:90vh; overflow:hidden; background:rgba(15,23,42,0.96); border:1px solid rgba(255,255,255,0.12); border-radius:18px; padding:20px; display:flex; flex-direction:column; gap:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; gap:12px;">
+                <div>
+                    <h3 style="margin:0; font-size:1.2rem; color:#10b981;"><i class="fas fa-plus-circle"></i> Augment Epic</h3>
+                    <p style="margin:4px 0 0; color:#94a3b8; font-size:0.9rem;">Add missing workstreams or new functionality to an existing decomposed epic</p>
+                </div>
+                <button id="closeAugmentModalButton" class="ghost" type="button">Close</button>
+            </div>
+
+            <!-- Epic Selection -->
+            <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:#94a3b8;">Target Epic</label>
+                    <select id="augmentEpicSelect" style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); color:#e2e8f0; font-size:0.9rem;">
+                        <option value="">Select an epic...</option>
+                    </select>
+                </div>
+                <div style="flex:1; min-width:200px;">
+                    <label style="display:block; margin-bottom:6px; font-size:0.85rem; color:#94a3b8;">Solution Folder</label>
+                    <input id="augmentSolutionPath" type="text" readonly style="width:100%; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); color:#64748b; font-family:'JetBrains Mono', monospace; font-size:0.8rem;" placeholder="Auto-detected...">
+                </div>
+            </div>
+
+            <!-- Current Solution Analysis -->
+            <div id="augmentSolutionAnalysis" style="padding:14px; background:rgba(0,0,0,0.2); border-radius:12px; border:1px solid rgba(255,255,255,0.08); max-height:180px; overflow:auto;">
+                <p style="margin:0; color:#64748b; font-size:0.85rem; text-align:center;"><i class="fas fa-info-circle"></i> Select an epic to analyze existing solution</p>
+            </div>
+
+            <!-- Augmentation Options -->
+            <div style="display:flex; flex-direction:column; gap:12px;">
+                <label style="font-size:0.9rem; color:#94a3b8; font-weight:600;">What to Add</label>
+                <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                    <label style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:10px; cursor:pointer;">
+                        <input type="checkbox" id="augmentAddUI" value="ui" style="accent-color:#10b981;">
+                        <span style="color:#e2e8f0; font-size:0.85rem;"><i class="fas fa-desktop"></i> UI / Frontend</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:rgba(59,130,246,0.1); border:1px solid rgba(59,130,246,0.3); border-radius:10px; cursor:pointer;">
+                        <input type="checkbox" id="augmentAddTests" value="tests" style="accent-color:#3b82f6;">
+                        <span style="color:#e2e8f0; font-size:0.85rem;"><i class="fas fa-vial"></i> Tests</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:rgba(249,115,22,0.1); border:1px solid rgba(249,115,22,0.3); border-radius:10px; cursor:pointer;">
+                        <input type="checkbox" id="augmentAddDocs" value="docs" style="accent-color:#f97316;">
+                        <span style="color:#e2e8f0; font-size:0.85rem;"><i class="fas fa-book"></i> Documentation</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:rgba(139,92,246,0.1); border:1px solid rgba(139,92,246,0.3); border-radius:10px; cursor:pointer;">
+                        <input type="checkbox" id="augmentAddInfra" value="infra" style="accent-color:#8b5cf6;">
+                        <span style="color:#e2e8f0; font-size:0.85rem;"><i class="fas fa-server"></i> Infrastructure</span>
+                    </label>
+                    <label style="display:flex; align-items:center; gap:8px; padding:10px 14px; background:rgba(236,72,153,0.1); border:1px solid rgba(236,72,153,0.3); border-radius:10px; cursor:pointer;">
+                        <input type="checkbox" id="augmentAddFeature" value="feature" style="accent-color:#ec4899;">
+                        <span style="color:#e2e8f0; font-size:0.85rem;"><i class="fas fa-star"></i> New Feature</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- New Feature Description -->
+            <div id="augmentFeatureSection" style="display:none;">
+                <label style="display:block; margin-bottom:6px; font-size:0.9rem; color:#94a3b8;">New Feature Description</label>
+                <textarea id="augmentFeatureDescription" style="width:100%; height:100px; padding:12px; border-radius:10px; border:1px solid rgba(255,255,255,0.12); background:rgba(0,0,0,0.25); color:#e2e8f0; font-family:'JetBrains Mono', monospace; font-size:0.85rem; resize:vertical;" placeholder="Describe the new functionality to add. Be specific about requirements, user interactions, and expected behavior..."></textarea>
+            </div>
+
+            <!-- Progress/Results -->
+            <div id="augmentProgress" style="display:none; padding:16px; text-align:center;">
+                <i class="fas fa-spinner fa-spin" style="font-size:1.5rem; color:#10b981;"></i>
+                <p id="augmentProgressText" style="margin:8px 0 0; color:#94a3b8;">Analyzing solution and generating tasks...</p>
+            </div>
+            <div id="augmentResult" style="display:none; padding:14px; background:rgba(16,185,129,0.1); border-radius:12px; border:1px solid rgba(16,185,129,0.3); max-height:150px; overflow:auto;"></div>
+
+            <!-- Actions -->
+            <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:auto;">
+                <button id="cancelAugmentButton" class="ghost" type="button">Cancel</button>
+                <button id="runAugmentButton" style="padding:10px 20px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); border:none; border-radius:10px; color:white; cursor:pointer; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                    <i class="fas fa-magic"></i> Generate Augmentation Tasks
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>
