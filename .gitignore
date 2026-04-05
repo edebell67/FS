@@ -1,4 +1,8 @@
 api_server_sql/venv/
+.env
+.env.*
+!.env.example
+!**/.env.example
 TradeApps/
 algo_viewer/
 a2ui/
@@ -14,6 +18,7 @@ __pycache__/
 *.log
 TradeApps - Copy/
 TradeApps/breakout/fs/json/
+!epics/
 epics/**/node_modules/
 epics/**/venv/
 epics/**/.pytest_cache/
