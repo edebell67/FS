@@ -1,1 +1,0 @@
-Create hello-world-2 demo via remote CLI orchestration

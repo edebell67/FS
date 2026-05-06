@@ -1,0 +1,90 @@
+{
+  "mined_at": "2026-04-08T01:15:00",
+  "target_subreddits": ["r/algotrading", "r/Daytrading", "r/Forex", "r/futurestrading"],
+  "subreddit_stats": {
+    "r/algotrading": {"members": "1.8M", "activity": "high"},
+    "r/Daytrading": {"members": "3.9M", "activity": "very high"}
+  },
+  "high_engagement_patterns": [
+    {
+      "id": 1,
+      "pattern": "Monthly performance update with specific metrics",
+      "example": "Monthly performance update, approaching 60% in profits since August last year! 5% max drawdown",
+      "engagement_drivers": ["specific_percentage", "timeframe", "risk_metric"],
+      "estimated_comments": "50-200"
+    },
+    {
+      "id": 2,
+      "pattern": "Algorithm working confirmation with backtest data",
+      "example": "My algorithm is working. My backtest and paper trading shows it's doing 1% a day",
+      "engagement_drivers": ["daily_return", "validation_method", "question_hook"],
+      "estimated_comments": "100-300"
+    },
+    {
+      "id": 3,
+      "pattern": "Year-end results comparison",
+      "example": "A year after my first Reddit post - made 74% return this year",
+      "engagement_drivers": ["annual_return", "progress_narrative", "before_after"],
+      "estimated_comments": "50-150"
+    },
+    {
+      "id": 4,
+      "pattern": "Strategy refinement journey",
+      "example": "Refined my portfolio from 8 algorithms to 3 uncorrelated profitable algorithms",
+      "engagement_drivers": ["learning_narrative", "specific_numbers", "process_insight"],
+      "estimated_comments": "30-100"
+    },
+    {
+      "id": 5,
+      "pattern": "Simple strategy with win rate",
+      "example": "This simple Strategy makes $8000 profit in october first week with 90% win rate",
+      "engagement_drivers": ["dollar_amount", "timeframe", "win_rate"],
+      "estimated_comments": "100-400"
+    },
+    {
+      "id": 6,
+      "pattern": "Open source tool share",
+      "example": "I built a Python algo trading framework with backtesting dashboard, Monte Carlo simulation - free open source",
+      "engagement_drivers": ["value_offer", "technical_credibility", "free_resource"],
+      "estimated_comments": "50-200"
+    },
+    {
+      "id": 7,
+      "pattern": "Live vs paper trading comparison",
+      "example": "60 days live paper trading results - LLMs exploiting mispricing",
+      "engagement_drivers": ["live_data", "specific_days", "novel_approach"],
+      "estimated_comments": "40-150"
+    },
+    {
+      "id": 8,
+      "pattern": "Beat the benchmark claim",
+      "example": "A potential S&P Buy & Hold beater?",
+      "engagement_drivers": ["benchmark_comparison", "question_format", "curiosity_hook"],
+      "estimated_comments": "80-250"
+    },
+    {
+      "id": 9,
+      "pattern": "Risk-first approach",
+      "example": "Limit exposure to 1-2% of capital per trade regardless of confidence level",
+      "engagement_drivers": ["risk_management", "practical_advice", "contrarian_view"],
+      "estimated_comments": "30-80"
+    },
+    {
+      "id": 10,
+      "pattern": "Weekly tracking/journal share",
+      "example": "My Trading Guidelines - analyze your results to understand your current trading metrics",
+      "engagement_drivers": ["process_share", "educational", "actionable"],
+      "estimated_comments": "50-126"
+    }
+  ],
+  "content_rules": {
+    "avoid": ["hype_language", "unrealistic_claims", "self_promotion_heavy"],
+    "include": ["specific_data", "risk_metrics", "honest_caveats", "questions"],
+    "disclosure_required": ["algorithmic", "backtest_vs_live", "not_financial_advice"]
+  },
+  "sources": [
+    "https://gummysearch.com/r/algotrading/",
+    "https://gummysearch.com/r/Daytrading/",
+    "https://billiondollaralgorithms.com/blog/my-algo-trading-journey-thus-far"
+  ]
+}

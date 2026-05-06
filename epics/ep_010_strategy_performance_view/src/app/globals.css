@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-sans: 'Geist', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'Geist Mono', 'JetBrains Mono', 'SF Mono', monospace;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-canvas text-ink font-sans;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface rounded-3xl border border-whisper shadow-diffuse p-6 md:p-8;
+  }
+
+  .card-compact {
+    @apply bg-surface rounded-2xl border border-whisper shadow-card p-4 md:p-6;
+  }
+
+  .btn-primary {
+    @apply bg-ink text-white px-6 py-3 rounded-lg font-medium
+           transition-all duration-200 ease-out
+           hover:bg-zinc-800 active:scale-[0.98] active:translate-y-[1px]
+           focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2;
+  }
+
+  .btn-secondary {
+    @apply bg-transparent text-ink px-6 py-3 rounded-lg font-medium
+           border border-whisper
+           transition-all duration-200 ease-out
+           hover:bg-gray-50 active:scale-[0.98]
+           focus:outline-none focus:ring-2 focus:ring-ink focus:ring-offset-2;
+  }
+
+  .btn-ghost {
+    @apply text-steel px-4 py-2 rounded-lg font-medium
+           transition-all duration-200 ease-out
+           hover:bg-gray-100 hover:text-ink;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg border border-whisper bg-surface
+           text-ink placeholder:text-muted
+           transition-all duration-200
+           focus:outline-none focus:ring-2 focus:ring-electric focus:border-transparent;
+  }
+
+  .metric-badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-medium uppercase tracking-wider;
+  }
+
+  .table-header {
+    @apply text-xs font-medium text-steel uppercase tracking-wider text-left;
+  }
+
+  .table-cell {
+    @apply py-4 px-4 text-sm;
+  }
+
+  .animate-stagger > * {
+    animation: slideUp 0.5s cubic-bezier(0.32, 0.72, 0, 1) forwards;
+    opacity: 0;
+  }
+
+  .animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+  .animate-stagger > *:nth-child(2) { animation-delay: 50ms; }
+  .animate-stagger > *:nth-child(3) { animation-delay: 100ms; }
+  .animate-stagger > *:nth-child(4) { animation-delay: 150ms; }
+  .animate-stagger > *:nth-child(5) { animation-delay: 200ms; }
+  .animate-stagger > *:nth-child(6) { animation-delay: 250ms; }
+  .animate-stagger > *:nth-child(7) { animation-delay: 300ms; }
+  .animate-stagger > *:nth-child(8) { animation-delay: 350ms; }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

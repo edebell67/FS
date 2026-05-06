@@ -1,2 +1,0 @@
-C:\Users\edebe\eds\workstream\clawd_originated\artefacts\miniapp_feed_2026-03-06.json
-{"strategies": 163, "open_trades": 1, "signals": 4}

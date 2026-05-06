@@ -1,8 +1,0 @@
-C:\Users\edebe\eds\workstream\clawd_originated\artefacts\projects\20260319_170500_trading_signal_mobile_landing_ia.md
-### Hero: ok
-### KPIs: ok
-### Top Strategies: ok
-### Open Trades: ok
-### Next Actions: ok
-### CTA: ok
-overall=pass

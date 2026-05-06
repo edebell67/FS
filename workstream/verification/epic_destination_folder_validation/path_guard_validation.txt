@@ -1,1 +1,0 @@
-ValueError: path_outside_repo: ../outside_repo_test

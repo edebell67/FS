@@ -1,0 +1,64 @@
+{
+  "canonical_epic_slug": "ep_015",
+  "epic_name": "Breakout Data Story Engine Implementation",
+  "source_epic_path": "workstream/000_epic/20260424_191435_breakout_015_data_story_engine_implementation.md",
+  "decomposition_timestamp": "2026-04-24T19:14:35Z",
+  "workstreams": ["breakout", "video_content"],
+  "tasks": [
+    {
+      "task_id": "015_phase0_definition_lock",
+      "task_file": "20260424_191500_breakout_015_phase0_definition_lock.md",
+      "phase": 0,
+      "description": "Freeze story object schema and detector list",
+      "status": "complete",
+      "completed_at": "2026-04-24T19:52:00Z",
+      "depends_on": []
+    },
+    {
+      "task_id": "015_phase1_loader_normalization",
+      "task_file": "20260424_191501_breakout_015_phase1_loader_normalization.md",
+      "phase": 1,
+      "description": "Build summary_net loader and row normalizer",
+      "status": "complete",
+      "completed_at": "2026-04-24T20:02:00Z",
+      "depends_on": ["015_phase0_definition_lock"]
+    },
+    {
+      "task_id": "015_phase2_feature_builder",
+      "task_file": "20260424_191502_breakout_015_phase2_feature_builder.md",
+      "phase": 2,
+      "description": "Build feature calculator for detector inputs",
+      "status": "complete",
+      "completed_at": "2026-04-24T20:02:00Z",
+      "note": "Completed as part of Phase 1 work",
+      "depends_on": ["015_phase1_loader_normalization"]
+    },
+    {
+      "task_id": "015_phase3_detectors",
+      "task_file": "20260424_191503_breakout_015_phase3_detectors.md",
+      "phase": 3,
+      "description": "Build after-the-fact story detectors",
+      "status": "complete",
+      "completed_at": "2026-04-24T22:42:00Z",
+      "depends_on": ["015_phase2_feature_builder"]
+    },
+    {
+      "task_id": "015_phase4_video_renderer",
+      "task_file": "20260424_191504_breakout_015_phase4_video_renderer.md",
+      "phase": 4,
+      "description": "Build video package renderer from story objects",
+      "status": "complete",
+      "completed_at": "2026-04-24T23:49:00Z",
+      "depends_on": ["015_phase3_detectors"]
+    },
+    {
+      "task_id": "015_phase5_validation",
+      "task_file": "20260424_191505_breakout_015_phase5_validation.md",
+      "phase": 5,
+      "description": "Validate automated output against manual 2026-04-24 package",
+      "status": "complete",
+      "completed_at": "2026-04-24T23:55:00Z",
+      "depends_on": ["015_phase4_video_renderer"]
+    }
+  ]
+}

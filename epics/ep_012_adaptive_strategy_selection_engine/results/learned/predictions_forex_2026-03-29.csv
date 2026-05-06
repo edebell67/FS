@@ -1,0 +1,14 @@
+date,product_type,snap_idx,minute_of_day,action,product,strategy,net,q_hold,q_switch,q_flat
+2026-03-29,forex,0,1380,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,1,1385,FLAT,,,0.0,-2.303,-54.225,0.0
+2026-03-29,forex,2,1390,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,3,1395,FLAT,,,0.0,-2.161,-53.864,0.0
+2026-03-29,forex,4,1400,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,5,1405,FLAT,,,0.0,-2.019,-53.503,0.0
+2026-03-29,forex,6,1410,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,7,1415,FLAT,,,0.0,-1.877,-53.142,0.0
+2026-03-29,forex,8,1420,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,9,1425,FLAT,,,0.0,-1.733,-52.781,0.0
+2026-03-29,forex,10,1430,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0
+2026-03-29,forex,11,1435,FLAT,,,0.0,-1.589,-52.42,0.0
+2026-03-29,forex,12,0,SWITCH,AUD,breakout_Rev_2_tp3.0_sl5.0,14.999999999996696,0.0,0.0,0.0

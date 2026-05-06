@@ -1,0 +1,5 @@
+Scan Date: 2026-04-23 14:28:29
+Target URL: https://practice-automation.com/broken-links/
+--------------------------------------------------
+URL: https://practice-automation.com/broken-links/missing-page.html | Status: 404
+URL: https://linktr.ee/automateNow | Status: 406
