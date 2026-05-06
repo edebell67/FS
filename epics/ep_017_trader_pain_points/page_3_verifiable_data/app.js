@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.querySelector('span').textContent = 'Verifying...';
         submitBtn.disabled = true;
 
-        const BACKEND_URL = 'http://localhost:5017/api/capture_lead';
+        const BACKEND_URL = 'https://ep-017.onrender.com/api/capture_lead';
 
         try {
             const response = await fetch(BACKEND_URL, {

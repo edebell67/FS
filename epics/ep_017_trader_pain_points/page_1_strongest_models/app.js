@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
         submitBtn.disabled = true;
 
         // JSON Backend URL (Points to local Flask or deployed Serverless function)
-        const BACKEND_URL = 'http://localhost:5017/api/capture_lead';
+        const BACKEND_URL = 'https://ep-017.onrender.com/api/capture_lead';
 
         try {
             const response = await fetch(BACKEND_URL, {
