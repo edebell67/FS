@@ -1,0 +1,28 @@
+NET-BASED THRESHOLDS
+Threshold       Total Net   Avg/day  Switches
+----------------------------------------------
+net > 0               6140       198        54
+net > 25              7155       231        33
+net > 50              5815       188        28
+net > 55              5815       188        28
+net > 75              5815       188        21
+net > 100             5675       183        18
+net > 150             5385       174        14
+net > 200             4645       150         6
+net > 300             1645        53         3
+net > 500              470        15         0
+
+RANK1 GAP-BASED THRESHOLDS
+Threshold       Total Net   Avg/day  Switches
+----------------------------------------------
+r1 gap > 0            1845        60        19
+r1 gap > 5            1355        44        15
+r1 gap > 10           1670        54        12
+r1 gap > 15           1190        38        11
+r1 gap > 20           1190        38        11
+r1 gap > 25           1290        42         9
+r1 gap > 50           1050        34         5
+r1 gap > 75            700        23         4
+r1 gap > 100           580        19         3
+r1 gap > 150           470        15         0
+r1 gap > 200           470        15         0

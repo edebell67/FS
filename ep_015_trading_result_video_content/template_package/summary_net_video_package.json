@@ -1,0 +1,33 @@
+{
+  "package_type": "summary_net_video_content",
+  "epic_ref": "ep_015_trading_result_video_content",
+  "target_date": "YYYY-MM-DD",
+  "source_summary_net": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\json\\live\\forex\\YYYY-MM-DD\\_summary_net.json",
+  "scope": "forex",
+  "video_format": "short_recap",
+  "status": "draft",
+  "selected_pairs": [
+    {
+      "strategy": "breakout_Rev_X_tpY_slZ",
+      "product": "GBPEUR_C",
+      "reason_selected": "top_winner"
+    },
+    {
+      "strategy": "breakout_Rev_X_tpY_slZ",
+      "product": "EURNZD_C",
+      "reason_selected": "largest_reversal"
+    }
+  ],
+  "primary_hook": "PLACEHOLDER",
+  "deliverables": [
+    "summary_net_video_brief.md",
+    "summary_net_video_script.txt",
+    "summary_net_video_storyboard.md",
+    "summary_net_video_hook_options.txt",
+    "summary_net_video_overlay_copy.txt",
+    "summary_net_video_asset_manifest.json",
+    "summary_net_video_render_notes.md",
+    "summary_net_video_prompt.txt",
+    "summary_net_video_thumbnail_brief.txt"
+  ]
+}

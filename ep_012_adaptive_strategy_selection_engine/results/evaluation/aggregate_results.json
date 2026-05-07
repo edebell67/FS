@@ -1,0 +1,22 @@
+{
+  "product_types_evaluated": [
+    "forex"
+  ],
+  "days_tested": 26,
+  "total_net_baseline_a": 26590.0,
+  "total_net_baseline_b": 27850.0,
+  "total_net_learned": 14105.0,
+  "best_baseline": "B",
+  "best_baseline_net": 27850.0,
+  "improvement_vs_best_baseline_pct": -49.35,
+  "acceptance_threshold_pct": 25,
+  "accepted": false,
+  "verdict": "REJECTED",
+  "total_switches_a": 112,
+  "total_switches_b": 90,
+  "total_switches_learned": 343,
+  "days_learned_beats_baseline_a": 5,
+  "days_learned_beats_baseline_b": 2,
+  "avg_learned_hold_pct": 72.4,
+  "avg_learned_flat_pct": 17.1
+}

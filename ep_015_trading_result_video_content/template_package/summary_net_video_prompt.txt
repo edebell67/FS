@@ -1,0 +1,13 @@
+Create a polished trading-results video using the attached package.
+
+Requirements:
+- Use the supplied strategy/product pairs only.
+- Tell a single clear story from the breakout `_summary_net.json` source.
+- Start with a strong hook in the first 5 seconds.
+- Use dynamic line-chart visuals for the featured equity curves.
+- Keep the pacing tight and analytical rather than generic hype.
+- Match the storyboard and overlay copy exactly where provided.
+
+Deliverable:
+- one vertical short-form version
+- one optional landscape version if requested

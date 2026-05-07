@@ -1,0 +1,17 @@
+# Thumbnail Brief: 2026-04-24
+
+## Primary Thumbnail Concept
+
+**Main text:** +1215
+**Subtext:** CAD
+**Visual:** Upward arrow or green chart
+
+## Style Guidelines
+- Bold, high contrast
+- Green for positive, red for negative
+- Date visible but not dominant
+- Brand logo in corner
+
+## Dimensions
+- YouTube: 1280x720
+- Shorts: 1080x1920

@@ -1,0 +1,37 @@
+{
+  "metadata": {
+    "generated_at": "2026-05-04T09:58:40.515404",
+    "report_type": "LIVE_ONLY",
+    "engine_version": "EP016_V1"
+  },
+  "engine_health": {
+    "run_mode": "LIVE",
+    "engine_status": "Active",
+    "last_snapshot_time": "2026-05-04T09:50:00",
+    "active_monitored_products": 36,
+    "total_live_snapshots": 4140,
+    "data_freshness_seconds": 520.5,
+    "db_write_latency_seconds": 304.2
+  },
+  "live_coverage": {
+    "products_under_monitoring": 42,
+    "products_with_live_patterns": 34,
+    "market_coverage_pct": 81.0
+  },
+  "live_detection": {
+    "total_live_turns_detected": 362,
+    "live_tops_identified": 176,
+    "live_bottoms_identified": 186,
+    "directional_balance_ratio": 0.95
+  },
+  "live_quality": {
+    "avg_confirm_delay_minutes": 8.7,
+    "avg_structural_quality_score": 442.189
+  },
+  "live_performance_claims": {
+    "verified_sample_size": 362,
+    "structural_stability_5m_pct": 87.6,
+    "structural_stability_10m_pct": 96.1,
+    "avg_move_captured_pips": 439.66
+  }
+}

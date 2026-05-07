@@ -1,0 +1,18 @@
+# Hook Options: 2026-04-24
+
+Choose one for the opening 5 seconds:
+
+## Option 1: Lead with Winner
+"CAD leads with +1215 pips"
+
+## Option 2: Lead with Drama
+"One strategy just lost 6245 pips."
+
+## Option 3: Lead with Volatility
+"NZDAUD_C swings 6195 pips"
+
+## Option 4: Lead with Contrast
+"CAD vs NZDAUD_C: 7460 pip spread"
+
+## Option 5: Question Hook
+"Which breakout strategy won the session?"

@@ -1,0 +1,30 @@
+{
+  "date": "YYYY-MM-DD",
+  "source_summary_net": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\json\\live\\forex\\YYYY-MM-DD\\_summary_net.json",
+  "visual_assets": [
+    {
+      "type": "line_chart",
+      "label": "featured_curve",
+      "strategy": "",
+      "product": "",
+      "status": "needed"
+    },
+    {
+      "type": "line_chart",
+      "label": "comparison_curve",
+      "strategy": "",
+      "product": "",
+      "status": "optional"
+    },
+    {
+      "type": "branding",
+      "label": "logo_or_endcard",
+      "path": "",
+      "status": "optional"
+    }
+  ],
+  "aspect_ratios": [
+    "9:16",
+    "16:9"
+  ]
+}

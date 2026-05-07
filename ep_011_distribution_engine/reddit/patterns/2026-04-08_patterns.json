@@ -1,0 +1,84 @@
+{
+  "extracted_at": "2026-04-08T01:16:00",
+  "title_mechanics": [
+    {
+      "mechanic": "specific_numbers",
+      "description": "Include exact percentages, dollar amounts, or counts",
+      "examples": ["60%", "$8000", "74% return", "3 algorithms"],
+      "effectiveness": "high"
+    },
+    {
+      "mechanic": "timeframe_anchor",
+      "description": "Specify exact time period for results",
+      "examples": ["this week", "since August", "60 days", "first week of October"],
+      "effectiveness": "high"
+    },
+    {
+      "mechanic": "risk_metric_inclusion",
+      "description": "Include drawdown or risk measure for credibility",
+      "examples": ["5% max drawdown", "1-2% per trade", "controlled risk"],
+      "effectiveness": "medium-high"
+    },
+    {
+      "mechanic": "question_hook",
+      "description": "End with question to invite engagement",
+      "examples": ["What do you think?", "Anyone else seeing this?", "Should I...?"],
+      "effectiveness": "high"
+    },
+    {
+      "mechanic": "benchmark_comparison",
+      "description": "Compare to known benchmark (S&P, buy-and-hold)",
+      "examples": ["S&P Buy & Hold beater", "vs index", "outperforming market"],
+      "effectiveness": "medium-high"
+    },
+    {
+      "mechanic": "journey_narrative",
+      "description": "Frame as personal progress story",
+      "examples": ["My journey", "A year later", "refined from X to Y"],
+      "effectiveness": "medium"
+    },
+    {
+      "mechanic": "value_offer",
+      "description": "Offer something useful to community",
+      "examples": ["free open source", "sharing my approach", "here's what I learned"],
+      "effectiveness": "high"
+    }
+  ],
+  "hook_templates": [
+    {
+      "id": "H1",
+      "template": "[Timeframe] update: [Strategy/Product] hitting [Net Return] with [Risk Metric]",
+      "example": "Weekly update: NQ breakout strategy hitting +2070 with 16 trades"
+    },
+    {
+      "id": "H2",
+      "template": "[Product] [Strategy Type] - [Net Return] this [Timeframe]. Anyone else trading [Product]?",
+      "example": "SI breakout reversal - +5300 this week. Anyone else trading Silver?"
+    },
+    {
+      "id": "H3",
+      "template": "My [Strategy Name] is showing [Net Return] across [N] trades - here's the breakdown",
+      "example": "My cipher-lattice strategy is showing +6900 across 46 trades - here's the breakdown"
+    },
+    {
+      "id": "H4",
+      "template": "Tracking [N] strategies across [Products] - top performer: [Gen Strategy Name] at [Net]",
+      "example": "Tracking 1,896 strategies across futures - top performer: cipher-lattice_2_z840_d22b at +6900"
+    },
+    {
+      "id": "H5",
+      "template": "Today vs Weekly: [Product] leading with [Today Net] today, [Weekly Net] weekly so far",
+      "example": "Today vs Weekly: SI leading with +1370 today, +23990 weekly so far"
+    }
+  ],
+  "post_structure": {
+    "title": "Hook with specific numbers + question or insight",
+    "body": [
+      "Brief context (1-2 sentences)",
+      "Data table or bullet list with results",
+      "Risk/caveats disclaimer",
+      "Question to drive engagement"
+    ],
+    "footer": "Disclosure: Algorithmic system, single-contract basis, not financial advice"
+  }
+}

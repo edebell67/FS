@@ -1,0 +1,38 @@
+{
+  "date": "2026-04-25",
+  "scope": "forex",
+  "charts": [],
+  "backgrounds": [
+    {
+      "name": "dark_gradient",
+      "usage": "hook_frame"
+    },
+    {
+      "name": "chart_background",
+      "usage": "equity_curves"
+    }
+  ],
+  "logos": [
+    {
+      "name": "breakout_logo",
+      "position": "bottom_right"
+    }
+  ],
+  "fonts": [
+    {
+      "name": "headline",
+      "family": "Inter Bold",
+      "size": 48
+    },
+    {
+      "name": "body",
+      "family": "Inter Regular",
+      "size": 24
+    },
+    {
+      "name": "metric",
+      "family": "Space Mono",
+      "size": 72
+    }
+  ]
+}

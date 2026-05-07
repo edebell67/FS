@@ -4,7 +4,7 @@ import fastapi
 import pyodbc
 import logging
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict, Optional
 from pydantic import BaseModel, Field
@@ -16,6 +16,7 @@ from pathlib import Path
 
 # [V20260126_0900] File for persisting live grid selections
 GRID_LIVE_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live.json")
+FOREX_PRICE_FILE = Path(r"Z:\algo_forex\prices\forex_price.json")
 
 # Configure Python logging
 logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(levelname)s - %(message)s")
@@ -320,21 +321,34 @@ async def get_rt_group_metrics_sp(request: Request, db: str = fastapi.Query("tra
         if conn:
             conn.close()
 
+@app.get("/api/forex_price.json")
+async def get_forex_price():
+    if not FOREX_PRICE_FILE.exists():
+        logger.error(f"Forex price file missing: {FOREX_PRICE_FILE}")
+        raise HTTPException(status_code=404, detail="Forex price file not found")
+    try:
+        return FileResponse(FOREX_PRICE_FILE, media_type="application/json")
+    except Exception as exc:
+        logger.exception(f"Failed to return forex price file: {exc}")
+        raise HTTPException(status_code=500, detail="Could not serve forex price file")
+
+
 @app.get("/api/{view_name}")
 async def get_view(view_name: str, request: Request, db: str = fastapi.Query("tradedb"), page: int = fastapi.Query(1, gt=0), page_size: int = fastapi.Query(100, gt=0), model: Optional[str] = fastapi.Query(None), signal: Optional[str] = fastapi.Query(None), tradeable: Optional[int] = fastapi.Query(None), trade_reason: Optional[str] = fastapi.Query(None), product: Optional[str] = fastapi.Query(None), session_id: Optional[str] = fastapi.Query(None), _sort: Optional[str] = fastapi.Query(None), _limit: Optional[int] = fastapi.Query(None, gt=0), created_gt: Optional[str] = fastapi.Query(None), created_lt: Optional[str] = fastapi.Query(None)): # 2025-08-23, V1.2: Added created_gt query parameter. # 2025-12-08, V20251208_01: Added session_id and _limit query parameters. # 2026-01-25: Added created_lt query parameter.
     conn = connect_to_db(db)
     if not conn:
         raise HTTPException(status_code=500, detail="Database connection failed")
     
-    # [V20260125_1130] Radical Performance Fix: Sync P&L Cache for the Chart View
-    if view_name == "vwCombined_trades_closed_output_top200" and db == "tradedb":
-        try:
-            logger.info("Syncing P&L Cache for request...")
-            cursor = conn.cursor()
-            cursor.execute("{CALL dbo.sp_refresh_dna_pnl_cache}")
-            conn.commit()
-        except Exception as e:
-            logger.warning("Cache sync failed (non-critical): %s", e)
+    # [V20260126_1010] Performance Optimization: Removed inline cache sync.
+    # This SP is now expected to be run by a background service.
+    # if view_name == "vwCombined_trades_closed_output_top200" and db == "tradedb":
+    #     try:
+    #         logger.info("Syncing P&L Cache for request...")
+    #         cursor = conn.cursor()
+    #         cursor.execute("{CALL dbo.sp_refresh_dna_pnl_cache}")
+    #         conn.commit()
+    #     except Exception as e:
+    #         logger.warning("Cache sync failed (non-critical): %s", e)
 
     data = get_view_data(conn, view_name, page, page_size, model, signal, tradeable, trade_reason, product, session_id, _sort, _limit, created_gt, created_lt) # 2025-08-23, V1.2: Passed created_gt to get_view_data. # 2025-12-08, V20251208_01: Passed session_id and _limit to get_view_data. # 2026-01-25: Passed created_lt.
     if data is None:
@@ -458,9 +472,45 @@ async def get_grid_live():
         logger.error(f"Failed to read grid_live.json: {e}")
         return {"success": False, "message": str(e)}
 
+@app.get("/api/forex_price.json")
+async def get_forex_price():
+    if not FOREX_PRICE_FILE.exists():
+        logger.error(f"Forex price file missing: {FOREX_PRICE_FILE}")
+        raise HTTPException(status_code=404, detail="Forex price file not found")
+    try:
+        return FileResponse(FOREX_PRICE_FILE, media_type="application/json")
+    except Exception as exc:
+        logger.exception(f"Failed to return forex price file: {exc}")
+        raise HTTPException(status_code=500, detail="Could not serve forex price file")
+
 @app.post("/api/grid_live/toggle")
 async def toggle_grid_live(payload: GridLiveToggle):
     try:
+        # [V20260205_2100] Mutual Exclusion Logic
+        config_file = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\config.json")
+        source_allowed = True
+        
+        if config_file.exists():
+            try:
+                with open(config_file, "r") as f:
+                    cfg = json.load(f)
+                
+                current_source = cfg.get("automated_trade_source", "Frequency")
+                if payload.active:
+                    # If turning ON, check if allowed
+                    if current_source != "Trade Bucket":
+                        # For manual UI toggle, we allow OVERRIDE
+                        cfg["automated_trade_source"] = "Trade Bucket"
+                        with open(config_file, "w") as f:
+                            json.dump(cfg, f, indent=4)
+                        logger.info(f"Automated trade source updated to 'Trade Bucket' via Multi-chart toggle.")
+                else:
+                    # If turning OFF, we don't necessarily reset it?
+                    # Keep existing logic for now.
+                    pass
+            except Exception as e:
+                logger.error(f"Failed to check automated source lock: {e}")
+
         data = {}
         if GRID_LIVE_FILE.exists():
             with open(GRID_LIVE_FILE, "r") as f:

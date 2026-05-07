@@ -1,0 +1,202 @@
+# Veo Video Generation Prompts: 2026-04-24 Forex Recap
+
+## Project Overview
+- **Format**: Daily trading recap
+- **Duration**: 60 seconds (8 clips x 6-8 seconds)
+- **Aspect Ratio**: 16:9 (landscape) for YouTube / 9:16 (portrait) for Shorts
+- **Resolution**: 1080p or 4K
+- **Style**: Professional financial broadcast, dark theme, data visualization
+
+---
+
+## CLIP 1: Hook (0:00-0:06)
+**Duration**: 6 seconds
+
+```
+Cinematic slow push-in on a sleek glass trading terminal in a dark control room.
+Holographic green text "+1215 PIPS" materializes and glows in the center frame.
+Subtle lens flare. Ambient blue LED reflections on polished surfaces.
+Shot on anamorphic lens, shallow depth of field, 24fps cinematic motion blur.
+Professional financial news aesthetic. Dark background with teal and green accents.
+```
+
+**Text Overlay**: +1215 PIPS | CAD
+
+---
+
+## CLIP 2: Winner Reveal (0:06-0:14)
+**Duration**: 8 seconds
+
+```
+Smooth crane shot descending toward a massive curved display showing an equity curve chart.
+The line chart animates upward from left to right, green glowing line on dark grid.
+Starting point labeled "25", peak at "1530", settling at "1215".
+Camera continues slow orbit around the display. Volumetric light beams in background.
+High-end broadcast studio environment. Bloomberg terminal aesthetic.
+Photorealistic, 4K, cinematic color grading with teal shadows and amber highlights.
+```
+
+**Text Overlay**:
+- STRATEGY: Rev_4
+- PRODUCT: CAD
+- HIGH: 1530 | CLOSE: 1215
+
+---
+
+## CLIP 3: Contrast Setup (0:14-0:22)
+**Duration**: 8 seconds
+
+```
+Split-screen transition wipe revealing two side-by-side holographic charts.
+Left side: green ascending line labeled "CAD +1215" with upward particle effects.
+Right side: red descending line labeled "NZDAUD_C -6245" with downward particle trail.
+Camera slowly pulls back to reveal both charts on a curved OLED wall.
+Dramatic lighting contrast - green glow left, red glow right.
+Dark trading floor environment with ambient monitor reflections.
+Cinematic wide shot, anamorphic bokeh, professional broadcast quality.
+```
+
+**Text Overlay**: WINNER vs LOSER | 7460 PIP SPREAD
+
+---
+
+## CLIP 4: Villain Deep Dive (0:22-0:30)
+**Duration**: 8 seconds
+
+```
+Dramatic low-angle shot pushing in on a red-illuminated display panel.
+Equity curve plummets downward, animated red line with motion blur trail.
+Numbers cascade: "-70" transforms to "-6245" with glitch transition effect.
+Warning indicators pulse softly in the background. Red ambient lighting.
+Shot through rain-streaked glass for added drama. Shallow depth of field.
+Blade Runner inspired financial terminal aesthetic. Moody, cinematic.
+```
+
+**Text Overlay**:
+- WORST PERFORMER: NZDAUD_C
+- LOSS: -6245 PIPS
+- REVERSAL: 6195 PIPS
+
+---
+
+## CLIP 5: Statistics Panel (0:30-0:40)
+**Duration**: 10 seconds
+
+```
+Elegant tracking shot along a curved glass wall displaying floating data cards.
+Holographic statistics materialize one by one with subtle animation:
+"2898 POSITIONS" - "795 POSITIVE (27%)" - "2079 NEGATIVE (72%)"
+Percentage bars fill with green and red respectively.
+Soft particle effects drift through the frame. Dark environment.
+Camera movement is smooth and deliberate, broadcast documentary style.
+High-end motion graphics aesthetic, Apple Keynote presentation quality.
+Photorealistic CGI environment, ray-traced reflections.
+```
+
+**Text Overlay**:
+- TOTAL POSITIONS: 2898
+- POSITIVE: 795 (27%)
+- NEGATIVE: 2079 (72%)
+- SESSION: BEARISH
+
+---
+
+## CLIP 6: Hero vs Villain Summary (0:40-0:48)
+**Duration**: 8 seconds
+
+```
+Epic wide shot of two towering holographic figures representing the data.
+Left: Green glowing pillar rising upward, labeled "CAD" with "+1215" floating above.
+Right: Red pillar descending into floor, labeled "NZDAUD_C" with "-6245" below.
+Dramatic scale contrast emphasizing the 7460 pip divergence.
+Camera slowly rises on crane shot to reveal the full spread.
+Dark arena-like environment with spotlights. Smoke and volumetric lighting.
+Cinematic superhero movie aesthetic applied to financial data.
+```
+
+**Text Overlay**: THE VERDICT | 7460 PIP DIVERGENCE
+
+---
+
+## CLIP 7: Key Insight (0:48-0:54)
+**Duration**: 6 seconds
+
+```
+Medium close-up on a minimalist digital display showing the session summary.
+Text elegantly types out: "72% of positions finished negative"
+Subtle camera drift. Clean, modern interface design.
+Soft backlight creates silhouette effect on the text panel.
+Apple-style product video aesthetic. Premium, understated.
+Shallow depth of field, warm highlights on dark background.
+```
+
+**Text Overlay**: SESSION INSIGHT | 72% BEARISH
+
+---
+
+## CLIP 8: Closing Brand (0:54-1:00)
+**Duration**: 6 seconds
+
+```
+Slow pull-back revealing the full trading command center from above.
+Multiple curved displays show various charts and data streams.
+Center screen displays "BREAKOUT DAILY RECAP" with date "2026-04-24".
+Cinematic crane shot ascending. City lights visible through windows.
+Peaceful, resolved mood after the data journey.
+Professional broadcast sign-off aesthetic. Premium production value.
+Fade to black with subtle lens flare.
+```
+
+**Text Overlay**:
+- BREAKOUT DAILY RECAP
+- 2026-04-24
+- "See you next session"
+
+---
+
+## Audio Guidance (Veo 3+ Native Audio)
+
+```
+Professional electronic ambient music, financial news style.
+Subtle data processing sounds - soft beeps, digital transitions.
+Low synthetic bass undertones for dramatic moments.
+Clean, modern, not overly aggressive. Think Bloomberg meets Blade Runner.
+Volume swell on the hook, soften during statistics, resolve on closing.
+```
+
+---
+
+## Generation Tips
+
+1. **Generate clips separately** then edit together
+2. **Lock character/environment seed** for consistency across clips
+3. **Use same prompt prefix** for visual continuity:
+   ```
+   Professional financial broadcast aesthetic. Dark environment with
+   teal and green accents. 4K cinematic quality. Ray-traced reflections.
+   ```
+4. **Portrait version**: Change aspect ratio to 9:16, use vertical compositions
+5. **Extend clips** if needed using Veo's video extension feature
+
+---
+
+## Quick Single-Prompt Version (30 seconds)
+
+For a faster single-generation attempt:
+
+```
+A 30-second professional financial news segment in a dark, high-tech trading room.
+Opening shot: Bold green text "+1215 PIPS" glows on screen.
+Cut to: Animated equity curve chart rising, labeled "CAD - Top Performer".
+Cut to: Split screen comparing green rising line vs red falling line.
+Cut to: Statistics panel showing "2898 positions, 72% negative".
+Closing shot: "BREAKOUT DAILY RECAP 2026-04-24" on curved display.
+Bloomberg meets Blade Runner aesthetic. Teal and amber color grading.
+Cinematic 4K quality, smooth camera movements, professional broadcast style.
+Electronic ambient soundtrack, subtle data processing sound effects.
+```
+
+---
+
+Generated by Breakout Data Story Engine
+Source: _summary_net.json (2026-04-24)

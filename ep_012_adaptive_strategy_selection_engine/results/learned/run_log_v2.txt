@@ -1,0 +1,52 @@
+============================================================
+Phase 3b: Learned Selector v2 -- Absolute Reward Fix
+============================================================
+Loaded 172276 rows, 33 dates, 5 product types
+
+forex: 31 dates -> 26 folds
+  Pre-building day sample cache...
+  Cache: 25048 samples across 30 days
+  2026-03-21: net=10045.0 sw=8 HOLD=97% [279H/8S/0F]
+  2026-03-22: net=385.0 sw=4 HOLD=90% [258H/4S/24F]
+  2026-03-23: net=805.0 sw=11 HOLD=96% [245H/11S/0F]
+  2026-03-24: net=90.0 sw=2 HOLD=90% [18H/2S/0F]
+  2026-03-25: net=955.0 sw=3 HOLD=98% [265H/3S/3F]
+  2026-03-26: net=-115.0 sw=6 HOLD=94% [144H/6S/4F]
+  2026-03-27: net=470.0 sw=5 HOLD=98% [282H/5S/0F]
+  2026-03-28: net=0.0 sw=0 HOLD=0% [0H/0S/2F]
+  2026-03-29: net=-35.0 sw=1 HOLD=92% [12H/1S/0F]
+  2026-03-30: net=70.0 sw=6 HOLD=98% [235H/6S/0F]
+  2026-03-31: net=810.0 sw=3 HOLD=99% [252H/3S/0F]
+  2026-04-01: net=85.0 sw=4 HOLD=99% [274H/4S/0F]
+  2026-04-02: net=185.0 sw=2 HOLD=70% [168H/2S/70F]
+  2026-04-03: net=-65.0 sw=7 HOLD=81% [191H/7S/38F]
+  2026-04-05: net=230.0 sw=1 HOLD=94% [31H/1S/1F]
+  2026-04-06: net=320.0 sw=5 HOLD=98% [282H/5S/0F]
+  2026-04-07: net=360.0 sw=4 HOLD=98% [162H/4S/0F]
+  2026-04-08: net=390.0 sw=3 HOLD=99% [238H/3S/0F]
+  2026-04-09: net=110.0 sw=5 HOLD=23% [85H/5S/282F]
+  2026-04-10: net=1850.0 sw=6 HOLD=98% [281H/6S/0F]
+  2026-04-12: net=450.0 sw=4 HOLD=88% [29H/4S/0F]
+  2026-04-13: net=410.0 sw=5 HOLD=98% [282H/5S/0F]
+  2026-04-14: net=2760.0 sw=4 HOLD=98% [273H/4S/1F]
+  2026-04-15: net=2510.0 sw=10 HOLD=97% [277H/10S/0F]
+  2026-04-16: net=3035.0 sw=5 HOLD=97% [279H/5S/3F]
+  2026-04-17: net=290.0 sw=5 HOLD=98% [257H/5S/1F]
+
+Saved fold summary: C:\Users\edebe\eds\epics\ep_012_adaptive_strategy_selection_engine\results\learned\fold_summary_learned_v2.csv (26 rows)
+Saved aggregate: C:\Users\edebe\eds\epics\ep_012_adaptive_strategy_selection_engine\results\learned\aggregate_learned_v2.json
+{
+  "total_net_learned": 26400.0,
+  "avg_net_per_day": 1015.38,
+  "total_switches": 119,
+  "avg_hold_pct": 87.9,
+  "days_tested": 26,
+  "total_predictions": 5647,
+  "hold_dominates": true,
+  "product_types_run": [
+    "forex"
+  ]
+}
+Leakage check: all 26 folds had >= 5 train days -- clean
+
+Phase 3b COMPLETE

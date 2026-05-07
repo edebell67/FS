@@ -1,0 +1,15 @@
+# On-Screen Overlay Copy: 2026-04-25
+
+Short text for on-screen display (readable in <2 seconds each):
+
+## Scene 1 - Hook
+
+## Scene 2 - Winner Detail
+
+## Scene 3 - Comparison
+
+## Scene 4 - Stats
+
+## Scene 5 - Close
+BREAKOUT DAILY RECAP
+2026-04-25

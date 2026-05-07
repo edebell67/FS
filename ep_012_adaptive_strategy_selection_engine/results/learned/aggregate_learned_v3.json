@@ -1,0 +1,12 @@
+{
+  "total_net_learned": 26550.0,
+  "avg_net_per_day": 1021.15,
+  "total_switches": 116,
+  "avg_hold_pct": 88.1,
+  "days_tested": 26,
+  "total_predictions": 5647,
+  "hold_dominates": true,
+  "product_types_run": [
+    "forex"
+  ]
+}

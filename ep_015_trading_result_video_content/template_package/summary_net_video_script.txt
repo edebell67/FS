@@ -1,0 +1,26 @@
+TITLE: Summary Net Video Script
+DATE: YYYY-MM-DD
+FORMAT: short_recap
+
+HOOK
+[Lead with the strongest result in one short spoken sentence.]
+
+SCENE 1
+[Introduce the day and the featured strategy/product.]
+
+SCENE 2
+[Describe the main equity curve movement.]
+
+SCENE 3
+[Compare it with a second standout or opposite performer.]
+
+SCENE 4
+[Explain the shift, reversal, or persistence in simple viewer language.]
+
+CLOSE
+[Finish with a concise takeaway and optional CTA.]
+
+NOTES
+- Keep the spoken script tight.
+- Prefer short sentences.
+- Only include numbers that are easy to understand out loud.

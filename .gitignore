@@ -16,6 +16,7 @@ firecrawl-mcp-server/
 node_modules/
 __pycache__/
 *.log
+workstream/
 TradeApps - Copy/
 TradeApps/breakout/fs/json/
 !epics/

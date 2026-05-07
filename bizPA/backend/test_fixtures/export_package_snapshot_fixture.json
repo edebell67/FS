@@ -1,0 +1,96 @@
+{
+  "unique_id": "11111111-2222-3333-4444-555555555555",
+  "entity_type": "snapshot",
+  "transaction_date": "2026-03-31",
+  "created_at": "2026-03-31T18:00:00.000Z",
+  "created_by": "owner@test.local",
+  "quarter_reference": "Q1-2026",
+  "description": "Quarter snapshot generated",
+  "status": "generated",
+  "commit_mode": "manual",
+  "source_type": "system",
+  "version_number": 2,
+  "readiness_score": 96,
+  "integrity_warning_summary": [
+    "1 optional attachment missing"
+  ],
+  "transactions": [
+    {
+      "unique_id": "aaaaaaa1-0000-0000-0000-000000000001",
+      "entity_type": "invoice",
+      "transaction_date": "2026-01-15",
+      "created_at": "2026-01-15T10:00:00.000Z",
+      "created_by": "owner@test.local",
+      "quarter_reference": "Q1-2026",
+      "counterparty_reference": "Brookside Renovations",
+      "description": "Invoice for labour",
+      "category": "sales_income",
+      "net_amount": 400.00,
+      "vat_amount": 80.00,
+      "gross_amount": 480.00,
+      "vat_rate": 20.00,
+      "vat_type": "output",
+      "status": "committed",
+      "commit_mode": "manual",
+      "source_type": "voice"
+    },
+    {
+      "unique_id": "aaaaaaa2-0000-0000-0000-000000000002",
+      "entity_type": "receipt_expense",
+      "transaction_date": "2026-02-03",
+      "created_at": "2026-02-03T09:30:00.000Z",
+      "created_by": "owner@test.local",
+      "quarter_reference": "Q1-2026",
+      "counterparty_reference": "Tool Depot",
+      "description": "Materials receipt",
+      "category": "materials",
+      "net_amount": 100.00,
+      "vat_amount": 20.00,
+      "gross_amount": 120.00,
+      "vat_rate": 20.00,
+      "vat_type": "input",
+      "status": "committed",
+      "commit_mode": "manual",
+      "source_type": "attachment"
+    },
+    {
+      "unique_id": "aaaaaaa3-0000-0000-0000-000000000003",
+      "entity_type": "payment",
+      "transaction_date": "2026-03-11",
+      "created_at": "2026-03-11T14:45:00.000Z",
+      "created_by": "owner@test.local",
+      "quarter_reference": "Q1-2026",
+      "counterparty_reference": "Brookside Renovations",
+      "description": "Payment received for invoice",
+      "category": "sales_income",
+      "net_amount": 400.00,
+      "vat_amount": 80.00,
+      "gross_amount": 480.00,
+      "vat_rate": 20.00,
+      "vat_type": "output",
+      "status": "allocated",
+      "commit_mode": "manual",
+      "source_type": "manual"
+    }
+  ],
+  "included_transaction_ids": [
+    "aaaaaaa1-0000-0000-0000-000000000001",
+    "aaaaaaa2-0000-0000-0000-000000000002",
+    "aaaaaaa3-0000-0000-0000-000000000003"
+  ],
+  "totals": {
+    "net_amount": 900.00,
+    "vat_amount": 180.00,
+    "gross_amount": 1080.00
+  },
+  "vat_totals": {
+    "total_vat": 180.00,
+    "by_rate": {
+      "20.00": 180.00
+    },
+    "by_type": {
+      "input": 20.00,
+      "output": 160.00
+    }
+  }
+}

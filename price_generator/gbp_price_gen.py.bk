@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+import csv
+import random
+import argparse
+import os
+from datetime import datetime, timedelta
+
+def generate_intraday_gbp_prices(filename, start_date, initial_price=1.3, total_seconds=86400):
+    """
+    Generate a CSV file with intraday GBP prices at one price per second.
+
+    :param filename: Name of the CSV file to create.
+    :param start_date: A datetime object for the starting date/time.
+    :param initial_price: The starting GBP price.
+    :param total_seconds: The total number of seconds for which to generate prices.
+    """
+    current_time = start_date
+    price = initial_price
+
+
+
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        # Write header row.
+        writer.writerow(['counter', 'datetime', 'price'])
+
+        for i in range(total_seconds):
+            # Simulate a random walk with a normally distributed change.
+            delta = random.gauss(0, 0.0001)
+            price += delta
+
+            # Write the current datetime and price (formatted to 5 decimal places).
+            writer.writerow([
+                i + 1,
+                current_time.strftime("%Y-%m-%d %H:%M:%S"),
+                f"{price:.5f}"
+            ])
+
+            current_time += timedelta(seconds=1)
+
+def main():
+    parser = argparse.ArgumentParser(description='Generate intraday GBP prices.')
+    parser.add_argument(
+        '-d', '--days',
+        type=int,
+        help='Number of days for which to generate intraday prices.'
+    )
+    args = parser.parse_args()
+
+    if args.days is not None:
+        num_days = args.days
+    else:
+        try:
+            num_days = int(input("Enter the number of days for which to generate intraday prices: "))
+            if num_days < 1:
+                raise ValueError("Number of days must be a positive integer.")
+        except ValueError as e:
+            print("Error:", e)
+            print("Please enter a valid positive integer for the number of days.")
+            return
+
+    start_date = datetime(2025, 1, 1, 0, 0, 0)    
+    base_directory = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
+    target_directory = os.path.join(base_directory, 'algo_simulate', 'price_simulated')
+    os.makedirs(target_directory, exist_ok=True)
+    filename = os.path.join(target_directory, f'intraday_gbp_prices.csv')   
+
+
+
+    total_seconds = num_days * 86400
+
+    print(f"Generating {total_seconds} seconds of data for {num_days} day(s) into file: {filename} ...")
+    generate_intraday_gbp_prices(
+        filename,
+        start_date,
+        total_seconds=total_seconds
+    )
+    print(f"Generated file: {filename}")
+
+if __name__ == '__main__':
+    main()
