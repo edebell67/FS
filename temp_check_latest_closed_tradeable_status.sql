@@ -1,7 +1,0 @@
-USE [tradedb];
-GO
-
-SELECT guid, tradeable
-FROM dbo.combined_trades_closed
-WHERE guid IN ('E9E11949-4645-439B-B505-90D4809FAD52', '2112C836-6F8B-44C2-9131-31A68C1E9E08');
-GO

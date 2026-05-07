@@ -1,6 +1,0 @@
-# Market Prices API - Dependencies
-# No database drivers required!
-
-fastapi>=0.110.0,<0.111.0
-starlette>=1.0.0,<1.1.0
-uvicorn>=0.42.0,<0.43.0

@@ -1,6 +1,0 @@
-# Hook Options: 2026-04-25
-
-Choose one for the opening 5 seconds:
-
-## Option 1: Question Hook
-"Which breakout strategy won the session?"
