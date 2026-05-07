@@ -1,9 +1,0 @@
-{
-  "total_net_learned": 147290.0,
-  "avg_net_per_day": 1115.83,
-  "total_switches": 982,
-  "avg_hold_pct": 72.0,
-  "days_tested": 132,
-  "total_predictions": 31588,
-  "hold_dominates": true
-}
