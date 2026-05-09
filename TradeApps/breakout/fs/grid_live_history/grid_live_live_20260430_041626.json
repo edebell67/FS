@@ -1,0 +1,13 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_2_tp20.0_sl5.0",
+            "product": "GBPAUD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0430_040955_147_GBPAUD_C_breakout_R_2_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0430_040955_147_GBPAUD_C_breakout_R_2_tp20_0_sl5_0",
+            "activated_at": "2026-04-30T04:16:26"
+        }
+    ],
+    "sim": []
+}

@@ -1,0 +1,14 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_4_tp20.0_sl3.0",
+            "product": "NZDAUD_C",
+            "metric": "buy_net",
+            "source": "strategy_performance",
+            "manual": true,
+            "group": "NZDAUD_C",
+            "activated_at": "2026-04-29T15:11:46"
+        }
+    ],
+    "sim": []
+}

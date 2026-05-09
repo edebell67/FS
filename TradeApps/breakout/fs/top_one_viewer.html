@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top Performers - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-main);
+            margin: 0;
+            overflow-x: hidden;
+        }
+
+        .main-content {
+            padding: 40px;
+            max-width: 1200px;
+            margin-left: 260px;
+            /* Adjust based on sidebar */
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.2em;
+            margin: 0;
+            background: linear-gradient(135deg, #fff 0%, #94a3b8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .control-item label {
+            font-size: 0.8em;
+            font-weight: 600;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        select,
+        input {
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid var(--border);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 8px;
+            outline: none;
+            font-family: inherit;
+            transition: border-color 0.2s;
+            min-width: 150px;
+        }
+
+        select:focus,
+        input:focus {
+            border-color: var(--primary);
+        }
+
+        .refresh-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            height: 42px;
+        }
+
+        .refresh-btn:hover {
+            background: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Hero Cards for Global Top One */
+        .global-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .hero-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+        }
+
+        .hero-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .hero-card.buy {
+            border-left: 5px solid var(--success);
+        }
+
+        .hero-card.sell {
+            border-left: 5px solid var(--danger);
+        }
+
+        .card-label {
+            font-size: 0.9em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-label.buy {
+            color: var(--success);
+        }
+
+        .card-label.sell {
+            color: var(--danger);
+        }
+
+        .hero-product {
+            font-size: 2.5em;
+            font-weight: 800;
+            margin-bottom: 5px;
+        }
+
+        .hero-strategy {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+            color: var(--text-dim);
+            margin-bottom: 25px;
+            opacity: 0.8;
+            word-break: break-all;
+        }
+
+        .hero-return {
+            font-size: 1.8em;
+            font-weight: 700;
+        }
+
+        .hero-return.positive {
+            color: var(--success);
+        }
+
+        .hero-return.negative {
+            color: var(--danger);
+        }
+
+        .last-updated {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: var(--text-dim);
+            font-style: italic;
+        }
+
+        /* Detail List */
+        .details-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .product-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .product-title {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: #fff;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9em;
+        }
+
+        .row .label {
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .row .value {
+            font-weight: 600;
+        }
+
+        .row .strategy-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75em;
+            max-width: 200px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px;
+            background: var(--card-bg);
+            border-radius: 16px;
+            color: var(--text-dim);
+            grid-column: 1 / -1;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.4s ease forwards;
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Top One Performer</h1>
+        </div>
+
+        <div class="controls">
+            <div class="control-item">
+                <label>Run Mode</label>
+                <select id="modeSelect">
+                    <option value="live">LIVE</option>
+                    <option value="sim">SIMULATION</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>Date</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="control-item">
+                <label>Product Filter</label>
+                <select id="productFilter">
+                    <option value="all">All Products</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>Strategy Filter</label>
+                <select id="strategyFilter">
+                    <option value="all">All Strategies</option>
+                </select>
+            </div>
+            <div class="control-item">
+                <label>Auto Refresh (30s)</label>
+                <input type="checkbox" id="autoRefreshCheck" onchange="toggleAutoRefresh()"
+                    style="min-width: unset; width: 22px; height: 22px; cursor: pointer;">
+            </div>
+            <button class="refresh-btn" onclick="fetchData()">
+                <i class="fas fa-sync-alt"></i> Update View
+            </button>
+        </div>
+
+        <div id="globalView" class="global-grid">
+            <!-- Global cards injected here -->
+        </div>
+
+        <div class="details-section">
+            <h2>
+                <span>Per-Product Leaders</span>
+                <span id="updateTime" style="font-size: 0.5em; font-weight: 400; opacity: 0.6;"></span>
+            </h2>
+            <div id="productGrid" class="product-grid">
+                <!-- Product list injected here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default date to today
+        document.getElementById('dateInput').valueAsDate = new Date();
+
+        let rawData = null;
+
+        async function fetchData() {
+            const mode = document.getElementById('modeSelect').value;
+            const date = document.getElementById('dateInput').value;
+
+            const globalGrid = document.getElementById('globalView');
+            const productGrid = document.getElementById('productGrid');
+
+            globalGrid.innerHTML = '<div class="no-data"><i class="fas fa-spinner fa-spin"></i> Loading...</div>';
+            productGrid.innerHTML = '';
+
+            try {
+                const resp = await fetch(`/api/top_one?mode=${mode}&date=${date}`);
+                const data = await resp.json();
+
+                if (data.success && data.content) {
+                    rawData = data.content;
+                    updateFilters(rawData);
+                    renderView();
+                } else {
+                    globalGrid.innerHTML = `<div class="no-data">${data.message || 'No data found for this period.'}</div>`;
+                }
+            } catch (err) {
+                globalGrid.innerHTML = `<div class="no-data">Error fetching data: ${err.message}</div>`;
+            }
+        }
+
+        function updateFilters(data) {
+            const prodSelect = document.getElementById('productFilter');
+            const stratSelect = document.getElementById('strategyFilter');
+
+            const currentProd = prodSelect.value;
+            const currentStrat = stratSelect.value;
+
+            // Collect all unique prods and strats
+            const products = new Set();
+            const strategies = new Set();
+
+            if (data.by_product) {
+                Object.keys(data.by_product).forEach(p => products.add(p));
+                Object.values(data.by_product).forEach(v => {
+                    const buys = Array.isArray(v.buy) ? v.buy : (v.top_buy ? [v.top_buy] : []);
+                    const sells = Array.isArray(v.sell) ? v.sell : (v.top_sell ? [v.top_sell] : []);
+                    buys.forEach(it => strategies.add(it.strategy));
+                    sells.forEach(it => strategies.add(it.strategy));
+                });
+            }
+
+            // Global ones too
+            if (data.global) {
+                const buys = Array.isArray(data.global.buy) ? data.global.buy : (data.global.top_buy ? [data.global.top_buy] : []);
+                const sells = Array.isArray(data.global.sell) ? data.global.sell : (data.global.top_sell ? [data.global.top_sell] : []);
+
+                buys.forEach(it => {
+                    products.add(it.product);
+                    strategies.add(it.strategy || it.strategy_and_params);
+                });
+                sells.forEach(it => {
+                    products.add(it.product);
+                    strategies.add(it.strategy || it.strategy_and_params);
+                });
+            }
+
+            // Populate Product Select
+            prodSelect.innerHTML = '<option value="all">All Products</option>';
+            Array.from(products).sort().forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p;
+                opt.textContent = p;
+                prodSelect.appendChild(opt);
+            });
+            prodSelect.value = products.has(currentProd) ? currentProd : "all";
+
+            // Populate Strategy Select
+            stratSelect.innerHTML = '<option value="all">All Strategies</option>';
+            Array.from(strategies).sort().forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s;
+                opt.textContent = s;
+                stratSelect.appendChild(opt);
+            });
+            stratSelect.value = strategies.has(currentStrat) ? currentStrat : "all";
+        }
+
+        function renderView() {
+            if (!rawData) return;
+
+            const productFilter = document.getElementById('productFilter').value;
+            const strategyFilter = document.getElementById('strategyFilter').value;
+
+            const globalGrid = document.getElementById('globalView');
+            const productGrid = document.getElementById('productGrid');
+            const updateTime = document.getElementById('updateTime');
+
+            globalGrid.innerHTML = '';
+            productGrid.innerHTML = '';
+            updateTime.textContent = rawData.last_update ? `Last update: ${new Date(rawData.last_update).toLocaleString()}` : '';
+
+            // Global Section (only show if filters are 'all')
+            if (productFilter === 'all' && strategyFilter === 'all') {
+                if (rawData.global) {
+                    if (Array.isArray(rawData.global.buy)) {
+                        rawData.global.buy.forEach(it => renderHeroCard(globalGrid, it, 'buy'));
+                    } else if (rawData.global.top_buy) { // legacy fallback
+                        renderHeroCard(globalGrid, rawData.global.top_buy, 'buy');
+                    }
+
+                    if (Array.isArray(rawData.global.sell)) {
+                        rawData.global.sell.forEach(it => renderHeroCard(globalGrid, it, 'sell'));
+                    } else if (rawData.global.top_sell) { // legacy fallback
+                        renderHeroCard(globalGrid, rawData.global.top_sell, 'sell');
+                    }
+                }
+            } else {
+                globalGrid.style.display = 'none';
+            }
+
+            if (productFilter === 'all' && strategyFilter === 'all') globalGrid.style.display = 'grid';
+
+            // Product Detail Section
+            if (rawData.by_product) {
+                Object.entries(rawData.by_product).forEach(([prod, leaders]) => {
+                    // Filter by product
+                    if (productFilter !== 'all' && prod !== productFilter) return;
+
+                    // Filter by strategy
+                    let buyHtml = '';
+                    let sellHtml = '';
+
+                    // Top N Buy
+                    const buyItems = Array.isArray(leaders.buy) ? leaders.buy : (leaders.top_buy ? [leaders.top_buy] : []);
+                    buyItems.forEach(buyIt => {
+                        const stratMatch = strategyFilter === 'all' || buyIt.strategy === strategyFilter;
+                        if (stratMatch) {
+                            buyHtml += `
+                                <div class="row" style="margin-bottom: 5px;">
+                                    <span class="label">TOP BUY</span>
+                                    <span class="value success" style="color: var(--success)">+$${buyIt.pnl.toFixed(2)}</span>
+                                </div>
+                                <div class="row" style="margin-top: -8px; margin-bottom: 10px;">
+                                    <span class="label" style="font-size: 0.8em">Strategy</span>
+                                    <span class="value strategy-val" title="${buyIt.strategy}">${buyIt.strategy}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    // Top N Sell
+                    const sellItems = Array.isArray(leaders.sell) ? leaders.sell : (leaders.top_sell ? [leaders.top_sell] : []);
+                    sellItems.forEach(sellIt => {
+                        const stratMatch = strategyFilter === 'all' || sellIt.strategy === strategyFilter;
+                        if (stratMatch) {
+                            sellHtml += `
+                                <div class="row" style="margin-bottom: 5px;">
+                                    <span class="label">TOP SELL</span>
+                                    <span class="value danger" style="color: var(--danger)">+$${sellIt.pnl.toFixed(2)}</span>
+                                </div>
+                                <div class="row" style="margin-top: -8px; margin-bottom: 10px;">
+                                    <span class="label" style="font-size: 0.8em">Strategy</span>
+                                    <span class="value strategy-val" title="${sellIt.strategy}">${sellIt.strategy}</span>
+                                </div>
+                            `;
+                        }
+                    });
+
+                    if (!buyHtml && !sellHtml) return;
+
+                    const item = document.createElement('div');
+                    item.className = 'product-item fade-in';
+                    item.innerHTML = `
+                        <div class="product-title">${prod} <i class="fas fa-microchip" style="opacity: 0.3"></i></div>
+                        ${buyHtml}
+                        ${sellHtml}
+                    `;
+                    productGrid.appendChild(item);
+                });
+            }
+
+            if (productGrid.innerHTML === '') {
+                productGrid.innerHTML = '<div class="no-data">No product leaders match the applied filters.</div>';
+            }
+        }
+
+        function renderHeroCard(container, data, type) {
+            const card = document.createElement('div');
+            card.className = `hero-card ${type} fade-in`;
+            const label = type === 'buy' ? 'Global Leader (Long)' : 'Global Leader (Short)';
+            const icon = type === 'buy' ? 'fa-arrow-up' : 'fa-arrow-down';
+
+            const strategy = data.strategy || data.strategy_and_params || 'N/A';
+            const pnl = data.pnl || data.total_net_return || 0;
+
+            card.innerHTML = `
+                <div class="card-label ${type}">
+                    <i class="fas ${icon}"></i> ${label}
+                </div>
+                <div class="hero-product">${data.product}</div>
+                <div class="hero-strategy">${strategy}</div>
+                <div class="hero-return positive">+$${pnl.toFixed(2)}</div>
+            `;
+            container.appendChild(card);
+        }
+
+        // Auto fetch on load
+        fetchData();
+
+        // Auto Refresh Logic
+        let refreshTimer = null;
+        const REFRESH_INTERVAL = 30000; // 30 seconds
+
+        function toggleAutoRefresh() {
+            const isChecked = document.getElementById('autoRefreshCheck').checked;
+            if (isChecked) {
+                if (refreshTimer) clearInterval(refreshTimer);
+                refreshTimer = setInterval(() => {
+                    console.log("Auto-refreshing data...");
+                    fetchData();
+                }, REFRESH_INTERVAL);
+            } else {
+                if (refreshTimer) clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        // Listen for filter changes
+        document.getElementById('productFilter').onchange = renderView;
+        document.getElementById('strategyFilter').onchange = renderView;
+        // Listen for mode/date changes to trigger immediate fetch
+        document.getElementById('modeSelect').onchange = fetchData;
+        document.getElementById('dateInput').onchange = fetchData;
+    </script>
+</body>
+
+</html>

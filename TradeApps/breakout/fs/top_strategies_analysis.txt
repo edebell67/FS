@@ -1,0 +1,137 @@
+================================================================================
+TOP 2 STRATEGIES BY NET VALUE AT EACH HALF-HOUR POINT (2026-01-26)
+================================================================================
+Time                 Strategy                                            Net Value
+--------------------------------------------------------------------------------
+02:30                breakout_2_tp10.0_sl10.0_GBP                       $    95.00
+                     breakout_2_tp10.0_sl6.0_GBP                        $    95.00
+
+03:00                breakout_2_tp10.0_sl10.0_NZDAUD_C                  $   180.00
+                     breakout_2_tp10.0_sl6.0_NZDAUD_C                   $   180.00
+
+03:30                breakout_Rev_2_tp20.0_sl10.0_GBPEUR_C              $   307.50
+                     breakout_Rev_2_tp20.0_sl6.0_GBPEUR_C               $   307.50
+
+04:00                breakout_3_tp10.0_sl10.0_GBPEUR_C                  $   360.00
+                     breakout_Rev_2_tp20.0_sl10.0_GBPAUD_C              $   282.50
+
+04:30                breakout_Rev_4_tp10.0_sl10.0_EURAUD_C              $   360.00
+                     breakout_Rev_4_tp10.0_sl6.0_EURAUD_C               $   360.00
+
+05:00                breakout_Rev_4_tp10.0_sl10.0_EURAUD_C              $   360.00
+                     breakout_Rev_4_tp10.0_sl6.0_EURAUD_C               $   360.00
+
+05:30                breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   360.00
+                     breakout_3_tp10.0_sl10.0_GBPNZD_C                  $   360.00
+
+06:00                breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   360.00
+                     breakout_3_tp10.0_sl10.0_GBPNZD_C                  $   360.00
+
+06:30                breakout_R_Rev_2_tp20.0_sl10.0_GBPAUD_C            $   452.50
+                     breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   450.00
+
+07:00                breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   520.00
+                     breakout_R_3_tp10.0_sl10.0_EURAUD_C                $   500.00
+
+07:30                breakout_Rev_4_tp10.0_sl6.0_EURAUD_C               $   580.00
+                     breakout_R_Rev_4_tp20.0_sl6.0_EURAUD_C             $   572.50
+
+08:00                breakout_Rev_4_tp10.0_sl6.0_EURAUD_C               $   670.00
+                     breakout_2_tp10.0_sl10.0_NZDAUD_C                  $   630.00
+
+08:30                breakout_2_tp10.0_sl10.0_NZDAUD_C                  $   720.00
+                     breakout_Rev_4_tp10.0_sl6.0_EURAUD_C               $   600.00
+
+09:00                breakout_R_3_tp10.0_sl10.0_EURAUD_C                $   770.00
+                     breakout_2_tp10.0_sl10.0_NZDAUD_C                  $   720.00
+
+09:30                breakout_R_Rev_3_tp20.0_sl10.0_EURAUD_C            $   927.50
+                     breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   797.50
+
+10:00                breakout_R_Rev_3_tp20.0_sl10.0_EURAUD_C            $   927.50
+                     breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   750.00
+
+10:30                breakout_R_Rev_3_tp20.0_sl10.0_EURAUD_C            $   817.50
+                     breakout_Rev_2_tp10.0_sl10.0_EURAUD_C              $   790.00
+
+11:00                breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   945.00
+                     breakout_R_Rev_3_tp20.0_sl10.0_EURAUD_C            $   817.50
+
+11:30                breakout_R_Rev_4_tp20.0_sl6.0_GBPNZD_C             $   892.50
+                     breakout_2_tp10.0_sl10.0_NZDAUD_C                  $   880.00
+
+12:00                breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   905.00
+                     breakout_R_Rev_4_tp20.0_sl6.0_GBPNZD_C             $   892.50
+
+12:30                breakout_R_Rev_4_tp20.0_sl10.0_GBPNZD_C            $   947.50
+                     breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   905.00
+
+13:00                breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   862.50
+                     breakout_R_Rev_4_tp20.0_sl10.0_GBPNZD_C            $   837.50
+
+13:30                breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   935.00
+                     breakout_R_Rev_4_tp20.0_sl6.0_GBPNZD_C             $   865.00
+
+14:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $   830.00
+                     breakout_R_Rev_2_tp20.0_sl10.0_EURAUD_C            $   825.00
+
+14:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $   920.00
+                     breakout_Rev_2_tp10.0_sl10.0_EURAUD_C              $   907.50
+
+15:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1010.00
+                     breakout_Rev_2_tp10.0_sl10.0_EURAUD_C              $   997.50
+
+15:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1100.00
+                     breakout_2_tp10.0_sl10.0_GBPNZD_C                  $   960.00
+
+16:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1080.00
+                     breakout_2_tp10.0_sl10.0_GBPNZD_C                  $  1050.00
+
+16:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+17:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+17:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+18:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+18:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+19:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+19:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+20:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+20:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+21:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+21:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+22:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+22:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+23:00                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+23:30                breakout_2_tp10.0_sl10.0_GBPAUD_C                  $  1167.50
+                     breakout_3_tp10.0_sl6.0_NZDAUD_C                   $   997.50
+
+================================================================================
+Total half-hour periods analyzed: 43
+================================================================================

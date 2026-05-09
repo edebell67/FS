@@ -1,0 +1,14 @@
+Error breakout_Rev_4_tp10.0_sl10.0_EUR_20251226_095150_4_0.00015_10.0_10.0.json: Expecting value: line 1 column 1 (char 0)
+TOP BUY NET:
+  breakout_R_Rev_2_tp10.0_sl10.0_GBPEUR_C_buy_net - GBPEUR_C: 152.49999999999105
+  breakout_R_Rev_3_tp10.0_sl10.0_GBPEUR_C_buy_net - GBPEUR_C: 152.49999999999105
+  breakout_R_Rev_4_tp10.0_sl10.0_GBPEUR_C_buy_net - GBPEUR_C: 152.49999999999105
+  breakout_R_Rev_2_tp10.0_sl10.0_buy_net - GBP: 72.50000000000647
+  breakout_R_Rev_2_tp20.0_sl10.0_buy_net - GBP: 72.50000000000647
+
+TOP SELL NET:
+  breakout_R_Rev_2_tp10.0_sl10.0_GBPEUR_C_sell_net - GBPEUR_C: 329.99999999988825
+  breakout_R_Rev_3_tp10.0_sl10.0_GBPEUR_C_sell_net - GBPEUR_C: 329.99999999988825
+  breakout_R_Rev_4_tp10.0_sl10.0_GBPEUR_C_sell_net - GBPEUR_C: 329.99999999988825
+  breakout_R_Rev_2_tp20.0_sl10.0_GBPEUR_C_sell_net - GBPEUR_C: 249.99999999994364
+  breakout_R_Rev_3_tp20.0_sl10.0_GBPEUR_C_sell_net - GBPEUR_C: 249.99999999994364

@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead/Lag Snapshots</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #070a12;
+            --panel: rgba(13, 18, 31, 0.86);
+            --panel-2: rgba(17, 24, 39, 0.92);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --cyan: #06b6d4;
+            --blue: #3b82f6;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(6, 182, 212, 0.18), transparent 34rem),
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 30rem),
+                var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+        }
+        .main { margin-left: 260px; padding: 22px 34px 56px; }
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+        h1 { margin: 0; font-size: 2rem; letter-spacing: -0.04em; }
+        .subtitle { color: var(--muted); margin-top: 6px; font-size: 0.94rem; max-width: 70rem; }
+        .meta { color: var(--muted); font-size: 0.82rem; text-align: right; line-height: 1.5; }
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+            padding: 14px;
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        input, select, button {
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text);
+            border-radius: 11px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+        select option { background: #0f172a; color: #f8fafc; }
+        button {
+            cursor: pointer;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0891b2, #2563eb);
+            border: 0;
+            transition: transform 120ms ease, filter 180ms ease, box-shadow 180ms ease, background 180ms ease, color 180ms ease;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.16);
+        }
+        button:hover { filter: brightness(1.04); }
+        button:active { transform: translateY(1px) scale(0.985); }
+        button.is-pressed-feedback {
+            transform: translateY(1px) scale(0.985);
+            filter: brightness(1.08);
+        }
+        .chart-btn {
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 0.82rem;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #0f172a;
+            border: 0;
+            font-weight: 800;
+            transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease, background 180ms ease, color 180ms ease;
+            box-shadow: 0 10px 24px rgba(234, 88, 12, 0.2);
+        }
+        .chart-btn:hover { filter: brightness(1.05); }
+        .chart-btn:active { transform: translateY(1px) scale(0.98); }
+        .chart-btn.is-busy {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            color: #eff6ff;
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
+        }
+        .chart-btn.is-success {
+            background: linear-gradient(135deg, #34d399, #22c55e);
+            color: #052e16;
+            box-shadow: 0 12px 26px rgba(34, 197, 94, 0.24);
+        }
+        .chart-btn.is-error {
+            background: linear-gradient(135deg, #fb7185, #dc2626);
+            color: #fff1f2;
+            box-shadow: 0 12px 26px rgba(220, 38, 38, 0.26);
+        }
+        .chart-btn[disabled] { cursor: wait; }
+        button.secondary {
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--line);
+        }
+        .snapshot-strip {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 2px 14px;
+            margin-bottom: 14px;
+        }
+        .snap-chip {
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.78);
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 7px 10px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: transform 120ms ease, filter 180ms ease, background 180ms ease, border-color 180ms ease, color 180ms ease;
+        }
+        .snap-chip:hover { filter: brightness(1.05); }
+        .snap-chip:active { transform: translateY(1px) scale(0.985); }
+        .snap-chip.is-pressed-feedback {
+            transform: translateY(1px) scale(0.985);
+            filter: brightness(1.09);
+        }
+        .snap-chip.active {
+            background: rgba(6, 182, 212, 0.18);
+            color: var(--text);
+            border-color: rgba(6, 182, 212, 0.55);
+        }
+        .status { color: var(--muted); margin: 12px 0 16px; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .panel {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 18px;
+            padding: 14px;
+        }
+        .panel h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .rank-list {
+            display: grid;
+            gap: 8px;
+        }
+        .rank-item {
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(15, 23, 42, 0.72);
+            border-radius: 14px;
+            padding: 10px 12px;
+            cursor: pointer;
+        }
+        .rank-item.active {
+            border-color: rgba(6, 182, 212, 0.62);
+            box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.15) inset;
+        }
+        .rank-title {
+            font-weight: 700;
+            font-size: 0.94rem;
+            line-height: 1.35;
+            margin-bottom: 5px;
+            word-break: break-word;
+        }
+        .rank-link {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            line-height: 1.35;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        .rank-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 8px;
+        }
+        .rank-note {
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+        .rank-meta {
+            color: var(--muted);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            font-size: 0.8rem;
+        }
+        .pair-quality-modal[hidden] { display: none; }
+        .pair-quality-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 1200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            background: rgba(2, 6, 23, 0.72);
+            backdrop-filter: blur(8px);
+        }
+        .pair-quality-shell {
+            width: min(1120px, calc(100vw - 48px));
+            max-height: calc(100vh - 48px);
+            overflow: auto;
+            box-shadow: 0 28px 72px rgba(2, 6, 23, 0.5);
+        }
+        .pair-quality-close {
+            min-width: 44px;
+            padding: 10px 14px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--line);
+        }
+        .inspect-btn-preview {
+            border: 1px solid rgba(148, 163, 184, 0.18);
+        }
+        .inspect-btn-preview.pos {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(34, 197, 94, 0.35);
+            color: #dcfce7;
+        }
+        .inspect-btn-preview.warn {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fef3c7;
+        }
+        .inspect-btn-preview.neg {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fee2e2;
+        }
+        .pair-quality-head {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        .pair-quality-head h2 {
+            margin: 0 0 6px;
+        }
+        .pair-quality-subtitle {
+            color: var(--muted);
+            font-size: 0.82rem;
+            line-height: 1.45;
+        }
+        .quality-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 7rem;
+            border-radius: 999px;
+            padding: 8px 12px;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            font-weight: 800;
+            border: 1px solid rgba(148, 163, 184, 0.18);
+            background: rgba(15, 23, 42, 0.72);
+        }
+        .quality-badge.pos {
+            background: rgba(34, 197, 94, 0.16);
+            border-color: rgba(34, 197, 94, 0.35);
+            color: #bbf7d0;
+        }
+        .quality-badge.warn {
+            background: rgba(245, 158, 11, 0.16);
+            border-color: rgba(245, 158, 11, 0.35);
+            color: #fde68a;
+        }
+        .quality-badge.neg {
+            background: rgba(239, 68, 68, 0.16);
+            border-color: rgba(239, 68, 68, 0.35);
+            color: #fecaca;
+        }
+        .pair-quality-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .pair-quality-stat {
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            background: rgba(15, 23, 42, 0.66);
+            border-radius: 14px;
+            padding: 12px;
+        }
+        .pair-quality-label {
+            color: var(--muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 7px;
+            font-weight: 700;
+        }
+        .pair-quality-value {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.25;
+        }
+        .pair-quality-detail {
+            color: #cbd5e1;
+            font-size: 0.8rem;
+            line-height: 1.4;
+            margin-top: 6px;
+        }
+        .pair-quality-notes {
+            display: grid;
+            gap: 8px;
+        }
+        .pair-quality-note {
+            border-left: 3px solid rgba(6, 182, 212, 0.45);
+            padding-left: 10px;
+            color: #cbd5e1;
+            font-size: 0.84rem;
+            line-height: 1.45;
+        }
+        .table-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+        .table-section {
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .table-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 14px 16px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        }
+        .table-head h3 {
+            margin: 0;
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+            text-align: right;
+            white-space: nowrap;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #0f172a;
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+        }
+        tr.pair-row {
+            cursor: pointer;
+            transition: background 120ms ease;
+        }
+        tr.pair-row:hover td {
+            background: rgba(15, 23, 42, 0.28);
+        }
+        tr.pair-row.active td {
+            background: rgba(6, 182, 212, 0.12);
+        }
+        td.left, th.left { text-align: left; }
+        .pos { color: var(--green); }
+        .neg { color: var(--red); }
+        .warn { color: var(--amber); }
+        .muted { color: var(--muted); }
+        @media (max-width: 1280px) {
+            .summary-grid { grid-template-columns: 1fr; }
+            .table-grid { grid-template-columns: 1fr; }
+            .pair-quality-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 1024px) {
+            .main { margin-left: 0; padding: 20px; }
+            .topbar { flex-direction: column; }
+            .meta { text-align: left; }
+            .pair-quality-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Lead/Lag Snapshots</h1>
+                <div class="subtitle">Explore corrected positive-lag lead/lag and inverse lead/lag relationships across dates and intraday snapshots. Leading means earlier movement; lagging means a later similar or inverse response.</div>
+            </div>
+            <div class="meta" id="meta">No data loaded.</div>
+        </div>
+
+        <section class="controls">
+            <div>
+                <label for="runMode">Run Mode</label>
+                <select id="runMode">
+                    <option value="live">live</option>
+                    <option value="sim">sim</option>
+                </select>
+            </div>
+            <div>
+                <label for="productType">Product Type</label>
+                <select id="productType">
+                    <option value="forex">forex</option>
+                    <option value="indices">indices</option>
+                    <option value="crypto">crypto</option>
+                    <option value="metals">metals</option>
+                    <option value="energy">energy</option>
+                </select>
+            </div>
+            <div>
+                <label for="dateInput">Date</label>
+                <input id="dateInput" type="date">
+            </div>
+            <div>
+                <label for="grainMode">Grain</label>
+                <select id="grainMode">
+                    <option value="strategy">strategy</option>
+                    <option value="product">strategy + product</option>
+                </select>
+            </div>
+            <div>
+                <label for="candidateLimit">Candidate Universe</label>
+                <input id="candidateLimit" type="number" min="20" max="400" step="10" value="240">
+            </div>
+            <div>
+                <label for="maxLag">Max Lag Steps</label>
+                <input id="maxLag" type="number" min="1" max="16" step="1" value="8">
+            </div>
+            <div>
+                <label for="minPoints">Min Points</label>
+                <input id="minPoints" type="number" min="4" max="40" step="1" value="8">
+            </div>
+            <div>
+                <label for="lookbackSteps">Lookback Steps</label>
+                <input id="lookbackSteps" type="number" min="4" max="24" step="1" value="8">
+            </div>
+            <div>
+                <label for="negativeNetFilter">Snapshot Net</label>
+                <select id="negativeNetFilter">
+                    <option value="non_negative">exclude negative net</option>
+                    <option value="all">include all</option>
+                </select>
+            </div>
+            <div>
+                <label for="cardFilter">Card Filter</label>
+                <select id="cardFilter">
+                    <option value="all">all</option>
+                    <option value="highlighted_only">highlighted only</option>
+                </select>
+            </div>
+            <button type="button" onclick="loadDay()">Load</button>
+            <button type="button" class="secondary" onclick="shiftDate(-1)">Prev Day</button>
+            <button type="button" class="secondary" onclick="shiftDate(1)">Next Day</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(-1)">Prev Snap</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(1)">Next Snap</button>
+        </section>
+
+        <div class="snapshot-strip" id="snapshotStrip"></div>
+        <div class="status" id="status"></div>
+
+        <section class="summary-grid">
+            <div class="panel">
+                <h2 id="leadersTitle">Leading</h2>
+                <div class="rank-list" id="leadersList"></div>
+            </div>
+            <div class="panel">
+                <h2 id="laggersTitle">Lagging</h2>
+                <div class="rank-list" id="laggersList"></div>
+            </div>
+            <div class="panel">
+                <h2 id="inverseTitle">Inverse Leaders</h2>
+                <div class="rank-list" id="inverseList"></div>
+            </div>
+        </section>
+
+        <section class="table-grid">
+            <div class="table-section">
+                <div class="table-head">
+                    <h3>Positive Lead/Lag</h3>
+                    <div class="muted" id="positiveMeta"></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="left">Leader</th>
+                                <th class="left">Lagger</th>
+                                <th>Corr</th>
+                                <th>Lag</th>
+                                <th>Points</th>
+                                <th>5m</th>
+                                <th>15m</th>
+                                <th>30m</th>
+                                <th>60m</th>
+                            </tr>
+                        </thead>
+                        <tbody id="positiveBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="table-section">
+                <div class="table-head">
+                    <h3>Inverse Lead/Lag</h3>
+                    <div class="muted" id="inverseMeta"></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="left">Leader</th>
+                                <th class="left">Lagger</th>
+                                <th>Corr</th>
+                                <th>Lag</th>
+                                <th>Points</th>
+                                <th>5m</th>
+                                <th>15m</th>
+                                <th>30m</th>
+                                <th>60m</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inverseBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div class="pair-quality-modal" id="pairQualityModal" hidden>
+        <section class="panel pair-quality-shell" id="pairQualityPanel" role="dialog" aria-modal="true" aria-labelledby="pairQualityTitle">
+            <div class="pair-quality-head">
+                <div>
+                    <h2 id="pairQualityTitle">Pair Quality</h2>
+                    <div class="pair-quality-subtitle" id="pairQualityMeta">Select a pair row or use `Inspect Pair` on a card to evaluate one exact leader/lagger relationship.</div>
+                </div>
+                <div style="display:flex; gap:10px; align-items:center;">
+                    <div class="quality-badge muted" id="pairQualityVerdict">No Pair</div>
+                    <button type="button" class="pair-quality-close" id="pairQualityCloseBtn" aria-label="Close pair quality modal">Close</button>
+                </div>
+            </div>
+            <div id="pairQualityBody" class="muted">No pair selected.</div>
+        </section>
+    </div>
+
+    <script>
+        const SNAPSHOT_MINUTES = 15;
+        const PRODUCT_DEFAULT_LIMIT = 180;
+        const STRATEGY_DEFAULT_LIMIT = 240;
+
+        let rawSummary = null;
+        let snapshotTimes = [];
+        let rawProductSeriesMap = new Map();
+        let strategyComponentMap = new Map();
+        let productSeriesMap = new Map();
+        let strategySeriesMap = new Map();
+        let selectedIndex = 0;
+        let selectedEntity = '';
+        let selectedPair = null;
+        const analysisCache = new Map();
+        const chartButtonResetTimers = new WeakMap();
+        const buttonFeedbackTimers = new WeakMap();
+        let pairQualityModalRequested = false;
+
+        function todayStr() {
+            const now = new Date();
+            const yyyy = now.getFullYear();
+            const mm = String(now.getMonth() + 1).padStart(2, '0');
+            const dd = String(now.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function parseIsoDate(value) {
+            if (!value) return null;
+            const parsed = new Date(value);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function floorToSnapshot(date) {
+            const d = new Date(date.getTime());
+            d.setSeconds(0, 0);
+            d.setMinutes(Math.floor(d.getMinutes() / SNAPSHOT_MINUTES) * SNAPSHOT_MINUTES);
+            return d;
+        }
+
+        function dateKey(date) {
+            return date.toISOString().slice(0, 10);
+        }
+
+        function fmtTime(value) {
+            const date = value instanceof Date ? value : parseIsoDate(value);
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '--:--';
+            return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+        }
+
+        function fmtDate(value) {
+            const date = value instanceof Date ? value : parseIsoDate(value);
+            if (!(date instanceof Date) || Number.isNaN(date.getTime())) return '--';
+            return date.toISOString().slice(0, 10);
+        }
+
+        function setStatus(message) {
+            document.getElementById('status').textContent = message || '';
+        }
+
+        function classForCorrelation(value) {
+            return Number(value || 0) >= 0 ? 'pos' : 'neg';
+        }
+
+        function getImportPayloadItems(items) {
+            const seen = new Set();
+            const dedup = [];
+            (items || []).forEach(item => {
+                const strategy = String(item.strategy || '').trim();
+                const product = String(item.product || '').trim();
+                if (!strategy || !product) return;
+                const key = `${strategy}|${product}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                dedup.push({
+                    strategy,
+                    product,
+                    group: `${strategy} | ${product}`,
+                    parm_raw: '',
+                });
+            });
+            return dedup;
+        }
+
+        function setChartButtonState(buttonEl, state, text) {
+            if (!buttonEl) return;
+            if (!buttonEl.dataset.baseLabel) buttonEl.dataset.baseLabel = buttonEl.textContent.trim() || 'Chart';
+            const resetTimer = chartButtonResetTimers.get(buttonEl);
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+                chartButtonResetTimers.delete(buttonEl);
+            }
+            buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+            if (state) buttonEl.classList.add(`is-${state}`);
+            buttonEl.textContent = text || buttonEl.dataset.baseLabel;
+            buttonEl.disabled = state === 'busy';
+        }
+
+        function triggerButtonFeedback(buttonEl, holdMs = 180) {
+            if (!buttonEl || buttonEl.disabled) return;
+            const resetTimer = buttonFeedbackTimers.get(buttonEl);
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+                buttonFeedbackTimers.delete(buttonEl);
+            }
+            buttonEl.classList.add('is-pressed-feedback');
+            const timerId = setTimeout(() => {
+                buttonEl.classList.remove('is-pressed-feedback');
+                buttonFeedbackTimers.delete(buttonEl);
+            }, holdMs);
+            buttonFeedbackTimers.set(buttonEl, timerId);
+        }
+
+        function scheduleChartButtonReset(buttonEl, delayMs = 1600) {
+            if (!buttonEl) return;
+            const timerId = setTimeout(() => {
+                buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+                buttonEl.textContent = buttonEl.dataset.baseLabel || 'Chart';
+                buttonEl.disabled = false;
+                chartButtonResetTimers.delete(buttonEl);
+            }, delayMs);
+            chartButtonResetTimers.set(buttonEl, timerId);
+        }
+
+        function sendToMultiChart(items, label, buttonEl) {
+            const dedup = getImportPayloadItems(items);
+            if (!dedup.length) return;
+            setChartButtonState(buttonEl, 'busy', 'Sending...');
+            const payloadToSend = {
+                created_at: new Date().toISOString(),
+                mode: document.getElementById('runMode').value,
+                date: document.getElementById('dateInput').value || todayStr(),
+                source: 'lead_lag_snapshots',
+                label,
+                preferred_metric: 'net',
+                append: true,
+                items: dedup,
+            };
+            try {
+                localStorage.setItem('multi_chart_import_payload', JSON.stringify(payloadToSend));
+            } catch (e) {
+                setChartButtonState(buttonEl, 'error', 'Failed');
+                scheduleChartButtonReset(buttonEl, 2200);
+                alert(`Could not send data to Multi-Chart: ${e.message}`);
+                return;
+            }
+            const mcChannel = new BroadcastChannel('multi_chart_channel');
+            let responded = false;
+            mcChannel.onmessage = (e) => {
+                if (e.data === 'PONG') {
+                    responded = true;
+                    mcChannel.postMessage('IMPORT');
+                    setChartButtonState(buttonEl, 'success', 'Sent');
+                    scheduleChartButtonReset(buttonEl);
+                }
+            };
+            mcChannel.postMessage('PING');
+            setTimeout(() => {
+                if (!responded) {
+                    window.open('multi_chart.html?import=1', '_blank');
+                    setChartButtonState(buttonEl, 'success', 'Opened');
+                    scheduleChartButtonReset(buttonEl);
+                }
+                try { mcChannel.close(); } catch (_) { }
+            }, 300);
+        }
+
+        function parseProductEntity(entityName) {
+            const parts = String(entityName || '').split(' / ');
+            if (parts.length < 2) return null;
+            return { strategy: parts[0].trim(), product: parts.slice(1).join(' / ').trim() };
+        }
+
+        function openCardChartPair(entityName, counterpartName, buttonEl) {
+            const left = parseProductEntity(entityName);
+            const right = parseProductEntity(counterpartName);
+            if (!left || !right) {
+                alert('Card chart pair is only available in strategy + product mode.');
+                return;
+            }
+            sendToMultiChart(
+                [left, right],
+                `Lead/Lag Pair: ${left.strategy} / ${left.product} <-> ${right.strategy} / ${right.product}`,
+                buttonEl
+            );
+        }
+
+        function makePairKey(relationship, leaderName, laggerName) {
+            return `${relationship}|${leaderName}|${laggerName}`;
+        }
+
+        function samePair(row, pair) {
+            if (!row || !pair) return false;
+            return makePairKey(row.relationship, row.leader_strategy, row.lagging_strategy) === makePairKey(pair.relationship, pair.leader_strategy, pair.lagging_strategy);
+        }
+
+        function setSelectedPair(relationship, leaderName, laggerName, rerender = true, openModal = false) {
+            selectedPair = relationship && leaderName && laggerName
+                ? { relationship, leader_strategy: leaderName, lagging_strategy: laggerName }
+                : null;
+            if (selectedPair && openModal) pairQualityModalRequested = true;
+            if (rerender && snapshotTimes.length) computeAndRenderCurrent();
+        }
+
+        function selectPair(relationship, leaderName, laggerName) {
+            setSelectedPair(relationship, leaderName, laggerName, true, true);
+        }
+
+        function selectPairFromCard(roleKind, entityName, counterpartName, relationship) {
+            if (!entityName || !counterpartName || !relationship) return;
+            const pair = roleKind === 'lagger'
+                ? { relationship, leader_strategy: counterpartName, lagging_strategy: entityName }
+                : { relationship, leader_strategy: entityName, lagging_strategy: counterpartName };
+            selectedEntity = entityName;
+            setSelectedPair(pair.relationship, pair.leader_strategy, pair.lagging_strategy, true, true);
+        }
+
+        function openPairQualityModal() {
+            const modalEl = document.getElementById('pairQualityModal');
+            if (!modalEl) return;
+            modalEl.hidden = false;
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closePairQualityModal() {
+            const modalEl = document.getElementById('pairQualityModal');
+            if (!modalEl) return;
+            modalEl.hidden = true;
+            document.body.style.overflow = '';
+            pairQualityModalRequested = false;
+        }
+
+        function openCardChartPairByRole(roleKind, entityName, counterpartName, buttonEl) {
+            const left = roleKind === 'lagger' ? counterpartName : entityName;
+            const right = roleKind === 'lagger' ? entityName : counterpartName;
+            openCardChartPair(left, right, buttonEl);
+        }
+
+        function shiftDate(days) {
+            const current = parseIsoDate(`${document.getElementById('dateInput').value || todayStr()}T00:00:00`);
+            if (!(current instanceof Date)) return;
+            current.setDate(current.getDate() + days);
+            document.getElementById('dateInput').value = fmtDate(current);
+            loadDay();
+        }
+
+        function selectSnapshot(index) {
+            if (!snapshotTimes.length) return;
+            selectedIndex = Math.max(0, Math.min(index, snapshotTimes.length - 1));
+            renderSnapshotStrip();
+            computeAndRenderCurrent();
+        }
+
+        function selectAdjacent(delta) {
+            selectSnapshot(selectedIndex + delta);
+        }
+
+        function changeCandidateDefault() {
+            const grain = document.getElementById('grainMode').value;
+            document.getElementById('candidateLimit').value = grain === 'product' ? PRODUCT_DEFAULT_LIMIT : STRATEGY_DEFAULT_LIMIT;
+        }
+
+        function excludeNegativeNet() {
+            return document.getElementById('negativeNetFilter').value === 'non_negative';
+        }
+
+        function highlightedOnlyCards() {
+            return document.getElementById('cardFilter').value === 'highlighted_only';
+        }
+
+        function buildSnapshotTimesFromSummary(summaryData, targetDate) {
+            const events = [];
+            const targetKey = targetDate;
+            const strategies = (summaryData && summaryData.strategies) || {};
+            Object.values(strategies).forEach(products => {
+                Object.values(products || {}).forEach(series => {
+                    if (!Array.isArray(series)) return;
+                    series.forEach(point => {
+                        const dt = parseIsoDate(point.t);
+                        if (dt && dateKey(dt) === targetKey) events.push(dt);
+                    });
+                });
+            });
+            if (!events.length) return [];
+            const start = new Date(`${targetKey}T00:00:00`);
+            const end = floorToSnapshot(new Date(Math.max(...events.map(item => item.getTime()))));
+            const times = [];
+            for (let current = new Date(start.getTime()); current <= end; current = new Date(current.getTime() + SNAPSHOT_MINUTES * 60000)) {
+                times.push(new Date(current.getTime()));
+            }
+            return times;
+        }
+
+        function latestNetAtOrBefore(rawPoints, targetTime) {
+            let latest = null;
+            for (const point of rawPoints) {
+                if (point.t <= targetTime) latest = point.net;
+                else break;
+            }
+            return latest;
+        }
+
+        function netMoveBetween(rawPoints, startTime, endTime) {
+            const startNet = latestNetAtOrBefore(rawPoints, startTime);
+            const endNet = latestNetAtOrBefore(rawPoints, endTime);
+            if (startNet === null || endNet === null) return null;
+            return Number((endNet - startNet).toFixed(2));
+        }
+
+        function buildAlignedSeries(nets) {
+            let firstValidIndex = -1;
+            let lastValidIndex = -1;
+            const deltas = new Array(nets.length).fill(null);
+            const prefixAbsDelta = new Array(nets.length).fill(0);
+            for (let i = 0; i < nets.length; i++) {
+                if (nets[i] !== null) {
+                    if (firstValidIndex === -1) firstValidIndex = i;
+                    lastValidIndex = i;
+                }
+                if (i > 0 && nets[i] !== null && nets[i - 1] !== null) {
+                    deltas[i] = Number((nets[i] - nets[i - 1]).toFixed(2));
+                }
+                prefixAbsDelta[i] = (i > 0 ? prefixAbsDelta[i - 1] : 0) + (deltas[i] === null ? 0 : Math.abs(deltas[i]));
+            }
+            return { nets, deltas, prefixAbsDelta, firstValidIndex, lastValidIndex };
+        }
+
+        function buildSeriesMaps(summaryData, times) {
+            const rawProducts = new Map();
+            const strategies = (summaryData && summaryData.strategies) || {};
+
+            Object.entries(strategies).forEach(([strategy, products]) => {
+                Object.entries(products || {}).forEach(([product, series]) => {
+                    if (!Array.isArray(series)) return;
+                    const normalized = series
+                        .map(point => ({ t: parseIsoDate(point.t), net: Number(point.net || 0) }))
+                        .filter(point => point.t instanceof Date && !Number.isNaN(point.t.getTime()))
+                        .sort((a, b) => a.t - b.t);
+                    if (!normalized.length) return;
+                    rawProducts.set(`${strategy} / ${product}`, { strategy, product, points: normalized });
+                });
+            });
+
+            const productMap = new Map();
+            rawProducts.forEach((entry, entityName) => {
+                const nets = times.map(time => {
+                    const latest = latestNetAtOrBefore(entry.points, time);
+                    return latest === null ? null : Number(latest.toFixed(2));
+                });
+                const aligned = buildAlignedSeries(nets);
+                if (aligned.firstValidIndex >= 0 && aligned.lastValidIndex - aligned.firstValidIndex >= 1) {
+                    productMap.set(entityName, aligned);
+                }
+            });
+
+            const grouped = new Map();
+            productMap.forEach((_series, entityName) => {
+                const strategy = entityName.split(' / ')[0];
+                if (!grouped.has(strategy)) grouped.set(strategy, []);
+                grouped.get(strategy).push(entityName);
+            });
+
+            const strategyMap = new Map();
+            grouped.forEach((productEntityNames, strategy) => {
+                const nets = [];
+                for (let idx = 0; idx < times.length; idx++) {
+                    let sum = 0;
+                    let count = 0;
+                    productEntityNames.forEach(entityName => {
+                        const series = productMap.get(entityName);
+                        if (series && series.nets[idx] !== null) {
+                            sum += Number(series.nets[idx] || 0);
+                            count += 1;
+                        }
+                    });
+                    nets.push(count > 0 ? Number(sum.toFixed(2)) : null);
+                }
+                const aligned = buildAlignedSeries(nets);
+                if (aligned.firstValidIndex >= 0 && aligned.lastValidIndex - aligned.firstValidIndex >= 1) {
+                    strategyMap.set(strategy, aligned);
+                }
+            });
+
+            return { rawProducts, strategyComponentMap: grouped, productMap, strategyMap };
+        }
+
+        function entityActivity(series, cutoffIndex) {
+            const firstIdx = series.firstValidIndex;
+            const lastIdx = Math.min(cutoffIndex, series.lastValidIndex);
+            if (firstIdx < 0 || lastIdx <= firstIdx) {
+                return { totalAbsDelta: 0, netChange: 0, snapshotCount: 0, currentNet: 0 };
+            }
+            const totalAbsDelta = series.prefixAbsDelta[lastIdx] - (firstIdx > 0 ? series.prefixAbsDelta[firstIdx] : 0);
+            const firstNet = Number(series.nets[firstIdx] || 0);
+            const lastNet = Number(series.nets[lastIdx] || 0);
+            return {
+                totalAbsDelta: Number(totalAbsDelta.toFixed(2)),
+                netChange: Number((lastNet - firstNet).toFixed(2)),
+                snapshotCount: lastIdx - firstIdx + 1,
+                currentNet: Number(lastNet.toFixed(2)),
+            };
+        }
+
+        function mean(values) {
+            if (!values.length) return 0;
+            return values.reduce((sum, value) => sum + value, 0) / values.length;
+        }
+
+        function pearson(x, y) {
+            if (x.length !== y.length || x.length < 2) return 0;
+            const mx = mean(x);
+            const my = mean(y);
+            let num = 0;
+            let dx = 0;
+            let dy = 0;
+            for (let i = 0; i < x.length; i++) {
+                const xv = x[i] - mx;
+                const yv = y[i] - my;
+                num += xv * yv;
+                dx += xv * xv;
+                dy += yv * yv;
+            }
+            if (!dx || !dy) return 0;
+            return num / Math.sqrt(dx * dy);
+        }
+
+        function buildLagSample(leaderSeries, laggerSeries, cutoffIndex, lag, lookbackSteps) {
+            const lhs = [];
+            const rhs = [];
+            const lastCompareIndex = Math.min(cutoffIndex, leaderSeries.lastValidIndex + lag, laggerSeries.lastValidIndex);
+            const firstCompareIndex = Math.max(
+                lag + 1,
+                laggerSeries.firstValidIndex + 1,
+                leaderSeries.firstValidIndex + 1 + lag,
+                lastCompareIndex - lookbackSteps + 1
+            );
+            for (let compareIndex = firstCompareIndex; compareIndex <= lastCompareIndex; compareIndex++) {
+                const leaderDelta = leaderSeries.deltas[compareIndex - lag];
+                const laggerDelta = laggerSeries.deltas[compareIndex];
+                if (leaderDelta === null || laggerDelta === null) continue;
+                lhs.push(leaderDelta);
+                rhs.push(laggerDelta);
+            }
+            return {
+                lag_steps: lag,
+                lag_minutes: lag * SNAPSHOT_MINUTES,
+                lhs,
+                rhs,
+                sample_points: lhs.length,
+                correlation: lhs.length >= 2 ? Number(pearson(lhs, rhs).toFixed(4)) : 0,
+            };
+        }
+
+        function analyzePairLags(leaderSeries, laggerSeries, cutoffIndex, maxLag, minPoints, lookbackSteps) {
+            let bestPositive = null;
+            let bestNegative = null;
+            const maxTestLag = maxLag;
+            for (let lag = 1; lag <= maxTestLag; lag++) {
+                const candidate = buildLagSample(leaderSeries, laggerSeries, cutoffIndex, lag, lookbackSteps);
+                if (candidate.sample_points < minPoints) continue;
+                if (bestPositive === null || candidate.correlation > bestPositive.correlation) bestPositive = candidate;
+                if (bestNegative === null || candidate.correlation < bestNegative.correlation) bestNegative = candidate;
+            }
+            return { bestPositive, bestNegative };
+        }
+
+        function candidateStrength(candidate, relationship) {
+            return relationship === 'positive' ? Number(candidate.correlation || 0) : Number(-candidate.correlation || 0);
+        }
+
+        function scoreDirectionalConsistency(lhs, rhs, relationship) {
+            const avgLeaderMagnitude = mean(lhs.map(value => Math.abs(value)).filter(value => value > 0)) || 0;
+            const significantThreshold = Math.max(avgLeaderMagnitude * 0.35, 1);
+            let considered = 0;
+            let matches = 0;
+            let strongMatches = 0;
+            for (let i = 0; i < lhs.length; i++) {
+                const leaderMove = Number(lhs[i] || 0);
+                const laggerMove = Number(rhs[i] || 0);
+                if (!leaderMove || !laggerMove) continue;
+                considered += 1;
+                const sameDirection = Math.sign(leaderMove) === Math.sign(laggerMove);
+                const holds = relationship === 'positive' ? sameDirection : !sameDirection;
+                if (!holds) continue;
+                matches += 1;
+                if (Math.abs(leaderMove) >= significantThreshold && Math.abs(laggerMove) >= significantThreshold) strongMatches += 1;
+            }
+            return {
+                considered,
+                matches,
+                strongMatches,
+                matchRate: considered ? Number((matches / considered).toFixed(4)) : 0,
+                strongRate: considered ? Number((strongMatches / considered).toFixed(4)) : 0,
+            };
+        }
+
+        function calculateOutlierShare(lhs, rhs) {
+            const weights = lhs
+                .map((leaderMove, idx) => Math.abs(Number(leaderMove || 0) * Number(rhs[idx] || 0)))
+                .filter(value => value > 0);
+            if (!weights.length) return 1;
+            const total = weights.reduce((sum, value) => sum + value, 0);
+            const maxWeight = Math.max(...weights);
+            return Number((maxWeight / total).toFixed(4));
+        }
+
+        function summarizePersistenceCounts(persistence) {
+            const summary = { hold: 0, weak: 0, fail: 0, na: 0 };
+            [5, 15, 30, 60].forEach(minutes => {
+                const label = persistence?.[minutes]?.label || 'n/a';
+                if (label === 'hold') summary.hold += 1;
+                else if (label === 'weak') summary.weak += 1;
+                else if (label === 'fail') summary.fail += 1;
+                else summary.na += 1;
+            });
+            return summary;
+        }
+
+        function verdictClassForScore(score) {
+            if (score >= 5) return 'pos';
+            if (score >= 3) return 'warn';
+            return 'neg';
+        }
+
+        function verdictLabelForScore(score) {
+            if (score >= 5) return 'High Quality';
+            if (score >= 3) return 'Medium Quality';
+            return 'Low Quality';
+        }
+
+        function buildPairQuality(grain, row, maxLag, minPoints, lookbackSteps) {
+            if (!row) return null;
+            const baseMap = grain === 'product' ? productSeriesMap : strategySeriesMap;
+            const leaderSeries = baseMap.get(row.leader_strategy);
+            const laggerSeries = baseMap.get(row.lagging_strategy);
+            if (!leaderSeries || !laggerSeries) return null;
+
+            const candidates = [];
+            for (let lag = 1; lag <= maxLag; lag++) {
+                const candidate = buildLagSample(leaderSeries, laggerSeries, selectedIndex, lag, lookbackSteps);
+                if (candidate.sample_points < minPoints) continue;
+                if (row.relationship === 'positive' && candidate.correlation <= 0) continue;
+                if (row.relationship === 'inverse' && candidate.correlation >= 0) continue;
+                candidates.push(candidate);
+            }
+            if (!candidates.length) return null;
+
+            const sorted = [...candidates].sort((a, b) =>
+                candidateStrength(b, row.relationship) - candidateStrength(a, row.relationship) ||
+                a.lag_steps - b.lag_steps
+            );
+            const best = sorted[0];
+            const runnerUp = sorted[1] || null;
+            const previousLag = candidates.find(candidate => candidate.lag_steps === best.lag_steps - 1) || null;
+            const nextLag = candidates.find(candidate => candidate.lag_steps === best.lag_steps + 1) || null;
+            const strongestNeighbor = [previousLag, nextLag]
+                .filter(Boolean)
+                .sort((a, b) => candidateStrength(b, row.relationship) - candidateStrength(a, row.relationship))[0] || null;
+
+            const recentWindowSize = Math.max(minPoints, Math.min(best.sample_points, Math.ceil(best.sample_points * 0.5)));
+            const recentLhs = best.lhs.slice(-recentWindowSize);
+            const recentRhs = best.rhs.slice(-recentWindowSize);
+            const recentCorrelation = recentLhs.length >= 2 ? Number(pearson(recentLhs, recentRhs).toFixed(4)) : 0;
+            const directional = scoreDirectionalConsistency(best.lhs, best.rhs, row.relationship);
+            const outlierShare = calculateOutlierShare(best.lhs, best.rhs);
+            const persistenceSummary = summarizePersistenceCounts(row.persistence);
+            const bestStrength = candidateStrength(best, row.relationship);
+            const runnerStrength = runnerUp ? candidateStrength(runnerUp, row.relationship) : 0;
+            const neighborStrength = strongestNeighbor ? candidateStrength(strongestNeighbor, row.relationship) : 0;
+            const lagClarity = Number((bestStrength - runnerStrength).toFixed(4));
+            const neighborGap = strongestNeighbor ? Number((bestStrength - neighborStrength).toFixed(4)) : null;
+            const recentStrength = row.relationship === 'positive' ? recentCorrelation : -recentCorrelation;
+
+            let qualityScore = 0;
+            if (bestStrength >= 0.75) qualityScore += 2;
+            else if (bestStrength >= 0.55) qualityScore += 1;
+            if (lagClarity >= 0.12) qualityScore += 1;
+            else if (lagClarity < 0.04) qualityScore -= 1;
+            if (directional.matchRate >= 0.75) qualityScore += 1;
+            else if (directional.matchRate < 0.55) qualityScore -= 1;
+            if (recentStrength >= 0.65) qualityScore += 1;
+            else if (recentStrength < 0.45) qualityScore -= 1;
+            if (outlierShare <= 0.35) qualityScore += 1;
+            else if (outlierShare > 0.55) qualityScore -= 1;
+            if (persistenceSummary.hold >= 2) qualityScore += 1;
+            else if (!persistenceSummary.hold && persistenceSummary.fail >= 2) qualityScore -= 1;
+
+            const verdictClass = verdictClassForScore(qualityScore);
+            const verdictLabel = verdictLabelForScore(qualityScore);
+            const neighborText = strongestNeighbor
+                ? `${strongestNeighbor.lag_minutes}m at ${strongestNeighbor.correlation.toFixed(4)}`
+                : 'no adjacent lag candidate';
+
+            const notes = [
+                `Lag clarity: best-fit ${best.lag_minutes}m scored ${best.correlation.toFixed(4)}; next-best lag gap is ${lagClarity.toFixed(4)}.`,
+                `Direction consistency: ${directional.matches}/${directional.considered || 0} aligned moves matched the expected ${row.relationship === 'positive' ? 'same-direction' : 'inverse-direction'} follow-through.`,
+                `Recent fit over the last ${recentWindowSize} aligned observations is ${recentCorrelation.toFixed(4)}; adjacent lag check: ${neighborText}.`,
+                outlierShare > 0.55
+                    ? `Outlier dependence is high: one aligned move contributes ${(outlierShare * 100).toFixed(0)}% of pair strength.`
+                    : `Outlier dependence is ${(outlierShare * 100).toFixed(0)}%, so the relationship is not dominated by one single move.`,
+                `Forward hold checks: ${persistenceSummary.hold} hold, ${persistenceSummary.weak} weak, ${persistenceSummary.fail} fail, ${persistenceSummary.na} n/a.`,
+            ];
+
+            return {
+                leader_strategy: row.leader_strategy,
+                lagging_strategy: row.lagging_strategy,
+                relationship: row.relationship,
+                bestLagMinutes: best.lag_minutes,
+                bestCorrelation: best.correlation,
+                samplePoints: best.sample_points,
+                recentCorrelation,
+                recentWindowSize,
+                lagClarity,
+                neighborGap,
+                strongestNeighbor,
+                directional,
+                outlierShare,
+                persistenceSummary,
+                qualityScore,
+                verdictClass,
+                verdictLabel,
+                notes,
+            };
+        }
+
+        function buildCardPreviewQuality(row, roleKind, result) {
+            if (!row?.top_link) return null;
+            const pairRow = {
+                relationship: row.top_link.relationship,
+                leader_strategy: roleKind === 'lagger' ? row.top_link.counterpart : row[result.grain === 'product' ? 'strategy_product' : 'strategy'],
+                lagging_strategy: roleKind === 'lagger' ? row[result.grain === 'product' ? 'strategy_product' : 'strategy'] : row.top_link.counterpart,
+            };
+            const inspectableRow = [...result.positiveRows, ...result.inverseRows].find(candidate => samePair(candidate, pairRow));
+            if (!inspectableRow) return null;
+            return buildPairQuality(result.grain, inspectableRow, result.maxLag, result.minPoints, result.lookbackSteps);
+        }
+
+        function inspectPreviewClass(quality) {
+            if (!quality || Number(quality.qualityScore || 0) <= 0) return 'secondary';
+            return `secondary inspect-btn-preview ${quality.verdictClass}`;
+        }
+
+        function inspectPreviewLabel(quality) {
+            if (!quality) return 'Inspect Pair';
+            if (Number(quality.qualityScore || 0) <= 0) return 'Inspect Pair';
+            return `Inspect Pair · ${quality.verdictLabel.replace(' Quality', '')}`;
+        }
+
+        function isHighlightedPreview(quality) {
+            return Boolean(quality && Number(quality.qualityScore || 0) > 0);
+        }
+
+        function renderInspectPairButton(row, entityField, roleKind, result, preview = null) {
+            if (!row?.top_link) return '';
+            const effectivePreview = preview || buildCardPreviewQuality(row, roleKind, result);
+            return `<button type="button" class="${inspectPreviewClass(effectivePreview)}" onclick="event.stopPropagation(); selectPairFromCard('${roleKind}', '${String(row[entityField]).replace(/'/g, "\\'")}', '${String(row.top_link.counterpart).replace(/'/g, "\\'")}', '${row.top_link.relationship}')">${inspectPreviewLabel(effectivePreview)}</button>`;
+        }
+
+        function getEntityMove(grain, entityName, startTime, endTime) {
+            if (grain === 'product') {
+                const rawPoints = rawProductSeriesMap.get(entityName)?.points || [];
+                return netMoveBetween(rawPoints, startTime, endTime);
+            }
+            const componentNames = strategyComponentMap.get(entityName) || [];
+            let startSum = 0;
+            let endSum = 0;
+            let startCount = 0;
+            let endCount = 0;
+            componentNames.forEach(productEntityName => {
+                const rawPoints = rawProductSeriesMap.get(productEntityName)?.points || [];
+                const startNet = latestNetAtOrBefore(rawPoints, startTime);
+                const endNet = latestNetAtOrBefore(rawPoints, endTime);
+                if (startNet !== null) {
+                    startSum += startNet;
+                    startCount += 1;
+                }
+                if (endNet !== null) {
+                    endSum += endNet;
+                    endCount += 1;
+                }
+            });
+            if (!startCount || !endCount) return null;
+            return Number((endSum - startSum).toFixed(2));
+        }
+
+        function scorePersistence(grain, leaderName, laggerName, detectionTime, lagMinutes, relationship) {
+            const horizons = [5, 15, 30, 60];
+            const scores = {};
+            horizons.forEach(minutes => {
+                const leaderEnd = new Date(detectionTime.getTime() + minutes * 60000);
+                const laggerStart = new Date(detectionTime.getTime() + lagMinutes * 60000);
+                const laggerEnd = new Date(laggerStart.getTime() + minutes * 60000);
+                const leaderMove = getEntityMove(grain, leaderName, detectionTime, leaderEnd);
+                const laggerMove = getEntityMove(grain, laggerName, laggerStart, laggerEnd);
+                if (leaderMove === null || laggerMove === null) {
+                    scores[minutes] = { label: 'n/a', status: 'muted', detail: 'insufficient future data' };
+                    return;
+                }
+                const alignedMagnitude = Math.min(Math.abs(leaderMove), Math.abs(laggerMove));
+                const maxMagnitude = Math.max(Math.abs(leaderMove), Math.abs(laggerMove), 1);
+                const ratio = alignedMagnitude / maxMagnitude;
+                const sameDirection = leaderMove === 0 || laggerMove === 0 ? false : Math.sign(leaderMove) === Math.sign(laggerMove);
+                const oppositeDirection = leaderMove === 0 || laggerMove === 0 ? false : Math.sign(leaderMove) === -Math.sign(laggerMove);
+                const holds = relationship === 'positive' ? sameDirection : oppositeDirection;
+                if (!holds) {
+                    scores[minutes] = { label: 'fail', status: 'neg', detail: `${leaderMove.toFixed(1)} vs ${laggerMove.toFixed(1)}` };
+                    return;
+                }
+                if (ratio >= 0.65) {
+                    scores[minutes] = { label: 'hold', status: 'pos', detail: `${leaderMove.toFixed(1)} vs ${laggerMove.toFixed(1)}` };
+                } else {
+                    scores[minutes] = { label: 'weak', status: 'muted', detail: `${leaderMove.toFixed(1)} vs ${laggerMove.toFixed(1)}` };
+                }
+            });
+            return scores;
+        }
+
+        function selectAnalysisUniverse(seriesMap, limit, cutoffIndex, minPoints) {
+            return [...seriesMap.entries()]
+                .map(([name, series]) => ({ name, ...entityActivity(series, cutoffIndex), firstValidIndex: series.firstValidIndex, lastValidIndex: series.lastValidIndex }))
+                .filter(item => item.snapshotCount >= minPoints + 1)
+                .filter(item => !excludeNegativeNet() || item.currentNet >= 0)
+                .sort((a, b) =>
+                    b.totalAbsDelta - a.totalAbsDelta ||
+                    Math.abs(b.netChange) - Math.abs(a.netChange) ||
+                    b.snapshotCount - a.snapshotCount ||
+                    a.name.localeCompare(b.name)
+                )
+                .slice(0, limit)
+                .map(item => item.name);
+        }
+
+        function buildRelationshipRows(seriesMap, candidateNames, cutoffIndex, maxLag, minPoints, lookbackSteps, relationship) {
+            const rows = [];
+            candidateNames.forEach(leaderName => {
+                const leaderSeries = seriesMap.get(leaderName);
+                if (!leaderSeries) return;
+                candidateNames.forEach(laggerName => {
+                    if (leaderName === laggerName) return;
+                    const laggerSeries = seriesMap.get(laggerName);
+                    if (!laggerSeries) return;
+                    const analysis = analyzePairLags(leaderSeries, laggerSeries, cutoffIndex, maxLag, minPoints, lookbackSteps);
+                    const candidate = relationship === 'positive' ? analysis.bestPositive : analysis.bestNegative;
+                    if (!candidate) return;
+                    if (relationship === 'positive' && candidate.correlation <= 0) return;
+                    if (relationship === 'inverse' && candidate.correlation >= 0) return;
+                    rows.push({
+                        leader_strategy: leaderName,
+                        lagging_strategy: laggerName,
+                        relationship,
+                        ...candidate,
+                    });
+                });
+            });
+            rows.sort((a, b) =>
+                relationship === 'positive'
+                    ? (b.correlation - a.correlation || a.lag_steps - b.lag_steps || a.leader_strategy.localeCompare(b.leader_strategy) || a.lagging_strategy.localeCompare(b.lagging_strategy))
+                    : (a.correlation - b.correlation || a.lag_steps - b.lag_steps || a.leader_strategy.localeCompare(b.leader_strategy) || a.lagging_strategy.localeCompare(b.lagging_strategy))
+            );
+            return rows;
+        }
+
+        function rankEntitiesFromRelationships(rows, roleKey, entityField, topN) {
+            const aggregates = new Map();
+            const counterpartKey = roleKey === 'leader_strategy' ? 'lagging_strategy' : 'leader_strategy';
+            rows.forEach(row => {
+                const entityName = row[roleKey];
+                const weight = Math.abs(Number(row.correlation || 0)) * Number(row.sample_points || 0);
+                const existing = aggregates.get(entityName) || {
+                    [entityField]: entityName,
+                    relationship_score: 0,
+                    pair_count: 0,
+                    best_correlation: 0,
+                    weighted_lag_total: 0,
+                    weight_total: 0,
+                    top_link: null,
+                };
+                existing.relationship_score += weight;
+                existing.pair_count += 1;
+                if (Math.abs(Number(row.correlation || 0)) > Math.abs(existing.best_correlation || 0)) existing.best_correlation = Number(row.correlation || 0);
+                existing.weighted_lag_total += Number(row.lag_minutes || 0) * weight;
+                existing.weight_total += weight;
+                if (!existing.top_link || Math.abs(Number(row.correlation || 0)) > Math.abs(Number(existing.top_link.correlation || 0))) {
+                    existing.top_link = {
+                        counterpart: row[counterpartKey],
+                        correlation: Number(row.correlation || 0),
+                        lag_minutes: Number(row.lag_minutes || 0),
+                        relationship: row.relationship,
+                    };
+                }
+                aggregates.set(entityName, existing);
+            });
+            return [...aggregates.values()]
+                .map(item => ({
+                    [entityField]: item[entityField],
+                    relationship_score: Number(item.relationship_score.toFixed(2)),
+                    pair_count: item.pair_count,
+                    best_correlation: Number(item.best_correlation.toFixed(4)),
+                    avg_lag_minutes: Number((item.weighted_lag_total / (item.weight_total || 1)).toFixed(2)),
+                    top_link: item.top_link,
+                }))
+                .sort((a, b) => b.relationship_score - a.relationship_score || Math.abs(b.best_correlation) - Math.abs(a.best_correlation) || String(a[entityField]).localeCompare(String(b[entityField])))
+                .slice(0, topN);
+        }
+
+        function computeAnalysisForCurrent() {
+            const grain = document.getElementById('grainMode').value;
+            const candidateLimit = Number(document.getElementById('candidateLimit').value || (grain === 'product' ? PRODUCT_DEFAULT_LIMIT : STRATEGY_DEFAULT_LIMIT));
+            const maxLag = Number(document.getElementById('maxLag').value || 8);
+            const minPoints = Number(document.getElementById('minPoints').value || 8);
+            const lookbackSteps = Number(document.getElementById('lookbackSteps').value || 8);
+            const cacheKey = [
+                document.getElementById('dateInput').value,
+                grain,
+                selectedIndex,
+                candidateLimit,
+                maxLag,
+                minPoints,
+                lookbackSteps,
+                document.getElementById('negativeNetFilter').value
+            ].join('|');
+            if (analysisCache.has(cacheKey)) return analysisCache.get(cacheKey);
+
+            const baseMap = grain === 'product' ? productSeriesMap : strategySeriesMap;
+            const cutoffTime = snapshotTimes[selectedIndex];
+            const candidateNames = selectAnalysisUniverse(baseMap, Math.min(candidateLimit, baseMap.size), selectedIndex, minPoints);
+            const positiveRowsAll = buildRelationshipRows(baseMap, candidateNames, selectedIndex, maxLag, minPoints, lookbackSteps, 'positive');
+            const inverseRowsAll = buildRelationshipRows(baseMap, candidateNames, selectedIndex, maxLag, minPoints, lookbackSteps, 'inverse');
+            const positiveRows = positiveRowsAll.slice(0, 10).map(row => ({
+                ...row,
+                persistence: scorePersistence(grain, row.leader_strategy, row.lagging_strategy, cutoffTime, row.lag_minutes, row.relationship),
+            }));
+            const inverseRows = inverseRowsAll.slice(0, 10).map(row => ({
+                ...row,
+                persistence: scorePersistence(grain, row.leader_strategy, row.lagging_strategy, cutoffTime, row.lag_minutes, row.relationship),
+            }));
+            const entityField = grain === 'product' ? 'strategy_product' : 'strategy';
+            const result = {
+                grain,
+                cutoffTime: cutoffTime.toISOString(),
+                candidateUniverseSize: candidateNames.length,
+                lookbackSteps,
+                leaders: rankEntitiesFromRelationships(positiveRowsAll, 'leader_strategy', entityField, 10),
+                laggers: rankEntitiesFromRelationships(positiveRowsAll, 'lagging_strategy', entityField, 10),
+                inverseLeaders: rankEntitiesFromRelationships(inverseRowsAll, 'leader_strategy', entityField, 10),
+                positiveRows,
+                inverseRows,
+                maxLag,
+                minPoints,
+            };
+            analysisCache.set(cacheKey, result);
+            return result;
+        }
+
+        function toggleSelectedEntity(entityName) {
+            selectedEntity = selectedEntity === entityName ? '' : entityName;
+            if (snapshotTimes.length) computeAndRenderCurrent();
+        }
+
+        function renderRankList(targetId, rows, entityField, roleKind, result) {
+            const target = document.getElementById(targetId);
+            if (!rows.length) {
+                target.innerHTML = `<div class="muted">No qualifying entities at this snapshot.</div>`;
+                return;
+            }
+            const grain = document.getElementById('grainMode').value;
+            const preparedRows = rows.map(row => ({ row, preview: buildCardPreviewQuality(row, roleKind, result) }));
+            const visibleRows = highlightedOnlyCards()
+                ? preparedRows.filter(item => isHighlightedPreview(item.preview))
+                : preparedRows;
+            if (!visibleRows.length) {
+                target.innerHTML = `<div class="muted">${highlightedOnlyCards() ? 'No highlighted cards at this snapshot.' : 'No qualifying entities at this snapshot.'}</div>`;
+                return;
+            }
+            target.innerHTML = visibleRows.map((item, idx) => {
+                const row = item.row;
+                const preview = item.preview;
+                return `
+                <div class="rank-item ${selectedEntity === row[entityField] ? 'active' : ''}" onclick="toggleSelectedEntity('${String(row[entityField]).replace(/'/g, "\\'")}')">
+                    <div class="rank-title">${idx + 1}. ${row[entityField]}</div>
+                    <div class="rank-link">
+                        Strongest link:
+                        ${row.top_link ? `${row.top_link.counterpart} | <span class="${classForCorrelation(row.top_link.correlation)}">${row.top_link.correlation.toFixed(4)}</span> | ${row.top_link.lag_minutes}m` : 'n/a'}
+                    </div>
+                    <div class="rank-actions">
+                        ${renderInspectPairButton(row, entityField, roleKind, result, preview)}
+                        ${grain === 'product' && row.top_link
+                            ? `<button type="button" class="chart-btn" onclick="event.stopPropagation(); openCardChartPairByRole('${roleKind}', '${String(row[entityField]).replace(/'/g, "\\'")}', '${String(row.top_link.counterpart).replace(/'/g, "\\'")}', this)">Chart Pair</button>`
+                            : `<span class="rank-note">Chart pair available in strategy + product mode</span>`
+                        }
+                    </div>
+                    <div class="rank-meta">
+                        <span>Score: ${row.relationship_score.toFixed(2)}</span>
+                        <span>Pairs: ${row.pair_count}</span>
+                        <span class="${classForCorrelation(row.best_correlation)}">Best Corr: ${row.best_correlation.toFixed(4)}</span>
+                        <span>Avg Lag: ${row.avg_lag_minutes.toFixed(1)}m</span>
+                    </div>
+                </div>
+            `;
+            }).join('');
+        }
+
+        function getVisibleRows(rows) {
+            return selectedEntity
+                ? rows.filter(row => row.leader_strategy === selectedEntity || row.lagging_strategy === selectedEntity)
+                : rows;
+        }
+
+        function resolveSelectedPairRow(result) {
+            const visibleRows = [...getVisibleRows(result.positiveRows), ...getVisibleRows(result.inverseRows)];
+            if (!visibleRows.length) {
+                selectedPair = null;
+                return null;
+            }
+            const preserved = selectedPair ? visibleRows.find(row => samePair(row, selectedPair)) : null;
+            if (preserved) return preserved;
+            selectedPair = {
+                relationship: visibleRows[0].relationship,
+                leader_strategy: visibleRows[0].leader_strategy,
+                lagging_strategy: visibleRows[0].lagging_strategy,
+            };
+            return visibleRows[0];
+        }
+
+        function renderPairQuality(result, quality) {
+            const verdictEl = document.getElementById('pairQualityVerdict');
+            const metaEl = document.getElementById('pairQualityMeta');
+            const bodyEl = document.getElementById('pairQualityBody');
+            if (!quality) {
+                verdictEl.className = 'quality-badge muted';
+                verdictEl.textContent = 'No Pair';
+                metaEl.textContent = 'Select a pair row or use `Inspect Pair` on a card to evaluate one exact leader/lagger relationship.';
+                bodyEl.className = 'muted';
+                bodyEl.textContent = 'No pair selected.';
+                return;
+            }
+            verdictEl.className = `quality-badge ${quality.verdictClass}`;
+            verdictEl.textContent = quality.verdictLabel;
+            metaEl.textContent = `${quality.relationship === 'positive' ? 'Positive lead/lag' : 'Inverse lead/lag'} | ${quality.leader_strategy} -> ${quality.lagging_strategy} | cutoff ${fmtTime(snapshotTimes[selectedIndex])}`;
+            const neighborDetail = quality.strongestNeighbor
+                ? `${quality.strongestNeighbor.lag_minutes}m / ${quality.strongestNeighbor.correlation.toFixed(4)}`
+                : 'n/a';
+            bodyEl.className = '';
+            bodyEl.innerHTML = `
+                <div class="pair-quality-grid">
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Best Fit</div>
+                        <div class="pair-quality-value ${classForCorrelation(quality.bestCorrelation)}">${quality.bestLagMinutes}m | ${quality.bestCorrelation.toFixed(4)}</div>
+                        <div class="pair-quality-detail">${quality.samplePoints} aligned points in the active lookback window.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Recent Fit</div>
+                        <div class="pair-quality-value ${classForCorrelation(quality.recentCorrelation)}">${quality.recentCorrelation.toFixed(4)}</div>
+                        <div class="pair-quality-detail">Last ${quality.recentWindowSize} aligned observations only.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Lag Clarity</div>
+                        <div class="pair-quality-value ${quality.lagClarity >= 0.12 ? 'pos' : quality.lagClarity < 0.04 ? 'neg' : 'warn'}">${quality.lagClarity.toFixed(4)}</div>
+                        <div class="pair-quality-detail">Adjacent lag check: ${neighborDetail}</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Direction Confirm</div>
+                        <div class="pair-quality-value ${quality.directional.matchRate >= 0.75 ? 'pos' : quality.directional.matchRate < 0.55 ? 'neg' : 'warn'}">${(quality.directional.matchRate * 100).toFixed(0)}%</div>
+                        <div class="pair-quality-detail">${quality.directional.matches}/${quality.directional.considered} aligned moves matched the expected direction.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Strong Confirms</div>
+                        <div class="pair-quality-value">${quality.directional.strongMatches}</div>
+                        <div class="pair-quality-detail">Moves where both leader and lagger were materially active.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Outlier Share</div>
+                        <div class="pair-quality-value ${quality.outlierShare > 0.55 ? 'neg' : quality.outlierShare <= 0.35 ? 'pos' : 'warn'}">${(quality.outlierShare * 100).toFixed(0)}%</div>
+                        <div class="pair-quality-detail">Lower is better; high values mean one move dominates the relationship.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Forward Hold</div>
+                        <div class="pair-quality-value">${quality.persistenceSummary.hold} hold / ${quality.persistenceSummary.weak} weak</div>
+                        <div class="pair-quality-detail">${quality.persistenceSummary.fail} fail / ${quality.persistenceSummary.na} n/a across 5m, 15m, 30m, 60m.</div>
+                    </div>
+                    <div class="pair-quality-stat">
+                        <div class="pair-quality-label">Reading</div>
+                        <div class="pair-quality-value">${quality.verdictLabel}</div>
+                        <div class="pair-quality-detail">${quality.relationship === 'positive' ? 'Use as same-direction lag follow-through only if recent fit holds.' : 'Use as inverse follow-through only if the lagged reversal starts confirming.'}</div>
+                    </div>
+                </div>
+                <div class="pair-quality-notes">
+                    ${quality.notes.map(note => `<div class="pair-quality-note">${note}</div>`).join('')}
+                </div>
+            `;
+            if (pairQualityModalRequested) {
+                pairQualityModalRequested = false;
+                openPairQualityModal();
+            }
+        }
+
+        function renderPairTable(targetId, rows) {
+            const target = document.getElementById(targetId);
+            const filteredRows = getVisibleRows(rows);
+            if (!filteredRows.length) {
+                target.innerHTML = `<tr><td colspan="9" class="left muted">No qualifying relationships at this snapshot.</td></tr>`;
+                return;
+            }
+            target.innerHTML = filteredRows.map(row => `
+                <tr class="pair-row ${samePair(row, selectedPair) ? 'active' : ''}" onclick="selectPair('${row.relationship}', '${String(row.leader_strategy).replace(/'/g, "\\'")}', '${String(row.lagging_strategy).replace(/'/g, "\\'")}')">
+                    <td class="left">${row.leader_strategy}${row.leader_strategy === selectedEntity ? ' *' : ''}</td>
+                    <td class="left">${row.lagging_strategy}${row.lagging_strategy === selectedEntity ? ' *' : ''}</td>
+                    <td class="${classForCorrelation(row.correlation)}">${row.correlation.toFixed(4)}</td>
+                    <td>${row.lag_minutes}m</td>
+                    <td>${row.sample_points}</td>
+                    <td class="${row.persistence?.[5]?.status || 'muted'}" title="${row.persistence?.[5]?.detail || ''}">${row.persistence?.[5]?.label || 'n/a'}</td>
+                    <td class="${row.persistence?.[15]?.status || 'muted'}" title="${row.persistence?.[15]?.detail || ''}">${row.persistence?.[15]?.label || 'n/a'}</td>
+                    <td class="${row.persistence?.[30]?.status || 'muted'}" title="${row.persistence?.[30]?.detail || ''}">${row.persistence?.[30]?.label || 'n/a'}</td>
+                    <td class="${row.persistence?.[60]?.status || 'muted'}" title="${row.persistence?.[60]?.detail || ''}">${row.persistence?.[60]?.label || 'n/a'}</td>
+                </tr>
+            `).join('');
+        }
+
+        function renderSnapshotStrip() {
+            const strip = document.getElementById('snapshotStrip');
+            strip.innerHTML = snapshotTimes.map((time, idx) => `
+                <button class="snap-chip ${idx === selectedIndex ? 'active' : ''}" onclick="selectSnapshot(${idx})">${fmtTime(time)}</button>
+            `).join('');
+        }
+
+        function computeAndRenderCurrent() {
+            if (!snapshotTimes.length) return;
+            setStatus(`Computing ${document.getElementById('grainMode').value} lead/lag analysis for ${fmtTime(snapshotTimes[selectedIndex])}...`);
+            window.setTimeout(() => {
+                const result = computeAnalysisForCurrent();
+                const entityField = result.grain === 'product' ? 'strategy_product' : 'strategy';
+                document.getElementById('leadersTitle').textContent = result.grain === 'product' ? 'Leading Strategy/Product' : 'Leading Strategies';
+                document.getElementById('laggersTitle').textContent = result.grain === 'product' ? 'Lagging Strategy/Product' : 'Lagging Strategies';
+                document.getElementById('inverseTitle').textContent = result.grain === 'product' ? 'Inverse Leading Strategy/Product' : 'Inverse Leading Strategies';
+                renderRankList('leadersList', result.leaders, entityField, 'leader', result);
+                renderRankList('laggersList', result.laggers, entityField, 'lagger', result);
+                renderRankList('inverseList', result.inverseLeaders, entityField, 'leader', result);
+                const selectedPairRow = resolveSelectedPairRow(result);
+                renderPairQuality(result, selectedPairRow ? buildPairQuality(result.grain, selectedPairRow, result.maxLag, result.minPoints, result.lookbackSteps) : null);
+                renderPairTable('positiveBody', result.positiveRows);
+                renderPairTable('inverseBody', result.inverseRows);
+                document.getElementById('positiveMeta').textContent = `${selectedEntity ? `Filtered: ${selectedEntity} | ` : ''}${result.positiveRows.length} top pairs | universe ${result.candidateUniverseSize} | lookback ${result.lookbackSteps * 15}m`;
+                document.getElementById('inverseMeta').textContent = `${selectedEntity ? `Filtered: ${selectedEntity} | ` : ''}${result.inverseRows.length} top pairs | universe ${result.candidateUniverseSize} | lookback ${result.lookbackSteps * 15}m`;
+                document.getElementById('meta').innerHTML = [
+                    `Date: ${document.getElementById('dateInput').value}`,
+                    `Snapshot: ${fmtTime(snapshotTimes[selectedIndex])}`,
+                    `Grain: ${result.grain}`,
+                    `Universe: ${result.candidateUniverseSize}`,
+                    `Snapshots: ${snapshotTimes.length}`,
+                    `Lookback: ${result.lookbackSteps * 15}m`,
+                    `Snapshot Net: ${excludeNegativeNet() ? 'exclude negative net' : 'include all'}`,
+                    `Card Filter: ${highlightedOnlyCards() ? 'highlighted only' : 'all'}`,
+                    `Selected: ${selectedEntity || 'none'}`
+                ].join('<br>');
+                setStatus(`Showing detected lead/lag relationships for ${document.getElementById('dateInput').value} at ${fmtTime(snapshotTimes[selectedIndex])}, with forward hold checks over 5m/15m/30m/60m.`);
+            }, 0);
+        }
+
+        async function loadDay() {
+            const mode = document.getElementById('runMode').value;
+            const type = document.getElementById('productType').value;
+            const date = document.getElementById('dateInput').value || todayStr();
+            const path = `json/${mode}/${type}/${date}/_summary_net.json?t=${Date.now()}`;
+            setStatus(`Loading ${path}`);
+            try {
+                const response = await fetch(path);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const text = await response.text();
+                if (text.trim().startsWith('<')) throw new Error(`No summary_net source found for ${type} ${date}.`);
+                rawSummary = JSON.parse(text);
+                snapshotTimes = buildSnapshotTimesFromSummary(rawSummary, date);
+                if (!snapshotTimes.length) throw new Error(`No intraday events found for ${date}.`);
+                const built = buildSeriesMaps(rawSummary, snapshotTimes);
+                rawProductSeriesMap = built.rawProducts;
+                strategyComponentMap = built.strategyComponentMap;
+                productSeriesMap = built.productMap;
+                strategySeriesMap = built.strategyMap;
+                analysisCache.clear();
+                selectedPair = null;
+                selectedIndex = snapshotTimes.length - 1;
+                renderSnapshotStrip();
+                computeAndRenderCurrent();
+            } catch (error) {
+                snapshotTimes = [];
+                rawProductSeriesMap = new Map();
+                strategyComponentMap = new Map();
+                productSeriesMap = new Map();
+                strategySeriesMap = new Map();
+                analysisCache.clear();
+                selectedPair = null;
+                document.getElementById('snapshotStrip').innerHTML = '';
+                document.getElementById('leadersList').innerHTML = '';
+                document.getElementById('laggersList').innerHTML = '';
+                document.getElementById('inverseList').innerHTML = '';
+                document.getElementById('positiveBody').innerHTML = '';
+                document.getElementById('inverseBody').innerHTML = '';
+                renderPairQuality(null, null);
+                closePairQualityModal();
+                document.getElementById('meta').textContent = 'No data loaded.';
+                setStatus(`Unable to load lead/lag source. ${error.message}`);
+            }
+        }
+
+        document.getElementById('dateInput').value = todayStr();
+        document.getElementById('grainMode').addEventListener('change', () => {
+            changeCandidateDefault();
+            if (snapshotTimes.length) computeAndRenderCurrent();
+        });
+        document.getElementById('candidateLimit').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('maxLag').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('minPoints').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('lookbackSteps').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('negativeNetFilter').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('cardFilter').addEventListener('change', () => { if (snapshotTimes.length) computeAndRenderCurrent(); });
+        document.getElementById('pairQualityCloseBtn').addEventListener('click', closePairQualityModal);
+        document.getElementById('pairQualityModal').addEventListener('click', (event) => {
+            if (event.target.id === 'pairQualityModal') closePairQualityModal();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && !document.getElementById('pairQualityModal').hidden) closePairQualityModal();
+        });
+        document.addEventListener('click', (event) => {
+            const buttonEl = event.target.closest('button');
+            if (buttonEl) triggerButtonFeedback(buttonEl);
+        });
+
+        loadDay();
+    </script>
+</body>
+
+</html>

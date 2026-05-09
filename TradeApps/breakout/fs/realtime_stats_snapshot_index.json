@@ -1,0 +1,1448 @@
+{
+  "version": 1,
+  "updated_at": "2026-05-09T16:21:07.490492",
+  "snapshot_seconds": 300,
+  "max_snapshots": 288,
+  "snapshots": [
+    {
+      "snapshot_at": "2026-05-08T11:50:00",
+      "generated_at": "2026-05-08T11:51:43.098211",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T11_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T11:55:00",
+      "generated_at": "2026-05-08T11:56:28.691120",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T11_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:00:00",
+      "generated_at": "2026-05-08T12:00:17.874716",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:05:00",
+      "generated_at": "2026-05-08T12:07:33.561890",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:10:00",
+      "generated_at": "2026-05-08T12:11:42.655370",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:15:00",
+      "generated_at": "2026-05-08T12:16:43.066874",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:20:00",
+      "generated_at": "2026-05-08T12:20:48.773304",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:25:00",
+      "generated_at": "2026-05-08T12:26:10.072639",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:30:00",
+      "generated_at": "2026-05-08T12:30:06.240610",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:35:00",
+      "generated_at": "2026-05-08T12:35:29.388752",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:40:00",
+      "generated_at": "2026-05-08T12:40:50.133191",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:45:00",
+      "generated_at": "2026-05-08T12:46:21.880092",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:50:00",
+      "generated_at": "2026-05-08T12:50:28.544852",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T12:55:00",
+      "generated_at": "2026-05-08T12:55:57.107183",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T12_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:00:00",
+      "generated_at": "2026-05-08T13:00:05.189000",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:05:00",
+      "generated_at": "2026-05-08T13:05:46.988438",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:10:00",
+      "generated_at": "2026-05-08T13:10:55.408951",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:15:00",
+      "generated_at": "2026-05-08T13:15:00.343265",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:20:00",
+      "generated_at": "2026-05-08T13:20:23.952323",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:25:00",
+      "generated_at": "2026-05-08T13:25:46.465461",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:30:00",
+      "generated_at": "2026-05-08T13:30:32.760732",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:35:00",
+      "generated_at": "2026-05-08T13:36:04.264872",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:40:00",
+      "generated_at": "2026-05-08T13:42:48.041795",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:45:00",
+      "generated_at": "2026-05-08T13:48:10.196043",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:50:00",
+      "generated_at": "2026-05-08T13:52:18.160534",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T13:55:00",
+      "generated_at": "2026-05-08T13:56:11.819642",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T13_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:00:00",
+      "generated_at": "2026-05-08T14:00:21.278661",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:05:00",
+      "generated_at": "2026-05-08T14:05:45.256732",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:10:00",
+      "generated_at": "2026-05-08T14:11:45.404225",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:15:00",
+      "generated_at": "2026-05-08T14:15:21.033888",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:20:00",
+      "generated_at": "2026-05-08T14:22:55.270409",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:25:00",
+      "generated_at": "2026-05-08T14:25:23.700126",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:30:00",
+      "generated_at": "2026-05-08T14:30:37.851485",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:35:00",
+      "generated_at": "2026-05-08T14:37:55.447564",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:40:00",
+      "generated_at": "2026-05-08T14:41:27.532779",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:45:00",
+      "generated_at": "2026-05-08T14:45:43.205202",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:50:00",
+      "generated_at": "2026-05-08T14:50:53.877543",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T14:55:00",
+      "generated_at": "2026-05-08T14:57:07.540659",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T14_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:00:00",
+      "generated_at": "2026-05-08T15:00:35.896351",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:05:00",
+      "generated_at": "2026-05-08T15:05:11.519426",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:10:00",
+      "generated_at": "2026-05-08T15:10:38.840024",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:15:00",
+      "generated_at": "2026-05-08T15:15:09.397430",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:20:00",
+      "generated_at": "2026-05-08T15:22:31.138735",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:25:00",
+      "generated_at": "2026-05-08T15:27:16.902356",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:30:00",
+      "generated_at": "2026-05-08T15:31:31.793863",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:35:00",
+      "generated_at": "2026-05-08T15:36:33.501521",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:40:00",
+      "generated_at": "2026-05-08T15:40:37.506540",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:45:00",
+      "generated_at": "2026-05-08T15:45:40.082177",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:50:00",
+      "generated_at": "2026-05-08T15:50:32.908775",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T15:55:00",
+      "generated_at": "2026-05-08T15:55:46.528594",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T15_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:00:00",
+      "generated_at": "2026-05-08T16:00:30.197431",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:05:00",
+      "generated_at": "2026-05-08T16:05:13.123992",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:10:00",
+      "generated_at": "2026-05-08T16:10:14.290249",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:15:00",
+      "generated_at": "2026-05-08T16:15:06.552196",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:20:00",
+      "generated_at": "2026-05-08T16:20:17.846594",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:25:00",
+      "generated_at": "2026-05-08T16:25:58.701420",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:30:00",
+      "generated_at": "2026-05-08T16:30:25.837353",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:35:00",
+      "generated_at": "2026-05-08T16:35:53.272348",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:40:00",
+      "generated_at": "2026-05-08T16:40:42.219306",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:45:00",
+      "generated_at": "2026-05-08T16:47:06.530205",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:50:00",
+      "generated_at": "2026-05-08T16:50:14.817371",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T16:55:00",
+      "generated_at": "2026-05-08T16:55:59.392530",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T16_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:00:00",
+      "generated_at": "2026-05-08T17:01:44.241294",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:05:00",
+      "generated_at": "2026-05-08T17:07:28.496279",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:10:00",
+      "generated_at": "2026-05-08T17:12:48.618218",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:15:00",
+      "generated_at": "2026-05-08T17:19:01.393041",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:20:00",
+      "generated_at": "2026-05-08T17:20:38.475244",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:25:00",
+      "generated_at": "2026-05-08T17:26:30.123038",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:30:00",
+      "generated_at": "2026-05-08T17:30:48.071019",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:35:00",
+      "generated_at": "2026-05-08T17:37:24.613146",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:40:00",
+      "generated_at": "2026-05-08T17:41:45.302214",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:45:00",
+      "generated_at": "2026-05-08T17:48:25.690494",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:50:00",
+      "generated_at": "2026-05-08T17:53:35.323778",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T17:55:00",
+      "generated_at": "2026-05-08T17:58:47.539588",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T17_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:00:00",
+      "generated_at": "2026-05-08T18:00:16.549753",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:05:00",
+      "generated_at": "2026-05-08T18:05:19.003230",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:10:00",
+      "generated_at": "2026-05-08T18:10:43.477457",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:15:00",
+      "generated_at": "2026-05-08T18:15:27.219834",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:20:00",
+      "generated_at": "2026-05-08T18:20:54.553525",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:25:00",
+      "generated_at": "2026-05-08T18:25:36.509356",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:30:00",
+      "generated_at": "2026-05-08T18:30:54.307299",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:35:00",
+      "generated_at": "2026-05-08T18:36:04.774808",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:40:00",
+      "generated_at": "2026-05-08T18:43:50.464797",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:45:00",
+      "generated_at": "2026-05-08T18:45:13.906487",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:50:00",
+      "generated_at": "2026-05-08T18:50:47.877592",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T18:55:00",
+      "generated_at": "2026-05-08T18:58:20.373714",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T18_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:05:00",
+      "generated_at": "2026-05-08T19:05:10.806436",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:10:00",
+      "generated_at": "2026-05-08T19:10:49.826879",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:15:00",
+      "generated_at": "2026-05-08T19:17:18.540255",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:20:00",
+      "generated_at": "2026-05-08T19:23:28.649712",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:25:00",
+      "generated_at": "2026-05-08T19:29:03.538496",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:30:00",
+      "generated_at": "2026-05-08T19:30:33.996698",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:35:00",
+      "generated_at": "2026-05-08T19:36:57.546743",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:40:00",
+      "generated_at": "2026-05-08T19:44:10.284136",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:45:00",
+      "generated_at": "2026-05-08T19:46:42.595538",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:50:00",
+      "generated_at": "2026-05-08T19:50:26.780418",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T19:55:00",
+      "generated_at": "2026-05-08T19:57:13.682925",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T19_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:00:00",
+      "generated_at": "2026-05-08T20:03:41.901902",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:05:00",
+      "generated_at": "2026-05-08T20:05:16.704619",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:10:00",
+      "generated_at": "2026-05-08T20:11:39.883012",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:15:00",
+      "generated_at": "2026-05-08T20:19:28.362944",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:20:00",
+      "generated_at": "2026-05-08T20:20:40.542499",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:25:00",
+      "generated_at": "2026-05-08T20:26:34.531027",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:30:00",
+      "generated_at": "2026-05-08T20:31:01.453983",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:35:00",
+      "generated_at": "2026-05-08T20:36:04.929225",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:40:00",
+      "generated_at": "2026-05-08T20:40:58.684527",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:45:00",
+      "generated_at": "2026-05-08T20:45:47.352664",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:50:00",
+      "generated_at": "2026-05-08T20:50:41.197440",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T20:55:00",
+      "generated_at": "2026-05-08T20:56:11.660148",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T20_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T21:00:00",
+      "generated_at": "2026-05-08T21:01:27.218598",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T21_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-08T21:05:00",
+      "generated_at": "2026-05-08T21:05:22.999091",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-08T21_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T01:40:00",
+      "generated_at": "2026-05-09T01:43:25.418089",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T01_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T01:45:00",
+      "generated_at": "2026-05-09T01:45:33.785562",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T01_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T01:50:00",
+      "generated_at": "2026-05-09T01:50:50.594345",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T01_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T01:55:00",
+      "generated_at": "2026-05-09T01:55:04.744339",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T01_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:00:00",
+      "generated_at": "2026-05-09T02:00:23.631165",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:05:00",
+      "generated_at": "2026-05-09T02:05:41.225020",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:10:00",
+      "generated_at": "2026-05-09T02:10:58.157804",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:15:00",
+      "generated_at": "2026-05-09T02:15:11.762856",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:20:00",
+      "generated_at": "2026-05-09T02:20:28.637372",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:25:00",
+      "generated_at": "2026-05-09T02:25:45.861521",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:30:00",
+      "generated_at": "2026-05-09T02:30:00.202447",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:35:00",
+      "generated_at": "2026-05-09T02:35:18.841177",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:40:00",
+      "generated_at": "2026-05-09T02:40:40.275138",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:45:00",
+      "generated_at": "2026-05-09T02:45:56.917767",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:50:00",
+      "generated_at": "2026-05-09T02:50:10.215815",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T02:55:00",
+      "generated_at": "2026-05-09T02:55:29.890480",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T02_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:00:00",
+      "generated_at": "2026-05-09T03:00:46.974411",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:05:00",
+      "generated_at": "2026-05-09T03:05:00.635590",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:10:00",
+      "generated_at": "2026-05-09T03:10:18.633062",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:15:00",
+      "generated_at": "2026-05-09T03:15:36.149010",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:20:00",
+      "generated_at": "2026-05-09T03:20:54.370163",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:25:00",
+      "generated_at": "2026-05-09T03:25:08.084755",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:30:00",
+      "generated_at": "2026-05-09T03:30:25.192001",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:35:00",
+      "generated_at": "2026-05-09T03:35:42.843384",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:40:00",
+      "generated_at": "2026-05-09T03:40:59.736796",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:45:00",
+      "generated_at": "2026-05-09T03:45:13.447651",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:50:00",
+      "generated_at": "2026-05-09T03:50:30.482991",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T03:55:00",
+      "generated_at": "2026-05-09T03:55:48.057356",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T03_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:00:00",
+      "generated_at": "2026-05-09T04:00:01.749222",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:05:00",
+      "generated_at": "2026-05-09T04:05:20.867710",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:10:00",
+      "generated_at": "2026-05-09T04:10:38.703509",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:15:00",
+      "generated_at": "2026-05-09T04:15:55.768158",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:20:00",
+      "generated_at": "2026-05-09T04:20:09.820094",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:25:00",
+      "generated_at": "2026-05-09T04:25:27.215438",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:30:00",
+      "generated_at": "2026-05-09T04:30:45.021234",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:35:00",
+      "generated_at": "2026-05-09T04:36:02.772105",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:40:00",
+      "generated_at": "2026-05-09T04:40:16.566816",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:45:00",
+      "generated_at": "2026-05-09T04:45:33.963335",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:50:00",
+      "generated_at": "2026-05-09T04:50:51.152418",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T04:55:00",
+      "generated_at": "2026-05-09T04:55:06.037845",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T04_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:00:00",
+      "generated_at": "2026-05-09T05:00:23.200815",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:05:00",
+      "generated_at": "2026-05-09T05:05:40.509495",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:10:00",
+      "generated_at": "2026-05-09T05:10:57.604419",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:15:00",
+      "generated_at": "2026-05-09T05:15:10.965220",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:20:00",
+      "generated_at": "2026-05-09T05:20:29.287680",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:25:00",
+      "generated_at": "2026-05-09T05:25:46.348576",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:30:00",
+      "generated_at": "2026-05-09T05:31:03.832754",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:35:00",
+      "generated_at": "2026-05-09T05:35:17.446149",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:40:00",
+      "generated_at": "2026-05-09T05:40:35.193289",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:45:00",
+      "generated_at": "2026-05-09T05:45:52.514344",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:50:00",
+      "generated_at": "2026-05-09T05:50:09.130701",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T05:55:00",
+      "generated_at": "2026-05-09T05:55:25.905035",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T05_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:00:00",
+      "generated_at": "2026-05-09T06:00:43.189425",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:05:00",
+      "generated_at": "2026-05-09T06:06:00.089539",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:10:00",
+      "generated_at": "2026-05-09T06:10:13.568185",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:15:00",
+      "generated_at": "2026-05-09T06:15:30.027232",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:20:00",
+      "generated_at": "2026-05-09T06:20:49.084703",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:25:00",
+      "generated_at": "2026-05-09T06:25:02.498298",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:30:00",
+      "generated_at": "2026-05-09T06:30:19.985393",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:35:00",
+      "generated_at": "2026-05-09T06:35:37.232502",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:40:00",
+      "generated_at": "2026-05-09T06:40:54.705379",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:45:00",
+      "generated_at": "2026-05-09T06:45:08.421093",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:50:00",
+      "generated_at": "2026-05-09T06:50:25.490883",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T06:55:00",
+      "generated_at": "2026-05-09T06:55:43.006151",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T06_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:00:00",
+      "generated_at": "2026-05-09T07:01:00.137332",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:05:00",
+      "generated_at": "2026-05-09T07:05:14.006390",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:10:00",
+      "generated_at": "2026-05-09T07:10:31.789335",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:15:00",
+      "generated_at": "2026-05-09T07:15:49.298958",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:20:00",
+      "generated_at": "2026-05-09T07:20:03.529382",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:25:00",
+      "generated_at": "2026-05-09T07:25:20.667882",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:30:00",
+      "generated_at": "2026-05-09T07:30:38.352133",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:35:00",
+      "generated_at": "2026-05-09T07:35:55.549683",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:40:00",
+      "generated_at": "2026-05-09T07:40:08.931289",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:45:00",
+      "generated_at": "2026-05-09T07:45:25.670241",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:50:00",
+      "generated_at": "2026-05-09T07:50:42.260586",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T07:55:00",
+      "generated_at": "2026-05-09T07:55:58.999004",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T07_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:00:00",
+      "generated_at": "2026-05-09T08:00:12.089885",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:05:00",
+      "generated_at": "2026-05-09T08:05:30.091628",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:10:00",
+      "generated_at": "2026-05-09T08:10:46.972044",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:15:00",
+      "generated_at": "2026-05-09T08:15:00.537443",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:20:00",
+      "generated_at": "2026-05-09T08:20:17.453086",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:25:00",
+      "generated_at": "2026-05-09T08:25:35.142523",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:30:00",
+      "generated_at": "2026-05-09T08:30:52.221211",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:35:00",
+      "generated_at": "2026-05-09T08:35:06.541986",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:40:00",
+      "generated_at": "2026-05-09T08:40:23.895048",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:45:00",
+      "generated_at": "2026-05-09T08:45:40.686265",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:50:00",
+      "generated_at": "2026-05-09T08:50:57.547888",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T08:55:00",
+      "generated_at": "2026-05-09T08:55:11.567624",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T08_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:00:00",
+      "generated_at": "2026-05-09T09:00:29.669277",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:05:00",
+      "generated_at": "2026-05-09T09:05:46.983314",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:10:00",
+      "generated_at": "2026-05-09T09:10:00.584114",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:15:00",
+      "generated_at": "2026-05-09T09:15:17.754846",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:20:00",
+      "generated_at": "2026-05-09T09:20:34.952569",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:25:00",
+      "generated_at": "2026-05-09T09:25:53.382908",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:30:00",
+      "generated_at": "2026-05-09T09:30:10.153710",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:35:00",
+      "generated_at": "2026-05-09T09:35:29.858002",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:40:00",
+      "generated_at": "2026-05-09T09:40:50.037664",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:45:00",
+      "generated_at": "2026-05-09T09:45:04.502817",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:50:00",
+      "generated_at": "2026-05-09T09:50:23.069941",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T09:55:00",
+      "generated_at": "2026-05-09T09:55:44.006660",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T09_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:00:00",
+      "generated_at": "2026-05-09T10:00:02.312723",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:05:00",
+      "generated_at": "2026-05-09T10:05:24.669859",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:10:00",
+      "generated_at": "2026-05-09T10:10:47.040433",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:15:00",
+      "generated_at": "2026-05-09T10:15:02.561568",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:20:00",
+      "generated_at": "2026-05-09T10:20:20.402483",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:25:00",
+      "generated_at": "2026-05-09T10:25:41.150516",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:30:00",
+      "generated_at": "2026-05-09T10:30:59.967861",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:35:00",
+      "generated_at": "2026-05-09T10:35:15.025685",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:40:00",
+      "generated_at": "2026-05-09T10:40:34.182797",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:45:00",
+      "generated_at": "2026-05-09T10:45:53.665607",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:50:00",
+      "generated_at": "2026-05-09T10:50:08.316678",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T10:55:00",
+      "generated_at": "2026-05-09T10:55:28.447441",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T10_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:00:00",
+      "generated_at": "2026-05-09T11:00:46.779455",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:05:00",
+      "generated_at": "2026-05-09T11:05:01.313487",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:10:00",
+      "generated_at": "2026-05-09T11:10:19.656968",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:15:00",
+      "generated_at": "2026-05-09T11:15:37.886666",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:20:00",
+      "generated_at": "2026-05-09T11:20:57.256974",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:25:00",
+      "generated_at": "2026-05-09T11:25:11.549237",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:30:00",
+      "generated_at": "2026-05-09T11:30:29.541418",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:35:00",
+      "generated_at": "2026-05-09T11:35:47.331200",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:40:00",
+      "generated_at": "2026-05-09T11:40:01.790001",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:45:00",
+      "generated_at": "2026-05-09T11:45:20.309494",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:50:00",
+      "generated_at": "2026-05-09T11:50:37.387189",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T11:55:00",
+      "generated_at": "2026-05-09T11:55:55.650194",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T11_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:00:00",
+      "generated_at": "2026-05-09T12:00:09.509289",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:05:00",
+      "generated_at": "2026-05-09T12:05:28.190457",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:10:00",
+      "generated_at": "2026-05-09T12:10:46.006087",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:15:00",
+      "generated_at": "2026-05-09T12:15:00.434898",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:20:00",
+      "generated_at": "2026-05-09T12:20:19.177140",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:25:00",
+      "generated_at": "2026-05-09T12:25:37.341319",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:30:00",
+      "generated_at": "2026-05-09T12:30:55.975824",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:35:00",
+      "generated_at": "2026-05-09T12:35:11.246013",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:40:00",
+      "generated_at": "2026-05-09T12:40:29.861752",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:45:00",
+      "generated_at": "2026-05-09T12:45:48.712386",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:50:00",
+      "generated_at": "2026-05-09T12:50:03.611519",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T12:55:00",
+      "generated_at": "2026-05-09T12:55:23.544708",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T12_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:00:00",
+      "generated_at": "2026-05-09T13:00:42.000293",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:05:00",
+      "generated_at": "2026-05-09T13:06:00.417011",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:10:00",
+      "generated_at": "2026-05-09T13:10:15.676718",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:15:00",
+      "generated_at": "2026-05-09T13:15:35.954970",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:20:00",
+      "generated_at": "2026-05-09T13:20:54.767435",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:25:00",
+      "generated_at": "2026-05-09T13:25:10.111883",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:30:00",
+      "generated_at": "2026-05-09T13:30:28.496000",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:35:00",
+      "generated_at": "2026-05-09T13:35:46.038416",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:40:00",
+      "generated_at": "2026-05-09T13:40:00.539486",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:45:00",
+      "generated_at": "2026-05-09T13:45:18.992827",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:50:00",
+      "generated_at": "2026-05-09T13:50:37.843874",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T13:55:00",
+      "generated_at": "2026-05-09T13:55:57.836015",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T13_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:00:00",
+      "generated_at": "2026-05-09T14:00:12.253877",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:05:00",
+      "generated_at": "2026-05-09T14:05:30.848616",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:10:00",
+      "generated_at": "2026-05-09T14:10:49.716720",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:15:00",
+      "generated_at": "2026-05-09T14:15:04.187575",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:20:00",
+      "generated_at": "2026-05-09T14:20:22.020304",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:25:00",
+      "generated_at": "2026-05-09T14:25:40.814373",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:30:00",
+      "generated_at": "2026-05-09T14:30:58.344223",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:35:00",
+      "generated_at": "2026-05-09T14:35:12.860330",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:40:00",
+      "generated_at": "2026-05-09T14:40:31.180291",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:45:00",
+      "generated_at": "2026-05-09T14:45:49.254818",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:50:00",
+      "generated_at": "2026-05-09T14:50:03.408399",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T14:55:00",
+      "generated_at": "2026-05-09T14:55:21.587121",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T14_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:00:00",
+      "generated_at": "2026-05-09T15:00:39.855434",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:05:00",
+      "generated_at": "2026-05-09T15:05:58.184440",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:10:00",
+      "generated_at": "2026-05-09T15:10:11.992636",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:15:00",
+      "generated_at": "2026-05-09T15:15:29.749123",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:20:00",
+      "generated_at": "2026-05-09T15:20:48.053134",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_20_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:25:00",
+      "generated_at": "2026-05-09T15:25:01.891561",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_25_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:30:00",
+      "generated_at": "2026-05-09T15:30:19.999913",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_30_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:35:00",
+      "generated_at": "2026-05-09T15:35:38.092134",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_35_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:40:00",
+      "generated_at": "2026-05-09T15:40:56.952745",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_40_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:45:00",
+      "generated_at": "2026-05-09T15:45:11.587267",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_45_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:50:00",
+      "generated_at": "2026-05-09T15:50:29.450640",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_50_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T15:55:00",
+      "generated_at": "2026-05-09T15:55:48.543090",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T15_55_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T16:00:00",
+      "generated_at": "2026-05-09T16:00:06.336302",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T16_00_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T16:05:00",
+      "generated_at": "2026-05-09T16:05:30.127410",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T16_05_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T16:10:00",
+      "generated_at": "2026-05-09T16:11:01.920956",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T16_10_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T16:15:00",
+      "generated_at": "2026-05-09T16:15:34.641120",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T16_15_00.json"
+    },
+    {
+      "snapshot_at": "2026-05-09T16:20:00",
+      "generated_at": "2026-05-09T16:21:01.209492",
+      "path": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\realtime_stats_snapshots\\2026-05-09T16_20_00.json"
+    }
+  ]
+}

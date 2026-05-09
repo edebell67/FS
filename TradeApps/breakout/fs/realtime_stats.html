@@ -1,0 +1,2299 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Stats - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #071326;
+            --panel: rgba(13, 28, 48, 0.92);
+            --panel-soft: rgba(18, 35, 58, 0.9);
+            --border: rgba(148, 163, 184, 0.16);
+            --muted: #93a4bd;
+            --text: #ecf3ff;
+            --green: #4ade80;
+            --cyan: #38bdf8;
+            --violet: #c084fc;
+            --amber: #f59e0b;
+            --buy: #4ade80;
+            --sell: #f87171;
+            --close-buy: #60a5fa;
+            --close-sell: #f59e0b;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: 'Inter', sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 32%),
+                radial-gradient(circle at top right, rgba(192, 132, 252, 0.16), transparent 28%),
+                linear-gradient(180deg, #061120 0%, #0a1526 100%);
+            display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            margin-left: var(--sidebar-width, 260px);
+            width: calc(100vw - var(--sidebar-width, 260px));
+            max-width: calc(100vw - var(--sidebar-width, 260px));
+            padding: 10px 10px 10px 8px;
+            overflow-x: auto;
+            overflow-y: auto;
+        }
+
+        .dashboard-shell {
+            width: 100%;
+            max-width: none;
+            margin: 0;
+        }
+
+        .dashboard-workspace {
+            display: grid;
+            grid-template-columns: minmax(760px, 1.55fr) minmax(320px, 0.62fr) minmax(420px, 0.78fr);
+            gap: 12px;
+            align-items: start;
+            margin-top: 18px;
+            width: 100%;
+            min-width: 1540px;
+        }
+
+        .dashboard-main-pane {
+            min-width: 0;
+        }
+
+        .side-panel-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .side-card {
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            background: linear-gradient(180deg, rgba(10, 20, 35, 0.98), rgba(7, 15, 26, 0.98));
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+        }
+
+        .side-card-inner {
+            padding: 18px 18px 16px;
+        }
+
+        .side-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .side-card-title {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .side-card-subtitle {
+            margin-top: 6px;
+            color: var(--muted);
+            font-size: 0.78rem;
+            line-height: 1.4;
+        }
+
+        .side-section {
+            padding: 14px 0;
+            border-top: 1px solid var(--border);
+        }
+
+        .side-section:first-of-type {
+            border-top: 0;
+            padding-top: 0;
+        }
+
+        .section-label {
+            margin: 0 0 10px;
+            color: #dbe7ff;
+            font-size: 0.76rem;
+            font-weight: 800;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+
+        .header-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 20px;
+            padding: 18px 22px;
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            background: linear-gradient(180deg, rgba(10, 23, 41, 0.96), rgba(10, 20, 36, 0.92));
+            box-shadow: 0 22px 70px rgba(0, 0, 0, 0.24);
+        }
+
+        .header-title {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .header-mark {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            display: grid;
+            place-items: center;
+            color: #d7eaff;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(59, 130, 246, 0.08));
+            border: 1px solid rgba(96, 165, 250, 0.28);
+            font-size: 1.15rem;
+        }
+
+        .header-copy h1 {
+            margin: 0;
+            font-size: 1.55rem;
+            font-weight: 800;
+            letter-spacing: 0.02em;
+        }
+
+        .header-copy p,
+        .header-copy .subline {
+            margin: 4px 0 0;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .filter-box {
+            min-width: 240px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            background: rgba(17, 30, 49, 0.9);
+            border: 1px solid var(--border);
+        }
+
+        .filter-box label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #c7d3e7;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .filter-box select {
+            width: 100%;
+            border: 1px solid rgba(123, 160, 215, 0.22);
+            outline: 0;
+            color: var(--text);
+            background: rgba(6, 14, 26, 0.96);
+            font: inherit;
+            font-weight: 600;
+            border-radius: 10px;
+            padding: 10px 12px;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .filter-box select:focus {
+            border-color: rgba(96, 165, 250, 0.55);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.14);
+        }
+
+        .filter-box select option {
+            color: var(--text);
+            background: #08111f;
+        }
+
+        .refresh-btn {
+            border: 0;
+            color: var(--text);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.28), rgba(59, 130, 246, 0.16));
+            border: 1px solid rgba(96, 165, 250, 0.2);
+            border-radius: 12px;
+            padding: 12px 14px;
+            cursor: pointer;
+            transition: transform 0.14s ease, box-shadow 0.18s ease, border-color 0.18s ease, background 0.18s ease, opacity 0.18s ease;
+            box-shadow: 0 10px 24px rgba(15, 23, 42, 0.22);
+        }
+
+        .refresh-btn:hover {
+            border-color: rgba(96, 165, 250, 0.42);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.18);
+        }
+
+        .refresh-btn:active,
+        .refresh-btn.is-pressed {
+            transform: translateY(1px) scale(0.97);
+            box-shadow: 0 5px 14px rgba(15, 23, 42, 0.28);
+        }
+
+        .refresh-btn.is-loading {
+            opacity: 0.92;
+            border-color: rgba(96, 165, 250, 0.55);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.38), rgba(37, 99, 235, 0.24));
+        }
+
+        .refresh-btn.is-loading i {
+            animation: refreshSpin 0.7s linear infinite;
+        }
+
+        @keyframes refreshSpin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .status-bar {
+            margin-top: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 14px;
+            color: var(--muted);
+            font-size: 0.8rem;
+        }
+
+        .snapshot-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: rgba(8, 18, 31, 0.82);
+        }
+
+        .snapshot-btn {
+            width: 34px;
+            height: 30px;
+            border: 1px solid rgba(123, 160, 215, 0.2);
+            border-radius: 8px;
+            color: var(--text);
+            background: rgba(6, 14, 26, 0.96);
+            cursor: pointer;
+        }
+
+        .snapshot-btn.jump-btn {
+            width: auto;
+            min-width: 52px;
+            padding: 0 10px;
+            font-size: 0.72rem;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+        }
+
+        .snapshot-btn:hover:not(:disabled) {
+            border-color: rgba(96, 165, 250, 0.55);
+            background: rgba(20, 45, 76, 0.96);
+        }
+
+        .snapshot-btn:disabled {
+            opacity: 0.42;
+            cursor: not-allowed;
+        }
+
+        .snapshot-label {
+            min-width: 190px;
+            color: #dbe7ff;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(74, 222, 128, 0.18);
+            border-radius: 999px;
+            color: #d9ffe7;
+            font-weight: 700;
+        }
+
+        .status-pill .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 999px;
+            background: var(--green);
+            box-shadow: 0 0 12px rgba(74, 222, 128, 0.7);
+        }
+
+        .board {
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            overflow: hidden;
+            background: linear-gradient(180deg, rgba(10, 20, 35, 0.98), rgba(7, 15, 26, 0.98));
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.25);
+        }
+
+        .time-header-row,
+        .board-row {
+            display: grid;
+            grid-template-columns: 100px repeat(4, minmax(145px, 1fr));
+            gap: 0;
+        }
+
+        .time-label-spacer,
+        .row-label-cell,
+        .summary-label-cell {
+            border-right: 1px solid var(--border);
+        }
+
+        .time-label-spacer {
+            background: rgba(8, 18, 31, 0.84);
+        }
+
+        .time-cell {
+            padding: 14px 12px 8px;
+            border-right: 1px solid var(--border);
+            background: rgba(8, 18, 31, 0.84);
+        }
+
+        .time-cell:last-child,
+        .metric-cell:last-child {
+            border-right: 0;
+        }
+
+        .time-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 800;
+            font-size: 0.82rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .time-chip i {
+            font-size: 0.9rem;
+        }
+
+        .time-spark {
+            margin-top: 10px;
+            height: 24px;
+            display: flex;
+            align-items: end;
+            gap: 3px;
+        }
+
+        .time-spark span,
+        .spark-bars span {
+            flex: 1;
+            min-width: 4px;
+            border-radius: 999px 999px 2px 2px;
+            opacity: 0.92;
+        }
+
+        .board-row {
+            border-top: 1px solid var(--border);
+            min-height: 148px;
+        }
+
+        .row-label-cell,
+        .summary-label-cell {
+            padding: 16px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(12, 24, 40, 0.92);
+        }
+
+        .row-label-box {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .row-icon {
+            font-size: 1.5rem;
+        }
+
+        .row-title {
+            font-size: 0.82rem;
+            line-height: 1.15;
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 0.04em;
+            max-width: 76px;
+        }
+
+        .row-tag {
+            padding: 4px 9px;
+            border-radius: 999px;
+            font-weight: 800;
+            font-size: 0.65rem;
+            color: #f8fbff;
+        }
+
+        .metric-cell {
+            padding: 9px 10px 10px;
+            border-right: 1px solid var(--border);
+            background: rgba(11, 22, 37, 0.94);
+        }
+
+        .metric-cell.threshold-profit {
+            background:
+                linear-gradient(135deg, rgba(187, 247, 208, 0.34), rgba(34, 197, 94, 0.16)),
+                rgba(11, 22, 37, 0.94);
+            box-shadow: inset 0 0 0 1px rgba(187, 247, 208, 0.55), inset 0 0 34px rgba(34, 197, 94, 0.18);
+        }
+
+        .metric-cell.threshold-loss {
+            background:
+                linear-gradient(135deg, rgba(254, 202, 202, 0.34), rgba(239, 68, 68, 0.18)),
+                rgba(11, 22, 37, 0.94);
+            box-shadow: inset 0 0 0 1px rgba(248, 113, 113, 0.58), inset 0 0 34px rgba(239, 68, 68, 0.2);
+        }
+
+        .threshold-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            margin-top: 5px;
+            padding: 3px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .threshold-badge.profit {
+            color: #062e15;
+            background: rgba(187, 247, 208, 0.94);
+        }
+
+        .threshold-badge.loss {
+            color: #450a0a;
+            background: rgba(254, 202, 202, 0.94);
+        }
+
+        .metric-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: end;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .metric-top .metric-count-label {
+            font-size: 0.82rem;
+            color: #d2deef;
+        }
+
+        .metric-top .metric-count {
+            display: block;
+            margin-top: 4px;
+            font-size: 2.1rem;
+            line-height: 1;
+            font-weight: 700;
+            letter-spacing: 0.01em;
+        }
+
+        .spark-bars {
+            width: 96px;
+            height: 48px;
+            display: flex;
+            align-items: end;
+            gap: 4px;
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .metric-stat {
+            padding: 8px;
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .metric-stat .label {
+            color: #d2deef;
+            font-size: 0.68rem;
+        }
+
+        .metric-stat .value {
+            margin-top: 4px;
+            font-size: 1rem;
+            font-weight: 800;
+        }
+
+        .pos {
+            color: var(--green);
+        }
+
+        .neg {
+            color: #fb7185;
+        }
+
+        .summary-cell {
+            display: grid;
+            grid-template-columns: 74px 1fr;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .summary-ring {
+            width: 68px;
+            height: 68px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            position: relative;
+            background: conic-gradient(var(--ring-color, var(--green)) calc(var(--ring-value, 0) * 1%), rgba(148, 163, 184, 0.12) 0);
+        }
+
+        .summary-ring::before {
+            content: "";
+            position: absolute;
+            inset: 8px;
+            border-radius: 999px;
+            background: #111f34;
+        }
+
+        .summary-ring-content {
+            position: relative;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .summary-ring-content strong {
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        .summary-ring-content span {
+            font-size: 0.56rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .summary-total {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .summary-total .headline {
+            font-size: 0.72rem;
+            color: #d2deef;
+        }
+
+        .summary-total .value {
+            font-size: 1.35rem;
+            font-weight: 800;
+        }
+
+        .summary-total .delta {
+            font-weight: 700;
+            font-size: 0.78rem;
+        }
+
+        .summary-total .trend-line {
+            height: 28px;
+            display: flex;
+            align-items: end;
+            gap: 4px;
+        }
+
+        .summary-total .trend-line span {
+            flex: 1;
+            border-radius: 999px 999px 3px 3px;
+            opacity: 0.95;
+        }
+
+        .summary-substats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+        }
+
+        .summary-substats .metric-stat .value {
+            font-size: 1rem;
+        }
+
+        .footer-note {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 16px 18px 20px;
+            color: var(--muted);
+            font-size: 0.82rem;
+            border-top: 1px solid var(--border);
+            background: rgba(7, 14, 24, 0.92);
+        }
+
+        .footer-note .dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--green);
+        }
+
+        .action-hero {
+            display: grid;
+            grid-template-columns: 58px minmax(0, 1fr);
+            gap: 14px;
+            align-items: center;
+            padding: 16px;
+            border-radius: 18px;
+            border: 1px solid rgba(123, 160, 215, 0.18);
+            background: rgba(10, 22, 37, 0.88);
+        }
+
+        .action-hero.buy {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.18), rgba(10, 22, 37, 0.94));
+            border-color: rgba(74, 222, 128, 0.28);
+        }
+
+        .action-hero.sell {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.18), rgba(10, 22, 37, 0.94));
+            border-color: rgba(248, 113, 113, 0.28);
+        }
+
+        .action-hero.neutral {
+            background: linear-gradient(135deg, rgba(148, 163, 184, 0.16), rgba(10, 22, 37, 0.94));
+            border-color: rgba(148, 163, 184, 0.24);
+        }
+
+        .action-icon {
+            width: 58px;
+            height: 58px;
+            border-radius: 18px;
+            display: grid;
+            place-items: center;
+            font-size: 1.5rem;
+            color: #f8fbff;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+        }
+
+        .action-copy strong {
+            display: block;
+            font-size: 2rem;
+            line-height: 1;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+        }
+
+        .action-copy .product-line {
+            margin-top: 4px;
+            font-size: 0.9rem;
+            color: #dbe7ff;
+            font-weight: 700;
+        }
+
+        .bias-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 10px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            font-size: 0.74rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: #eff8ff;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .reason-list {
+            display: grid;
+            gap: 10px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .reason-item {
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+            color: #dce9fb;
+            font-size: 0.84rem;
+            line-height: 1.4;
+        }
+
+        .reason-item i {
+            margin-top: 2px;
+            color: var(--green);
+            font-size: 0.82rem;
+        }
+
+        .mode-grid,
+        .ticket-grid,
+        .summary-grid,
+        .action-btn-row,
+        .manual-form-grid {
+            display: grid;
+            gap: 10px;
+        }
+
+        .mode-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .ticket-grid,
+        .summary-grid,
+        .manual-form-grid,
+        .action-btn-row {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .mode-btn,
+        .action-btn,
+        .ghost-btn {
+            border-radius: 12px;
+            font: inherit;
+            cursor: pointer;
+        }
+
+        .mode-btn {
+            padding: 12px 10px;
+            border: 1px solid rgba(123, 160, 215, 0.16);
+            background: rgba(11, 22, 37, 0.9);
+            color: var(--text);
+            text-align: center;
+        }
+
+        .mode-btn i {
+            display: block;
+            margin-bottom: 8px;
+            color: #9db8dd;
+        }
+
+        .mode-btn strong {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 800;
+        }
+
+        .mode-btn span {
+            display: block;
+            margin-top: 4px;
+            font-size: 0.7rem;
+            color: var(--muted);
+        }
+
+        .mode-btn.active {
+            border-color: rgba(96, 165, 250, 0.48);
+            box-shadow: inset 0 0 0 1px rgba(96, 165, 250, 0.28), 0 12px 28px rgba(37, 99, 235, 0.14);
+            background: linear-gradient(180deg, rgba(20, 45, 76, 0.96), rgba(11, 22, 37, 0.92));
+        }
+
+        .mode-hint,
+        .ticket-note,
+        .trade-log-note,
+        .panel-meta {
+            color: var(--muted);
+            font-size: 0.76rem;
+            line-height: 1.45;
+        }
+
+        .ticket-metric .label,
+        .summary-metric .label,
+        .field label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.72rem;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .ticket-metric .value,
+        .summary-metric .value {
+            display: block;
+            color: #edf5ff;
+            font-size: 0.9rem;
+            font-weight: 700;
+        }
+
+        .ticket-metric .value.buyish,
+        .summary-metric .value.pos {
+            color: var(--buy);
+        }
+
+        .ticket-metric .value.sellish,
+        .summary-metric .value.neg {
+            color: var(--sell);
+        }
+
+        .action-btn,
+        .ghost-btn {
+            padding: 12px 14px;
+            font-weight: 800;
+        }
+
+        .action-btn {
+            border: 0;
+        }
+
+        .action-btn.accept {
+            background: linear-gradient(180deg, rgba(34, 197, 94, 0.9), rgba(22, 163, 74, 0.92));
+            color: #04120a;
+        }
+
+        .action-btn.reject {
+            background: linear-gradient(180deg, rgba(127, 29, 29, 0.92), rgba(153, 27, 27, 0.94));
+            color: #ffe4e6;
+            border: 1px solid rgba(248, 113, 113, 0.28);
+        }
+
+        .ghost-btn {
+            width: 100%;
+            background: rgba(11, 22, 37, 0.9);
+            color: #dbe7ff;
+            border: 1px solid rgba(123, 160, 215, 0.18);
+        }
+
+        .action-btn:disabled,
+        .ghost-btn:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+
+        .flash-banner {
+            margin-bottom: 12px;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: rgba(59, 130, 246, 0.14);
+            border: 1px solid rgba(96, 165, 250, 0.22);
+            color: #dbeafe;
+            font-size: 0.78rem;
+            font-weight: 700;
+        }
+
+        .status-toggle-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 16px;
+            background: rgba(11, 22, 37, 0.9);
+            border: 1px solid rgba(123, 160, 215, 0.16);
+        }
+
+        .status-toggle {
+            position: relative;
+            width: 46px;
+            height: 26px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.24);
+            box-shadow: inset 0 0 0 1px rgba(148, 163, 184, 0.18);
+        }
+
+        .status-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            border-radius: 999px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .status-state {
+            color: #f8fafc;
+            font-weight: 800;
+            font-size: 0.86rem;
+        }
+
+        .loading-state,
+        .error-state {
+            padding: 48px 24px;
+            text-align: center;
+            color: var(--muted);
+        }
+
+        .error-state {
+            color: #fca5a5;
+        }
+
+        .trade-log-toolbar {
+            margin-bottom: 12px;
+        }
+
+        .trade-log-filter,
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            border: 1px solid rgba(123, 160, 215, 0.22);
+            outline: 0;
+            color: var(--text);
+            background: rgba(6, 14, 26, 0.96);
+            font: inherit;
+            border-radius: 10px;
+            padding: 10px 12px;
+        }
+
+        .field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .field label {
+            font-weight: 700;
+        }
+
+        .field textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        .trade-log-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .trade-log-card {
+            border: 1px solid rgba(120, 150, 190, 0.25);
+            border-radius: 14px;
+            padding: 12px;
+            background: rgba(8, 20, 36, 0.85);
+        }
+
+        .trade-log-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .trade-log-title {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: baseline;
+        }
+
+        .trade-log-title strong {
+            font-size: 0.9rem;
+            color: #f8fbff;
+        }
+
+        .trade-log-title span {
+            color: var(--muted);
+            font-size: 0.76rem;
+        }
+
+        .trade-log-pips {
+            font-size: 0.95rem;
+            font-weight: 900;
+        }
+
+        .trade-log-meta {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 4px;
+            margin-top: 8px;
+            font-size: 0.76rem;
+            color: #d6e4f5;
+        }
+
+        .trade-log-meta strong {
+            color: #eef6ff;
+        }
+
+        .mono {
+            font-variant-numeric: tabular-nums;
+            font-feature-settings: "tnum";
+        }
+
+        .status-pill-mini {
+            display: inline-flex;
+            padding: 4px 8px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .status-pill-mini.closed {
+            background: rgba(34, 197, 94, 0.16);
+            color: #bbf7d0;
+        }
+
+        .status-pill-mini.open {
+            background: rgba(245, 158, 11, 0.16);
+            color: #fde68a;
+        }
+
+        .empty-table-state,
+        .panel-empty {
+            padding: 18px 0 6px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 0.82rem;
+        }
+
+        .panel-empty {
+            padding: 40px 18px;
+        }
+
+        @media (max-width: 1560px) {
+            .dashboard-workspace {
+                grid-template-columns: minmax(760px, 1.45fr) minmax(320px, 0.7fr) minmax(400px, 0.8fr);
+                min-width: 1500px;
+            }
+
+            .main-content {
+                overflow-x: auto;
+            }
+        }
+
+        @media (max-width: 1280px) {
+            .main-content {
+                margin-left: 0;
+                padding: 18px;
+                width: 100vw;
+                max-width: none;
+            }
+
+            .header-box {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .header-actions {
+                justify-content: space-between;
+            }
+
+            .dashboard-workspace {
+                grid-template-columns: 1fr;
+                min-width: 0;
+            }
+
+            .board,
+            .trade-action-pane,
+            .trade-log-pane {
+                overflow-x: auto;
+            }
+
+            .time-header-row,
+            .board-row {
+                min-width: 720px;
+            }
+
+            .mode-grid,
+            .ticket-grid,
+            .summary-grid,
+            .action-btn-row,
+            .manual-form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar-container"></div>
+    <main class="main-content">
+        <div class="dashboard-shell">
+            <section class="header-box">
+                <div class="header-title">
+                    <div class="header-mark"><i class="fas fa-wave-square"></i></div>
+                    <div class="header-copy">
+                        <h1>Trade Performance Dashboard</h1>
+                        <p>Comprehensive overview of trading performance across timeframes</p>
+                        <div class="subline" id="dashboardSubline">Momentum strategies only</div>
+                    </div>
+                </div>
+                <div class="header-actions">
+                    <div class="filter-box">
+                        <label for="strategyGroupFilter"><i class="fas fa-layer-group"></i> Filter by Strategy Group</label>
+                        <select id="strategyGroupFilter">
+                            <option value="all">All</option>
+                            <option value="momentum">Momentum</option>
+                            <option value="momentum_r">Momentum R</option>
+                            <option value="breakout">Breakout</option>
+                            <option value="breakout_r">Breakout R</option>
+                            <option value="breakout_rev">Breakout Rev</option>
+                            <option value="breakout_r_rev">Breakout R Rev</option>
+                        </select>
+                    </div>
+                    <div class="filter-box">
+                        <label for="productFilter"><i class="fas fa-filter"></i> Filter by Product</label>
+                        <select id="productFilter">
+                            <option value="">All Products</option>
+                        </select>
+                    </div>
+                    <button id="refreshBtn" class="refresh-btn" title="Refresh now">
+                        <i class="fas fa-rotate-right"></i>
+                    </button>
+                </div>
+            </section>
+
+            <div class="status-bar">
+                <div class="status-pill"><span class="dot"></span> <span id="statusPillText">Momentum Real-Time Feed</span></div>
+                <div class="snapshot-controls" aria-label="Snapshot navigation">
+                    <button id="prevDaySnapshotBtn" class="snapshot-btn jump-btn" title="Jump backward by one day">-1D</button>
+                    <button id="prevHourSnapshotBtn" class="snapshot-btn jump-btn" title="Jump backward by one hour">-1H</button>
+                    <button id="prevSnapshotBtn" class="snapshot-btn" title="Previous 5 minute snapshot"><i class="fas fa-chevron-left"></i></button>
+                    <span id="snapshotLabel" class="snapshot-label">Latest snapshot</span>
+                    <button id="nextSnapshotBtn" class="snapshot-btn" title="Next 5 minute snapshot"><i class="fas fa-chevron-right"></i></button>
+                    <button id="nextHourSnapshotBtn" class="snapshot-btn jump-btn" title="Jump forward by one hour">+1H</button>
+                    <button id="nextDaySnapshotBtn" class="snapshot-btn jump-btn" title="Jump forward by one day">+1D</button>
+                    <button id="latestSnapshotBtn" class="snapshot-btn" title="Return to latest"><i class="fas fa-bolt"></i></button>
+                </div>
+                <div id="lastUpdated">Last update: waiting for data...</div>
+            </div>
+
+            <div class="dashboard-workspace">
+                <section class="dashboard-main-pane">
+                    <section class="board" id="dashboardBoard">
+                        <div class="loading-state">Loading momentum dashboard...</div>
+                    </section>
+                </section>
+
+                <aside class="side-panel-stack trade-action-pane" id="tradeActionPanel">
+                    <section class="side-card">
+                        <div class="panel-empty">Preparing trade action panel...</div>
+                    </section>
+                </aside>
+
+                <aside class="side-panel-stack trade-log-pane" id="tradeLogPanel">
+                    <section class="side-card">
+                        <div class="panel-empty">Preparing trade log...</div>
+                    </section>
+                </aside>
+            </div>
+        </div>
+    </main>
+
+    <script src="theme.js"></script>
+    <script src="sidebar-loader.js"></script>
+    <script>
+        const AUTO_REFRESH_MS = 15000;
+        const API_ORIGIN = window.location.hostname === 'localhost'
+            ? `${window.location.protocol}//127.0.0.1:${window.location.port || '5000'}`
+            : window.location.origin;
+        const TIME_ICONS = {
+            m5: 'fa-clock',
+            m30: 'fa-clock',
+            h1: 'fa-clock',
+            h3: 'fa-clock'
+        };
+        const HOUR_MS = 60 * 60 * 1000;
+        const DAY_MS = 24 * HOUR_MS;
+
+        let refreshTimer = null;
+        let lastPayload = null;
+        let isRefreshInFlight = false;
+        let snapshotCursor = 'latest';
+        let availableSnapshots = [];
+        let executionMode = 'semi_automatic';
+        let tradeLogFilter = 'all';
+        let manualTradeOpen = false;
+        let panelFlashMessage = '';
+        let closePolicyConfig = null;
+        let highlightConfig = {
+            profitThresholdPct: 100,
+            lossThresholdPct: 100
+        };
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatMoney(value) {
+            const num = Number(value || 0);
+            const abs = Math.abs(num).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return `${num < 0 ? '-' : ''}$${abs}`;
+        }
+
+        function formatDelta(value) {
+            const num = Number(value || 0);
+            const sign = num > 0 ? '+' : '';
+            return `${sign}${num.toFixed(1)}%`;
+        }
+
+        function formatRatio(value) {
+            return `${(Number(value || 0) * 100).toFixed(1)}%`;
+        }
+
+        function formatPips(value) {
+            const num = Number(value || 0);
+            const sign = num > 0 ? '+' : '';
+            return `${sign}${num.toFixed(0)}`;
+        }
+
+        function formatDateTime(value) {
+            const ts = value ? new Date(value) : null;
+            return ts && !isNaN(ts.getTime()) ? ts.toLocaleString() : 'n/a';
+        }
+
+        function normalizeSpark(values) {
+            const nums = Array.isArray(values) ? values.map(v => Number(v || 0)) : [];
+            const max = Math.max(...nums, 1);
+            return nums.map(v => Math.max(10, Math.round((Number(v || 0) / max) * 100)));
+        }
+
+        function renderBars(values, color) {
+            const heights = normalizeSpark(values);
+            return heights.map(h => `<span style="height:${h}%; background:${color};"></span>`).join('');
+        }
+
+        function normalizeThresholdPct(value, fallback) {
+            const parsed = Number(value);
+            if (!Number.isFinite(parsed)) return fallback;
+            return Math.max(0, Math.min(100, parsed));
+        }
+
+        function defaultClosePolicyConfig() {
+            return {
+                enabled: true,
+                enabled_policies: ['opposite_signal'],
+                evaluate_on_realtime_stats: true,
+                evaluate_on_trade_log: true,
+                policies: {
+                    opposite_signal: {
+                        enabled: true,
+                        require_executable_signal: true,
+                        ignore_no_trade: true,
+                        ignore_stale_snapshot: true
+                    },
+                    net_pips_after_cost_threshold: {
+                        enabled: false,
+                        threshold_pips: 5,
+                        threshold_options: [3, 5, 10, 20]
+                    }
+                }
+            };
+        }
+
+        function normalizeClosePolicyConfig(raw) {
+            const base = defaultClosePolicyConfig();
+            const cfg = raw && typeof raw === 'object' ? raw : {};
+            const next = {
+                ...base,
+                ...cfg,
+                enabled_policies: Array.isArray(cfg.enabled_policies) ? cfg.enabled_policies : base.enabled_policies.slice(),
+                policies: {
+                    ...base.policies,
+                    ...(cfg.policies || {})
+                }
+            };
+            const thresholdPolicy = next.policies.net_pips_after_cost_threshold || {};
+            next.policies.net_pips_after_cost_threshold = {
+                ...base.policies.net_pips_after_cost_threshold,
+                ...thresholdPolicy,
+                threshold_options: Array.isArray(thresholdPolicy.threshold_options) && thresholdPolicy.threshold_options.length
+                    ? thresholdPolicy.threshold_options.map(value => Number(value)).filter(Number.isFinite)
+                    : base.policies.net_pips_after_cost_threshold.threshold_options
+            };
+            return next;
+        }
+
+        async function loadHighlightConfig() {
+            try {
+                const response = await fetch(new URL('/api/config', API_ORIGIN).toString(), { cache: 'no-store' });
+                if (!response.ok) throw new Error(`HTTP ${response.status} loading config`);
+                const data = await response.json();
+                const cfg = data.config || {};
+                highlightConfig = {
+                    profitThresholdPct: normalizeThresholdPct(cfg.realtime_stats_profit_check_threshold_pct, 100),
+                    lossThresholdPct: normalizeThresholdPct(cfg.realtime_stats_loss_check_threshold_pct, 100)
+                };
+                closePolicyConfig = normalizeClosePolicyConfig(cfg.realtime_trade_close_config);
+            } catch (err) {
+                console.warn('Realtime stats highlight config load failed; using defaults.', err);
+                closePolicyConfig = defaultClosePolicyConfig();
+            }
+        }
+
+        function thresholdState(card) {
+            const count = Number(card?.count || 0);
+            if (count <= 0) return { className: '', badge: '' };
+
+            const profitPct = (Number(card?.profit_count || 0) / count) * 100;
+            const lossPct = (Number(card?.loss_count || 0) / count) * 100;
+            const lossHit = lossPct >= highlightConfig.lossThresholdPct;
+            const profitHit = profitPct >= highlightConfig.profitThresholdPct;
+
+            if (lossHit) {
+                return {
+                    className: ' threshold-loss',
+                    badge: `<div class="threshold-badge loss"><i class="fas fa-triangle-exclamation"></i>${lossPct.toFixed(0)}% loss</div>`
+                };
+            }
+            if (profitHit) {
+                return {
+                    className: ' threshold-profit',
+                    badge: `<div class="threshold-badge profit"><i class="fas fa-check"></i>${profitPct.toFixed(0)}% profit</div>`
+                };
+            }
+            return { className: '', badge: '' };
+        }
+
+        function cardMetricHtml(card) {
+            return `
+                <div class="metric-stat">
+                    <div class="label">Profit Count</div>
+                    <div class="value pos">${card.profit_count}</div>
+                </div>
+                <div class="metric-stat">
+                    <div class="label">Profit Value</div>
+                    <div class="value pos">${formatMoney(card.profit_value)}</div>
+                </div>
+                <div class="metric-stat">
+                    <div class="label">Loss Count</div>
+                    <div class="value neg">${card.loss_count}</div>
+                </div>
+                <div class="metric-stat">
+                    <div class="label">Loss Value</div>
+                    <div class="value neg">${formatMoney(card.loss_value)}</div>
+                </div>
+            `;
+        }
+
+        function renderTimeHeader(windows, summary) {
+            const cells = windows.map(window => `
+                <div class="time-cell">
+                    <div class="time-chip" style="color:${window.accent}">
+                        <i class="fas ${TIME_ICONS[window.key] || 'fa-clock'}"></i>
+                        <span>${escapeHtml(window.label)}</span>
+                    </div>
+                    <div class="time-spark">
+                        ${renderBars((summary[window.key] || {}).spark || [], window.accent)}
+                    </div>
+                </div>
+            `).join('');
+            return `<div class="time-header-row"><div class="time-label-spacer"></div>${cells}</div>`;
+        }
+
+        function renderMetricRow(row, windows) {
+            const labelStyle = `color:${row.accent}`;
+            const cells = windows.map(window => {
+                const card = row.cards[window.key] || {};
+                const threshold = thresholdState(card);
+                return `
+                    <div class="metric-cell${threshold.className}">
+                        <div class="metric-top">
+                            <div>
+                                <div class="metric-count-label">Count</div>
+                                <span class="metric-count">${card.count || 0}</span>
+                                ${threshold.badge}
+                            </div>
+                            <div class="spark-bars">
+                                ${renderBars(card.spark || [], window.accent)}
+                            </div>
+                        </div>
+                        <div class="metric-grid">
+                            ${cardMetricHtml(card)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="board-row">
+                    <div class="row-label-cell">
+                        <div class="row-label-box">
+                            <div class="row-icon" style="${labelStyle}"><i class="fas fa-${row.icon || 'chart-line'}"></i></div>
+                            <div class="row-title" style="${labelStyle}">${escapeHtml(row.title)}</div>
+                            <div class="row-tag" style="background:${row.accent};">${escapeHtml(row.tag || '')}</div>
+                        </div>
+                    </div>
+                    ${cells}
+                </div>
+            `;
+        }
+
+        function renderSummaryRow(summary, windows) {
+            const cells = windows.map(window => {
+                const card = summary[window.key] || {};
+                const threshold = thresholdState(card);
+                const ringColor = window.accent;
+                const deltaClass = Number(card.delta_pct || 0) >= 0 ? 'pos' : 'neg';
+                const valueClass = Number(card.net_value || 0) >= 0 ? 'pos' : 'neg';
+                return `
+                    <div class="metric-cell${threshold.className}">
+                        <div class="summary-cell">
+                            <div class="summary-ring" style="--ring-color:${ringColor}; --ring-value:${Math.max(0, Math.min(100, Number(card.win_rate || 0)))};">
+                                <div class="summary-ring-content">
+                                    <strong>${card.win_rate || 0}%</strong>
+                                    <span>Win Rate</span>
+                                </div>
+                            </div>
+                            <div class="summary-total">
+                                <div class="headline">Count</div>
+                                <div class="value">${card.count || 0}</div>
+                                ${threshold.badge}
+                                <div class="delta ${deltaClass}">${formatDelta(card.delta_pct)}</div>
+                                <div class="summary-substats">
+                                    <div class="metric-stat">
+                                        <div class="label">Net Total</div>
+                                        <div class="value ${valueClass}">${formatMoney(card.net_value)}</div>
+                                    </div>
+                                    <div class="metric-stat">
+                                        <div class="label">Profit Count</div>
+                                        <div class="value pos">${card.profit_count || 0}</div>
+                                    </div>
+                                </div>
+                                <div class="trend-line">
+                                    ${renderBars(card.spark || [], ringColor)}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="board-row">
+                    <div class="summary-label-cell">
+                        <div class="row-label-box">
+                            <div class="row-icon" style="color:#c7d2fe;"><i class="fas fa-chart-column"></i></div>
+                            <div class="row-title" style="color:#dbe7ff;">Performance Summary</div>
+                            <div style="color:var(--muted); font-size:0.8rem; font-weight:600;">Total Net Profit / Loss</div>
+                        </div>
+                    </div>
+                    ${cells}
+                </div>
+            `;
+        }
+
+        function titleizeStrategyGroup(groupKey) {
+            const map = {
+                all: 'All',
+                momentum: 'Momentum',
+                momentum_r: 'Momentum R',
+                breakout: 'Breakout',
+                breakout_r: 'Breakout R',
+                breakout_rev: 'Breakout Rev',
+                breakout_r_rev: 'Breakout R Rev'
+            };
+            return map[groupKey] || groupKey || 'Momentum';
+        }
+
+        function getRowMap(rows) {
+            return Object.fromEntries((rows || []).map(row => [row.key, row]));
+        }
+
+        function getWindowPreference(payload, rowMap) {
+            const candidates = ['h3', 'h1', 'm30', 'm5'].filter(key => (payload.windows || []).some(window => window.key === key));
+            const buyRow = rowMap.open_buy;
+            const sellRow = rowMap.open_sell;
+            for (const key of candidates) {
+                const buyCount = Number(buyRow?.cards?.[key]?.count || 0);
+                const sellCount = Number(sellRow?.cards?.[key]?.count || 0);
+                if (buyCount >= 10 && sellCount >= 10) return key;
+            }
+            for (const key of candidates) {
+                const buyCount = Number(buyRow?.cards?.[key]?.count || 0);
+                const sellCount = Number(sellRow?.cards?.[key]?.count || 0);
+                if (buyCount > 0 || sellCount > 0) return key;
+            }
+            return payload.windows?.[0]?.key || 'm30';
+        }
+
+        function getWindowLabel(payload, windowKey) {
+            return payload.windows?.find(window => window.key === windowKey)?.label || windowKey;
+        }
+
+        function getPrototypeEntryPrice(product) {
+            const upper = String(product || '').toUpperCase();
+            if (upper.includes('JPY')) return 156.42;
+            if (upper.includes('XAU')) return 2325.4;
+            if (upper.includes('BTC')) return 64250.0;
+            return 1.2345;
+        }
+
+        function getPipSize(product) {
+            const upper = String(product || '').toUpperCase();
+            return upper.includes('JPY') ? 0.01 : 0.0001;
+        }
+
+        function deriveTradeActionModel(payload) {
+            if (payload?.trade_action) {
+                const tradeAction = payload.trade_action || {};
+                return {
+                    action: tradeAction.action || 'NO TRADE',
+                    product: tradeAction.product || payload.selected_product || 'All Products',
+                    hasSingleProduct: !!tradeAction.has_single_product,
+                    executable: !!tradeAction.executable,
+                    windowKey: tradeAction.window_key || 'm30',
+                    windowLabel: tradeAction.window_label || getWindowLabel(payload, tradeAction.window_key || 'm30'),
+                    biasStrength: tradeAction.bias_strength || 'Low',
+                    biasScore: Number(tradeAction.bias_score || 0),
+                    directionBias: tradeAction.direction_bias || 'NEUTRAL',
+                    reasons: Array.isArray(tradeAction.reasons) ? tradeAction.reasons : [],
+                    entryPrice: Number(tradeAction.entry_price || getPrototypeEntryPrice(tradeAction.product || payload.selected_product || '')),
+                    pipSize: Number(tradeAction.pip_size || getPipSize(tradeAction.product || payload.selected_product || '')),
+                    priceDigits: Number(tradeAction.price_digits || (Number(tradeAction.pip_size || 0.0001) < 0.001 ? 4 : 2)),
+                    costPips: Number(tradeAction.cost_pips || 3),
+                    breakEvenPrice: Number(tradeAction.break_even_price || 0),
+                    generatedAt: tradeAction.generated_at || payload.last_update || payload.snapshot_at || new Date().toISOString(),
+                    snapshotAgeSeconds: tradeAction.snapshot_age_seconds ?? null,
+                    ticket: tradeAction.ticket || null,
+                    stale: !!tradeAction.stale
+                };
+            }
+            const rowMap = getRowMap(payload.rows || []);
+            const windowKey = getWindowPreference(payload, rowMap);
+            const openBuy = rowMap.open_buy?.cards?.[windowKey] || {};
+            const openSell = rowMap.open_sell?.cards?.[windowKey] || {};
+            const nowIso = payload.last_update || payload.snapshot_at || new Date().toISOString();
+            const generatedAt = new Date(nowIso);
+            const ageSeconds = isNaN(generatedAt.getTime()) ? null : Math.max(0, Math.round((Date.now() - generatedAt.getTime()) / 1000));
+            const stale = ageSeconds !== null && ageSeconds > 60;
+            const minimumCount = 10;
+            const hasSingleProduct = !!payload.selected_product;
+            const buyCount = Number(openBuy.count || 0);
+            const sellCount = Number(openSell.count || 0);
+            const buyProfitRate = buyCount > 0 ? Number(openBuy.profit_count || 0) / buyCount : 0;
+            const buyLossRate = buyCount > 0 ? Number(openBuy.loss_count || 0) / buyCount : 0;
+            const sellProfitRate = sellCount > 0 ? Number(openSell.profit_count || 0) / sellCount : 0;
+            const sellLossRate = sellCount > 0 ? Number(openSell.loss_count || 0) / sellCount : 0;
+            const buyBiasScore = buyProfitRate + sellLossRate;
+            const sellBiasScore = sellProfitRate + buyLossRate;
+            const buySignal = buyCount > 0 && sellCount > 0 && buyProfitRate >= 0.75 && sellLossRate >= 0.75;
+            const sellSignal = sellCount > 0 && buyCount > 0 && sellProfitRate >= 0.75 && buyLossRate >= 0.75;
+            let action = 'NO TRADE';
+            let biasScore = Math.max(buyBiasScore, sellBiasScore);
+            if (hasSingleProduct && !stale && buyCount >= minimumCount && sellCount >= minimumCount) {
+                if (buySignal && !sellSignal && buyBiasScore >= 1.5) {
+                    action = 'BUY';
+                    biasScore = buyBiasScore;
+                } else if (sellSignal && !buySignal && sellBiasScore >= 1.5) {
+                    action = 'SELL';
+                    biasScore = sellBiasScore;
+                }
+            }
+            const biasStrength = biasScore >= 1.8 ? 'High' : biasScore >= 1.5 ? 'Medium' : 'Low';
+            const directionBias = buyBiasScore === sellBiasScore ? 'NEUTRAL' : (buyBiasScore > sellBiasScore ? 'BUY' : 'SELL');
+            const product = payload.selected_product || 'All Products';
+            const entryPrice = getPrototypeEntryPrice(product);
+            const pipSize = getPipSize(product);
+            const costPips = 3;
+            const breakEvenPrice = action === 'SELL'
+                ? entryPrice - (costPips * pipSize)
+                : entryPrice + (costPips * pipSize);
+            const executable = hasSingleProduct && action !== 'NO TRADE';
+            const reasons = [
+                `Open Buy Win Rate: ${formatRatio(buyProfitRate)} (${Number(openBuy.profit_count || 0)} / ${buyCount})`,
+                `Open Sell Loss Rate: ${formatRatio(sellLossRate)} (${Number(openSell.loss_count || 0)} / ${sellCount})`,
+                `Buy Profit Value: ${formatMoney(openBuy.profit_value)}`,
+                `Sell Loss Value: ${formatMoney(openSell.loss_value)}`,
+                `Direction Bias: ${directionBias}`
+            ];
+            if (!hasSingleProduct) {
+                reasons.push('Execution requires a single selected product.');
+            }
+            if (buyCount < minimumCount || sellCount < minimumCount) {
+                reasons.push(`Minimum open trade threshold not met for ${getWindowLabel(payload, windowKey)}.`);
+            }
+            if (stale) {
+                reasons.push(`Snapshot is stale (${ageSeconds}s old).`);
+            }
+            if (action === 'NO TRADE' && hasSingleProduct && !stale && buyCount >= minimumCount && sellCount >= minimumCount) {
+                reasons.push(`Bias strength is ${biasStrength.toLowerCase()} or directional signals are mixed.`);
+            }
+
+            return {
+                action,
+                product,
+                hasSingleProduct,
+                executable,
+                windowKey,
+                windowLabel: getWindowLabel(payload, windowKey),
+                biasStrength,
+                biasScore,
+                directionBias,
+                reasons,
+                entryPrice,
+                pipSize,
+                costPips,
+                breakEvenPrice,
+                generatedAt: nowIso,
+                snapshotAgeSeconds: ageSeconds
+            };
+        }
+
+        function createBaseTrades(product, direction) {
+            if (product === 'All Products') {
+                return [
+                    { id: '1', entry_time: '2026-05-01T11:53:00', direction: 'BUY', product: 'GBP', entry_price: 1.2345, exit_time: '2026-05-01T12:59:00', exit_price: 1.2555, cost_pips: 3, net_pips: 207, status: 'CLOSED', execution_mode: 'semi_automatic' },
+                    { id: '2', entry_time: '2026-05-01T12:59:00', direction: 'SELL', product: 'EUR', entry_price: 1.1086, exit_time: '2026-05-01T14:59:00', exit_price: 1.0979, cost_pips: 3, net_pips: 104, status: 'CLOSED', execution_mode: 'semi_automatic' }
+                ];
+            }
+            if (direction === 'SELL') {
+                return [
+                    { id: '1', entry_time: '2026-05-01T11:53:00', direction: 'SELL', product, entry_price: 1.2555, exit_time: '2026-05-01T12:59:00', exit_price: 1.2345, cost_pips: 3, net_pips: 207, status: 'CLOSED', execution_mode: 'semi_automatic' },
+                    { id: '2', entry_time: '2026-05-01T12:59:00', direction: 'SELL', product, entry_price: 1.2456, exit_time: '2026-05-01T14:59:00', exit_price: 1.2346, cost_pips: 3, net_pips: 107, status: 'CLOSED', execution_mode: 'semi_automatic' }
+                ];
+            }
+            return [
+                { id: '1', entry_time: '2026-05-01T11:53:00', direction: 'BUY', product, entry_price: 1.2345, exit_time: '2026-05-01T12:59:00', exit_price: 1.2555, cost_pips: 3, net_pips: 207, status: 'CLOSED', execution_mode: 'semi_automatic' },
+                { id: '2', entry_time: '2026-05-01T12:59:00', direction: 'BUY', product, entry_price: 1.2346, exit_time: '2026-05-01T14:59:00', exit_price: 1.2456, cost_pips: 3, net_pips: 107, status: 'CLOSED', execution_mode: 'semi_automatic' }
+            ];
+        }
+
+        function buildTradeLog(payload, model) {
+            if (Array.isArray(payload?.trade_log)) {
+                return payload.trade_log;
+            }
+            const baseTrades = createBaseTrades(model.product, model.action === 'SELL' ? 'SELL' : 'BUY');
+            return baseTrades;
+        }
+
+        function filterTrades(trades) {
+            switch (tradeLogFilter) {
+                case 'open': return trades.filter(trade => trade.status === 'OPEN');
+                case 'closed': return trades.filter(trade => trade.status === 'CLOSED');
+                case 'manual': return trades.filter(trade => trade.execution_mode === 'manual');
+                case 'semi_automatic': return trades.filter(trade => trade.execution_mode === 'semi_automatic');
+                case 'automatic': return trades.filter(trade => trade.execution_mode === 'automatic');
+                default: return trades;
+            }
+        }
+
+        function summarizeTrades(trades) {
+            const closedTrades = trades.filter(trade => trade.status === 'CLOSED');
+            const totalTrades = closedTrades.length;
+            const winningTrades = closedTrades.filter(trade => Number(trade.net_pips || 0) > 0).length;
+            const totalNetPips = closedTrades.reduce((sum, trade) => sum + Number(trade.net_pips || 0), 0);
+            const totalCostPips = closedTrades.reduce((sum, trade) => sum + Number(trade.cost_pips || 0), 0);
+            return {
+                totalTrades,
+                winRate: totalTrades ? Math.round((winningTrades / totalTrades) * 100) : 0,
+                totalNetPips,
+                averageNetPips: totalTrades ? totalNetPips / totalTrades : 0,
+                totalCostPips
+            };
+        }
+
+        function renderTradeActionPanel(payload, model) {
+            const container = document.getElementById('tradeActionPanel');
+            if (!container) return;
+            const actionClass = model.action === 'BUY' ? 'buy' : model.action === 'SELL' ? 'sell' : 'neutral';
+            const actionIcon = model.action === 'BUY' ? 'fa-arrow-up' : model.action === 'SELL' ? 'fa-arrow-down' : 'fa-pause';
+            const actionLabel = model.action === 'NO TRADE' ? 'NO TRADE' : `${model.action} ${escapeHtml(model.product)}`;
+            const autoTradeEnabled = !!payload?.execution_state?.auto_trade_enabled;
+            const autoTradeStatus = autoTradeEnabled ? 'Enabled' : 'Disabled';
+            const closeConfig = normalizeClosePolicyConfig(payload?.execution_state?.trade_close_config || closePolicyConfig);
+            const enabledClosePolicies = Array.isArray(closeConfig?.enabled_policies) ? closeConfig.enabled_policies : [];
+            const thresholdPolicy = closeConfig?.policies?.net_pips_after_cost_threshold || {};
+            const thresholdOptions = Array.isArray(thresholdPolicy.threshold_options) && thresholdPolicy.threshold_options.length
+                ? thresholdPolicy.threshold_options
+                : [3, 5, 10, 20];
+            const modeHint = executionMode === 'automatic'
+                ? 'System will eventually execute validated signals automatically.'
+                : executionMode === 'manual'
+                    ? 'Manual mode bypasses suggestion-only execution and opens the ticket form.'
+                    : 'Semi-automatic: system suggests the trade and waits for approval.';
+            container.innerHTML = `
+                <section class="side-card">
+                    <div class="side-card-inner">
+                        ${panelFlashMessage ? `<div class="flash-banner">${escapeHtml(panelFlashMessage)}</div>` : ''}
+                        <div class="side-card-header">
+                            <div>
+                                <h2 class="side-card-title">Trade Action Panel</h2>
+                                <div class="side-card-subtitle">Strategy Group: ${escapeHtml(titleizeStrategyGroup(payload.selected_group))} &nbsp; Product: ${escapeHtml(model.product)}</div>
+                            </div>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Current Suggested Action</p>
+                            <div class="action-hero ${actionClass}">
+                                <div class="action-icon"><i class="fas ${actionIcon}"></i></div>
+                                <div class="action-copy">
+                                    <strong>${actionLabel}</strong>
+                                    <div class="product-line">${escapeHtml(model.windowLabel)} snapshot basis</div>
+                                    <div class="bias-pill">Bias Strength: ${escapeHtml(model.biasStrength)} · Score ${model.biasScore.toFixed(3)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Reasoning</p>
+                            <ul class="reason-list">
+                                ${model.reasons.map(reason => `<li class="reason-item"><i class="fas fa-check-circle"></i><span>${escapeHtml(reason)}</span></li>`).join('')}
+                            </ul>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Execution Mode</p>
+                            <div class="mode-grid">
+                                <button class="mode-btn ${executionMode === 'automatic' ? 'active' : ''}" data-mode="automatic" type="button"><i class="fas fa-robot"></i><strong>Automatic</strong><span>Guarded rollout</span></button>
+                                <button class="mode-btn ${executionMode === 'semi_automatic' ? 'active' : ''}" data-mode="semi_automatic" type="button"><i class="fas fa-user-check"></i><strong>Semi-Automatic</strong><span>Review and approve</span></button>
+                                <button class="mode-btn ${executionMode === 'manual' ? 'active' : ''}" data-mode="manual" type="button"><i class="fas fa-hand"></i><strong>Manual</strong><span>Override ticket</span></button>
+                            </div>
+                            <p class="mode-hint">${escapeHtml(modeHint)}</p>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Trade Ticket</p>
+                            ${model.executable ? `
+                                <div class="ticket-grid">
+                                    <div class="ticket-metric"><span class="label">Product</span><span class="value">${escapeHtml(model.product)}</span></div>
+                                    <div class="ticket-metric"><span class="label">Direction</span><span class="value ${model.action === 'SELL' ? 'sellish' : 'buyish'}">${escapeHtml(model.action)}</span></div>
+                                    <div class="ticket-metric"><span class="label">Entry Price</span><span class="value">${model.entryPrice.toFixed(model.priceDigits || (model.pipSize < 0.001 ? 4 : 2))}</span></div>
+                                    <div class="ticket-metric"><span class="label">Time</span><span class="value">${escapeHtml(formatDateTime(model.generatedAt))}</span></div>
+                                    <div class="ticket-metric"><span class="label">Cost</span><span class="value">${model.costPips} pips</span></div>
+                                    <div class="ticket-metric"><span class="label">Est. Break-even</span><span class="value">${model.breakEvenPrice.toFixed(model.priceDigits || (model.pipSize < 0.001 ? 4 : 2))}</span></div>
+                                </div>
+                                <p class="ticket-note">${escapeHtml(payload?.trade_ticket?.note || 'Ticket is derived from the current realtime snapshot and stored with the execution record when accepted.')}</p>
+                            ` : `
+                                <div class="panel-empty">No executable trade ticket. Select a single product and wait for BUY or SELL signal.</div>
+                            `}
+                        </div>
+                        ${(manualTradeOpen || executionMode === 'manual') ? `
+                            <div class="side-section">
+                                <p class="section-label">Manual Trade</p>
+                                <form id="manualTradeForm">
+                                    <div class="manual-form-grid">
+                                        <div class="field">
+                                            <label for="manualDirection">Direction</label>
+                                            <select id="manualDirection">
+                                                <option value="BUY"${model.action === 'BUY' ? ' selected' : ''}>BUY</option>
+                                                <option value="SELL"${model.action === 'SELL' ? ' selected' : ''}>SELL</option>
+                                                <option value="NO TRADE">NO TRADE</option>
+                                            </select>
+                                        </div>
+                                        <div class="field">
+                                            <label for="manualEntryPrice">Entry Price</label>
+                                            <input id="manualEntryPrice" type="number" step="0.0001" value="${model.entryPrice.toFixed(model.priceDigits || (model.pipSize < 0.001 ? 4 : 2))}">
+                                        </div>
+                                    </div>
+                                    <div class="field">
+                                        <label for="manualNote">Note</label>
+                                        <textarea id="manualNote">Manual trade opened from realtime stats panel.</textarea>
+                                    </div>
+                                    <button class="ghost-btn" type="submit">Submit Manual Trade</button>
+                                </form>
+                            </div>
+                        ` : ''}
+                        <div class="side-section">
+                            <div class="action-btn-row">
+                                <button class="action-btn accept" id="acceptTradeBtn" type="button"${!model.executable ? ' disabled' : ''}>Accept Trade</button>
+                                <button class="action-btn reject" id="rejectTradeBtn" type="button"${!model.executable ? ' disabled' : ''}>Reject</button>
+                            </div>
+                            <div style="margin-top:10px;">
+                                <button class="ghost-btn" id="toggleManualTradeBtn" type="button">${manualTradeOpen || executionMode === 'manual' ? 'Hide Manual Trade' : 'Switch to Manual Trade'}</button>
+                            </div>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Auto-Trade Status</p>
+                            <div class="status-toggle-card">
+                                <div>
+                                    <div class="status-state">${escapeHtml(autoTradeStatus)}</div>
+                                    <div class="panel-meta">${escapeHtml(payload?.execution_state?.auto_trade_note || 'Full automatic execution remains blocked until semi-automatic validation is complete.')}</div>
+                                    <div class="panel-meta" style="margin-top:8px;">Close Policies: ${enabledClosePolicies.length ? escapeHtml(enabledClosePolicies.join(', ')) : 'none'}</div>
+                                </div>
+                                <div class="status-toggle${autoTradeEnabled ? ' is-on' : ''}" aria-hidden="true"></div>
+                            </div>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Close Policy Rules</p>
+                            <div class="field" style="margin-bottom:10px;">
+                                <label style="display:flex; gap:8px; align-items:center;">
+                                    <input id="closePolicyOppositeSignal" type="checkbox"${enabledClosePolicies.includes('opposite_signal') ? ' checked' : ''}>
+                                    <span>Close on opposite signal</span>
+                                </label>
+                            </div>
+                            <div class="field">
+                                <label style="display:flex; gap:8px; align-items:center;">
+                                    <input id="closePolicyNetThreshold" type="checkbox"${enabledClosePolicies.includes('net_pips_after_cost_threshold') ? ' checked' : ''}>
+                                    <span>Close when net pips after cost exceeds threshold</span>
+                                </label>
+                            </div>
+                            <div class="field" style="margin-top:10px;">
+                                <label for="closePolicyThresholdSelect">Threshold (pips)</label>
+                                <select id="closePolicyThresholdSelect">
+                                    ${thresholdOptions.map(option => {
+                                        const numeric = Number(option);
+                                        const selected = numeric === Number(thresholdPolicy.threshold_pips || 5) ? ' selected' : '';
+                                        return `<option value="${numeric}"${selected}>${numeric} pips</option>`;
+                                    }).join('')}
+                                </select>
+                            </div>
+                            <div style="margin-top:10px;">
+                                <button class="ghost-btn" id="saveClosePolicyConfigBtn" type="button">Save Close Policy</button>
+                            </div>
+                            <p class="panel-meta" style="margin-top:8px;">Trades will close if any enabled policy matches.</p>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderTradeLogPanel(payload, model) {
+            const container = document.getElementById('tradeLogPanel');
+            if (!container) return;
+            const visibleTrades = filterTrades(buildTradeLog(payload, model));
+            const summary = summarizeTrades(visibleTrades);
+            const rowsHtml = visibleTrades.length ? visibleTrades.map((trade, index) => `
+                <article class="trade-log-card">
+                    <div class="trade-log-card-header">
+                        <div class="trade-log-title">
+                            <strong>#${index + 1} ${escapeHtml(trade.status)}</strong>
+                            <span>${escapeHtml(`${trade.direction} ${trade.product}`)}</span>
+                        </div>
+                        <div class="trade-log-pips ${Number(trade.net_pips || 0) >= 0 ? 'pos' : 'neg'}">${formatPips(trade.net_pips)} pips</div>
+                    </div>
+                    <div class="trade-log-meta">
+                        <div><strong>Entry:</strong> <span class="mono">${escapeHtml(formatDateTime(trade.entry_time))}</span> @ <span class="mono">${Number(trade.entry_price).toFixed(getPipSize(trade.product) < 0.001 ? 4 : 2)}</span></div>
+                        <div><strong>Exit:</strong> <span class="mono">${trade.exit_time ? escapeHtml(formatDateTime(trade.exit_time)) : '-'}</span> @ <span class="mono">${trade.exit_price !== null && trade.exit_price !== undefined && trade.exit_price !== '' ? Number(trade.exit_price).toFixed(getPipSize(trade.product) < 0.001 ? 4 : 2) : '-'}</span></div>
+                        <div><strong>Cost:</strong> ${trade.cost_pips} pips &nbsp; <strong>Mode:</strong> ${escapeHtml(String(trade.execution_mode || '').replace('_', ' '))}</div>
+                        ${trade.close_reason ? `<div><strong>Close Reason:</strong> ${escapeHtml(String(trade.close_reason || '').replace(/_/g, ' '))}</div>` : ''}
+                    </div>
+                </article>
+            `).join('') : `<div class="empty-table-state">No trades match the current filter.</div>`;
+            container.innerHTML = `
+                <section class="side-card">
+                    <div class="side-card-inner">
+                        <div class="side-card-header">
+                            <div>
+                                <h2 class="side-card-title">Trade Log</h2>
+                                <div class="side-card-subtitle">${Array.isArray(payload?.trade_log) ? `Persisted execution history for ${escapeHtml(model.product)}.` : `Prototype trade history for ${escapeHtml(model.product)}.`}</div>
+                            </div>
+                        </div>
+                        <div class="trade-log-toolbar">
+                            <select id="tradeLogFilter" class="trade-log-filter">
+                                <option value="all"${tradeLogFilter === 'all' ? ' selected' : ''}>All Trades</option>
+                                <option value="open"${tradeLogFilter === 'open' ? ' selected' : ''}>Open Trades</option>
+                                <option value="closed"${tradeLogFilter === 'closed' ? ' selected' : ''}>Closed Trades</option>
+                                <option value="manual"${tradeLogFilter === 'manual' ? ' selected' : ''}>Manual</option>
+                                <option value="semi_automatic"${tradeLogFilter === 'semi_automatic' ? ' selected' : ''}>Semi-Automatic</option>
+                                <option value="automatic"${tradeLogFilter === 'automatic' ? ' selected' : ''}>Automatic</option>
+                            </select>
+                        </div>
+                        <div class="side-section">
+                            <div class="trade-log-list">${rowsHtml}</div>
+                        </div>
+                        <div class="side-section">
+                            <p class="section-label">Summary</p>
+                            <div class="summary-grid">
+                                <div class="summary-metric"><span class="label">Total Trades</span><span class="value">${summary.totalTrades}</span></div>
+                                <div class="summary-metric"><span class="label">Win Rate</span><span class="value">${summary.winRate}%</span></div>
+                                <div class="summary-metric"><span class="label">Total Net</span><span class="value ${summary.totalNetPips >= 0 ? 'pos' : 'neg'}">${formatPips(summary.totalNetPips)} pips</span></div>
+                                <div class="summary-metric"><span class="label">Average Net</span><span class="value ${summary.averageNetPips >= 0 ? 'pos' : 'neg'}">${formatPips(summary.averageNetPips)} pips</span></div>
+                                <div class="summary-metric"><span class="label">Total Cost</span><span class="value">${summary.totalCostPips} pips</span></div>
+                                <div class="summary-metric"><span class="label">Snapshot Age</span><span class="value">${model.snapshotAgeSeconds === null ? 'n/a' : `${model.snapshotAgeSeconds}s`}</span></div>
+                            </div>
+                            <p class="trade-log-note">${Array.isArray(payload?.trade_log) ? 'Trades are now loaded from the app-local execution store. Close-trade API support is available for the next UI step.' : 'Net pips shown as prototype calculations. Persisted trade lifecycle and close-trade flows are planned for Phase 2.'}</p>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderExecutionPanels(payload) {
+            const actionPanel = document.getElementById('tradeActionPanel');
+            const logPanel = document.getElementById('tradeLogPanel');
+            if (!payload || !payload.success) {
+                const errorMessage = escapeHtml(payload?.message || 'Waiting for realtime stats.');
+                if (actionPanel) actionPanel.innerHTML = `<section class="side-card"><div class="panel-empty">${errorMessage}</div></section>`;
+                if (logPanel) logPanel.innerHTML = `<section class="side-card"><div class="panel-empty">${errorMessage}</div></section>`;
+                return;
+            }
+            const model = deriveTradeActionModel(payload);
+            renderTradeActionPanel(payload, model);
+            renderTradeLogPanel(payload, model);
+            bindExecutionPanelEvents(payload, model);
+        }
+
+        async function postExecutionAction(path, body) {
+            const response = await fetch(new URL(path, API_ORIGIN).toString(), {
+                method: 'POST',
+                cache: 'no-store',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body || {})
+            });
+            const data = await response.json().catch(() => ({ success: false, message: `HTTP ${response.status}` }));
+            if (!response.ok || !data.success) {
+                throw new Error(data?.message || `HTTP ${response.status}`);
+            }
+            return data;
+        }
+
+        async function saveTradeCloseConfig(nextConfig) {
+            const response = await fetch(new URL('/api/config', API_ORIGIN).toString(), {
+                method: 'POST',
+                cache: 'no-store',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    realtime_trade_close_config: nextConfig
+                })
+            });
+            const data = await response.json().catch(() => ({ success: false, message: `HTTP ${response.status}` }));
+            if (!response.ok || !data.success) {
+                throw new Error(data?.message || `HTTP ${response.status}`);
+            }
+            closePolicyConfig = normalizeClosePolicyConfig(nextConfig);
+            return data;
+        }
+
+        function bindExecutionPanelEvents(payload, model) {
+            document.querySelectorAll('.mode-btn[data-mode]').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    executionMode = btn.dataset.mode || 'semi_automatic';
+                    manualTradeOpen = executionMode === 'manual';
+                    panelFlashMessage = `Execution mode set to ${executionMode.replace('_', ' ')}.`;
+                    renderExecutionPanels(lastPayload);
+                });
+            });
+
+            document.getElementById('tradeLogFilter')?.addEventListener('change', event => {
+                tradeLogFilter = event.target.value || 'all';
+                renderExecutionPanels(lastPayload);
+            });
+
+            document.getElementById('toggleManualTradeBtn')?.addEventListener('click', () => {
+                manualTradeOpen = !manualTradeOpen;
+                if (manualTradeOpen) executionMode = 'manual';
+                panelFlashMessage = manualTradeOpen ? 'Manual trade form opened.' : 'Manual trade form hidden.';
+                renderExecutionPanels(lastPayload);
+            });
+
+            document.getElementById('acceptTradeBtn')?.addEventListener('click', async () => {
+                try {
+                    const result = await postExecutionAction('/api/trades/accept', {
+                        strategy_group: payload.selected_group,
+                        product: payload.selected_product,
+                        execution_mode: executionMode,
+                        snapshot: payload.snapshot_mode === 'historical' ? payload.snapshot_at : ''
+                    });
+                    panelFlashMessage = result.message || `${model.action} trade accepted.`;
+                    await fetchDashboard();
+                } catch (err) {
+                    panelFlashMessage = err?.message || `Failed to accept ${model.action} trade.`;
+                    renderExecutionPanels(lastPayload);
+                }
+            });
+
+            document.getElementById('rejectTradeBtn')?.addEventListener('click', async () => {
+                try {
+                    const result = await postExecutionAction('/api/trades/reject', {
+                        strategy_group: payload.selected_group,
+                        product: payload.selected_product,
+                        execution_mode: executionMode,
+                        snapshot: payload.snapshot_mode === 'historical' ? payload.snapshot_at : ''
+                    });
+                    panelFlashMessage = result.message || `${model.action} suggestion rejected.`;
+                    await fetchDashboard();
+                } catch (err) {
+                    panelFlashMessage = err?.message || `Failed to reject ${model.action} suggestion.`;
+                    renderExecutionPanels(lastPayload);
+                }
+            });
+
+            document.getElementById('manualTradeForm')?.addEventListener('submit', async event => {
+                event.preventDefault();
+                const direction = document.getElementById('manualDirection')?.value || 'BUY';
+                if (direction === 'NO TRADE') {
+                    panelFlashMessage = 'Manual no-trade selection is not persisted as an execution record.';
+                    renderExecutionPanels(lastPayload);
+                    return;
+                }
+                try {
+                    const entryPrice = Number(document.getElementById('manualEntryPrice')?.value || model.entryPrice);
+                    const note = document.getElementById('manualNote')?.value || 'Manual trade opened from realtime stats panel.';
+                    const result = await postExecutionAction('/api/trades/manual', {
+                        strategy_group: payload.selected_group,
+                        product: payload.selected_product,
+                        direction,
+                        entry_price: entryPrice,
+                        note,
+                        snapshot: payload.snapshot_mode === 'historical' ? payload.snapshot_at : ''
+                    });
+                    panelFlashMessage = result.message || `Manual ${direction} trade created.`;
+                    await fetchDashboard();
+                } catch (err) {
+                    panelFlashMessage = err?.message || `Failed to create manual ${direction} trade.`;
+                    renderExecutionPanels(lastPayload);
+                }
+            });
+
+            document.getElementById('saveClosePolicyConfigBtn')?.addEventListener('click', async () => {
+                const oppositeEnabled = !!document.getElementById('closePolicyOppositeSignal')?.checked;
+                const thresholdEnabled = !!document.getElementById('closePolicyNetThreshold')?.checked;
+                const thresholdValue = Number(document.getElementById('closePolicyThresholdSelect')?.value || 5);
+                const nextConfig = normalizeClosePolicyConfig(lastPayload?.execution_state?.trade_close_config || closePolicyConfig);
+                nextConfig.enabled_policies = [];
+                if (oppositeEnabled) nextConfig.enabled_policies.push('opposite_signal');
+                if (thresholdEnabled) nextConfig.enabled_policies.push('net_pips_after_cost_threshold');
+                nextConfig.policies.opposite_signal.enabled = oppositeEnabled;
+                nextConfig.policies.net_pips_after_cost_threshold.enabled = thresholdEnabled;
+                nextConfig.policies.net_pips_after_cost_threshold.threshold_pips = thresholdValue;
+                try {
+                    await saveTradeCloseConfig(nextConfig);
+                    panelFlashMessage = `Close policy saved: ${nextConfig.enabled_policies.length ? nextConfig.enabled_policies.join(', ') : 'none'}.`;
+                    await fetchDashboard({ forceRefresh: snapshotCursor === 'latest' });
+                } catch (err) {
+                    panelFlashMessage = err?.message || 'Failed to save close policy config.';
+                    renderExecutionPanels(lastPayload);
+                }
+            });
+        }
+
+        function renderDashboard(payload) {
+            const board = document.getElementById('dashboardBoard');
+            if (!payload || !payload.success) {
+                board.innerHTML = `<div class="error-state">${escapeHtml(payload?.message || 'Failed to load dashboard data.')}</div>`;
+                renderExecutionPanels(payload);
+                return;
+            }
+
+            const windows = payload.windows || [];
+            const rows = payload.rows || [];
+            const summary = payload.summary || {};
+
+            board.innerHTML = `
+                ${renderTimeHeader(windows, summary)}
+                ${rows.map(row => renderMetricRow(row, windows)).join('')}
+                ${renderSummaryRow(summary, windows)}
+                <div class="footer-note">
+                    <span class="dot"></span>
+                    <span>${escapeHtml(titleizeStrategyGroup(payload.selected_group))} dashboard view · auto-updates every 15 seconds · values shown in USD net return</span>
+                </div>
+            `;
+            renderExecutionPanels(payload);
+        }
+
+        function formatSnapshotLabel(snapshotAt, mode) {
+            if (!snapshotAt || mode === 'latest') return 'Latest snapshot';
+            const ts = new Date(snapshotAt);
+            return isNaN(ts.getTime()) ? snapshotAt : ts.toLocaleString();
+        }
+
+        function parseSnapshotTime(snapshotAt) {
+            const ts = new Date(snapshotAt);
+            return isNaN(ts.getTime()) ? null : ts;
+        }
+
+        function getCurrentSnapshotIndex() {
+            if (!availableSnapshots.length) return -1;
+            const currentSnapshot = snapshotCursor === 'latest' ? lastPayload?.snapshot_at : snapshotCursor;
+            if (!currentSnapshot) return -1;
+            return availableSnapshots.findIndex(item => item.snapshot_at === currentSnapshot);
+        }
+
+        function findJumpTargetIndex(currentIndex, deltaMs) {
+            if (currentIndex < 0 || currentIndex >= availableSnapshots.length || !deltaMs) return -1;
+            const currentSnapshotAt = availableSnapshots[currentIndex]?.snapshot_at;
+            const currentTime = parseSnapshotTime(currentSnapshotAt);
+            if (!currentTime) return -1;
+
+            const targetTimeMs = currentTime.getTime() + deltaMs;
+
+            if (deltaMs < 0) {
+                for (let index = currentIndex - 1; index >= 0; index -= 1) {
+                    const candidateTime = parseSnapshotTime(availableSnapshots[index]?.snapshot_at);
+                    if (candidateTime && candidateTime.getTime() <= targetTimeMs) {
+                        return index;
+                    }
+                }
+                return currentIndex > 0 ? 0 : -1;
+            }
+
+            for (let index = currentIndex + 1; index < availableSnapshots.length; index += 1) {
+                const candidateTime = parseSnapshotTime(availableSnapshots[index]?.snapshot_at);
+                if (candidateTime && candidateTime.getTime() >= targetTimeMs) {
+                    return index;
+                }
+            }
+            return currentIndex < availableSnapshots.length - 1 ? availableSnapshots.length - 1 : -1;
+        }
+
+        function updateSnapshotControls(payload) {
+            availableSnapshots = Array.isArray(payload.snapshots) ? payload.snapshots : [];
+            const current = payload.snapshot_mode === 'historical' ? payload.snapshot_at : 'latest';
+            snapshotCursor = current || 'latest';
+
+            const label = document.getElementById('snapshotLabel');
+            label.textContent = formatSnapshotLabel(payload.snapshot_at, payload.snapshot_mode);
+
+            const currentIndex = availableSnapshots.findIndex(item => item.snapshot_at === payload.snapshot_at);
+            const latestIndex = availableSnapshots.length - 1;
+            const hourBackIndex = findJumpTargetIndex(currentIndex, -HOUR_MS);
+            const dayBackIndex = findJumpTargetIndex(currentIndex, -DAY_MS);
+            const hourForwardIndex = findJumpTargetIndex(currentIndex, HOUR_MS);
+            const dayForwardIndex = findJumpTargetIndex(currentIndex, DAY_MS);
+            document.getElementById('prevSnapshotBtn').disabled = currentIndex <= 0;
+            document.getElementById('nextSnapshotBtn').disabled = snapshotCursor === 'latest' || currentIndex < 0 || currentIndex >= latestIndex;
+            document.getElementById('prevHourSnapshotBtn').disabled = hourBackIndex < 0;
+            document.getElementById('prevDaySnapshotBtn').disabled = dayBackIndex < 0;
+            document.getElementById('nextHourSnapshotBtn').disabled = snapshotCursor === 'latest' || hourForwardIndex < 0;
+            document.getElementById('nextDaySnapshotBtn').disabled = snapshotCursor === 'latest' || dayForwardIndex < 0;
+            document.getElementById('latestSnapshotBtn').disabled = snapshotCursor === 'latest';
+        }
+
+        function syncStrategyGroupFilter(groups, selectedValue) {
+            const select = document.getElementById('strategyGroupFilter');
+            const current = selectedValue ?? select.value ?? 'momentum';
+            const options = (groups || []).map(group => {
+                const safeKey = escapeHtml(group.key);
+                const safeLabel = escapeHtml(group.label);
+                const selected = current === group.key ? ' selected' : '';
+                return `<option value="${safeKey}"${selected}>${safeLabel}</option>`;
+            });
+            select.innerHTML = options.join('');
+            select.value = current;
+
+            const label = titleizeStrategyGroup(current);
+            document.getElementById('dashboardSubline').textContent = current === 'all' ? 'All strategy groups combined' : `${label} strategies only`;
+            document.getElementById('statusPillText').textContent = `${label} Real-Time Feed`;
+        }
+
+        function syncProductFilter(products, selectedValue) {
+            const select = document.getElementById('productFilter');
+            const current = selectedValue ?? select.value;
+            const options = ['<option value="">All Products</option>']
+                .concat((products || []).map(product => {
+                    const safe = escapeHtml(product);
+                    const selected = current === product ? ' selected' : '';
+                    return `<option value="${safe}"${selected}>${safe}</option>`;
+                }));
+            select.innerHTML = options.join('');
+            select.value = current || '';
+        }
+
+        function setRefreshButtonState(state) {
+            const btn = document.getElementById('refreshBtn');
+            if (!btn) return;
+            btn.classList.toggle('is-loading', !!state.loading);
+            btn.classList.toggle('is-pressed', !!state.pressed);
+            btn.disabled = !!state.loading;
+            btn.setAttribute('aria-busy', state.loading ? 'true' : 'false');
+            btn.title = state.loading ? 'Refreshing...' : 'Refresh now';
+        }
+
+        async function fetchDashboard(options = {}) {
+            if (isRefreshInFlight) return;
+            isRefreshInFlight = true;
+            setRefreshButtonState({ loading: true, pressed: false });
+            const forceRefresh = !!options.forceRefresh;
+            const product = document.getElementById('productFilter').value || '';
+            const strategyGroup = document.getElementById('strategyGroupFilter').value || 'momentum';
+            const url = new URL('/api/realtime_stats', API_ORIGIN);
+            url.searchParams.set('strategy_group', strategyGroup);
+            url.searchParams.set('product', product);
+            if (snapshotCursor && snapshotCursor !== 'latest') {
+                url.searchParams.set('snapshot', snapshotCursor);
+            } else if (forceRefresh) {
+                url.searchParams.set('force_refresh', '1');
+            }
+            url.searchParams.set('_', Date.now().toString());
+            try {
+                const response = await fetch(url.toString(), { cache: 'no-store' });
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status} loading realtime stats`);
+                }
+                const data = await response.json();
+                lastPayload = data;
+                syncStrategyGroupFilter(data.strategy_groups || [], data.selected_group || strategyGroup);
+                syncProductFilter(data.products || [], data.selected_product || product);
+                updateSnapshotControls(data);
+                renderDashboard(data);
+
+                const lastUpdated = document.getElementById('lastUpdated');
+                const ts = data.last_update ? new Date(data.last_update) : new Date();
+                lastUpdated.textContent = `Last update: ${isNaN(ts.getTime()) ? 'unknown' : ts.toLocaleString()}`;
+            } catch (err) {
+                console.error('Realtime stats fetch failed:', err);
+                renderDashboard({ success: false, message: err?.message || 'Failed to load realtime stats.' });
+                document.getElementById('lastUpdated').textContent = 'Last update: connection error';
+            } finally {
+                isRefreshInFlight = false;
+                setRefreshButtonState({ loading: false, pressed: false });
+            }
+        }
+
+        function startAutoRefresh() {
+            if (refreshTimer) clearInterval(refreshTimer);
+            fetchDashboard({ forceRefresh: true });
+            refreshTimer = setInterval(() => {
+                if (snapshotCursor === 'latest') fetchDashboard({ forceRefresh: true });
+            }, AUTO_REFRESH_MS);
+        }
+
+        function moveSnapshot(delta) {
+            if (!availableSnapshots.length) return;
+            const currentIndex = getCurrentSnapshotIndex();
+            if (currentIndex < 0) return;
+            const nextIndex = currentIndex + delta;
+            if (nextIndex < 0 || nextIndex >= availableSnapshots.length) return;
+            snapshotCursor = availableSnapshots[nextIndex].snapshot_at;
+            fetchDashboard();
+        }
+
+        function moveSnapshotByDuration(deltaMs) {
+            if (!availableSnapshots.length) return;
+            const currentIndex = getCurrentSnapshotIndex();
+            const nextIndex = findJumpTargetIndex(currentIndex, deltaMs);
+            if (nextIndex < 0 || nextIndex === currentIndex) return;
+            snapshotCursor = availableSnapshots[nextIndex].snapshot_at;
+            fetchDashboard();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('strategyGroupFilter').addEventListener('change', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
+            document.getElementById('productFilter').addEventListener('change', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
+            const refreshBtn = document.getElementById('refreshBtn');
+            refreshBtn.addEventListener('pointerdown', () => {
+                if (!isRefreshInFlight) setRefreshButtonState({ loading: false, pressed: true });
+            });
+            refreshBtn.addEventListener('pointerup', () => {
+                if (!isRefreshInFlight) setRefreshButtonState({ loading: false, pressed: false });
+            });
+            refreshBtn.addEventListener('pointerleave', () => {
+                if (!isRefreshInFlight) setRefreshButtonState({ loading: false, pressed: false });
+            });
+            refreshBtn.addEventListener('click', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
+            document.getElementById('prevDaySnapshotBtn').addEventListener('click', () => moveSnapshotByDuration(-DAY_MS));
+            document.getElementById('prevHourSnapshotBtn').addEventListener('click', () => moveSnapshotByDuration(-HOUR_MS));
+            document.getElementById('prevSnapshotBtn').addEventListener('click', () => moveSnapshot(-1));
+            document.getElementById('nextSnapshotBtn').addEventListener('click', () => moveSnapshot(1));
+            document.getElementById('nextHourSnapshotBtn').addEventListener('click', () => moveSnapshotByDuration(HOUR_MS));
+            document.getElementById('nextDaySnapshotBtn').addEventListener('click', () => moveSnapshotByDuration(DAY_MS));
+            document.getElementById('latestSnapshotBtn').addEventListener('click', () => {
+                snapshotCursor = 'latest';
+                fetchDashboard({ forceRefresh: true });
+            });
+            loadHighlightConfig().finally(startAutoRefresh);
+        });
+    </script>
+</body>
+
+</html>

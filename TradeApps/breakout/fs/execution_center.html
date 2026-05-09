@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>L-Trade Execution Center</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #09111f;
+            --panel: #132238;
+            --panel-alt: #0f1b2d;
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #f97316;
+            --accent-2: #38bdf8;
+            --good: #4ade80;
+            --bad: #f87171;
+            --warn: #fbbf24;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 24px;
+            padding-left: calc(var(--sidebar-width) + 24px);
+            background:
+                radial-gradient(circle at top right, rgba(249, 115, 22, 0.12), transparent 28%),
+                radial-gradient(circle at left center, rgba(56, 189, 248, 0.08), transparent 32%),
+                var(--bg);
+            color: var(--text);
+            font-family: "Segoe UI", system-ui, sans-serif;
+        }
+
+        .page {
+            max-width: 1680px;
+            margin: 0 auto;
+        }
+
+        .hero, .panel {
+            background: rgba(19, 34, 56, 0.9);
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            box-shadow: 0 20px 60px rgba(2, 6, 23, 0.35);
+            backdrop-filter: blur(12px);
+        }
+
+        .hero {
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            display: grid;
+            grid-template-columns: 1.8fr 1fr;
+            gap: 18px;
+            align-items: center;
+        }
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: 2rem;
+            letter-spacing: 0.02em;
+        }
+
+        .hero p {
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .stat {
+            background: var(--panel-alt);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 14px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .stat-value {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1.1fr 1fr;
+            gap: 20px;
+        }
+
+        .panel {
+            padding: 18px;
+        }
+
+        .panel h2 {
+            margin: 0 0 4px;
+            font-size: 1rem;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .panel-note {
+            margin: 0 0 14px;
+            color: var(--muted);
+            font-size: 0.92rem;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 14px;
+        }
+
+        input, select, button, textarea {
+            border-radius: 10px;
+            border: 1px solid var(--line);
+            background: #0b1525;
+            color: var(--text);
+            padding: 10px 12px;
+            font: inherit;
+        }
+
+        button {
+            cursor: pointer;
+            background: linear-gradient(135deg, var(--accent), #ea580c);
+            border: none;
+            font-weight: 700;
+        }
+
+        button.secondary {
+            background: #16263d;
+            border: 1px solid var(--line);
+        }
+
+        button.good {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+        }
+
+        button.bad {
+            background: linear-gradient(135deg, #b91c1c, #ef4444);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 10px 8px;
+            text-align: left;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+            vertical-align: top;
+        }
+
+        th {
+            color: var(--muted);
+            text-transform: uppercase;
+            font-size: 0.76rem;
+            letter-spacing: 0.08em;
+        }
+
+        .stack {
+            display: grid;
+            gap: 20px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            border-radius: 999px;
+            padding: 5px 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            background: rgba(56, 189, 248, 0.12);
+            color: #93c5fd;
+        }
+
+        .tag.warn { background: rgba(251, 191, 36, 0.12); color: #fde68a; }
+        .tag.good { background: rgba(74, 222, 128, 0.12); color: #86efac; }
+        .tag.bad { background: rgba(248, 113, 113, 0.12); color: #fca5a5; }
+
+        .mono { font-family: Consolas, "SFMono-Regular", monospace; }
+        .message {
+            min-height: 20px;
+            margin: 10px 0 0;
+            color: var(--muted);
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(2, 6, 23, 0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 10000;
+        }
+
+        .modal.open { display: flex; }
+
+        .modal-card {
+            width: min(980px, 96vw);
+            max-height: 88vh;
+            overflow: auto;
+            background: #0c1728;
+            border: 1px solid var(--line);
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: 0 28px 90px rgba(2, 6, 23, 0.6);
+        }
+
+        .modal-header, .modal-actions {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            align-items: center;
+        }
+
+        pre {
+            margin: 16px 0;
+            padding: 16px;
+            border-radius: 14px;
+            background: #07101d;
+            border: 1px solid var(--line);
+            overflow: auto;
+            color: #cbd5e1;
+            font-size: 0.85rem;
+        }
+
+        @media (max-width: 1120px) {
+            .hero, .layout { grid-template-columns: 1fr; }
+            body { padding-left: 20px; }
+            body.with-sidebar { padding-left: calc(var(--sidebar-width) + 20px); }
+        }
+    </style>
+</head>
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+    <div class="page">
+        <section class="hero">
+            <div>
+                <h1>L-Trade Execution Center</h1>
+                <p>Review pending l-trade orders, manually promote open trades to live, and stage close requests for existing live trades. Approval sends to TWS. Cancellation stops the workflow without side effects.</p>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-label">Auto Execution</div>
+                    <div class="stat-value" id="autoExecutionValue">-</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Pending Requests</div>
+                    <div class="stat-value" id="pendingCount">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Last Refresh</div>
+                    <div class="stat-value" id="lastRefresh">-</div>
+                </div>
+            </div>
+        </section>
+
+        <section class="layout">
+            <div class="stack">
+                <div class="panel">
+                    <h2>Pending Queue</h2>
+                    <p class="panel-note">Requests created by automation or the manual screen stop here until approval or cancellation.</p>
+                    <div class="toolbar">
+                        <button class="secondary" id="refreshPendingBtn">Refresh Queue</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Request</th>
+                                <th>Action</th>
+                                <th>Trade</th>
+                                <th>Status</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="pendingBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="panel">
+                    <h2>Manual Open</h2>
+                    <p class="panel-note">Load existing open trades and stage them for promotion into the live l-trade process.</p>
+                    <div class="toolbar">
+                        <input type="date" id="openDate">
+                        <button class="secondary" id="loadOpenBtn">Load Open Trades</button>
+                        <button id="queueOpenBtn">Stage For Execution</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Trade</th>
+                                <th>Direction</th>
+                                <th>Entry</th>
+                                <th>Pending</th>
+                            </tr>
+                        </thead>
+                        <tbody id="openCandidatesBody"></tbody>
+                    </table>
+                    <div class="message" id="openMessage"></div>
+                </div>
+            </div>
+
+            <div class="stack">
+                <div class="panel">
+                    <h2>Manual Close</h2>
+                    <p class="panel-note">Preload open l-trades, select the trades to close, and route them through the same approval screen.</p>
+                    <div class="toolbar">
+                        <input type="date" id="closeDate">
+                        <input type="text" id="closeReason" value="Manual Close" placeholder="Close reason">
+                        <button class="secondary" id="loadCloseBtn">Load Live Trades</button>
+                        <button class="bad" id="queueCloseBtn">Stage Close Request</button>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th>Trade</th>
+                                <th>Live Mode</th>
+                                <th>Price</th>
+                                <th>Pending</th>
+                            </tr>
+                        </thead>
+                        <tbody id="closeCandidatesBody"></tbody>
+                    </table>
+                    <div class="message" id="closeMessage"></div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal" id="requestModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div>
+                    <div class="tag warn">Execution Review</div>
+                    <h2 id="modalTitle">Pending Request</h2>
+                </div>
+                <button class="secondary" id="closeModalBtn">Close</button>
+            </div>
+            <pre id="modalPayload"></pre>
+            <div class="modal-actions">
+                <div id="modalMeta" class="message"></div>
+                <div>
+                    <button class="bad" id="cancelRequestBtn">Cancel Request</button>
+                    <button class="good" id="approveRequestBtn">Approve And Send</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const state = {
+            config: { l_trade_auto_execution: true },
+            pendingRequests: [],
+            activeRequest: null,
+        };
+
+        const ids = (id) => document.getElementById(id);
+        const pendingBody = ids('pendingBody');
+        const openCandidatesBody = ids('openCandidatesBody');
+        const closeCandidatesBody = ids('closeCandidatesBody');
+        const modal = ids('requestModal');
+
+        function todayString() {
+            return new Date().toISOString().slice(0, 10);
+        }
+
+        function setMessage(id, text, isError = false) {
+            const el = ids(id);
+            el.textContent = text || '';
+            el.style.color = isError ? 'var(--bad)' : 'var(--muted)';
+        }
+
+        async function fetchJson(url, options = {}) {
+            const res = await fetch(url, options);
+            const data = await res.json();
+            if (!res.ok || data.success === false) {
+                throw new Error(data.message || 'Request failed');
+            }
+            return data;
+        }
+
+        function collectChecked(name) {
+            return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map((input) => input.value);
+        }
+
+        function renderPending() {
+            pendingBody.innerHTML = '';
+            state.pendingRequests.forEach((request) => {
+                const preview = request.preview || {};
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="mono">${request.request_id || '-'}</td>
+                    <td><span class="tag ${preview.phase === 'CLOSE' ? 'bad' : 'good'}">${preview.phase || '-'}</span> <span class="tag">${preview.mode || '-'}</span></td>
+                    <td>
+                        <div>${preview.strategy_key || '-'}</div>
+                        <div class="mono">${preview.product || '-'} #${preview.trade_id || '-'}</div>
+                    </td>
+                    <td><span class="tag warn">${request.status || 'pending'}</span></td>
+                    <td><button class="secondary" data-request-id="${request.request_id}">Review</button></td>
+                `;
+                tr.querySelector('button').addEventListener('click', () => openRequestModal(request.request_id));
+                pendingBody.appendChild(tr);
+            });
+            ids('pendingCount').textContent = String(state.pendingRequests.length);
+        }
+
+        function renderCandidates(target, rows, type) {
+            target.innerHTML = '';
+            rows.forEach((item) => {
+                const pendingValue = type === 'open'
+                    ? (item.pending_order_request_net || item.pending_order_request_alt || '-')
+                    : (item.pending_close_request_id || '-');
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="checkbox" name="${type}Candidate" value="${item.path}"></td>
+                    <td>
+                        <div>${item.strategy_key || '-'}</div>
+                        <div class="mono">${item.product || '-'} #${item.trade_id || '-'}</div>
+                    </td>
+                    <td>${item.direction || '-'}</td>
+                    <td class="mono">${item.current_price ?? item.entry_price ?? '-'}</td>
+                    <td class="mono">${pendingValue}</td>
+                `;
+                target.appendChild(tr);
+            });
+        }
+
+        function openRequestModal(requestId) {
+            const request = state.pendingRequests.find((item) => item.request_id === requestId);
+            if (!request) return;
+            state.activeRequest = request;
+            ids('modalTitle').textContent = `${request.preview?.phase || 'OPEN'} ${request.preview?.product || ''} ${request.preview?.strategy_key || ''}`.trim();
+            ids('modalPayload').textContent = JSON.stringify(request, null, 2);
+            ids('modalMeta').textContent = `Created ${request.created_at || '-'} by ${request.requested_by || 'system'}`;
+            modal.classList.add('open');
+        }
+
+        function closeRequestModal() {
+            state.activeRequest = null;
+            modal.classList.remove('open');
+        }
+
+        async function loadConfig() {
+            const data = await fetchJson('/api/config');
+            state.config = data.config || { l_trade_auto_execution: true };
+            ids('autoExecutionValue').textContent = state.config.l_trade_auto_execution ? 'AUTO' : 'MANUAL';
+        }
+
+        async function loadPendingRequests() {
+            const data = await fetchJson('/api/l_trade_execution_requests?status=pending');
+            state.pendingRequests = data.requests || [];
+            renderPending();
+            ids('lastRefresh').textContent = new Date().toLocaleTimeString();
+        }
+
+        async function loadOpenCandidates() {
+            const date = ids('openDate').value || todayString();
+            const data = await fetchJson(`/api/l_trade_open_candidates?mode=live&date=${encodeURIComponent(date)}`);
+            renderCandidates(openCandidatesBody, data.candidates || [], 'open');
+            setMessage('openMessage', `${data.count || 0} open trade(s) ready for staging.`);
+        }
+
+        async function loadCloseCandidates() {
+            const date = ids('closeDate').value || todayString();
+            const data = await fetchJson(`/api/l_trade_close_candidates?mode=live&date=${encodeURIComponent(date)}`);
+            renderCandidates(closeCandidatesBody, data.candidates || [], 'close');
+            setMessage('closeMessage', `${data.count || 0} live trade(s) ready for close review.`);
+        }
+
+        async function approveRequests(requestIds) {
+            if (!requestIds.length) return;
+            await fetchJson('/api/l_trade_execution_requests/approve', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ request_ids: requestIds, approved_by: 'execution_center' }),
+            });
+        }
+
+        async function cancelRequests(requestIds, reason = 'cancelled from execution center') {
+            if (!requestIds.length) return;
+            await fetchJson('/api/l_trade_execution_requests/cancel', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ request_ids: requestIds, cancelled_by: 'execution_center', reason }),
+            });
+        }
+
+        async function queueSelectedOpenTrades() {
+            const tradePaths = collectChecked('openCandidate');
+            if (!tradePaths.length) {
+                setMessage('openMessage', 'Select at least one open trade.', true);
+                return;
+            }
+            const data = await fetchJson('/api/l_trade_execution_requests/open', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ trade_paths: tradePaths, requested_by: 'execution_center' }),
+            });
+            const requestIds = (data.results || []).filter((item) => item.request_id).map((item) => item.request_id);
+            if (state.config.l_trade_auto_execution && requestIds.length) {
+                await approveRequests(requestIds);
+                setMessage('openMessage', `${requestIds.length} trade(s) staged and auto-approved.`);
+            } else {
+                setMessage('openMessage', `${requestIds.length} trade(s) staged for approval.`);
+            }
+            await refreshAll();
+        }
+
+        async function queueSelectedCloseTrades() {
+            const tradePaths = collectChecked('closeCandidate');
+            if (!tradePaths.length) {
+                setMessage('closeMessage', 'Select at least one live trade.', true);
+                return;
+            }
+            const data = await fetchJson('/api/l_trade_execution_requests/close', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    trade_paths: tradePaths,
+                    requested_by: 'execution_center',
+                    exit_reason: ids('closeReason').value || 'Manual Close',
+                }),
+            });
+            const requestIds = (data.results || []).filter((item) => item.request_id).map((item) => item.request_id);
+            if (state.config.l_trade_auto_execution && requestIds.length) {
+                await approveRequests(requestIds);
+                setMessage('closeMessage', `${requestIds.length} close request(s) staged and auto-approved.`);
+            } else {
+                setMessage('closeMessage', `${requestIds.length} close request(s) staged for approval.`);
+            }
+            await refreshAll();
+        }
+
+        async function refreshAll() {
+            await Promise.all([loadConfig(), loadPendingRequests(), loadOpenCandidates(), loadCloseCandidates()]);
+        }
+
+        ids('openDate').value = todayString();
+        ids('closeDate').value = todayString();
+        ids('refreshPendingBtn').addEventListener('click', loadPendingRequests);
+        ids('loadOpenBtn').addEventListener('click', loadOpenCandidates);
+        ids('loadCloseBtn').addEventListener('click', loadCloseCandidates);
+        ids('queueOpenBtn').addEventListener('click', () => queueSelectedOpenTrades().catch((err) => setMessage('openMessage', err.message, true)));
+        ids('queueCloseBtn').addEventListener('click', () => queueSelectedCloseTrades().catch((err) => setMessage('closeMessage', err.message, true)));
+        ids('closeModalBtn').addEventListener('click', closeRequestModal);
+        ids('approveRequestBtn').addEventListener('click', async () => {
+            if (!state.activeRequest) return;
+            try {
+                await approveRequests([state.activeRequest.request_id]);
+                closeRequestModal();
+                await refreshAll();
+            } catch (err) {
+                ids('modalMeta').textContent = err.message;
+            }
+        });
+        ids('cancelRequestBtn').addEventListener('click', async () => {
+            if (!state.activeRequest) return;
+            try {
+                await cancelRequests([state.activeRequest.request_id], 'cancelled from review modal');
+                closeRequestModal();
+                await refreshAll();
+            } catch (err) {
+                ids('modalMeta').textContent = err.message;
+            }
+        });
+
+        refreshAll().catch((err) => {
+            ids('lastRefresh').textContent = 'Error';
+            setMessage('openMessage', err.message, true);
+        });
+        setInterval(() => loadPendingRequests().catch(() => {}), 10000);
+    </script>
+</body>
+</html>

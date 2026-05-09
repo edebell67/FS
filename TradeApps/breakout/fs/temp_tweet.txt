@@ -1,0 +1,19 @@
+Update at 2026-05-08 20:25
+
+Today
+1. NZDAUD 970
+2. GBPAUD 948
+3. GBPAUD 948
+4. GBPAUD 945
+5. GBPAUD 900
+
+Weekly details follow. #StrategyWarehouse #FuturesTrading #AlgoTrading
+
+Part 2: Weekly                Today
+1. NZDAUD: brk R Rev 4 tp20    970 | 0
+2. GBPAUD: brk R Rev 3 tp20    948 | 0 up 3
+3. GBPAUD: brk R Rev 3 tp20    948 | 0 up 2
+4. GBPAUD: brk R Rev 3 tp20    945 | 0 up 1
+5. GBPAUD: brk 2 tp20    900 | 0
+
+#StrategyWarehouse #FuturesTrading #AlgoTrading

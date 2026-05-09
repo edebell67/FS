@@ -1,0 +1,63 @@
+====================================================================================================
+TOP 30 MOST PROFITABLE BUY STRATEGIES (by total buy_net)
+====================================================================================================
+Rank   Strategy                                 Product      Buy Net      Trades   Avg/Trade    Win%    
+----------------------------------------------------------------------------------------------------
+1      breakout_2_tp10.0_sl30.0                 EURAUD_C     $900.00      10       $90.00       100.0  %
+2      breakout_4_tp10.0_sl50.0                 GBPEUR_C     $900.00      10       $90.00       100.0  %
+3      breakout_2_tp10.0_sl20.0                 EURAUD_C     $810.00      9        $90.00       100.0  %
+4      breakout_Rev_2_tp10.0_sl20.0             EURAUD_C     $752.50      18       $41.81       72.2   %
+5      breakout_Rev_2_tp10.0_sl30.0             EURAUD_C     $752.50      18       $41.81       72.2   %
+6      breakout_Rev_2_tp10.0_sl50.0             EURAUD_C     $752.50      18       $41.81       72.2   %
+7      breakout_2_tp10.0_sl30.0                 GBPAUD_C     $720.00      8        $90.00       100.0  %
+8      breakout_3_tp10.0_sl20.0                 EURAUD_C     $720.00      8        $90.00       100.0  %
+9      breakout_4_tp10.0_sl50.0                 GBPNZD_C     $720.00      8        $90.00       100.0  %
+10     breakout_4_tp10.0_sl20.0                 GBPAUD_C     $690.00      11       $62.73       90.9   %
+11     breakout_R_Rev_2_tp10.0_sl50.0           GBPEUR_C     $687.50      9        $76.39       100.0  %
+12     breakout_4_tp10.0_sl30.0                 GBPAUD_C     $680.00      12       $56.67       91.7   %
+13     breakout_4_tp10.0_sl20.0                 GBPEUR_C     $660.00      14       $47.14       85.7   %
+14     breakout_R_Rev_4_tp10.0_sl50.0           GBPAUD_C     $647.50      8        $80.94       100.0  %
+15     breakout_R_Rev_2_tp10.0_sl50.0           GBPAUD_C     $640.00      9        $71.11       100.0  %
+16     breakout_2_tp10.0_sl30.0                 GBPNZD_C     $630.00      7        $90.00       100.0  %
+17     breakout_3_tp10.0_sl30.0                 EURAUD_C     $630.00      7        $90.00       100.0  %
+18     breakout_4_tp10.0_sl30.0                 EURAUD_C     $630.00      7        $90.00       100.0  %
+19     breakout_Rev_2_tp10.0_sl20.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+20     breakout_Rev_2_tp10.0_sl30.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+21     breakout_Rev_2_tp10.0_sl50.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+22     breakout_R_Rev_2_tp10.0_sl30.0           EURAUD_C     $622.50      11       $56.59       100.0  %
+23     breakout_R_Rev_2_tp10.0_sl20.0           EURNZD_C     $602.50      9        $66.94       100.0  %
+24     breakout_R_Rev_2_tp10.0_sl20.0           GBPEUR_C     $602.50      11       $54.77       90.9   %
+25     breakout_4_tp10.0_sl20.0                 GBPNZD_C     $600.00      10       $60.00       90.0   %
+26     breakout_4_tp10.0_sl20.0                 EURAUD_C     $600.00      10       $60.00       90.0   %
+27     breakout_3_tp10.0_sl30.0                 GBPAUD_C     $597.50      9        $66.39       100.0  %
+28     breakout_Rev_2_tp10.0_sl20.0             GBP          $590.00      10       $59.00       80.0   %
+29     breakout_Rev_4_tp10.0_sl30.0             GBPEUR_C     $575.00      19       $30.26       73.7   %
+30     breakout_Rev_4_tp10.0_sl50.0             GBPEUR_C     $575.00      19       $30.26       73.7   %
+
+====================================================================================================
+PATTERN ANALYSIS - What makes BUY strategies profitable?
+====================================================================================================
+
+1. STRATEGY TYPE PATTERNS:
+   breakout             -> Avg: $  708.62 | Total: $  14172.50 | Count: 20
+
+2. TP/SL PARAMETER PATTERNS (Top 10):
+   TP:10.0/SL:30.0      -> Avg: $  695.94 | Total: $   5567.50 | Count: 8
+   TP:10.0/SL:50.0      -> Avg: $  724.58 | Total: $   4347.50 | Count: 6
+   TP:10.0/SL:20.0      -> Avg: $  709.58 | Total: $   4257.50 | Count: 6
+
+3. PRODUCT PATTERNS:
+   EURAUD_C             -> Avg: $  743.44 | Total: $   5947.50 | Count: 8
+   GBPAUD_C             -> Avg: $  675.50 | Total: $   3377.50 | Count: 5
+   GBPNZD_C             -> Avg: $  650.00 | Total: $   2600.00 | Count: 4
+   GBPEUR_C             -> Avg: $  749.17 | Total: $   2247.50 | Count: 3
+
+4. WIN RATE PATTERNS:
+Traceback (most recent call last):
+  File "C:\Users\edebe\eds\TradeApps\breakout\fs\analyze_buy_patterns.py", line 116, in <module>
+    print(f"   High Win Rate (\u226590%): {len(high_winrate)} strategies, Avg Net: ${sum(p['buy_net'] for p in high_winrate) / len(high_winrate) if high_winrate else 0:.2f}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2265' in position 18: character maps to <undefined>

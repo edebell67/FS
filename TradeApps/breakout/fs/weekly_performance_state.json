@@ -1,0 +1,11 @@
+{
+    "auto_select_modes": {
+        "energy": "Rev_scalper",
+        "forex": "None",
+        "indices": "All",
+        "metals": "Rev_scalper"
+    },
+    "auto_select_permitted_types": [],
+    "selected_product_type": "forex",
+    "selected_target_date": null
+}

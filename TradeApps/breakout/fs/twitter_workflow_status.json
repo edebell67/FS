@@ -1,0 +1,27 @@
+{
+  "timestamp": "2026-04-11T13:06:47.418880",
+  "run_date": "2026-04-11",
+  "steps": {
+    "verify_api": {
+      "ok": false,
+      "details": "",
+      "artifact": "http://localhost:5000/api/health"
+    },
+    "generate_content": {
+      "ok": false,
+      "details": "",
+      "artifact": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\temp_tweet_top2.txt"
+    },
+    "validate_payload": {
+      "ok": false,
+      "details": "",
+      "artifact": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\json\\live\\social_posting_package\\2026-04-11\\top2_cross_product_post.json"
+    },
+    "submit_post": {
+      "ok": false,
+      "details": "Top-2 X posting workflow is suspended. Use run_twitter_consolidated_leaderboard_workflow.py for the only approved recurring X post.",
+      "artifact": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\twitter_x_api_post_response.json"
+    }
+  },
+  "final_status": "suspended"
+}

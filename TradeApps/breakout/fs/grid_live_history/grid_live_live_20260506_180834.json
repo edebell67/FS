@@ -1,0 +1,29 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_Rev_2_tp5.0_sl30.0",
+            "product": "GBPAUD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0430_200725_126_GBPAUD_C_breakout_R_Rev_2_tp5_0_sl30_0",
+            "source": "TB_AUTO_TB_0430_200725_126_GBPAUD_C_breakout_R_Rev_2_tp5_0_sl30_0",
+            "activated_at": "2026-04-30T23:59:49"
+        },
+        {
+            "model": "breakout_R_Rev_2_tp5.0_sl30.0",
+            "product": "GBPAUD_C",
+            "metric": "sell_net",
+            "activated_at": "2026-04-30T23:59:49",
+            "group": "AUTO_TB_0430_200725_126_GBPAUD_C_breakout_R_Rev_2_tp5_0_sl30_0",
+            "source": "AUTO_TB_0430_200725_126_GBPAUD_C_breakout_R_Rev_2_tp5_0_sl30_0"
+        },
+        {
+            "model": "breakout_R_2_tp10.0_sl3.0",
+            "product": "NZDAUD_C",
+            "metric": "sell_net",
+            "activated_at": "2026-05-04T09:44:31",
+            "group": "AUTO_TB_0430_162624_941_NZDAUD_C_breakout_R_Rev_2_tp10_0_sl3_0",
+            "source": "AUTO_TB_0430_162624_941_NZDAUD_C_breakout_R_Rev_2_tp10_0_sl3_0"
+        }
+    ],
+    "sim": []
+}

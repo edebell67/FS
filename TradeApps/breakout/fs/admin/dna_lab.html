@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DNA Lab - PG Admin</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background: #fafafa; padding: 20px; }
+        .back-link { display: inline-block; margin-bottom: 20px; color: #3498db; text-decoration: none; font-weight: bold; }
+        .container { background: white; padding: 30px; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); max-width: 800px; margin: auto; }
+        h1 { color: #2c3e50; margin-top: 0; }
+        .product-list { margin-top: 30px; }
+        .product-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-bottom: 1px solid #eee; }
+        .product-item:last-child { border-bottom: none; }
+        .product-info h3 { margin: 0; color: #34495e; }
+        .product-info span { font-size: 12px; color: #95a5a6; }
+        .btn-dna { background: #9b59b6; color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: bold; transition: background 0.3s; }
+        .btn-dna:hover { background: #8e44ad; }
+        .btn-dna:disabled { background: #bdc3c7; cursor: not-allowed; }
+        #status-msg { margin-top: 20px; padding: 15px; border-radius: 8px; display: none; }
+        .info { background: #e8f4fd; color: #3498db; border: 1px solid #3498db; }
+    </style>
+    <script src="/theme.js?v=V20260423_0018" defer></script>
+</head>
+<body class="breakout-admin-page">
+    <a href="index.html" class="back-link">&larr; Back to Admin Suite</a>
+    <div class="container">
+        <h1>DNA Lab</h1>
+        <p>Trigger DNA data generation for optimization. This starts the <b>advanced_forex_signal_generator.py</b> process in the background.</p>
+        
+        <div id="status-msg" class="info"></div>
+
+        <div class="product-list" id="product-list">
+            <!-- Products -->
+        </div>
+    </div>
+
+    <script>
+        async function loadProducts() {
+            const res = await fetch('/api/admin/products');
+            const data = await res.json();
+            
+            // Get unique products
+            const products = [...new Set(data.map(p => p.product))].sort();
+            const list = document.getElementById('product-list');
+            list.innerHTML = '';
+
+            products.forEach(p => {
+                if(!p) return;
+                const div = document.createElement('div');
+                div.className = 'product-item';
+                div.innerHTML = `
+                    <div class="product-info">
+                        <h3>${p.toUpperCase()}</h3>
+                        <span>Active in product_forex</span>
+                    </div>
+                    <button class="btn-dna" onclick="generateDNA('${p}')">Generate DNA</button>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        async function generateDNA(product) {
+            const status = document.getElementById('status-msg');
+            status.textContent = `Starting DNA generation for ${product.toUpperCase()}... Check server logs for progress.`;
+            status.style.display = 'block';
+
+            try {
+                const res = await fetch('/api/admin/dna/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product: product })
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    status.textContent = result.message;
+                } else {
+                    status.textContent = 'Error: ' + result.error;
+                }
+            } catch (e) {
+                status.textContent = 'Error connecting to API: ' + e.message;
+            }
+        }
+
+        loadProducts();
+    </script>
+</body>
+</html>

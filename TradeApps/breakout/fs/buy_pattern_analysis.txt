@@ -1,0 +1,9 @@
+====================================================================================================
+Traceback (most recent call last):
+  File "C:\Users\edebe\eds\TradeApps\breakout\fs\analyze_buy_patterns.py", line 44, in <module>
+    print("\U0001f3af TOP 30 MOST PROFITABLE BUY STRATEGIES (by total buy_net)")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\U0001f3af' in position 0: character maps to <undefined>

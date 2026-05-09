@@ -1,0 +1,903 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Trades Viewer</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-body: #0f172a;
+            --bg-card: #1e293b;
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent: #6366f1;
+            --positive: #4ade80;
+            --negative: #f87171;
+            --warning: #fbbf24;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+        }
+
+        body.with-sidebar {
+            padding-left: calc(var(--sidebar-width) + 20px) !important;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding: 20px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 1.5rem;
+            color: var(--warning);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        select,
+        input {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+        }
+
+        button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        /* Stacked layout stuff [V20260106_0106] */
+        .trades-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .trades-column {
+            background: rgba(30, 41, 59, 0.5);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            min-height: 100px;
+            /* Reduced min-height since they stack */
+        }
+
+        .column-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .column-header h2 {
+            margin: 0;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .count-badge {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: rgba(51, 65, 85, 0.5);
+            color: var(--text-dim);
+            text-align: left;
+            padding: 10px 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .positive {
+            color: var(--positive);
+        }
+
+        .negative {
+            color: var(--negative);
+        }
+
+        .warning {
+            color: var(--warning);
+        }
+
+        .mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .live-tag {
+            background: rgba(251, 191, 36, 0.1);
+            color: var(--warning);
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-size: 0.7em;
+            font-weight: 700;
+        }
+
+        .loading-wrap {
+            grid-column: span 2;
+            text-align: center;
+            padding: 100px;
+            color: var(--text-dim);
+        }
+
+        /* [V20260203_0940] Target Met Highlight */
+        .target-met-row {
+            background: rgba(74, 222, 128, 0.1) !important;
+            border-left: 3px solid var(--positive) !important;
+        }
+
+        .target-met-row td {
+            color: var(--text-main);
+        }
+
+        .summary-source-link {
+            color: var(--accent);
+            text-decoration: underline;
+            text-decoration-color: rgba(99, 102, 241, 0.45);
+            text-underline-offset: 3px;
+        }
+
+        .summary-source-link:hover {
+            color: #93c5fd;
+            text-decoration-color: #93c5fd;
+        }
+
+        .trade-json-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .trade-json-content {
+            width: min(1100px, 94vw);
+            max-height: 84vh;
+            overflow: auto;
+            background: #0b1222;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+        }
+
+        .trade-json-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .trade-json-body {
+            margin: 0;
+            padding: 14px;
+            font-size: 0.8rem;
+            line-height: 1.45;
+            color: #cbd5e1;
+            font-family: 'JetBrains Mono', Consolas, monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="container">
+        <div class="header">
+            <div>
+                <h1>Live Strategy Trades (L-Trades)</h1>
+                <p style="color: var(--text-dim); font-size: 0.85em; margin-top: 4px;">Split view: Open vs Closed
+                    executions from Net & Alt activations</p>
+            </div>
+            <div class="controls">
+                <div class="stats-card" id="totalPnlCard"
+                    style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); min-width: 140px; text-align: center;">
+                    <div
+                        style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: bold;">
+                        Current Total</div>
+                    <div id="totalPnlValue"
+                        style="font-size: 1.1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;">$0.00
+                    </div>
+                </div>
+                <div class="stats-card" id="peakPnlCard"
+                    style="background: rgba(255,255,255,0.05); padding: 5px 15px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); min-width: 140px; text-align: center;">
+                    <div
+                        style="font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; font-weight: bold;">
+                        Session Peak (HWM)</div>
+                    <div id="peakPnlValue"
+                        style="color: var(--positive); font-size: 1.1rem; font-weight: 800; font-family: 'JetBrains Mono', monospace;">
+                        $0.00</div>
+                </div>
+            </div>
+            <div class="control-group">
+                <label>Run Mode</label>
+                <select id="runModeSelect" onchange="loadLiveTrades()">
+                    <option value="live" selected>Live</option>
+                    <option value="sim">Simulation</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Date</label>
+                <input type="date" id="tradeDate" onchange="loadLiveTrades()">
+            </div>
+            <div class="control-group">
+                <label>Product Type</label>
+                <select id="productTypeSelect" onchange="loadLiveTrades()">
+                    <option value="forex">forex</option>
+                </select>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-right: 10px;">
+                <input type="checkbox" id="autoRefreshCheck" onchange="toggleAutoRefresh()"
+                    style="width: 16px; height: 16px; cursor: pointer;" checked>
+                <label for="autoRefreshCheck" style="cursor: pointer; font-size: 0.9em; user-select: none;">Auto</label>
+            </div>
+            <div id="strategyFilterGroup" class="control-group" style="visibility: hidden;">
+                <label>Filter Strategy</label>
+                <select id="modelFilter" onchange="renderTrades()"
+                    style="width: 200px; background: #0f172a; border: 1px solid #334155; color: white; padding: 8px 12px; border-radius: 6px; cursor: pointer;">
+                    <option value="">All Strategies</option>
+                </select>
+            </div>
+            <button onclick="loadLiveTrades()">🔄 Refresh</button>
+            <button onclick="exportToCSV()" style="background: var(--positive);">📄 Export CSV</button>
+        </div>
+    </div>
+
+    <div id="tradesContainer" class="trades-grid">
+        <div class="loading-wrap">Select a date and load trades.</div>
+    </div>
+
+    <div id="tradeJsonModal" class="trade-json-modal" onclick="if(event.target.id==='tradeJsonModal') closeTradeJsonModal();">
+        <div class="trade-json-content">
+            <div class="trade-json-head">
+                <div style="font-weight:700; color:#fbbf24;">Trade JSON Details</div>
+                <button onclick="closeTradeJsonModal()" style="background:#334155;">Close</button>
+            </div>
+            <pre id="tradeJsonBody" class="trade-json-body">{}</pre>
+        </div>
+    </div>
+    </div>
+
+    <script>
+        let currentTrades = [];
+        let sortState = { key: 'live_entry_time', dir: 'desc' };
+        let maxLiveTrades = 1;
+        let lastSuccessfulScope = null;
+        let tradeDetailCache = {};
+        let tradeDetailSeq = 0;
+        let availableProductTypes = ['forex'];
+
+        function getSelectedProductType() {
+            return document.getElementById('productTypeSelect')?.value || 'forex';
+        }
+
+        function buildProductTypeQuery() {
+            return `product_type=${encodeURIComponent(getSelectedProductType())}`;
+        }
+
+        function populateProductTypeSelect(configData) {
+            const select = document.getElementById('productTypeSelect');
+            if (!select) return;
+            const defaults = Array.isArray(configData?.product_types) && configData.product_types.length > 0
+                ? configData.product_types
+                : [configData?.product_type || 'forex'];
+            availableProductTypes = [...new Set(defaults.map(v => String(v).trim()).filter(Boolean))];
+            if (availableProductTypes.length === 0) availableProductTypes = ['forex'];
+            const params = new URLSearchParams(window.location.search);
+            const preferred = params.get('product_type') || configData?.product_type || availableProductTypes[0];
+            select.innerHTML = availableProductTypes.map(pt => `<option value="${pt}">${pt}</option>`).join('');
+            select.value = availableProductTypes.includes(preferred) ? preferred : availableProductTypes[0];
+        }
+
+        function getEffectiveLiveEntry(trade) {
+            return trade.in_trade_entry_time || trade.entry_time || null;
+        }
+
+        function isMismatchedBucketDateTrade(trade, selectedDate) {
+            // [V20260216_0002] Enforce same-day TB display rule in Live Trades:
+            // hide trades tagged with TB_MMDD_* when MMDD != selected trade date MMDD.
+            const mmdd = String(selectedDate || '').replaceAll('-', '').slice(4, 8);
+            if (!mmdd || mmdd.length !== 4) return false;
+
+            const srcGroup = String(trade.source_group || '');
+            const src = String(trade.source || '');
+            const combined = `${srcGroup} ${src}`;
+
+            const dates = [];
+            const tbMatches = combined.matchAll(/TB_(\d{4})_/g);
+            for (const m of tbMatches) dates.push(m[1]);
+
+            // Catch breakout-prefixed group tags that embed bucket timestamp (e.g. breakout|0215_...)
+            const breakoutMatches = combined.matchAll(/breakout\|(\d{4})_/gi);
+            for (const m of breakoutMatches) dates.push(m[1]);
+
+            // Also inspect nested grid context snapshots attached to the trade record.
+            const ctx = Array.isArray(trade.grid_live_context_at_block) ? trade.grid_live_context_at_block : [];
+            for (const c of ctx) {
+                const s = String((c && c.source) || '');
+                const g = String((c && c.group) || '');
+                for (const m of s.matchAll(/TB_(\d{4})_/g)) dates.push(m[1]);
+                for (const m of g.matchAll(/(\d{4})_/g)) dates.push(m[1]);
+            }
+
+            if (!dates.length) return false;
+            return dates.some(d => d !== mmdd);
+        }
+
+        document.getElementById('tradeDate').valueAsDate = new Date();
+
+        async function loadLiveTrades(isBackground = false) {
+            const date = document.getElementById('tradeDate').value;
+            const container = document.getElementById('tradesContainer');
+
+            if (!isBackground) {
+                container.innerHTML = '<div class="loading-wrap"><i class="fas fa-spinner fa-spin"></i> Loading Live Trades...</div>';
+            }
+
+            try {
+                const mode = document.getElementById('runModeSelect').value;
+                const url = `/api/trade_file?mode=${encodeURIComponent(mode)}&date=${encodeURIComponent(date)}&filename=${encodeURIComponent('_live_trades.json')}&${buildProductTypeQuery()}&_=${Date.now()}`;
+                const currentScope = `${mode}|${getSelectedProductType()}|${date}`;
+                const response = await fetch(url, { cache: 'no-store' });
+                const data = await response.json();
+
+                if (!response.ok || !data?.success) {
+                    throw new Error(data?.message || `Live trades data not available for ${mode.toUpperCase()} ${date}`);
+                }
+
+                const tradesList = (data.content?.trades || data.trade_data?.trades || data.trades || []);
+                const liveTrades = tradesList
+                    .filter(t => t.is_live_trade === true)
+                    .filter(t => !isMismatchedBucketDateTrade(t, date));
+                liveTrades.forEach(t => {
+                    t.live_entry_time = getEffectiveLiveEntry(t);
+                });
+                // const liveTrades = tradesList; // Show ALL trades for visibility
+
+                // Calculate Cumulative P&L (Equity Curve) based on chronological order
+                const sortedForCalc = [...liveTrades].sort((a, b) => new Date(a.live_entry_time || 0) - new Date(b.live_entry_time || 0));
+                let runningTotal = 0;
+                let targetMetFound = false; // Ensure we only highlight the *first* crossing per session
+
+                sortedForCalc.forEach(t => {
+                    const net = parseFloat(t.net_return || 0);
+                    const prevTotal = runningTotal;
+                    runningTotal += net;
+
+                    t.cumulative_net = runningTotal;
+
+                    // [V20260203_0940] Check for Daily Target crossing
+                    if (dailyTarget > 0 && !targetMetFound) {
+                        if (prevTotal < dailyTarget && runningTotal >= dailyTarget) {
+                            t.target_met_event = true;
+                            targetMetFound = true;
+                        }
+                    }
+                });
+
+                // Default initial sort by entry time desc if not set (or rely on renderTrades)
+                // We'll let renderTrades handle the sorting based on current sortState
+                currentTrades = liveTrades;
+                lastSuccessfulScope = currentScope;
+
+                if (liveTrades.length === 0) {
+                    const msg = '<div class="loading-wrap">No Live Trades (L-Trades) found for this date.</div>';
+                    container.innerHTML = msg;
+                    document.getElementById('totalPnlValue').innerText = "$0.00";
+                    document.getElementById('totalPnlValue').className = "";
+                    return;
+                }
+
+                // Update Stats
+                const totalNet = liveTrades.reduce((sum, t) => sum + parseFloat(t.net_return || 0), 0);
+                const pnlEl = document.getElementById('totalPnlValue');
+                pnlEl.innerText = (totalNet >= 0 ? "+$" : "-$") + Math.abs(totalNet).toFixed(2);
+                pnlEl.className = totalNet >= 0 ? "positive" : "negative";
+
+                // Local file doesn't have session_max_net in metadata usually, fallback to 0 or total
+                const peakNet = parseFloat(data.content?._metadata?.total_pnl || data.trade_data?._metadata?.total_pnl || data._metadata?.total_pnl || 0);
+                const peakEl = document.getElementById('peakPnlValue');
+                peakEl.innerText = (peakNet >= 0 ? "+$" : "-$") + Math.abs(peakNet).toFixed(2);
+                peakEl.className = "positive";
+
+                renderTrades();
+                populateStrategyFilter(liveTrades);
+
+            } catch (error) {
+                console.error("Refresh failed:", error);
+                const mode = document.getElementById('runModeSelect').value;
+                const date = document.getElementById('tradeDate').value;
+                const failedScope = `${mode}|${getSelectedProductType()}|${date}`;
+                const shouldReplaceView = !isBackground || failedScope !== lastSuccessfulScope;
+                if (shouldReplaceView) {
+                    currentTrades = [];
+                    container.innerHTML = `<div class="loading-wrap" style="color: var(--negative);">Error: ${error.message}</div>`;
+                    const pnlEl = document.getElementById('totalPnlValue');
+                    pnlEl.innerText = "$0.00";
+                    pnlEl.className = "";
+                    const peakEl = document.getElementById('peakPnlValue');
+                    peakEl.innerText = "$0.00";
+                    peakEl.className = "";
+                }
+            }
+        }
+
+        function sortTrades(key) {
+            if (sortState.key === key) {
+                sortState.dir = sortState.dir === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.key = key;
+                sortState.dir = 'desc'; // Default to desc
+            }
+            renderTrades();
+        }
+
+        function populateStrategyFilter(trades) {
+            const select = document.getElementById('modelFilter');
+            const group = document.getElementById('strategyFilterGroup');
+            if (!select || !group) return;
+
+            const strategies = [...new Set(trades.map(t => t.script_name || t.app_name || '-'))].sort();
+
+            if (strategies.length > 1) {
+                select.innerHTML = '<option value="">All Strategies</option>';
+                strategies.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s;
+                    opt.innerText = s;
+                    select.appendChild(opt);
+                });
+                group.style.visibility = 'visible';
+            } else {
+                group.style.visibility = 'hidden';
+            }
+        }
+
+        function renderTrades() {
+            const container = document.getElementById('tradesContainer');
+            if (!currentTrades || currentTrades.length === 0) return;
+
+            const filterVal = document.getElementById('modelFilter').value.toLowerCase().trim();
+            const filtered = currentTrades.filter(t => {
+                if (!filterVal) return true;
+                const strategy = (t.source_strategy || t.strategy || '').toLowerCase();
+                const appName = (t.script_name || t.app_name || '').toLowerCase();
+                return strategy === filterVal || appName === filterVal;
+            });
+
+            const statusOf = (t) => ((t.trade_status || t.status || '').toUpperCase());
+            const sourceGroupOf = (t) => String(t.source_group || t.source_screen || 'breakout');
+            const byGroup = {};
+            filtered.forEach(t => {
+                const g = sourceGroupOf(t);
+                if (!byGroup[g]) byGroup[g] = [];
+                byGroup[g].push(t);
+            });
+
+            const compareTrades = (a, b) => {
+                let valA = a[sortState.key];
+                let valB = b[sortState.key];
+                if (['entry_price', 'net_return'].includes(sortState.key)) {
+                    valA = parseFloat(valA || 0);
+                    valB = parseFloat(valB || 0);
+                } else if (['entry_time', 'live_entry_time', 'exit_time'].includes(sortState.key)) {
+                    valA = new Date(valA || 0).getTime();
+                    valB = new Date(valB || 0).getTime();
+                } else {
+                    valA = (valA || '').toString().toLowerCase();
+                    valB = (valB || '').toString().toLowerCase();
+                }
+                if (valA < valB) return sortState.dir === 'asc' ? -1 : 1;
+                if (valA > valB) return sortState.dir === 'asc' ? 1 : -1;
+                return 0;
+            };
+
+            container.innerHTML = '';
+            const sectionBackgrounds = [
+                'rgba(12, 22, 44, 0.92)',
+                'rgba(42, 22, 12, 0.92)'
+            ];
+            const sectionBorders = [
+                '3px solid rgba(56, 189, 248, 0.75)',
+                '3px solid rgba(251, 191, 36, 0.78)'
+            ];
+            let groupIndex = 0;
+            Object.keys(byGroup).sort().forEach(groupName => {
+                const groupTrades = byGroup[groupName];
+                const openTrades = groupTrades.filter(t => statusOf(t) === 'OPEN');
+                const closedTrades = groupTrades.filter(t => statusOf(t) !== 'OPEN').sort(compareTrades);
+                const idx = groupIndex % 2;
+                const groupStyle = { bg: sectionBackgrounds[idx], border: sectionBorders[idx] };
+
+                // Unique IDs for toggling
+                const openId = `grp-${groupIndex}-open`;
+                const closedId = `grp-${groupIndex}-closed`;
+
+                // Wrapper div to keep Summary+Tables together
+                const wrapper = document.createElement('div');
+                wrapper.className = 'group-wrapper';
+                wrapper.style.display = 'flex';
+                wrapper.style.flexDirection = 'column';
+                wrapper.style.gap = '10px';
+
+                // Add Summary with toggle button logic
+                wrapper.appendChild(createGroupSummary(groupName, groupTrades, openTrades, closedTrades, groupStyle, openId, closedId));
+
+                // Hidden inputs by default
+                wrapper.appendChild(createTableSection(`[${groupName}] Current Open Positions`, openTrades, "var(--warning)", false, groupStyle, openId, true));
+                wrapper.appendChild(createTableSection(`[${groupName}] Closed Executions`, closedTrades, "var(--text-dim)", true, groupStyle, closedId, true));
+
+                container.appendChild(wrapper);
+                groupIndex += 1;
+            });
+        }
+
+        function toggleSection(id, btn) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            const isHidden = el.style.display === 'none';
+            el.style.display = isHidden ? 'block' : 'none';
+
+            // Toggle button appearance if provided
+            if (btn) {
+                const icon = btn.querySelector('i');
+                if (icon) {
+                    icon.className = isHidden ? 'fas fa-chevron-up' : 'fas fa-chevron-down';
+                }
+                btn.style.opacity = isHidden ? '1' : '0.7';
+            }
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function resolveSummarySource(groupName, groupTrades) {
+            const sample = (groupTrades && groupTrades.length) ? groupTrades[0] : {};
+            const rawScreen = String(sample.source_screen || '').toLowerCase();
+            const rawSource = String(sample.source || '').toLowerCase();
+            const mode = encodeURIComponent(document.getElementById('runModeSelect').value || 'live');
+            const date = encodeURIComponent(document.getElementById('tradeDate').value || '');
+            const productType = encodeURIComponent(getSelectedProductType());
+            const group = encodeURIComponent(groupName || '');
+
+            // Trade Bucket: explicit source_screen flag or TB_ group prefix.
+            if (rawScreen.startsWith('trade_bucket') || String(groupName).startsWith('TB_')) {
+                const bucketName = String(groupName).split('|')[0].replace(/^TB_/, '');
+                const bucket = encodeURIComponent(bucketName);
+                return {
+                    href: `trade_bucket.html?mode=${mode}&date=${date}&product_type=${productType}&bucket=${bucket}&group=${group}`,
+                    label: `[${groupName}] Group Summary`
+                };
+            }
+
+            if (rawSource.startsWith('rank_alert') || rawSource.startsWith('frequency') || rawScreen.includes('frequency')) {
+                return {
+                    href: `frequency_explorer.html?mode=${mode}&date=${date}&product_type=${productType}&group=${group}`,
+                    label: `[${groupName}] Group Summary`
+                };
+            }
+
+            if (rawSource.startsWith('top20')) {
+                return {
+                    href: `strategy_performance.html?mode=${mode}&date=${date}&product_type=${productType}&focus=top20&group=${group}`,
+                    label: `[${groupName}] Group Summary`
+                };
+            }
+
+            // Default breakout/grid flows.
+            return {
+                href: `trade_viewer.html?mode=${mode}&date=${date}&product_type=${productType}&group=${group}`,
+                label: `[${groupName}] Group Summary`
+            };
+        }
+
+        function createGroupSummary(groupName, groupTrades, openTrades, closedTrades, sectionStyle, openId, closedId) {
+            const section = document.createElement('div');
+            section.className = 'trades-column';
+            section.style.background = (sectionStyle && sectionStyle.bg) || '';
+            section.style.borderLeft = (sectionStyle && sectionStyle.border) || '';
+            const closedNet = closedTrades.reduce((s, t) => s + parseFloat(t.net_return || 0), 0);
+            const totalNet = [...openTrades, ...closedTrades].reduce((s, t) => s + parseFloat(t.net_return || 0), 0);
+            const targetPct = dailyTarget > 0 ? Math.max(0, Math.min(100, (closedNet / dailyTarget) * 100)) : 0;
+            const capPct = maxLiveTrades > 0 ? Math.max(0, Math.min(100, (openTrades.length / maxLiveTrades) * 100)) : 0;
+            const closedClass = closedNet >= 0 ? 'positive' : 'negative';
+            const totalClass = totalNet >= 0 ? 'positive' : 'negative';
+            const sourceMeta = resolveSummarySource(groupName, groupTrades);
+            const summaryTitleHtml = `<a class="summary-source-link" href="${escapeHtml(sourceMeta.href)}" title="Open source context">${escapeHtml(sourceMeta.label)}</a>`;
+
+            section.innerHTML = `
+                <div class="column-header">
+                    <h2 style="color: var(--accent)">${summaryTitleHtml}</h2>
+                    <span class="count-badge">${openTrades.length} open / ${closedTrades.length} closed</span>
+                </div>
+                <div style="display:grid; grid-template-columns: repeat(5, minmax(150px, 1fr)); gap: 10px; padding: 10px 4px 4px;">
+                    <div><div style="color:var(--text-dim); font-size:12px;">Closed Net</div><div class="${closedClass}" style="font-weight:700;">$${closedNet.toFixed(2)}</div></div>
+                    <div><div style="color:var(--text-dim); font-size:12px;">Total Net</div><div class="${totalClass}" style="font-weight:700;">$${totalNet.toFixed(2)}</div></div>
+                    <div><div style="color:var(--text-dim); font-size:12px;">Daily Target</div><div class="mono">${dailyTarget > 0 ? '$' + dailyTarget.toFixed(2) : 'Off'}</div></div>
+                    <div><div style="color:var(--text-dim); font-size:12px;">Target Progress</div><div class="mono">${dailyTarget > 0 ? targetPct.toFixed(1) + '%' : '-'}</div></div>
+                    <div><div style="color:var(--text-dim); font-size:12px;">Cap Usage</div><div class="mono">${openTrades.length}/${maxLiveTrades} (${capPct.toFixed(1)}%)</div></div>
+                </div>
+                <!-- Toggle Buttons -->
+                <div style="display:flex; gap:10px; margin-top:15px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05);">
+                    <button onclick="toggleSection('${openId}', this)" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:0.8em; opacity:0.7;">
+                        <i class="fas fa-chevron-down" style="margin-right:5px;"></i> Open Positions (${openTrades.length})
+                    </button>
+                    <button onclick="toggleSection('${closedId}', this)" style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); font-size:0.8em; opacity:0.7;">
+                        <i class="fas fa-chevron-down" style="margin-right:5px;"></i> Closed Executions (${closedTrades.length})
+                    </button>
+                </div>
+            `;
+            return section;
+        }
+        // ...
+        function toggleAutoRefresh() {
+            const isChecked = document.getElementById('autoRefreshCheck').checked;
+            if (isChecked) {
+                if (!refreshTimer) {
+                    refreshTimer = setInterval(() => loadLiveTrades(true), 15000); // 15 seconds silent refresh
+                }
+            } else {
+                if (refreshTimer) {
+                    clearInterval(refreshTimer);
+                    refreshTimer = null;
+                }
+            }
+        }
+
+        function createTableSection(title, trades, color, isSortable, sectionStyle, id, isHidden) {
+            const section = document.createElement('div');
+            section.className = 'trades-column';
+            if (id) section.id = id;
+            if (isHidden) section.style.display = 'none';
+
+            section.style.background = (sectionStyle && sectionStyle.bg) || '';
+            section.style.borderLeft = (sectionStyle && sectionStyle.border) || '';
+            const isClosed = title.includes("Closed Executions");
+
+            // Helper to generate sort header
+            const th = (label, key) => {
+                if (!isSortable) return `<th>${label}</th>`;
+                const active = sortState.key === key;
+                const arrow = active ? (sortState.dir === 'asc' ? '↑' : '↓') : '';
+                const style = active ? 'color: var(--accent); cursor: pointer;' : 'cursor: pointer;';
+                return `<th onclick="sortTrades('${key}')" style="${style}">${label} ${arrow}</th>`;
+            };
+
+            let html = `
+                <div class="column-header">
+                    <h2 style="color: ${color}">${title}</h2>
+                    <span class="count-badge">${trades.length}</span>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            ${th('Live Entry', 'live_entry_time')}
+                            ${isClosed ? th('Exit Time', 'exit_time') : ''}
+                            ${th('Product', 'product')}
+                            ${th('Strategy', 'app_name')}
+                            ${th('Dir', 'direction')}
+                            ${th('Price', 'entry_price')}
+                            ${th('Net P&L', 'net_return')}
+                            <th>Cum. Net</th> <!-- [V20260203_0940] -->
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            if (trades.length === 0) {
+                const colSpan = isClosed ? 8 : 7; // Increased colspan
+                html += `<tr><td colspan="${colSpan}" style="text-align:center; padding: 40px; color: var(--text-dim);">No ${title.toLowerCase()}</td></tr>`;
+            } else {
+                trades.forEach(t => {
+                    const netVal = parseFloat(t.net_return || 0);
+                    const netClass = netVal >= 0 ? 'positive' : 'negative';
+                    const dir = (t.direction || '').toUpperCase();
+                    const dirColor = dir.includes('LONG') ? 'var(--positive)' : 'var(--negative)';
+                    const liveEntry = t.live_entry_time || t.entry_time;
+                    const timeStr = liveEntry ? new Date(liveEntry).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+
+                    let exitTimeStr = '-';
+                    if (isClosed && t.exit_time) {
+                        try {
+                            exitTimeStr = new Date(t.exit_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                        } catch (e) { }
+                    }
+
+                    // Field mapping for local file vs API
+                    const product = t.product || '-';
+                    const strategy = t.source_strategy || t.strategy || '-';
+                    const appName = t.script_name || t.app_name || '-';
+
+                    const cumNet = t.cumulative_net !== undefined ? parseFloat(t.cumulative_net) : 0;
+                    const cumClass = cumNet >= 0 ? 'doc-text' : 'negative'; // Use basic text or negative color
+                    const rowClass = t.target_met_event ? 'target-met-row' : '';
+
+                    const blockedBadge = !t.is_live_trade ? '<span style="color:var(--text-dim); font-size:0.7em; border:1px solid #334155; padding:1px 4px; border-radius:4px; margin-left:5px;">BLOCKED</span>' : '';
+                    const detailKey = `td_${++tradeDetailSeq}`;
+                    tradeDetailCache[detailKey] = t;
+
+                    html += `
+                        <tr class="${rowClass}">
+                            <td class="mono" title="Live: ${liveEntry || '-'} | Original: ${t.entry_time || '-'}">${timeStr}</td>
+                            ${isClosed ? `<td class="mono" title="${t.exit_time || ''}">${exitTimeStr}</td>` : ''}
+                            <td style="font-weight:700; color:#fbbf24">${product}</td>
+                            <td title="{${strategy}}" style="color: #667eea">${appName}${blockedBadge}</td>
+                            <td style="color:${dirColor}; font-weight:700">${dir}</td>
+                            <td class="mono">${t.entry_price ? t.entry_price.toFixed(5) : '-'}</td>
+                            <td class="mono ${netClass}" style="font-weight:700">$${netVal.toFixed(2)}</td>
+                            <td class="mono ${cumNet >= 0 ? 'positive' : 'negative'}" style="font-weight:600; opacity:0.8;">$${cumNet.toFixed(2)}</td>
+                            <td><button style="padding:4px 8px; font-size:0.75rem; background:#334155;" onclick="openTradeJsonModal('${detailKey}')">Trade Details</button></td>
+                        </tr>
+                    `;
+                });
+            }
+
+            html += '</tbody></table>';
+            section.innerHTML = html;
+            return section;
+        }
+
+        function openTradeJsonModal(detailKey) {
+            const modal = document.getElementById('tradeJsonModal');
+            const body = document.getElementById('tradeJsonBody');
+            const trade = tradeDetailCache[detailKey];
+            if (!modal || !body || !trade) return;
+            body.textContent = JSON.stringify(trade, null, 2);
+            modal.style.display = 'flex';
+        }
+
+        function closeTradeJsonModal() {
+            const modal = document.getElementById('tradeJsonModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function exportToCSV() {
+            const filterVal = document.getElementById('modelFilter').value.toLowerCase().trim();
+            const filtered = currentTrades.filter(t => {
+                if (!filterVal) return true;
+                const strategy = (t.source_strategy || t.strategy || '').toLowerCase();
+                const appName = (t.script_name || t.app_name || '').toLowerCase();
+                return strategy === filterVal || appName === filterVal;
+            });
+
+            if (!filtered.length) return alert("No trades matching filter to export.");
+
+            const headers = ["Source Group", "Live Entry Time", "Original Entry Time", "Exit Time", "Product", "Strategy", "Parameters", "Direction", "Status", "Entry Price", "Exit Price", "Net P&L"];
+            const rows = filtered.map(t => [
+                t.source_group || t.source_screen || "breakout",
+                t.live_entry_time || getEffectiveLiveEntry(t) || "",
+                t.entry_time || "",
+                t.exit_time || "",
+                t.product || "",
+                t.script_name || t.app_name || "",
+                t.source_strategy || t.strategy || "",
+                t.direction || "",
+                t.trade_status || t.status || "CLOSED",
+                t.entry_price || "",
+                t.exit_price || "",
+                t.net_return || "0"
+            ]);
+
+            const csv = [headers.join(","), ...rows.map(r => r.map(v => `"${v}"`).join(","))].join("\n");
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `live_trades_${document.getElementById('tradeDate').value}.csv`;
+            a.click();
+        }
+
+        let dailyTarget = 0; // [V20260203_0940] Global target
+
+        async function loadConfig() {
+            try {
+                const res = await fetch('/api/config');
+                const cfg = await res.json();
+
+                // [V20260203_0940] Handle wrapped or raw config
+                const configData = cfg.config || cfg;
+                populateProductTypeSelect(configData);
+
+                const modeSel = document.getElementById('runModeSelect');
+                if (modeSel && configData.run_mode) modeSel.value = String(configData.run_mode).toLowerCase();
+
+                if (configData.daily_target) {
+                    dailyTarget = parseFloat(configData.daily_target);
+                }
+                if (configData.max_live_trades) {
+                    maxLiveTrades = parseInt(configData.max_live_trades, 10) || 1;
+                }
+            } catch (e) {
+                console.error('Config load error', e);
+                populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
+            }
+
+            loadLiveTrades();
+        }
+
+        let refreshTimer = null;
+
+        // [V20260202_1235] Duplicate toggleAutoRefresh removed.
+
+
+        loadConfig().then(() => {
+            toggleAutoRefresh();
+        });
+    </script>
+</body>
+
+</html>

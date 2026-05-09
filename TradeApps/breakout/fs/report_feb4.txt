@@ -1,0 +1,34 @@
+Starting Strategy Picker (2026-02-04)...
+
+==========================================
+REPORT FOR 2026-02-04 (Now: 09:51:11)
+Status: FLIPPED [CHOPPY MARKET]
+Bias Direction: SELL
+ - Day Started: BUY | Recent (1hr): SELL
+ - Recent P&L: BUY $-31,142.00 vs SELL $33,017.50
+ !! PRIORITY: Scalping strategies (tp5/sl50, etc) recommended !!
+Eligible strategies: 75
+Executed strategies: 73
+===============================================================
+Strategy Name                                 | Trades   | Net Return   | Type
+------------------------------------------------------------------------------
+breakout_Rev_2_tp50.0_sl10.0                  | 9        | 1562.50      | 
+breakout_Rev_2_tp50.0_sl50.0                  | 9        | 1562.50      | 
+breakout_Rev_3_tp50.0_sl50.0                  | 9        | 1562.50      | 
+breakout_Rev_3_tp50.0_sl10.0                  | 8        | 1262.50      | 
+breakout_Rev_3_tp50.0_sl6.0                   | 8        | 1032.50      | 
+breakout_3_tp50.0_sl6.0                       | 9        | 990.00       | 
+breakout_Rev_2_tp50.0_sl6.0                   | 8        | 987.50       | 
+breakout_2_tp50.0_sl6.0                       | 10       | 727.50       | 
+breakout_Rev_4_tp20.0_sl6.0                   | 6        | 727.50       | 
+breakout_Rev_4_tp20.0_sl10.0                  | 7        | 727.50       | 
+breakout_Rev_3_tp20.0_sl50.0                  | 7        | 725.00       | 
+breakout_Rev_2_tp20.0_sl50.0                  | 8        | 715.00       | 
+breakout_Rev_4_tp20.0_sl50.0                  | 7        | 705.00       | 
+breakout_Rev_3_tp20.0_sl10.0                  | 6        | 697.50       | 
+breakout_Rev_3_tp20.0_sl6.0                   | 6        | 662.50       | 
+breakout_Rev_2_tp20.0_sl10.0                  | 7        | 577.50       | 
+breakout_2_tp50.0_sl10.0                      | 8        | 492.50       | 
+breakout_Rev_3_tp10.0_sl6.0                   | 8        | 467.50       | 
+breakout_Rev_3_tp10.0_sl10.0                  | 6        | 447.50       | 
+breakout_Rev_4_tp10.0_sl50.0                  | 6        | 395.00       | 

@@ -1,0 +1,14 @@
+{
+  "symbol": "EURUSD",
+  "secType": "CASH",
+  "exchange": "IDEALPRO",
+  "currency": "USD",
+  "action": "BUY",
+  "orderType": "MKT",
+  "quantity": 1000,
+  "guidePrice": 1.1,
+  "comment": "breakout_demo NET OPEN #trade-1",
+  "source": "normal",
+  "source_group": "breakout",
+  "guid": "unknown"
+}

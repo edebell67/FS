@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-04-11T05:14:38.565552",
+  "tweet_file": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\temp_tweet.txt",
+  "session_dir": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\twitter_session",
+  "steps": {
+    "load_tweet": {
+      "ok": true,
+      "details": "Loaded tweet text (277 chars)"
+    },
+    "verify_login": {
+      "ok": false,
+      "details": "",
+      "artifact": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\twitter_login_check.png"
+    },
+    "submit_post": {
+      "ok": false,
+      "details": ""
+    },
+    "verify_publication": {
+      "ok": false,
+      "details": "",
+      "artifact": "C:\\Users\\edebe\\eds\\TradeApps\\breakout\\fs\\twitter_post_success.png"
+    }
+  },
+  "final_status": "failed"
+}

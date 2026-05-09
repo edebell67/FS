@@ -1,0 +1,9 @@
+2026-05-09 leaders
+
+Update at 2026-05-08 20:25
+
+NZDAUD leading +970
+GBPAUD +948 -> gap: 22
+
+2,880 strategy-product combinations tracked. Only the strongest traded.
+Live -- updates on trade close.

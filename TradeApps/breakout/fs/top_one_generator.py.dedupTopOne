@@ -1,0 +1,291 @@
+#!/usr/bin/env python
+import os
+import json
+import glob
+import time
+from datetime import datetime
+import pyodbc
+
+# --- Database Configuration ---
+DB_SERVER = "tcp:EDS,1433"
+DB_USERNAME = "sqlaccessfromapi"
+DB_PASSWORD = "apiaccess@4321"
+DB_DRIVER = "{ODBC Driver 17 for SQL Server}"
+
+# Threshold for recording a new high score. Only insert if profit increases by this much. 
+MIN_PROFIT_INCREMENT = 0.01 
+
+def get_db_connection(db_name):
+    """Establishes and returns a database connection for a specific database."""
+    try:
+        conn_str = f"DRIVER={DB_DRIVER};SERVER={DB_SERVER};DATABASE={db_name};UID={DB_USERNAME};PWD={DB_PASSWORD}"
+        conn = pyodbc.connect(conn_str)
+        print(f"Successfully connected to database: {db_name}")
+        return conn
+    except pyodbc.Error as ex:
+        sqlstate = ex.args[0]
+        print(f"Database connection error for '{db_name}': {sqlstate} - {ex}")
+        return None
+
+def create_table_if_not_exists(conn):
+    """Creates the tbl_top_one table if it doesn't already exist."""
+    db_name = conn.getinfo(pyodbc.SQL_DATABASE_NAME)
+    try:
+        cursor = conn.cursor()
+        table_name = "tbl_top_one"
+        print(f"Checking for table '{table_name}' in database '{db_name}'...")
+        if cursor.tables(table=table_name, tableType='TABLE').fetchone():
+            print(f"Table '{table_name}' already exists in '{db_name}'.")
+        else:
+            print(f"Table '{table_name}' does not exist in '{db_name}'. Attempting to create it.")
+            create_table_query = f"""
+            CREATE TABLE {table_name} (
+                id INT PRIMARY KEY IDENTITY(1,1),
+                product NVARCHAR(50),
+                strategy_and_params NVARCHAR(255),
+                direction NVARCHAR(10),
+                total_net_return FLOAT,
+                last_update DATETIME2
+            );
+            """
+            cursor.execute(create_table_query)
+            conn.commit()
+            print(f"Table '{table_name}' created successfully in '{db_name}'.")
+        cursor.close()
+    except pyodbc.Error as ex:
+        print(f"Error creating or checking for table in '{db_name}': {ex}")
+
+def insert_into_db(conn, data):
+    """
+    Inserts records into tbl_top_one only if the new return is higher than the previous top return
+    for that specific product and direction.
+    """
+    db_name = conn.getinfo(pyodbc.SQL_DATABASE_NAME)
+    try:
+        cursor = conn.cursor()
+        last_update_dt = datetime.fromisoformat(data['last_update'])
+
+        # --- Process Top Buy ---
+        if 'top_buy' in data and data['top_buy']:
+            buy_data = data['top_buy']
+            product = str(buy_data['product']).strip() # Ensure clean product string
+            new_return = buy_data['total_net_return']
+            
+            # Get the previous global max return for this direction
+            # [Update] Removed product filter as requested to track global direction high
+            cursor.execute("SELECT TOP 1 total_net_return FROM tbl_top_one WHERE direction = 'buy' ORDER BY total_net_return DESC")
+            result = cursor.fetchone()
+            previous_max_return = result[0] if result else float('-inf')
+
+            # --- DEBUG LOGGING ---
+            print(f"DEBUG BUY | New Leader: '{product}' | New Ret: {new_return:.2f} | Prev Global Max: {previous_max_return:.2f}")
+
+            # [Fix] Use MIN_PROFIT_INCREMENT tolerance to filter micro-updates
+            if new_return > (previous_max_return + MIN_PROFIT_INCREMENT):
+                insert_query = """
+                INSERT INTO tbl_top_one (product, strategy_and_params, direction, total_net_return, last_update)
+                VALUES (?, ?, ?, ?, ?);
+                """
+                cursor.execute(insert_query, 
+                               product, 
+                               buy_data['strategy_and_params'], 
+                               buy_data['direction'], 
+                               new_return, 
+                               last_update_dt)
+                print(f"New global 'buy' high recorded: {product} at {new_return:.2f} (Previous: {previous_max_return:.2f})")
+            else:
+                # Optional: Comment out to reduce noise if needed
+                print(f"Global 'buy' high not exceeded. New ({new_return:.4f}) <= Prev ({previous_max_return:.4f}) + {MIN_PROFIT_INCREMENT}")
+
+        # --- Process Top Sell ---
+        if 'top_sell' in data and data['top_sell']:
+            sell_data = data['top_sell']
+            product = str(sell_data['product']).strip() # Ensure clean product string
+            new_return = sell_data['total_net_return']
+
+            # Get the previous global max return for this direction
+            # [Update] Removed product filter
+            cursor.execute("SELECT TOP 1 total_net_return FROM tbl_top_one WHERE direction = 'sell' ORDER BY total_net_return DESC")
+            result = cursor.fetchone()
+            previous_max_return = result[0] if result else float('-inf')
+
+            # --- DEBUG LOGGING ---
+            print(f"DEBUG SELL| New Leader: '{product}' | New Ret: {new_return:.2f} | Prev Global Max: {previous_max_return:.2f}")
+
+            # [Fix] Use MIN_PROFIT_INCREMENT tolerance
+            if new_return > (previous_max_return + MIN_PROFIT_INCREMENT):
+                insert_query = """
+                INSERT INTO tbl_top_one (product, strategy_and_params, direction, total_net_return, last_update)
+                VALUES (?, ?, ?, ?, ?);
+                """
+                cursor.execute(insert_query, 
+                               product, 
+                               sell_data['strategy_and_params'], 
+                               sell_data['direction'], 
+                               new_return, 
+                               last_update_dt)
+                print(f"New global 'sell' high recorded: {product} at {new_return:.2f} (Previous: {previous_max_return:.2f})")
+            else:
+                 print(f"Global 'sell' high not exceeded. New ({new_return:.4f}) <= Prev ({previous_max_return:.4f}) + {MIN_PROFIT_INCREMENT}")
+
+        conn.commit()
+        cursor.close()
+    except pyodbc.Error as ex:
+        print(f"Database insert error in '{db_name}': {ex}")
+    except Exception as e:
+        print(f"An unexpected error occurred during DB insert in '{db_name}': {e}")
+
+
+def generate_top_one_summary():
+    """
+    This script calculates top strategies, writes them to a '.json' file,
+    and saves them to a database determined by the run_mode in config.json.
+    """
+    initialized_dbs = set()
+    try:
+        while True:
+            try:
+                print(f"\n--- Starting new cycle at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} ---")
+                
+                # 1. Read config and determine target database
+                config_path = r'C:\Users\edebe\eds\TradeApps\breakout\config.json'
+                with open(config_path, 'r') as f:
+                    main_config = json.load(f)
+                run_mode = main_config.get('run_mode', 'sim')
+                print(f"Config loaded. Run mode is set to: '{run_mode}'")
+
+                db_name_to_use = None
+                if run_mode == 'sim':
+                    db_name_to_use = 'tradedb_sim2'
+                elif run_mode == 'live':
+                    db_name_to_use = 'tradedb'
+                else:
+                    print(f"Warning: Unknown run_mode '{run_mode}'. No database operations will be performed.")
+
+                # --- On-demand Database Initialization ---
+                if db_name_to_use and db_name_to_use not in initialized_dbs:
+                    db_conn_setup = get_db_connection(db_name_to_use)
+                    if db_conn_setup:
+                        create_table_if_not_exists(db_conn_setup)
+                        initialized_dbs.add(db_name_to_use)
+                        db_conn_setup.close()
+                    else:
+                        print(f"Could not establish initial connection to '{db_name_to_use}'. Will retry.")
+
+                # 2. Determine the directory for the current day
+                today_str = datetime.now().strftime('%Y-%m-%d')
+                base_dir = os.path.join(os.path.dirname(config_path), 'json', run_mode)
+                directory = os.path.join(base_dir, today_str)
+                
+                if not os.path.isdir(directory):
+                    print(f"DEBUG: Directory not found, sleeping: {directory}")
+                    time.sleep(10)
+                    continue
+
+                print(f"DEBUG: Processing files in: {directory}")
+                output_filepath = os.path.join(directory, '_top_one.json')
+                
+                # 3. Aggregate data from all trade files
+                summary = {}
+                file_paths = glob.glob(os.path.join(directory, 'breakout_*.json'))
+                print(f"DEBUG: Found {len(file_paths)} 'breakout_*.json' files.")
+                
+                processed_files = 0
+                for file_path in file_paths:
+                    filename = os.path.basename(file_path)
+                    try:
+                        with open(file_path, 'r') as f:
+                            trade = json.load(f)
+                        
+                        # [Update] Include both CLOSED and OPEN trades to capture Realized + Unrealized P&L
+                        if isinstance(trade, dict) and trade.get('status') in ('CLOSED', 'OPEN'):
+                            product = trade.get('product')
+                            direction = trade.get('direction')
+                            net_return = trade.get('net_return')
+
+                            if product and direction and isinstance(net_return, (int, float)):
+                                processed_files += 1
+                                splitter = f'_{product.upper()}_'
+                                strategy_and_params = filename.split(splitter)[0] if splitter in filename else 'unknown_strategy'
+                                key = (product, direction, strategy_and_params)
+                                summary[key] = summary.get(key, 0) + net_return
+                    except (json.JSONDecodeError, IndexError) as e:
+                        print(f"Skipping malformed file {filename}: {e}")
+                        continue
+                
+                print(f"DEBUG: Aggregated data from {processed_files} valid trade files.")
+                print(f"DEBUG: Generated summary keys: {list(summary.keys())}")
+
+                # 4. Find top trades
+                output_data = {}
+                if summary:
+                    sorted_keys = sorted(summary.keys(), key=lambda k: summary[k], reverse=True)
+                    top_long = next(((k, summary[k]) for k in sorted_keys if k[1] == 'LONG'), None)
+                    top_short = next(((k, summary[k]) for k in sorted_keys if k[1] == 'SHORT'), None)
+
+                    update_timestamp = datetime.now().isoformat()
+                    output_data = {"last_update": update_timestamp}
+                    
+                    if top_long:
+                        key, total_return = top_long
+                        output_data['top_buy'] = {"product": key[0], "strategy_and_params": key[2], "direction": "buy", "total_net_return": total_return}
+                    
+                    if top_short:
+                        key, total_return = top_short
+                        output_data['top_sell'] = {"product": key[0], "strategy_and_params": key[2], "direction": "sell", "total_net_return": total_return}
+                
+                print(f"DEBUG: Final data to be written: {json.dumps(output_data, indent=2)}")
+
+                # 5. Write to file and save to the target database
+                if 'top_buy' in output_data or 'top_sell' in output_data:
+                    # --- Write to JSON file ---
+                    # (Logic for writing to JSON file remains the same)
+                    temp_filepath = output_filepath + ".tmp"
+                    try:
+                        with open(temp_filepath, 'w') as outfile:
+                            json.dump(output_data, outfile, indent=2)
+                        
+                        max_retries = 5
+                        for attempt in range(max_retries):
+                            try:
+                                os.replace(temp_filepath, output_filepath)
+                                print(f"Successfully wrote summary to: {output_filepath}")
+                                break
+                            except PermissionError:
+                                if attempt < max_retries - 1:
+                                    time.sleep(0.5)
+                                else: raise
+                    except Exception as e:
+                        print(f"Failed to write JSON summary: {e}")
+                    finally:
+                        if os.path.exists(temp_filepath):
+                            try: os.unlink(temp_filepath)
+                            except: pass
+                    
+                    # --- Save to the target Database ---
+                    if db_name_to_use:
+                        db_conn_loop = get_db_connection(db_name_to_use)
+                        if db_conn_loop:
+                            try:
+                                insert_into_db(db_conn_loop, output_data)
+                            finally:
+                                db_conn_loop.close()
+                        else:
+                            print(f"Could not connect to database '{db_name_to_use}' in this cycle.")
+                else:
+                    print("No summary data was generated. No file or DB record written.")
+
+            except FileNotFoundError:
+                print(f"Error: Main config file not found at {config_path}")
+            except Exception as e:
+                print(f"An unexpected error occurred in loop: {e}")
+
+            # 6. Wait
+            time.sleep(10)
+    except Exception as e:
+        print(f"A critical error occurred outside the main loop: {e}")
+    finally:
+        print("--- Script finished ---")
+
+if __name__ == "__main__":
+    generate_top_one_summary()

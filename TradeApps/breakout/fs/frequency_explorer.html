@@ -1,0 +1,3697 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frequency Explorer • Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg: #070b1a;
+            --panel: rgba(15, 23, 42, 0.85);
+            --panel-border: rgba(148, 163, 184, 0.2);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --accent: #6366f1;
+            --accent-2: #06b6d4;
+            --positive: #10b981;
+            --negative: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #040713 0%, #0f172a 60%, #111b33 100%);
+            color: var(--text-main);
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            margin-left: 260px;
+            padding: 16px 50px 80px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-bottom: 16px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 18px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .data-source-control,
+        .date-input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .data-source-control label,
+        .date-input-group label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+        }
+
+        .control-select {
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            min-width: 180px;
+        }
+
+        .date-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .date-actions input {
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-main);
+        }
+
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+            background: linear-gradient(120deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            font-family: inherit;
+            border: none;
+            border-radius: 10px;
+            padding: 12px 18px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.14s ease, box-shadow 0.14s ease, filter 0.14s ease, background-color 0.14s ease;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.25);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+        }
+
+        button:active,
+        button.is-clicked {
+            transform: translateY(1px) scale(0.98);
+            filter: brightness(1.18);
+            box-shadow: inset 0 0 0 999px rgba(255, 255, 255, 0.08);
+        }
+
+        button:focus-visible {
+            outline: 2px solid rgba(99, 102, 241, 0.75);
+            outline-offset: 2px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .summary-card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .summary-card h3 {
+            margin: 0;
+            font-size: 0.85rem;
+            letter-spacing: 0.1em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .summary-card strong {
+            font-size: 2rem;
+            display: block;
+            margin-top: 8px;
+        }
+
+        .summary-card span {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .data-panel {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .panel-title {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+        }
+
+        .panel-title h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--text-dim);
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .filters input {
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .timeline-select {
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            border-radius: 10px;
+            padding: 10px 14px;
+            color: var(--text-main);
+            font-family: inherit;
+            min-width: 220px;
+        }
+
+        .timeline-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .timeline-nav-btn {
+            min-width: 44px;
+            padding: 10px 12px;
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            color: var(--text-main);
+            font-weight: 700;
+        }
+
+        .timeline-nav-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.4;
+            transform: none;
+            filter: none;
+            box-shadow: none;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px 18px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.15);
+            text-align: left;
+        }
+
+        th {
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            cursor: pointer;
+        }
+
+        th.sort-active {
+            color: var(--accent);
+        }
+
+        th.sort-active::after {
+            content: attr(data-sort);
+            margin-left: 6px;
+            font-size: 0.8em;
+        }
+
+        th.sortable-header:hover {
+            color: var(--text-main);
+        }
+
+        tbody tr:hover {
+            background: rgba(99, 102, 241, 0.05);
+        }
+
+        .mono {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .pnl-pos {
+            color: var(--positive);
+        }
+
+        .pnl-neg {
+            color: var(--negative);
+        }
+
+        .timeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+
+        .timeline-card {
+            background: rgba(8, 13, 30, 0.75);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 18px;
+        }
+
+        .timeline-card h4 {
+            margin: 0 0 10px 0;
+            font-size: 1rem;
+            color: var(--accent-2);
+        }
+
+        .timeline-card ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .timeline-card li {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            padding: 4px 0;
+        }
+
+        .status-text {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+
+        .sort-indicator {
+            margin-left: 4px;
+            font-size: 0.65rem;
+            opacity: 0.7;
+        }
+
+        .error-banner {
+            display: none;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #fecaca;
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                margin-left: 0;
+                padding: 30px 20px 60px;
+            }
+        }
+
+        /* [V20260130_0915] Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(4, 7, 19, 0.85);
+            backdrop-filter: blur(8px);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 24px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 85vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            animation: modalSlide 0.3s ease-out;
+        }
+
+        @keyframes modalSlide {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--panel-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            font-size: 1.4rem;
+            color: var(--accent-2);
+        }
+
+        .close-modal {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--panel-border);
+            color: var(--text-dim);
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: var(--negative);
+            color: white;
+            border-color: var(--negative);
+        }
+
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .drilldown-stat-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 24px;
+        }
+
+        .drilldown-stat-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .drilldown-stat-item label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+
+        .drilldown-stat-item strong {
+            font-size: 1.25rem;
+            color: white;
+        }
+
+        /* [V20260130_1010] Action Button Styles */
+        .btn-monitor {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        .btn-monitor:hover {
+            background: rgba(6, 182, 212, 0.1);
+            color: var(--accent-2);
+            border-color: var(--accent-2);
+        }
+
+        .btn-monitor.active {
+            background: var(--accent-2);
+            color: var(--bg);
+            border-color: var(--accent-2);
+            font-weight: 700;
+        }
+
+        .leader-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-chart {
+            background: rgba(99, 102, 241, 0.12);
+            color: #c7d2fe;
+            border-color: rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-chart:hover {
+            background: rgba(99, 102, 241, 0.22);
+            color: #eef2ff;
+            border-color: rgba(129, 140, 248, 0.75);
+        }
+
+        .chart-modal-content {
+            max-width: 980px;
+        }
+
+        .chart-shell {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--panel-border);
+            border-radius: 18px;
+            padding: 18px;
+        }
+
+        .chart-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+
+        .chart-meta strong {
+            font-size: 1rem;
+            color: var(--text-main);
+        }
+
+        .chart-meta span {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chart-legend {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        .chart-legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--panel-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-main);
+            font-size: 0.78rem;
+        }
+
+        .chart-legend-swatch {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            flex: 0 0 auto;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            width: 100%;
+        }
+
+        .freq-chart-svg {
+            width: 100%;
+            height: auto;
+            display: block;
+            overflow: visible;
+        }
+
+        .chart-tooltip {
+            position: absolute;
+            pointer-events: none;
+            min-width: 140px;
+            background: rgba(4, 7, 19, 0.95);
+            border: 1px solid rgba(99, 102, 241, 0.45);
+            border-radius: 12px;
+            padding: 10px 12px;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+            transform: translate(-50%, calc(-100% - 16px));
+            display: none;
+            z-index: 2;
+        }
+
+        .chart-tooltip strong {
+            display: block;
+            color: var(--text-main);
+            font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+
+        .chart-tooltip span {
+            display: block;
+            color: var(--text-dim);
+            font-size: 0.78rem;
+        }
+
+        .chart-empty {
+            color: var(--text-dim);
+            text-align: center;
+            padding: 36px 20px;
+        }
+
+        /* [V20260130_1720] Rank 1 Alert Notification */
+        .rank-notification {
+            display: none;
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2000;
+            background: #facc15;
+            /* Bright Yellow */
+            color: #0f172a;
+            /* Dark Slate */
+            padding: 0;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(234, 179, 8, 0.5);
+            width: 420px;
+            max-width: 90vw;
+            animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translate(-50%, -100px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translate(-50%, 0);
+                opacity: 1;
+            }
+        }
+
+        .notif-header {
+            background: rgba(0, 0, 0, 0.05);
+            padding: 12px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .notif-header h3 {
+            margin: 0;
+            font-size: 1rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notif-body {
+            padding: 20px 24px;
+            text-align: center;
+        }
+
+        .notif-stat {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 8px 0 4px 0;
+            font-family: 'IBM Plex Mono', monospace;
+        }
+
+        .notif-desc {
+            font-size: 0.95rem;
+            opacity: 0.8;
+            margin-bottom: 16px;
+        }
+
+        .notif-actions {
+            display: grid;
+            gap: 8px;
+        }
+
+        .btn-notif {
+            background: white;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #0f172a;
+            padding: 10px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-notif:hover {
+            background: #fffbeb;
+            border-color: #f59e0b;
+            transform: translateX(4px);
+        }
+
+        .btn-notif-primary {
+            background: #0f172a;
+            color: #facc15;
+            border: none;
+        }
+
+        .btn-notif-primary:hover {
+            background: #1e293b;
+        }
+
+        .notif-footer {
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.03);
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .notif-footer-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+            gap: 10px;
+            margin-bottom: 6px;
+        }
+
+        .notification-select {
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(99, 102, 241, 0.6);
+            color: #0f172a;
+            border-radius: 8px;
+            padding: 6px 10px;
+            min-width: 160px;
+        }
+
+        .suspend-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .suspend-label input {
+            width: 16px;
+            height: 16px;
+        }
+
+        /* [V20260419] Switch Rule Controls */
+        .switch-rule-body {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .switch-rule-body { grid-template-columns: 1fr; }
+        }
+
+        .switch-rule-section label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+            margin-bottom: 10px;
+        }
+
+        .switch-mode-options, .switch-action-options {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .switch-radio-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+
+        .switch-radio-label input[type="radio"] {
+            accent-color: #ffe600;
+            width: 15px;
+            height: 15px;
+        }
+
+        .switch-threshold-row {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .switch-threshold-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .switch-threshold-item span {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            min-width: 70px;
+        }
+
+        .switch-threshold-item select {
+            background: rgba(8, 13, 30, 0.85);
+            border: 1px solid var(--panel-border);
+            border-radius: 8px;
+            padding: 7px 10px;
+            color: var(--text-main);
+            font-family: inherit;
+            font-size: 0.85rem;
+        }
+
+        .switch-threshold-item select:disabled {
+            opacity: 0.35;
+        }
+
+        .held-display {
+            background: rgba(255, 230, 0, 0.06);
+            border: 1px solid rgba(255, 230, 0, 0.2);
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 14px;
+        }
+
+        .held-display-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #ffe600;
+            opacity: 0.7;
+            margin-bottom: 4px;
+        }
+
+        .held-display-main {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .held-display-sub {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 2px;
+        }
+
+        .switch-signal-card {
+            border-color: rgba(255, 230, 0, 0.6) !important;
+            background: rgba(255, 230, 0, 0.04) !important;
+        }
+
+        .opening-trade-card {
+            border-color: rgba(16, 185, 129, 0.6) !important;
+            background: rgba(16, 185, 129, 0.04) !important;
+        }
+
+        .switch-signal-banner {
+            background: rgba(255, 230, 0, 0.12);
+            border: 1px solid rgba(255, 230, 0, 0.4);
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+        }
+
+        .switch-signal-banner strong {
+            color: #ffe600;
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 3px;
+        }
+
+        .switch-signal-banner span {
+            color: var(--text-dim);
+        }
+
+        .held-position-banner {
+            border-radius: 8px;
+            padding: 8px 12px;
+            margin-top: 10px;
+            font-size: 0.78rem;
+        }
+
+        .held-position-banner.profit {
+            background: rgba(16, 185, 129, 0.10);
+            border: 1px solid rgba(16, 185, 129, 0.45);
+        }
+
+        .held-position-banner.loss {
+            background: rgba(239, 68, 68, 0.10);
+            border: 1px solid rgba(239, 68, 68, 0.45);
+        }
+
+        .held-position-banner strong {
+            display: block;
+            font-size: 0.8rem;
+            margin-bottom: 3px;
+        }
+
+        .held-position-banner.profit strong {
+            color: var(--positive);
+        }
+
+        .held-position-banner.loss strong {
+            color: var(--negative);
+        }
+
+        .held-position-banner span {
+            color: var(--text-dim);
+        }
+
+        @keyframes monitorPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(255,230,0,0.6); }
+            50% { box-shadow: 0 0 0 8px rgba(255,230,0,0); }
+        }
+
+        .btn-monitor.switch-highlight {
+            background: #ffe600 !important;
+            color: #0f172a !important;
+            border-color: #ffe600 !important;
+            animation: monitorPulse 1.2s ease infinite;
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="main-content">
+        <div class="header">
+            <div>
+                <h1>Frequency Explorer</h1>
+                <p class="status-text">Track the most persistent strategies from weighted frequency snapshots.</p>
+            </div>
+            <div class="header-actions">
+                <div class="data-source-control">
+                    <label>Run Mode</label>
+                    <select id="runModeSelect" class="control-select" onchange="handleRunModeChange(this.value)">
+                        <option value="live" selected>Live</option>
+                        <option value="sim">Simulation</option>
+                    </select>
+                </div>
+                <!-- [V20260318_1010] Add Product Type Filter -->
+                <div class="data-source-control">
+                    <label>Product Type</label>
+                    <select id="productTypeSelect" class="control-select" onchange="handleProductTypeChange(this.value)">
+                        <option value="all">All</option>
+                        <option value="forex">Forex</option>
+                        <option value="indices" selected>Indices</option>
+                        <option value="crypto">Crypto</option>
+                        <option value="energy">Energy</option>
+                        <option value="metals">Metals</option>
+                    </select>
+                </div>
+                <div class="data-source-control">
+                    <label>Data Source</label>
+                    <select id="dataSourceSelect" class="control-select" onchange="handleDataSourceChange(this.value)">
+                        <option value="standard" selected>Breakout</option>
+                        <option value="dnaNet">DNA Net</option>
+                        <option value="dnaAlt">DNA Alt</option>
+                    </select>
+                </div>
+                <div class="date-input-group">
+                    <label>Trading Date</label>
+                    <div class="date-actions">
+                        <input type="date" id="dateInput">
+                        <button class="btn-outline" onclick="applyDateFilter()">Load</button>
+                        <button class="btn-outline" onclick="clearDateFilter()">Latest</button>
+                    </div>
+                </div>
+                <label style="display:flex;align-items:center;gap:8px;color:var(--text-dim);font-size:0.9rem;">
+                    <input type="checkbox" id="autoRefresh" checked style="accent-color:var(--accent);"> Auto refresh
+                </label>
+                <button class="btn-outline" onclick="fetchData()"><i class="fas fa-sync-alt"></i> Refresh</button>
+                <button class="btn-outline" onclick="window.testRankAlert()" title="Test Rank Alert"
+                    style="color: #facc15; border-color: #facc15;"><i class="fas fa-bell"></i></button>
+                <button class="btn-outline" onclick="openSwitchRuleModal()" title="Switch Rule"
+                    style="color:#ffe600; border-color:#ffe600;"><i class="fas fa-bolt"></i></button>
+            </div>
+        </div>
+
+        <div id="errorBanner" class="error-banner"></div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3>Trading Date</h3>
+                <strong id="statDate">--</strong>
+                <span id="statFrequency">Frequency: --</span>
+                <span id="statDataset"
+                    style="display:block;margin-top:4px;color:var(--text-dim);font-size:0.85rem;">Dataset:
+                    Breakout</span>
+            </div>
+            <div class="summary-card">
+                <h3>Total Snapshots</h3>
+                <strong id="statSnapshots">0</strong>
+                <span>Since session start</span>
+            </div>
+            <div class="summary-card">
+                <h3>Active Leaders</h3>
+                <strong id="statLeaders">0</strong>
+                <span>Strategies appearing in race</span>
+            </div>
+            <div class="summary-card">
+                <h3>Current Front-Runner</h3>
+                <strong id="statTop">--</strong>
+                <span id="statTopNet">Net: --</span>
+            </div>
+        </div>
+
+        <!-- [V20260128_2115] New Recent Consistency Section -->
+        <div class="data-panel">
+            <div class="panel-title">
+                <h2>Recent Consistency</h2>
+                <div class="filters">
+                    <select id="consistencyWindowSelect" class="control-select" onchange="renderConsistencyList()">
+                        <option value="5">Last 5 Minutes</option>
+                        <option value="30" selected>Last 30 Minutes</option>
+                        <option value="60">Last 60 Minutes</option>
+                    </select>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th id="consistencySort-product" class="sortable-header" onclick="changeConsistencySort('product')">Product</th>
+                            <th id="consistencySort-strategy" class="sortable-header" onclick="changeConsistencySort('strategy')">Strategy</th>
+                            <th id="consistencySort-netGain" class="sortable-header" onclick="changeConsistencySort('netGain')">Net Gain (Window)</th>
+                            <th id="consistencySort-rank1Count" class="sortable-header" onclick="changeConsistencySort('rank1Count')">Rank 1s</th>
+                            <th id="consistencySort-count" class="sortable-header" onclick="changeConsistencySort('count')">Top 5s</th>
+                            <th id="consistencySort-avgWeight" class="sortable-header" onclick="changeConsistencySort('avgWeight')">Avg Weight</th>
+                            <th>Monitor</th>
+                        </tr>
+                    </thead>
+                    <tbody id="consistencyBody">
+                        <tr>
+                            <td colspan="7" style="text-align:center;padding:15px;color:var(--text-dim);">Awaiting
+                                data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <div class="panel-title">
+                <h2>Leaderboard</h2>
+                <div class="filters">
+                    <!-- [V20260203_0200] Rank Filter -->
+                    <select id="rankFilter" class="control-select" onchange="renderTable()" style="min-width:140px;">
+                        <option value="1" selected>Has Hit Rank #1</option>
+                        <option value="2">Has Hit Top 2</option>
+                        <option value="3">Has Hit Top 3</option>
+                        <option value="4">Has Hit Top 4</option>
+                        <option value="5">Has Hit Top 5</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="Search product or strategy"
+                        oninput="renderTable()">
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th onclick="changeSort('product')">Product</th>
+                            <th onclick="changeSort('strategy')">Strategy</th>
+                            <th onclick="changeSort('final_net')">Final Net</th>
+                            <th onclick="changeSort('rank1_appearances')">Rank 1s</th>
+                            <th onclick="changeSort('appearances')">Top 5s</th>
+                            <th onclick="changeSort('weighted_score')">Score</th>
+                            <th onclick="changeSort('last_seen')">Last Seen</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderBody">
+                        <tr>
+                            <td colspan="8" style="text-align:center;padding:30px;color:var(--text-dim);">Loading…</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="data-panel">
+            <div class="panel-title">
+                <h2>Snapshot Timeline</h2>
+                <div class="timeline-controls">
+                    <select id="timelineRangeSelect" class="timeline-select"
+                        onchange="handleTimelineRangeChange(this.value)">
+                        <option value="recent">Recent (last 12 snapshots)</option>
+                    </select>
+                    <button id="timelinePrevBtn" class="timeline-nav-btn" type="button" onclick="shiftTimelineRange(-1)">&lt;</button>
+                    <button id="timelineNextBtn" class="timeline-nav-btn" type="button" onclick="shiftTimelineRange(1)">&gt;</button>
+                </div>
+            </div>
+            <div class="timeline" id="timeline"></div>
+        </div>
+    </div>
+
+    <!-- [V20260130_0915] Drilldown Modal -->
+    <div id="drilldownModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="modalTitle">Performance Drilldown</h2>
+                    <p id="modalSubtitle" style="margin:4px 0 0 0; font-size:0.85rem; color:var(--text-dim);"></p>
+                </div>
+                <div class="close-modal" onclick="closeDrilldown()">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="drilldown-stat-grid" id="modalStats"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr id="drilldownHeaderRow">
+                                <th onclick="toggleDrilldownSort('time')">Timestamp <span class="sort-indicator"
+                                        id="drilldownSort-time"></span></th>
+                                <th onclick="toggleDrilldownSort('net')">Net P&L <span class="sort-indicator"
+                                        id="drilldownSort-net"></span></th>
+                                <th onclick="toggleDrilldownSort('rank')">Rank (Net) <span class="sort-indicator"
+                                        id="drilldownSort-rank"></span></th>
+                                <th onclick="toggleDrilldownSort('score_rank')">Rank (Score) <span
+                                        class="sort-indicator" id="drilldownSort-score_rank"></span></th>
+                                <th onclick="toggleDrilldownSort('score')">Score Match <span class="sort-indicator"
+                                        id="drilldownSort-score"></span></th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="freqChartModal" class="modal">
+        <div class="modal-content chart-modal-content">
+            <div class="modal-header">
+                <div>
+                    <h2 id="freqChartTitle">Rank #1 Frequency Chart</h2>
+                    <p id="freqChartSubtitle" style="margin:4px 0 0 0; font-size:0.85rem; color:var(--text-dim);"></p>
+                </div>
+                <div class="close-modal" onclick="closeFrequencyChart()">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <div class="drilldown-stat-grid" id="freqChartStats"></div>
+                <div class="chart-shell">
+                    <div class="chart-meta">
+                        <div>
+                            <strong>Cumulative Rank #1 Count</strong>
+                            <span id="freqChartMeta">Selected date</span>
+                        </div>
+                        <div class="chart-actions">
+                            <button class="btn-monitor btn-chart" type="button" onclick="plotVisibleFrequencyCharts()">Plot Visible</button>
+                            <button class="btn-monitor" type="button" onclick="clearFrequencyChartComparison()">Clear Compare</button>
+                        </div>
+                    </div>
+                    <div class="chart-legend" id="freqChartLegend"></div>
+                    <div class="chart-wrapper" id="freqChartWrapper">
+                        <div class="chart-tooltip" id="freqChartTooltip"></div>
+                        <svg id="freqChartSvg" class="freq-chart-svg" viewBox="0 0 860 340" preserveAspectRatio="xMidYMid meet"></svg>
+                    </div>
+                    <div class="chart-empty" id="freqChartEmpty" style="display:none;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [V20260130_1720] Rank 1 Alert Notification -->
+    <div id="rankAlert" class="rank-notification">
+        <div class="notif-header">
+            <h3><i class="fas fa-trophy"></i> New Rank #1 Detected!</h3>
+            <div onclick="hideRankAlert()" style="cursor:pointer; opacity:0.5; padding:4px;"><i
+                    class="fas fa-times"></i></div>
+        </div>
+        <div class="notif-body">
+            <div id="alertProduct"
+                style="text-transform:uppercase; font-size:0.9rem; font-weight:700; letter-spacing:0.05em; opacity:0.75;">
+                --</div>
+            <div id="alertStrategy" style="font-weight:800; font-size:1.1rem; margin-bottom:5px;">--</div>
+            <div id="alertNet" class="notif-stat">--</div>
+            <div class="notif-actions">
+                <button class="btn-notif btn-notif-primary" onclick="handleRankAction('monitor_only')">
+                    <span>Monitor #1 as Only</span> <i class="fas fa-bolt"></i>
+                </button>
+                <button class="btn-notif" onclick="handleRankAction('monitor_priority')">
+                    <span>Monitor #1 as Priority</span> <i class="fas fa-arrow-up"></i>
+                </button>
+                <button class="btn-notif" onclick="handleRankAction('add_monitor')">
+                    <span>Add to Monitor List</span> <i class="fas fa-plus"></i>
+                </button>
+                <button class="btn-notif" onclick="handleRankAction('none')">
+                    <span>No Action</span> <i class="fas fa-times"></i>
+                </button>
+                <button class="btn-notif" onclick="handleRankAction('disable')">
+                    <span>No More Updates</span> <i class="fas fa-ban"></i>
+                </button>
+            </div>
+        </div>
+        <div class="notif-footer">
+            <div class="notif-footer-row">
+                <label for="rankAlertThresholdSelect" style="font-weight:600; opacity:0.8;">Notify when</label>
+                <select id="rankAlertThresholdSelect" class="notification-select">
+                    <option value="improvement">Any top-5 improvement</option>
+                    <option value="rank1">Only when product hits rank #1</option>
+                    <option value="rank2">Only when product hits rank #2</option>
+                    <option value="rank3plus">Only when product ranks #3 or lower</option>
+                </select>
+            </div>
+            <div class="notif-footer-row">
+                <label class="suspend-label">
+                    <input type="checkbox" id="rankAlertSuspend">
+                    Suspend visual alerts (auto-add rank #1 only)
+                </label>
+            </div>
+            <div class="notif-footer-row">
+                <div>
+                    <input type="checkbox" id="rankAlertRepeat" style="accent-color:#0f172a; width:16px; height:16px;">
+                    <label for="rankAlertRepeat" style="cursor:pointer; font-weight:600;">Repeat selected option in
+                        future</label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- [V20260420] Switch Rule Modal -->
+    <div id="switchRuleModal" class="modal" onclick="if(event.target===this)closeSwitchRuleModal()">
+        <div class="modal-content" style="max-width:560px;">
+            <div class="modal-header">
+                <div>
+                    <h2 style="color:#ffe600;"><i class="fas fa-bolt"></i> Switch Rule</h2>
+                    <p style="margin:4px 0 0 0;font-size:0.85rem;color:var(--text-dim);">Configure rank-1 switching criteria and action</p>
+                </div>
+                <div class="close-modal" onclick="closeSwitchRuleModal()">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="modal-body">
+                <!-- Held Strategy -->
+                <div class="held-display" id="heldDisplay" style="margin-bottom:12px;">
+                    <div class="held-display-label">Held Strategy</div>
+                    <div class="held-display-main" id="heldDisplayMain">-- awaiting data --</div>
+                    <div class="held-display-sub" id="heldDisplaySub"></div>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                    <button id="syncToGridBtn" class="btn-outline" onclick="manualSyncToGrid()"
+                        style="font-size:0.8rem;padding:6px 14px;border-color:rgba(16,185,129,0.5);color:#10b981;">
+                        <i class="fas fa-sync-alt"></i> Sync to Grid
+                    </button>
+                    <span id="syncToGridStatus" style="font-size:0.78rem;color:var(--text-dim);"></span>
+                </div>
+                <div class="switch-rule-body">
+                    <!-- Mode -->
+                    <div class="switch-rule-section">
+                        <label>Mode</label>
+                        <div class="switch-mode-options">
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchMode" value="net" onchange="updateSwitchRule()">
+                                Net Only
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchMode" value="gap" onchange="updateSwitchRule()">
+                                Count Only
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchMode" value="or" onchange="updateSwitchRule()">
+                                Net OR Count
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchMode" value="and" checked onchange="updateSwitchRule()">
+                                Net AND Count
+                            </label>
+                        </div>
+                    </div>
+                    <!-- Thresholds -->
+                    <div class="switch-rule-section">
+                        <label>Thresholds</label>
+                        <div class="switch-threshold-row">
+                            <div class="switch-threshold-item">
+                                <span>Net &gt; $</span>
+                                <select id="switchNetSelect" onchange="updateSwitchRule()">
+                                    <option value="25">25</option>
+                                    <option value="50">50</option>
+                                    <option value="100" selected>100</option>
+                                    <option value="200">200</option>
+                                    <option value="300">300</option>
+                                    <option value="500">500</option>
+                                </select>
+                            </div>
+                            <div class="switch-threshold-item">
+                                <span>Count &gt;</span>
+                                <select id="switchGapSelect" onchange="updateSwitchRule()">
+                                    <option value="5">5</option>
+                                    <option value="10">10</option>
+                                    <option value="15">15</option>
+                                    <option value="20" selected>20</option>
+                                    <option value="25">25</option>
+                                    <option value="30">30</option>
+                                    <option value="50">50</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Action -->
+                    <div class="switch-rule-section">
+                        <label>Action on Signal</label>
+                        <div class="switch-action-options">
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchAction" value="notify" checked onchange="updateSwitchRule()">
+                                Notification
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchAction" value="highlight" onchange="updateSwitchRule()">
+                                Highlight Monitor
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchAction" value="grid" onchange="updateSwitchRule()">
+                                Send to Grid
+                            </label>
+                            <label class="switch-radio-label">
+                                <input type="radio" name="switchAction" value="none" onchange="updateSwitchRule()">
+                                Do Nothing
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DATA_SOURCES = {
+            standard: { label: 'Breakout', file: '_frequency.json' },
+            dnaNet: { label: 'DNA Net', file: '_dna_frequency.json' },
+            dnaAlt: { label: 'DNA Alt', file: '_dna_alt_frequency.json' }
+        };
+        let rawData = null;
+        let summaryNetData = null; // [V20260420] _summary_net.json for held-net fallback
+        let leaders = [];
+        let runMode = 'live';
+        let productType = localStorage.getItem('lastProductType') || 'indices'; // [V20260318_1010]
+        let dataSourceKey = 'standard';
+        let configFrequencyDatasource = 'breakout'; // [V20260203_2230] Default allowed source
+        let productTypeByProduct = {};
+        // [V20260203_1215] Default to Today to match weighted_race dated output
+        const _t = new Date();
+        let selectedDate = `${_t.getFullYear()}-${String(_t.getMonth() + 1).padStart(2, '0')}-${String(_t.getDate()).padStart(2, '0')}`;
+
+        // [V20260419] Switch Rule State
+        let switchRuleMode = localStorage.getItem('switchRuleMode') || 'and';
+        let switchNetThreshold = parseInt(localStorage.getItem('switchNetThreshold') || '100');
+        let switchGapThreshold = parseInt(localStorage.getItem('switchGapThreshold') || '20');
+        let switchActionPref = localStorage.getItem('switchActionPref') || 'notify';
+        let heldStrategyData = null; // { product, strategy, net, count }
+        let lastFiredSignalKey = null; // prevent re-firing same snap
+
+        // [V20260420] Immutable signal cache — once a snap's signal is decided it never changes
+        // Key: `{sessionDate}|{ruleFingerprint}` → object mapping snapTime → signal|null
+        const SIGNAL_CACHE_VERSION = 'v20260421_config_product_scope';
+        let _sigCache = null;
+        let _sigCacheKey = '';
+
+        function _getRuleFingerprint() {
+            return `${switchRuleMode}_${switchNetThreshold}_${switchGapThreshold}`;
+        }
+
+        function _getSigCacheKey(sessionDate) {
+            const activeSource = DATA_SOURCES[dataSourceKey] || DATA_SOURCES.standard || {};
+            const sourceFile = activeSource.file || 'unknown';
+            const selectedType = normalizeProductTypeValue(productType) || 'all';
+            return `sigCache_${SIGNAL_CACHE_VERSION}_${sessionDate}_${runMode}_${selectedType}_${sourceFile}_${_getRuleFingerprint()}`;
+        }
+
+        function _loadSigCache(sessionDate) {
+            const key = _getSigCacheKey(sessionDate);
+            if (_sigCacheKey === key && _sigCache !== null) return; // already loaded
+            _sigCacheKey = key;
+            try { _sigCache = JSON.parse(localStorage.getItem(key) || '{}'); }
+            catch(e) { _sigCache = {}; }
+        }
+
+        function _persistSigCache() {
+            if (_sigCacheKey) localStorage.setItem(_sigCacheKey, JSON.stringify(_sigCache));
+        }
+
+        // Call when rule changes — forces full re-evaluation on next render
+        function _clearSigCache(sessionDate) {
+            if (_sigCacheKey) localStorage.removeItem(_sigCacheKey);
+            _sigCache = {};
+            _sigCacheKey = _getSigCacheKey(sessionDate || '');
+            lastFiredSignalKey = null;
+        }
+
+        // [V20260420] Get held strategy net from _summary_net.json at a given snap time
+        // Returns null if unavailable — caller falls back to last known net
+        function _getSummaryNetAt(strategy, product, snapTime) {
+            if (!summaryNetData || !summaryNetData.strategies) return null;
+            const entries = (summaryNetData.strategies[strategy] || {})[product];
+            if (!entries || !entries.length) return null;
+            // Find the last entry with t <= snapTime
+            let net = null;
+            for (const e of entries) {
+                if (e.t <= snapTime) net = e.net;
+                else break;
+            }
+            return net;
+        }
+
+        function normalizeProductTypeValue(value) {
+            return String(value || '').trim().toLowerCase();
+        }
+
+        function resolveLeaderProductType(leader) {
+            const explicit = normalizeProductTypeValue(leader?.product_type);
+            if (explicit) return explicit;
+            const productKey = String(leader?.product || '').trim().toUpperCase();
+            return normalizeProductTypeValue(productTypeByProduct[productKey]);
+        }
+
+        function getSwitchScopeProductType(currentHeld) {
+            const selectedType = normalizeProductTypeValue(productType);
+            if (selectedType && selectedType !== 'all') return selectedType;
+            if (currentHeld?.product) return resolveLeaderProductType({ product: currentHeld.product });
+            return '';
+        }
+
+        function isLeaderInSwitchScope(leader, scopeProductType) {
+            if (!scopeProductType) return true;
+            const resolvedType = resolveLeaderProductType(leader);
+            // The selected folder/source is authoritative for unresolved products
+            // such as bare FX currency keys, while known other products remain excluded.
+            if (!resolvedType) return true;
+            return resolvedType === scopeProductType;
+        }
+
+        function isSignalInSwitchScope(signal, scopeProductType) {
+            if (!signal || !scopeProductType) return true;
+            if (signal.to && !isLeaderInSwitchScope(signal.to, scopeProductType)) return false;
+            if (signal.from && !isLeaderInSwitchScope(signal.from, scopeProductType)) return false;
+            return true;
+        }
+
+        // Initialize UI [V20260318_1010]
+        window.addEventListener('DOMContentLoaded', () => {
+             const ptSelect = document.getElementById('productTypeSelect');
+             if (ptSelect) ptSelect.value = productType;
+             const dateInput = document.getElementById('dateInput');
+             if (dateInput && selectedDate) dateInput.value = selectedDate;
+             bindButtonClickFeedback();
+             initSwitchRuleUI();
+        });
+
+        function handleProductTypeChange(value) {
+            productType = value || 'all';
+            localStorage.setItem('lastProductType', productType);
+            fetchData();
+        }
+        let latestDateOverride = null;
+        let timelineRange = 'recent';
+        // [V20260128_2115] Reduced from 12 to 8
+        const TABLE_MAX_ROWS = 8;
+        let snapshots = [];
+        let sortCol = 'weighted_score';
+        let sortAsc = false;
+        let consistencySortCol = 'count';
+        let consistencySortAsc = false;
+        let refreshTimer = null;
+        let gridLiveItems = []; // [V20260130_1010] Track active grid items
+        const LATEST_DATE_CACHE_MS = 60000;
+        let latestDateCache = { mode: null, date: null, ts: 0 };
+
+        const getLeaderNet = leader => {
+            if (typeof leader.final_net === 'number') return leader.final_net;
+            if (typeof leader.net === 'number') return leader.net;
+            return 0;
+        };
+
+        // [V20260130_1720] Rank 1 Alert State
+        let currentRank1 = null;
+        let previousRanks = {}; // [V20260131_0445] Track history
+        let rankAlertEnabled = true;
+        let rankImprovementAlertEnabled = true; // [V20260131_0445]
+        let rankAlertDefaultAction = null; // 'monitor_only', 'monitor_priority', 'add_monitor', 'none', 'disable'
+        let rankAlertPreference = 'improvement'; // improvement, rank1, rank2, rank3plus
+        let rankAlertSuspended = false;
+        const RANK_ALERT_FALLBACK_ACTION = 'monitor_only';
+        let lastEnsuredTopKey = null;
+        let drilldownMode = 'snapshots'; // 'snapshots' or 'trades'
+        let drilldownTrades = [];
+        let drilldownHistory = [];
+        let drilldownSortCol = 'time';
+        let drilldownSortAsc = false;
+        let freqChartDatasets = [];
+        let freqChartHoverPoints = [];
+        let freqChartDragActive = false;
+        const FREQ_CHART_COLORS = ['#6366f1', '#06b6d4', '#22c55e', '#f59e0b', '#ef4444', '#a855f7', '#ec4899', '#14b8a6'];
+
+        async function getLatestDate(mode, pType, fileName) {
+            const now = Date.now();
+            const pTypeVal = pType || productType || 'all';
+            // [V20260318_1055] Include fileName in cache key
+            const cacheKey = `${mode}_${pTypeVal}_${fileName || ''}`;
+            if (latestDateCache.key === cacheKey && latestDateCache.date && (now - latestDateCache.ts) < LATEST_DATE_CACHE_MS) {
+                return latestDateCache.date;
+            }
+            try {
+                let url = `/api/dates?mode=${encodeURIComponent(mode)}&product_type=${encodeURIComponent(pTypeVal)}`;
+                if (fileName) url += `&file=${encodeURIComponent(fileName)}`; // [V20260318_1055]
+                
+                const resp = await fetch(url);
+                if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                const data = await resp.json();
+                const latest = data && data.dates && data.dates.length ? data.dates[0] : null;
+                if (latest) {
+                    latestDateCache = { key: cacheKey, date: latest, ts: now };
+                    return latest;
+                }
+            } catch (err) {
+                console.warn('[FrequencyExplorer] Unable to resolve latest date', err);
+            }
+            return new Date().toISOString().split('T')[0];
+        }
+
+        function getActiveDate() {
+            return selectedDate || latestDateOverride;
+        }
+
+        async function fetchData() {
+            const banner = document.getElementById('errorBanner');
+            banner.style.display = 'none';
+            const source = DATA_SOURCES[dataSourceKey] || DATA_SOURCES.standard;
+            const cacheBuster = `t=${Date.now()}`;
+            let effectiveDate = selectedDate;
+            if (!effectiveDate) {
+                // [V20260318_1055] Use current product type AND file existence for date resolution
+                effectiveDate = latestDateOverride || await getLatestDate(runMode, productType, source.file);
+                latestDateOverride = effectiveDate;
+            }
+            const dateStr = effectiveDate || new Date().toISOString().split('T')[0];
+            
+            // [V20260318_1010] Support multidir structure: json/{mode}/{productType}/{date}/{file}
+            let freqPath;
+            if (productType && productType !== 'all') {
+                freqPath = `json/${runMode}/${productType}/${dateStr}/${source.file}?${cacheBuster}`;
+            } else {
+                // Fallback / Legacy (Top level date folders)
+                freqPath = `json/${runMode}/${dateStr}/${source.file}?${cacheBuster}`;
+            }
+
+            try {
+                const resp = await fetch(freqPath);
+                
+                // [V20260318_1015] Check for valid JSON response headers
+                const contentType = resp.headers.get("content-type");
+                if (!resp.ok) {
+                    throw new Error(`Data not found (${resp.status}): ${freqPath}`);
+                }
+                if (contentType && !contentType.includes("application/json")) {
+                    const previewText = await resp.text();
+                    throw new Error(`Server returned non-JSON response (likely HTML error). File may be missing.`);
+                }
+                
+                rawData = await resp.json();
+                leaders = rawData.leaders || [];
+                snapshots = rawData.snapshots || [];
+
+                // [V20260420] Load _summary_net.json for held-net fallback when held drops out of top-5
+                try {
+                    const summaryPath = freqPath.replace(source.file, `_summary_net.json`);
+                    const summaryResp = await fetch(summaryPath);
+                    if (summaryResp.ok) summaryNetData = await summaryResp.json();
+                } catch(e) { summaryNetData = null; }
+
+                // [V20260130_1720] Rank 1 Alert Check
+                // checkRank1Change(leaders);
+
+                // [V20260131_0445] Enhanced Rank Alert Check
+                checkRankChanges(leaders);
+
+                if (!selectedDate && rawData.date) {
+                    const dateInput = document.getElementById('dateInput');
+                    if (dateInput) dateInput.value = rawData.date;
+                    latestDateOverride = rawData.date;
+                }
+                buildTimelineOptions();
+                updateSummary();
+                await fetchGridLive(); // [V20260130_1010]
+                renderTable();
+                renderTimeline();
+                renderConsistencyList(); // [V20260128_2115] Update new section
+            } catch (err) {
+                console.error('Frequency fetch error', err);
+                // [V20260318_1055] Enhanced user feedback for missing files
+                let msg = `Unable to read ${freqPath}: ${err.message}`;
+                if (err.message.includes('404') || err.message.includes('not found') || err.message.includes('non-JSON')) {
+                    msg = `Data not found for ${dateStr} (${productType}). It likely hasn't been generated yet. Please try an earlier date.`;
+                }
+                banner.textContent = msg;
+                banner.style.display = 'block';
+            }
+        }
+        function updateSummary() {
+            if (!rawData) return;
+            document.getElementById('statDate').textContent = rawData.date || '--';
+            document.getElementById('statFrequency').textContent = `Frequency: every ${rawData.frequency_minutes || '?'} min`;
+            document.getElementById('statSnapshots').textContent = rawData.snapshot_count || 0;
+            document.getElementById('statLeaders').textContent = leaders.length || 0;
+
+            const datasetLabel = (DATA_SOURCES[dataSourceKey] && DATA_SOURCES[dataSourceKey].label) || 'Breakout';
+            const displayType = productType && productType !== 'all' ? ` (${productType})` : '';
+            document.getElementById('statDataset').textContent = `Dataset: ${datasetLabel}${displayType}`;
+            if (leaders.length > 0) {
+                const top = [...leaders].sort((a, b) => getLeaderNet(b) - getLeaderNet(a))[0];
+                document.getElementById('statTop').textContent = `${top.product}`;
+                document.getElementById('statTopNet').textContent = `Net: ${formatPnL(top.final_net)} | Weighted ${top.weighted_score.toFixed(0)}`;
+            } else {
+                document.getElementById('statTop').textContent = '--';
+                document.getElementById('statTopNet').textContent = 'Net: --';
+            }
+        }
+
+        function formatPnL(value) {
+            if (value === null || value === undefined) return '--';
+            return `${value >= 0 ? '+' : ''}${value.toFixed(2)}`;
+        }
+
+        function changeSort(column) {
+            if (sortCol === column) sortAsc = !sortAsc;
+            else {
+                sortCol = column;
+                sortAsc = column === 'product' || column === 'strategy';
+            }
+            renderTable();
+        }
+
+        function bindButtonClickFeedback() {
+            document.querySelectorAll('button').forEach(button => {
+                const release = () => button.classList.remove('is-clicked');
+                button.addEventListener('pointerdown', () => button.classList.add('is-clicked'));
+                button.addEventListener('pointerup', release);
+                button.addEventListener('pointerleave', release);
+                button.addEventListener('blur', release);
+                button.addEventListener('keyup', (event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                        button.classList.add('is-clicked');
+                        window.setTimeout(release, 120);
+                    }
+                });
+            });
+        }
+
+        function changeConsistencySort(column) {
+            if (consistencySortCol === column) consistencySortAsc = !consistencySortAsc;
+            else {
+                consistencySortCol = column;
+                consistencySortAsc = column === 'product' || column === 'strategy';
+            }
+            renderConsistencyList();
+        }
+
+        function updateConsistencySortUI() {
+            const sortableCols = ['product', 'strategy', 'netGain', 'rank1Count', 'count', 'avgWeight'];
+            sortableCols.forEach(col => {
+                const th = document.getElementById(`consistencySort-${col}`);
+                if (!th) return;
+                const isActive = col === consistencySortCol;
+                th.classList.toggle('sort-active', isActive);
+                th.dataset.sort = isActive ? (consistencySortAsc ? '▲' : '▼') : '';
+            });
+        }
+
+
+        function handleDataSourceChange(value) {
+            dataSourceKey = value || 'standard';
+            timelineRange = 'recent';
+            const rangeSelect = document.getElementById('timelineRangeSelect');
+            if (rangeSelect) rangeSelect.value = 'recent';
+            fetchData();
+        }
+
+        function handleRunModeChange(mode) {
+            runMode = mode;
+            latestDateOverride = null;
+            fetchData();
+        }
+
+        function applyDateFilter() {
+            const input = document.getElementById('dateInput');
+            selectedDate = input && input.value ? input.value : null;
+            if (selectedDate) latestDateOverride = null;
+            timelineRange = 'recent';
+            const rangeSelect = document.getElementById('timelineRangeSelect');
+            if (rangeSelect) rangeSelect.value = 'recent';
+
+            checkHistoricalMode(); // [V20260202_1245]
+
+            fetchData();
+        }
+
+        function clearDateFilter() {
+            const input = document.getElementById('dateInput');
+            if (input) input.value = '';
+            selectedDate = null;
+            latestDateOverride = null;
+            timelineRange = 'recent';
+            const rangeSelect = document.getElementById('timelineRangeSelect');
+            if (rangeSelect) rangeSelect.value = 'recent';
+
+            checkHistoricalMode(); // [V20260202_1245]
+
+            fetchData();
+        }
+
+        // [V20260202_1245] Helper to detect historical view
+        function isHistoricalView() {
+            const activeDate = getActiveDate();
+            if (!activeDate) return false;
+            const today = new Date().toISOString().split('T')[0];
+            return activeDate !== today;
+        }
+
+        function checkHistoricalMode() {
+            const isHist = isHistoricalView();
+            const chk = document.getElementById('autoRefresh');
+            if (!chk) return;
+
+            if (isHist) {
+                if (refreshTimer) {
+                    clearInterval(refreshTimer);
+                    refreshTimer = null;
+                }
+                chk.checked = false;
+                chk.disabled = true;
+                chk.parentElement.title = "Auto-refresh disabled for historical data";
+                chk.parentElement.style.opacity = "0.5";
+            } else {
+                chk.disabled = false;
+                chk.parentElement.title = "";
+                chk.parentElement.style.opacity = "1";
+            }
+        }
+
+        function getFilteredLeaders() {
+            const query = document.getElementById('searchInput').value.trim().toLowerCase();
+            const rankLimit = parseInt(document.getElementById('rankFilter').value) || 5; // [V20260203_0200]
+
+            let filtered = leaders.filter(item => {
+                const matchQuery = item.product.toLowerCase().includes(query) || item.strategy.toLowerCase().includes(query);
+
+                // [V20260203_0200] Rank Calculation with Fallback
+                let bestRank = item.best_rank;
+                if (typeof bestRank !== 'number') {
+                    // Fallback for legacy data (before best_rank was added)
+                    bestRank = (item.rank1_appearances > 0) ? 1 : 5;
+                }
+
+                return matchQuery && (bestRank <= rankLimit);
+            });
+
+            filtered.sort((a, b) => {
+                let valA = a[sortCol];
+                let valB = b[sortCol];
+
+                if (sortCol === 'last_seen') {
+                    valA = valA ? new Date(valA).getTime() : 0;
+                    valB = valB ? new Date(valB).getTime() : 0;
+                }
+
+                if (typeof valA === 'string') {
+                    valA = valA.toLowerCase();
+                    valB = valB.toLowerCase();
+                }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            return filtered;
+        }
+
+        function renderTable() {
+            const body = document.getElementById('leaderBody');
+            if (!leaders || leaders.length === 0) {
+                body.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:30px;color:var(--text-dim);">No leaders available. Run weighted_race.py first.</td></tr>';
+                return;
+            }
+
+            const filtered = getFilteredLeaders();
+
+            const ths = document.querySelectorAll('thead th[onclick^="changeSort"]');
+            ths.forEach(th => {
+                th.classList.remove('sort-active');
+                th.removeAttribute('data-sort');
+                const key = th.getAttribute('onclick')?.match(/'(.*?)'/);
+                if (key && key[1] === sortCol) {
+                    th.classList.add('sort-active');
+                    th.setAttribute('data-sort', sortAsc ? '▲' : '▼');
+                }
+            });
+
+            const limited = filtered.slice(0, TABLE_MAX_ROWS);
+            body.innerHTML = limited.map(item => {
+                const pnlClass = item.final_net >= 0 ? 'pnl-pos' : 'pnl-neg';
+                const last = item.last_seen ? new Date(item.last_seen).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '--';
+
+                // Check if active in grid_live
+                const isActive = gridLiveItems.some(g => g.product === item.product && g.model === item.strategy);
+                const btnClass = isActive ? 'btn-monitor active' : 'btn-monitor';
+                const btnText = isActive ? 'Monitoring' : 'Monitor';
+
+                return `
+                    <tr>
+                        <td onclick="showDrilldown('${item.product}', '${item.strategy}')" 
+                            style="cursor:pointer; color:var(--accent-2); font-weight:600; text-decoration:underline; text-decoration-color:rgba(6, 182, 212, 0.2);">
+                            ${item.product}
+                        </td>
+                        <td onclick="showStrategyTradeDrilldown('${item.product}', '${item.strategy}')" 
+                            style="cursor:pointer; color:var(--accent-2); font-weight:600; text-decoration:underline; text-decoration-color:rgba(6, 182, 212, 0.2);">
+                            ${item.strategy}
+                        </td>
+                        <td class="mono ${pnlClass}" style="font-weight:600;">${formatPnL(item.final_net)}</td>
+                        <td class="mono" style="color:var(--positive); font-weight:700;">${item.rank1_appearances || 0}</td>
+                        <td class="mono">${item.appearances}</td>
+                        <td class="mono">${item.weighted_score.toFixed(0)}</td>
+                        <td>${last}</td>
+                        <td>
+                            <div class="leader-actions">
+                                <button class="${btnClass}" onclick="toggleGridLive('${item.product}', '${item.strategy}')">
+                                    ${btnText}
+                                </button>
+                                <button class="btn-monitor btn-chart" onclick="showFrequencyChart('${item.product}', '${item.strategy}', document.getElementById('freqChartModal').style.display === 'flex')">
+                                    Freq Chart
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            if (filtered.length > TABLE_MAX_ROWS) {
+                body.innerHTML += `<tr><td colspan="8" style="text-align:center;padding:12px;color:var(--text-dim);font-size:0.85rem;">Showing top ${TABLE_MAX_ROWS} of ${filtered.length} entries</td></tr>`;
+            }
+        }
+
+        function renderConsistencyList() {
+            const body = document.getElementById('consistencyBody');
+            const windowMin = parseInt(document.getElementById('consistencyWindowSelect').value);
+            updateConsistencySortUI();
+
+            if (!snapshots || snapshots.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:15px;color:var(--text-dim);">No snapshot data.</td></tr>';
+                return;
+            }
+
+            const lastSnap = snapshots[snapshots.length - 1];
+            const lastTime = new Date(lastSnap.time).getTime();
+            const startTime = lastTime - (windowMin * 60 * 1000);
+
+            const windowSnaps = snapshots.filter(s => new Date(s.time).getTime() >= startTime);
+
+            if (windowSnaps.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:15px;color:var(--text-dim);">No data in selected window.</td></tr>';
+                return;
+            }
+
+            const stats = {};
+
+            windowSnaps.forEach((snap, snapIdx) => {
+                snap.leaders.forEach(l => {
+                    const key = `${l.product}|${l.strategy}`;
+                    if (!stats[key]) {
+                        stats[key] = {
+                            product: l.product,
+                            strategy: l.strategy,
+                            count: 0,
+                            rank1Count: 0,
+                            firstNet: l.net,
+                            lastNet: l.net,
+                            weightSum: 0
+                        };
+                    }
+                    stats[key].count++;
+                    if (l.rank === 1) stats[key].rank1Count++;
+                    stats[key].lastNet = l.net;
+                    stats[key].weightSum += (11 - l.rank);
+                });
+            });
+
+            const list = Object.values(stats).map(s => {
+                return {
+                    ...s,
+                    netGain: s.lastNet - s.firstNet,
+                    avgWeight: s.weightSum / s.count
+                };
+            });
+
+            const sortedList = [...list].sort((a, b) => {
+                const aVal = a[consistencySortCol];
+                const bVal = b[consistencySortCol];
+                if (typeof aVal === 'string' || typeof bVal === 'string') {
+                    return consistencySortAsc
+                        ? String(aVal).localeCompare(String(bVal))
+                        : String(bVal).localeCompare(String(aVal));
+                }
+                if (aVal === bVal) {
+                    return (b.count - a.count) || (b.netGain - a.netGain);
+                }
+                return consistencySortAsc ? (aVal - bVal) : (bVal - aVal);
+            });
+
+            const top5 = sortedList.slice(0, 5);
+            if (top5.length === 0) {
+                body.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:15px;color:var(--text-dim);">No recurring leaders in window.</td></tr>';
+                return;
+            }
+
+            body.innerHTML = top5.map(item => {
+                const gainClass = item.netGain >= 0 ? 'pnl-pos' : 'pnl-neg';
+                const isActive = gridLiveItems.some(g => g.product === item.product && g.model === item.strategy);
+                const btnClass = isActive ? 'btn-monitor active' : 'btn-monitor';
+                const btnText = isActive ? 'Monitoring' : 'Monitor';
+
+                return `
+                    <tr>
+                        <td onclick="showDrilldown('${item.product}', '${item.strategy}')" 
+                            style="cursor:pointer; color:var(--accent-2); font-weight:600; text-decoration:underline;">
+                            ${item.product}
+                        </td>
+                        <td style="font-size:0.85rem; color:var(--text-dim);">${item.strategy}</td>
+                        <td class="mono ${gainClass}" style="font-weight:600;">${formatPnL(item.netGain)}</td>
+                        <td class="mono" style="font-weight:700; color:var(--positive);">${item.rank1Count}</td>
+                        <td class="mono" style="font-weight:700; color:var(--accent-2);">${item.count}</td>
+                        <td class="mono">${item.avgWeight.toFixed(1)}</td>
+                        <td>
+                            <button class="${btnClass}" onclick="toggleGridLive('${item.product}', '${item.strategy}')">
+                                ${btnText}
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // [V20260419] Switch Rule Functions
+        function initSwitchRuleUI() {
+            const modeRadio = document.querySelector(`input[name="switchMode"][value="${switchRuleMode}"]`);
+            if (modeRadio) modeRadio.checked = true;
+            const netSel = document.getElementById('switchNetSelect');
+            if (netSel) netSel.value = String(switchNetThreshold);
+            const gapSel = document.getElementById('switchGapSelect');
+            if (gapSel) gapSel.value = String(switchGapThreshold);
+            const actionRadio = document.querySelector(`input[name="switchAction"][value="${switchActionPref}"]`);
+            if (actionRadio) actionRadio.checked = true;
+            updateSwitchThresholdSelectors();
+        }
+
+        function openSwitchRuleModal() {
+            initSwitchRuleUI();
+            updateHeldDisplay(heldStrategyData);
+            const modal = document.getElementById('switchRuleModal');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeSwitchRuleModal() {
+            const modal = document.getElementById('switchRuleModal');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function updateSwitchRule() {
+            const modeEl = document.querySelector('input[name="switchMode"]:checked');
+            switchRuleMode = modeEl ? modeEl.value : 'and';
+            switchNetThreshold = parseInt(document.getElementById('switchNetSelect')?.value || '100');
+            switchGapThreshold = parseInt(document.getElementById('switchGapSelect')?.value || '20');
+            const actionEl = document.querySelector('input[name="switchAction"]:checked');
+            switchActionPref = actionEl ? actionEl.value : 'notify';
+            localStorage.setItem('switchRuleMode', switchRuleMode);
+            localStorage.setItem('switchNetThreshold', switchNetThreshold);
+            localStorage.setItem('switchGapThreshold', switchGapThreshold);
+            localStorage.setItem('switchActionPref', switchActionPref);
+            // Rule changed — clear cached signals so they re-evaluate under new settings
+            const sessionDate = snapshots && snapshots.length > 0 ? new Date(snapshots[0].time).toLocaleDateString('en-CA') : '';
+            _clearSigCache(sessionDate);
+            updateSwitchThresholdSelectors();
+            renderTimeline();
+        }
+
+        function updateSwitchThresholdSelectors() {
+            const netSel = document.getElementById('switchNetSelect');
+            const gapSel = document.getElementById('switchGapSelect');
+            if (!netSel || !gapSel) return;
+            netSel.disabled = switchRuleMode === 'gap';
+            gapSel.disabled = switchRuleMode === 'net';
+        }
+
+        function updateHeldDisplay(data) {
+            heldStrategyData = data;
+            const main = document.getElementById('heldDisplayMain');
+            const sub = document.getElementById('heldDisplaySub');
+            if (!main) return;
+            if (!data) { main.textContent = '-- awaiting data --'; if (sub) sub.textContent = ''; return; }
+            main.textContent = `${data.product}  /  ${data.strategy}`;
+            if (sub) sub.textContent = `Net: $${data.net >= 0 ? '+' : ''}${data.net.toFixed(0)}   Count: ${data.count}`;
+        }
+
+        function evaluateSwitchSignals(rank1AtSnap) {
+            if (!snapshots || snapshots.length === 0) return new Map();
+
+            // Load immutable cache for this session/rule combination
+            const sessionDate = new Date(snapshots[0].time).toLocaleDateString('en-CA');
+            _loadSigCache(sessionDate);
+
+            const signalAtSnap = new Map();
+            let currentHeld = null;
+            let openingTradePlaced = false;
+
+            const openingHour = 1; // 01:00 local time
+            const hasPostOpenSnap = snapshots.some(s => {
+                const d = new Date(s.time);
+                return d.getHours() > openingHour || (d.getHours() === openingHour && d.getMinutes() >= 0);
+            });
+
+            for (const snap of snapshots) {
+                const snapDate = new Date(snap.time);
+                const snapHour = snapDate.getHours();
+                const snapMin = snapDate.getMinutes();
+                const afterOpen = snapHour > openingHour || (snapHour === openingHour && snapMin >= 0);
+                const snapKey = snap.time; // unique cache key per snap
+
+                if (!openingTradePlaced && hasPostOpenSnap && !afterOpen) continue;
+
+                const snapCounts = rank1AtSnap.get(snap) || {};
+                const switchScopeProductType = getSwitchScopeProductType(currentHeld);
+                const positiveLeaders = snap.leaders ? snap.leaders.filter(l => {
+                    if (!(l.net > 0)) return false;
+                    return isLeaderInSwitchScope(l, switchScopeProductType);
+                }) : [];
+
+                // ── CACHE HIT: signal for this snap was already decided — never recompute ──
+                if (snapKey in _sigCache) {
+                    const cached = _sigCache[snapKey];
+                    if (cached !== null) {
+                        if (!isSignalInSwitchScope(cached, switchScopeProductType)) {
+                            _sigCache[snapKey] = null;
+                            _persistSigCache();
+                            if (currentHeld && !isLeaderInSwitchScope(currentHeld, switchScopeProductType)) {
+                                currentHeld = null;
+                                heldStrategyData = null;
+                                updateHeldDisplay(null);
+                            }
+                            continue;
+                        }
+                        // Reconstruct with live net/count but locked-in product/strategy identity
+                        const toLive = snap.leaders ? snap.leaders.find(l => l.product === cached.to.product && l.strategy === cached.to.strategy) : null;
+                        const toKey = `${cached.to.product}|${cached.to.strategy}`;
+                        const signal = {
+                            type: cached.type,
+                            from: cached.from ? { ...cached.from } : null,
+                            to: { product: cached.to.product, strategy: cached.to.strategy,
+                                  net: toLive ? toLive.net : cached.to.net,
+                                  count: snapCounts[toKey] || cached.to.count },
+                            netGap: cached.netGap, countGap: cached.countGap,
+                            netFires: cached.netFires, gapFires: cached.gapFires
+                        };
+                        signalAtSnap.set(snap, signal);
+                        currentHeld = { product: cached.to.product, strategy: cached.to.strategy,
+                                        net: signal.to.net, count: signal.to.count };
+                        if (cached.type === 'open') {
+                            openingTradePlaced = true;
+                            updateHeldDisplay(currentHeld);
+                        }
+                    } else {
+                        // null = evaluated, no signal — just update held's live values
+                        if (currentHeld) {
+                            const heldLive = snap.leaders ? snap.leaders.find(l => l.product === currentHeld.product && l.strategy === currentHeld.strategy) : null;
+                            if (heldLive) currentHeld.net = heldLive.net;
+                            currentHeld.count = snapCounts[`${currentHeld.product}|${currentHeld.strategy}`] || currentHeld.count;
+                        }
+                        if (!openingTradePlaced && afterOpen) openingTradePlaced = true; // skip if null-cached at open
+                    }
+                    continue;
+                }
+
+                // ── CACHE MISS: compute, then write to cache (immutable from this point) ──
+                if (positiveLeaders.length === 0) { _sigCache[snapKey] = null; continue; }
+
+                // Opening trade
+                if (!openingTradePlaced) {
+                    openingTradePlaced = true;
+                    const sorted = [...positiveLeaders].sort((a, b) => {
+                        const aCount = snapCounts[`${a.product}|${a.strategy}`] || 0;
+                        const bCount = snapCounts[`${b.product}|${b.strategy}`] || 0;
+                        return bCount !== aCount ? bCount - aCount : b.net - a.net;
+                    });
+                    const opener = sorted[0];
+                    const openerKey = `${opener.product}|${opener.strategy}`;
+                    const openerCount = snapCounts[openerKey] || 0;
+                    currentHeld = { product: opener.product, strategy: opener.strategy, net: opener.net, count: openerCount };
+                    updateHeldDisplay(currentHeld);
+                    const signal = { type: 'open', from: null,
+                        to: { product: opener.product, strategy: opener.strategy, net: opener.net, count: openerCount },
+                        netGap: opener.net, countGap: openerCount, netFires: true, gapFires: true };
+                    signalAtSnap.set(snap, signal);
+                    // Write to cache — identity only, net/count are live at runtime
+                    _sigCache[snapKey] = { type: 'open', from: null,
+                        to: { product: opener.product, strategy: opener.strategy, net: opener.net, count: openerCount },
+                        netGap: opener.net, countGap: openerCount, netFires: true, gapFires: true,
+                        _snapshot: {
+                            leaders: (snap.leaders || []).map(l => ({ rank: l.rank, product: l.product, strategy: l.strategy, net: l.net })),
+                            rank1Counts: Object.fromEntries(Object.entries(snapCounts).filter(([, v]) => v > 0))
+                        }
+                    };
+                    _persistSigCache();
+                    continue;
+                }
+
+                if (switchScopeProductType && !isLeaderInSwitchScope(currentHeld, switchScopeProductType)) {
+                    currentHeld = null;
+                    heldStrategyData = null;
+                    updateHeldDisplay(null);
+                    _sigCache[snapKey] = null;
+                    continue;
+                }
+
+                // Switch rule
+                const r1candidates = positiveLeaders.filter(l => l.rank === 1)
+                    .sort((a, b) => b.net - a.net); // defensive: highest net first if tied rank
+                if (r1candidates.length === 0) { _sigCache[snapKey] = null; continue; }
+                const newLeader = r1candidates[0];
+                const newKey = `${newLeader.product}|${newLeader.strategy}`;
+                const newCount = snapCounts[newKey] || 0;
+                const heldKey = `${currentHeld.product}|${currentHeld.strategy}`;
+
+                if (newKey === heldKey) {
+                    const heldLive = snap.leaders.find(l => l.product === currentHeld.product && l.strategy === currentHeld.strategy);
+                    if (heldLive) currentHeld.net = heldLive.net;
+                    currentHeld.count = snapCounts[heldKey] || currentHeld.count;
+                    _sigCache[snapKey] = null;
+                    continue;
+                }
+
+                const heldLive = snap.leaders ? snap.leaders.find(l => l.product === currentHeld.product && l.strategy === currentHeld.strategy) : null;
+                // [V20260420] When held drops out of top-5, use _summary_net.json for true current net
+                const heldCurrentNet = heldLive ? heldLive.net
+                    : (_getSummaryNetAt(currentHeld.strategy, currentHeld.product, snap.time) ?? currentHeld.net);
+                const heldCurrentCount = snapCounts[heldKey] || currentHeld.count;
+
+                const netCond = newLeader.net > heldCurrentNet + switchNetThreshold;
+                const gapCond = newCount > heldCurrentCount + switchGapThreshold;
+                let fires = false;
+                if (switchRuleMode === 'net') fires = netCond;
+                else if (switchRuleMode === 'gap') fires = gapCond;
+                else if (switchRuleMode === 'or') fires = netCond || gapCond;
+                else if (switchRuleMode === 'and') fires = netCond && gapCond;
+
+                if (fires) {
+                    const signal = {
+                        type: 'switch',
+                        from: { product: currentHeld.product, strategy: currentHeld.strategy },
+                        to: { product: newLeader.product, strategy: newLeader.strategy, net: newLeader.net, count: newCount },
+                        netGap: newLeader.net - heldCurrentNet,
+                        countGap: newCount - heldCurrentCount,
+                        netFires: netCond, gapFires: gapCond
+                    };
+                    if (!isSignalInSwitchScope(signal, switchScopeProductType)) {
+                        _sigCache[snapKey] = null;
+                        continue;
+                    }
+                    signalAtSnap.set(snap, signal);
+                    _sigCache[snapKey] = { ...signal,
+                        _snapshot: {
+                            leaders: (snap.leaders || []).map(l => ({ rank: l.rank, product: l.product, strategy: l.strategy, net: l.net })),
+                            rank1Counts: Object.fromEntries(Object.entries(snapCounts).filter(([, v]) => v > 0))
+                        }
+                    };
+                    _persistSigCache();
+                    currentHeld = { product: newLeader.product, strategy: newLeader.strategy, net: newLeader.net, count: newCount };
+                    updateHeldDisplay(currentHeld);
+                } else {
+                    _sigCache[snapKey] = null;
+                }
+            }
+            return signalAtSnap;
+        }
+
+        function fireSwitchAction(signal, snap) {
+            const switchScopeProductType = getSwitchScopeProductType(null);
+            if (!isSignalInSwitchScope(signal, switchScopeProductType)) return;
+            const snapKey = snap ? snap.time : JSON.stringify(signal.to);
+            if (snapKey === lastFiredSignalKey) return;
+            lastFiredSignalKey = snapKey;
+
+            const isOpen = signal.type === 'open';
+
+            if (switchActionPref === 'none' && !isOpen) return;
+
+            if (switchActionPref === 'notify' || switchActionPref === 'grid' || isOpen) {
+                // Reuse existing rank alert notification
+                const alertProd = document.getElementById('alertProduct');
+                const alertStrat = document.getElementById('alertStrategy');
+                const alertNet = document.getElementById('alertNet');
+                const alertEl = document.getElementById('rankAlert');
+                if (isOpen) {
+                    if (alertProd) alertProd.textContent = `🟢 OPENING TRADE — ${signal.to.product}`;
+                    if (alertStrat) alertStrat.textContent = signal.to.strategy;
+                    if (alertNet) alertNet.textContent = `Net: $${signal.to.net.toFixed(0)}   Count: ${signal.to.count}`;
+                } else {
+                    if (alertProd) alertProd.textContent = `⚡ SWITCH SIGNAL — ${signal.to.product}`;
+                    if (alertStrat) alertStrat.textContent = signal.to.strategy;
+                    const parts = [];
+                    if (signal.netFires) parts.push(`Net gap: +$${signal.netGap.toFixed(0)}`);
+                    if (signal.gapFires) parts.push(`Count gap: +${signal.countGap}`);
+                    if (alertNet) alertNet.textContent = parts.join('   ');
+                }
+                if (alertEl) alertEl.style.display = 'block';
+                if (switchActionPref === 'grid' || isOpen) sendSwitchToGrid(signal.to.product, signal.to.strategy);
+            }
+
+            if (switchActionPref === 'highlight') {
+                // Pulse all monitor buttons matching the new leader
+                document.querySelectorAll('.btn-monitor').forEach(btn => {
+                    const row = btn.closest('tr');
+                    if (!row) return;
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 2 && cells[0].textContent.trim() === signal.to.product) {
+                        btn.classList.add('switch-highlight');
+                        setTimeout(() => btn.classList.remove('switch-highlight'), 8000);
+                    }
+                });
+            }
+        }
+
+        function getHeldCurrentNetAtSnap(held, snap) {
+            if (!held || !snap) return null;
+            const live = snap.leaders
+                ? snap.leaders.find(l => l.product === held.product && l.strategy === held.strategy)
+                : null;
+            if (live) return live.net;
+            return _getSummaryNetAt(held.strategy, held.product, snap.time);
+        }
+
+        function buildHeldStatusAtSnap(signalAtSnap) {
+            const heldStatusAtSnap = new Map();
+            let activeHeld = null;
+
+            snapshots.forEach(snap => {
+                const signal = signalAtSnap.get(snap);
+                if (signal) {
+                    activeHeld = {
+                        product: signal.to.product,
+                        strategy: signal.to.strategy,
+                        entryNet: signal.to.net,
+                        since: snap.time,
+                        lastNet: signal.to.net
+                    };
+                }
+
+                if (!activeHeld) return;
+
+                const currentNet = getHeldCurrentNetAtSnap(activeHeld, snap);
+                if (currentNet !== null && currentNet !== undefined) {
+                    activeHeld.lastNet = currentNet;
+                }
+
+                const effectiveNet = activeHeld.lastNet;
+                heldStatusAtSnap.set(snap, {
+                    product: activeHeld.product,
+                    strategy: activeHeld.strategy,
+                    entryNet: activeHeld.entryNet,
+                    currentNet: effectiveNet,
+                    result: effectiveNet - activeHeld.entryNet,
+                    since: activeHeld.since
+                });
+            });
+
+            return heldStatusAtSnap;
+        }
+
+        function renderHeldPositionBanner(status) {
+            if (!status) return '';
+            const isProfit = status.result >= 0;
+            const tone = isProfit ? 'profit' : 'loss';
+            const label = isProfit ? '🟢 HELD POSITION' : '🔴 HELD POSITION';
+            const heldSince = new Date(status.since).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+            return `
+                <div class="held-position-banner ${tone}">
+                    <strong>${label}</strong>
+                    <span style="color:var(--text-main);font-weight:600;">${status.product} / ${status.strategy}</span>
+                    <span style="display:block;margin-top:3px;">
+                        Current Net: ${formatPnL(status.currentNet)}  ·  Entry Net: ${formatPnL(status.entryNet)}  ·  Result: ${formatPnL(status.result)}
+                    </span>
+                    <span style="display:block;margin-top:2px;">Held since: ${heldSince}</span>
+                </div>
+            `;
+        }
+
+        async function sendSwitchToGrid(product, strategy) {
+            try {
+                const resp = await fetch('/api/switch_rule/activate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product, strategy, mode: runMode || 'live' })
+                });
+                if (!resp.ok) console.warn('[SwitchRule] Activate failed', resp.status);
+                else console.log('[SwitchRule] grid_live updated:', product, strategy);
+            } catch (e) {
+                console.warn('[SwitchRule] Activate error', e);
+            }
+        }
+
+        // [V20260420] Auto-backfill: if heldStrategyData is known but grid_live has no switch_rule entry, sync silently
+        async function autoSyncToGrid() {
+            if (!heldStrategyData) {
+                console.log('[SwitchRule:autoSync] skipped — no heldStrategyData');
+                return;
+            }
+            try {
+                const resp = await fetch(`/api/grid_live?mode=${runMode || 'live'}`);
+                if (!resp.ok) { console.warn('[SwitchRule:autoSync] GET grid_live failed', resp.status); return; }
+                const json = await resp.json();
+                const entries = json.data || [];
+                const hasSwitchRule = entries.some(m => m.source === 'freq_switch_rule');
+                console.log(`[SwitchRule:autoSync] grid_live entries=${entries.length} hasSwitchRule=${hasSwitchRule} held=${heldStrategyData.product}/${heldStrategyData.strategy}`);
+                if (!hasSwitchRule) {
+                    console.log('[SwitchRule:autoSync] backfilling grid_live...');
+                    await sendSwitchToGrid(heldStrategyData.product, heldStrategyData.strategy);
+                }
+            } catch (e) {
+                console.warn('[SwitchRule:autoSync] error', e);
+            }
+        }
+
+        // [V20260420] Manual sync — triggered by "Sync to Grid" button in Switch Rule modal
+        async function manualSyncToGrid() {
+            const btn = document.getElementById('syncToGridBtn');
+            const status = document.getElementById('syncToGridStatus');
+            if (!heldStrategyData) {
+                if (status) status.textContent = 'No held strategy — load data first';
+                return;
+            }
+            if (btn) btn.disabled = true;
+            if (status) status.textContent = 'Syncing…';
+            try {
+                await sendSwitchToGrid(heldStrategyData.product, heldStrategyData.strategy);
+                if (status) {
+                    status.textContent = `✓ Synced: ${heldStrategyData.product} / ${heldStrategyData.strategy.split('_').slice(0,3).join('_')}…`;
+                    setTimeout(() => { if (status) status.textContent = ''; }, 5000);
+                }
+            } catch (e) {
+                if (status) status.textContent = 'Sync failed';
+            } finally {
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function renderTimeline() {
+            const container = document.getElementById('timeline');
+            const rangeSelect = document.getElementById('timelineRangeSelect');
+            updateTimelineNavButtons();
+            if (!snapshots || snapshots.length === 0) {
+                container.innerHTML = '<p style="color:var(--text-dim);">No snapshots available.</p>';
+                if (rangeSelect) rangeSelect.disabled = true;
+                updateTimelineNavButtons();
+                return;
+            }
+            if (rangeSelect) rangeSelect.disabled = false;
+            let view = [];
+            if (!timelineRange || timelineRange === 'recent') {
+                view = snapshots.slice(-12);
+            } else {
+                const startTime = new Date(timelineRange);
+                const endTime = new Date(startTime.getTime() + 60 * 60 * 1000);
+                view = snapshots.filter(snap => {
+                    const ts = new Date(snap.time);
+                    return ts >= startTime && ts < endTime;
+                });
+                if (view.length === 0) {
+                    container.innerHTML = '<p style="color:var(--text-dim);">No data for selected window.</p>';
+                    updateTimelineNavButtons();
+                    return;
+                }
+            }
+            // Build cumulative rank1 counts from start of day up to each snap
+            const rank1Running = {};
+            const rank1AtSnap = new Map();
+            snapshots.forEach(snap => {
+                snap.leaders.forEach(l => {
+                    if (l.rank === 1) {
+                        const k = `${l.product}|${l.strategy}`;
+                        rank1Running[k] = (rank1Running[k] || 0) + 1;
+                    }
+                });
+                rank1AtSnap.set(snap, Object.assign({}, rank1Running));
+            });
+
+            // [V20260419] Evaluate switch signals across all snapshots
+            const signalAtSnap = evaluateSwitchSignals(rank1AtSnap);
+            const heldStatusAtSnap = buildHeldStatusAtSnap(signalAtSnap);
+
+            // Fire action for most recent signal (last snap that has a signal)
+            const latestSignalSnap = [...snapshots].reverse().find(s => signalAtSnap.has(s));
+            if (latestSignalSnap) {
+                fireSwitchAction(signalAtSnap.get(latestSignalSnap), latestSignalSnap);
+            }
+            // [V20260420] Auto-backfill: silently restore grid_live if switch_rule entry is missing
+            autoSyncToGrid();
+
+            container.innerHTML = view.map(snap => {
+                const snapCounts = rank1AtSnap.get(snap) || {};
+                const signal = signalAtSnap.get(snap);
+                const heldStatus = heldStatusAtSnap.get(snap);
+                const isOpenSignal = signal && signal.type === 'open';
+                const cardClass = signal ? `timeline-card ${isOpenSignal ? 'opening-trade-card' : 'switch-signal-card'}` : 'timeline-card';
+                const leadersList = snap.leaders.map(item => {
+                    const r1 = snapCounts[`${item.product}|${item.strategy}`] || 0;
+                    const r1Badge = r1 > 0 ? `<span style="color:#ffe600;font-size:0.8rem;font-weight:800;margin-left:4px;letter-spacing:0.02em;">${r1}</span>` : '<span style="display:inline-block;width:1.8rem;"></span>';
+                    return `
+                    <li style="display:flex;justify-content:space-between;align-items:flex-start;">
+                        <span style="flex:1;min-width:0;">${item.rank}. ${item.product}<br><small style="color:var(--text-dim);font-size:0.7rem;">${item.strategy}</small></span>
+                        ${r1Badge}
+                        <strong class="mono ${item.net >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="flex-shrink:0;padding-left:8px;">${formatPnL(item.net)}</strong>
+                    </li>`;
+                }).join('');
+                const signalBanner = signal ? (isOpenSignal ? `
+                    <div class="switch-signal-banner" style="border-color:rgba(16,185,129,0.5);background:rgba(16,185,129,0.08);">
+                        <strong style="color:#10b981;display:block;margin-bottom:3px;">🟢 OPENING TRADE</strong>
+                        <span style="color:var(--text-main);font-weight:600;">${signal.to.product} / ${signal.to.strategy}</span>
+                        <span style="display:block;margin-top:3px;color:var(--text-dim);">Net: $${signal.to.net.toFixed(0)}  ·  Count: ${signal.to.count}</span>
+                    </div>` : `
+                    <div class="switch-signal-banner">
+                        <strong>⚡ SWITCH SIGNAL → ${signal.to.product}</strong>
+                        <span>${signal.to.strategy}</span>
+                        <span style="display:block;margin-top:3px;">
+                            ${signal.netFires ? `Net +$${signal.netGap.toFixed(0)}` : ''}
+                            ${signal.netFires && signal.gapFires ? '  ·  ' : ''}
+                            ${signal.gapFires ? `Count +${signal.countGap}` : ''}
+                        </span>
+                    </div>`) : '';
+                return `
+                    <div class="${cardClass}">
+                        <h4>${new Date(snap.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</h4>
+                        <ul>${leadersList}</ul>
+                        ${signalBanner}
+                        ${renderHeldPositionBanner(heldStatus)}
+                    </div>
+                `;
+            }).join('');
+            updateTimelineNavButtons();
+        }
+
+        function buildTimelineOptions() {
+            const select = document.getElementById('timelineRangeSelect');
+            if (!select) return;
+            let options = '<option value="recent">Recent (last 12 snapshots)</option>';
+            if (!snapshots || snapshots.length === 0) {
+                select.innerHTML = options;
+                select.disabled = true;
+                timelineRange = 'recent';
+                updateTimelineNavButtons();
+                return;
+            }
+            select.disabled = false;
+            const earliest = new Date(snapshots[0].time);
+            const latest = new Date(snapshots[snapshots.length - 1].time);
+            let cursor = new Date(Math.floor(earliest.getTime() / (60 * 60 * 1000)) * 60 * 60 * 1000);
+            while (cursor <= latest) {
+                const end = new Date(cursor.getTime() + 60 * 60 * 1000);
+                const label = `${cursor.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })} - ${end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+                options += `<option value="${cursor.toISOString()}">${label}</option>`;
+                cursor = end;
+            }
+            select.innerHTML = options;
+            if (timelineRange && timelineRange !== 'recent') {
+                const match = Array.from(select.options).some(opt => opt.value === timelineRange);
+                select.value = match ? timelineRange : 'recent';
+            } else {
+                select.value = 'recent';
+                timelineRange = 'recent';
+            }
+            updateTimelineNavButtons();
+        }
+
+        function handleTimelineRangeChange(value) {
+            timelineRange = value;
+            renderTimeline();
+        }
+
+        function shiftTimelineRange(direction) {
+            const select = document.getElementById('timelineRangeSelect');
+            if (!select || select.options.length <= 1 || !timelineRange || timelineRange === 'recent') return;
+            const options = Array.from(select.options).filter(option => option.value !== 'recent');
+            const currentIndex = options.findIndex(option => option.value === timelineRange);
+            if (currentIndex === -1) return;
+            const nextIndex = currentIndex + direction;
+            if (nextIndex < 0 || nextIndex >= options.length) return;
+            const nextValue = options[nextIndex].value;
+            select.value = nextValue;
+            handleTimelineRangeChange(nextValue);
+        }
+
+        function updateTimelineNavButtons() {
+            const prevBtn = document.getElementById('timelinePrevBtn');
+            const nextBtn = document.getElementById('timelineNextBtn');
+            const select = document.getElementById('timelineRangeSelect');
+            if (!prevBtn || !nextBtn || !select) return;
+
+            const options = Array.from(select.options).filter(option => option.value !== 'recent');
+            const currentIndex = options.findIndex(option => option.value === timelineRange);
+            const isWindowMode = timelineRange && timelineRange !== 'recent' && currentIndex !== -1;
+
+            prevBtn.disabled = !isWindowMode || currentIndex === 0;
+            nextBtn.disabled = !isWindowMode || currentIndex === options.length - 1;
+        }
+
+        function formatChartTime(dateValue) {
+            return new Date(dateValue).toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function buildFrequencyChartSeries(product, strategy) {
+            const activeDate = getActiveDate() || rawData?.date || selectedDate || new Date().toISOString().split('T')[0];
+            const dayStart = new Date(`${activeDate}T00:00:00`);
+            const dayEnd = new Date(`${activeDate}T23:59:59`);
+            const sortedSnaps = [...(snapshots || [])].sort((a, b) => new Date(a.time) - new Date(b.time));
+            let cumulative = 0;
+
+            const series = [{
+                time: dayStart.getTime(),
+                count: 0,
+                label: '00:00',
+                isBoundary: true,
+                hit: false
+            }];
+
+            sortedSnaps.forEach(snap => {
+                const snapTime = new Date(snap.time).getTime();
+                if (snapTime < dayStart.getTime() || snapTime > dayEnd.getTime()) return;
+                const hit = snap.leaders.find(item => item.product === product && item.strategy === strategy && item.rank === 1);
+                if (hit) cumulative += 1;
+                series.push({
+                    time: snapTime,
+                    count: cumulative,
+                    label: formatChartTime(snap.time),
+                    isBoundary: false,
+                    hit: Boolean(hit)
+                });
+            });
+
+            series.push({
+                time: dayEnd.getTime(),
+                count: cumulative,
+                label: '23:59',
+                isBoundary: true,
+                hit: false
+            });
+
+            return {
+                key: `${product}|${strategy}|${activeDate}`,
+                product,
+                strategy,
+                activeDate,
+                dayStart,
+                dayEnd,
+                label: `${product} / ${strategy}`,
+                series,
+                totalHits: series.filter(point => point.hit).length
+            };
+        }
+
+        function upsertFrequencyChartDataset(dataset, append = false) {
+            if (!append) {
+                freqChartDatasets = [dataset];
+                return;
+            }
+
+            const existingIndex = freqChartDatasets.findIndex(item => item.key === dataset.key);
+            if (existingIndex >= 0) {
+                freqChartDatasets[existingIndex] = dataset;
+                return;
+            }
+
+            const sameDate = freqChartDatasets.length === 0 || freqChartDatasets[0].activeDate === dataset.activeDate;
+            if (!sameDate) {
+                freqChartDatasets = [dataset];
+                return;
+            }
+
+            freqChartDatasets = [...freqChartDatasets, dataset];
+        }
+
+        function renderFrequencyChartLegend() {
+            const legend = document.getElementById('freqChartLegend');
+            if (!legend) return;
+            legend.innerHTML = freqChartDatasets.map((dataset, index) => `
+                <div class="chart-legend-item">
+                    <span class="chart-legend-swatch" style="background:${FREQ_CHART_COLORS[index % FREQ_CHART_COLORS.length]};"></span>
+                    <span>${dataset.label}</span>
+                </div>
+            `).join('');
+        }
+
+        function refreshFrequencyChartStats() {
+            const stats = document.getElementById('freqChartStats');
+            const meta = document.getElementById('freqChartMeta');
+            if (!stats || !meta) return;
+
+            const activeDate = freqChartDatasets[0]?.activeDate || (getActiveDate() || rawData?.date || selectedDate || '--');
+            const maxHits = freqChartDatasets.length ? Math.max(...freqChartDatasets.map(item => item.totalHits), 0) : 0;
+            const totalSeries = freqChartDatasets.length;
+            const totalHitsAcrossSeries = freqChartDatasets.reduce((sum, item) => sum + item.totalHits, 0);
+            const labels = freqChartDatasets.map(item => item.label).join(' | ');
+
+            meta.textContent = `${activeDate} • ${totalSeries} series on shared cumulative scale`;
+            stats.innerHTML = `
+                <div class="drilldown-stat-item">
+                    <label>Series</label>
+                    <strong>${totalSeries}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Top Rank 1 Count</label>
+                    <strong>${maxHits}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Total Rank 1 Hits</label>
+                    <strong>${totalHitsAcrossSeries}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Compared</label>
+                    <strong style="font-size:0.9rem;">${labels || '--'}</strong>
+                </div>
+            `;
+        }
+
+        function showFrequencyChart(product, strategy, append = false) {
+            const modal = document.getElementById('freqChartModal');
+            const title = document.getElementById('freqChartTitle');
+            const subtitle = document.getElementById('freqChartSubtitle');
+            const empty = document.getElementById('freqChartEmpty');
+            const svg = document.getElementById('freqChartSvg');
+
+            const dataset = buildFrequencyChartSeries(product, strategy);
+            upsertFrequencyChartDataset(dataset, append);
+            freqChartHoverPoints = [];
+            title.textContent = 'Rank #1 Frequency Comparison';
+            subtitle.textContent = append || freqChartDatasets.length > 1 ? 'Shared-scale cumulative comparison' : dataset.label;
+            refreshFrequencyChartStats();
+            renderFrequencyChartLegend();
+
+            if (!svg) return;
+            if (!freqChartDatasets.length || freqChartDatasets.every(item => item.series.length <= 2)) {
+                svg.innerHTML = '';
+                empty.style.display = 'block';
+                empty.textContent = `No snapshot history was found for the selected comparison set on ${dataset.activeDate}.`;
+                modal.style.display = 'flex';
+                return;
+            }
+
+            empty.style.display = 'none';
+            renderFrequencyChartSvg();
+            modal.style.display = 'flex';
+        }
+
+        function plotVisibleFrequencyCharts() {
+            const filtered = getFilteredLeaders().slice(0, TABLE_MAX_ROWS);
+            if (!filtered.length) {
+                alert('No visible leaderboard rows are available to compare.');
+                return;
+            }
+
+            const datasets = filtered.map(item => buildFrequencyChartSeries(item.product, item.strategy));
+            const activeDate = datasets[0]?.activeDate;
+            freqChartDatasets = datasets.filter(item => item.activeDate === activeDate);
+            const modal = document.getElementById('freqChartModal');
+            const title = document.getElementById('freqChartTitle');
+            const subtitle = document.getElementById('freqChartSubtitle');
+            const empty = document.getElementById('freqChartEmpty');
+            const svg = document.getElementById('freqChartSvg');
+            title.textContent = 'Rank #1 Frequency Comparison';
+            subtitle.textContent = 'Visible leaderboard series';
+            refreshFrequencyChartStats();
+            renderFrequencyChartLegend();
+
+            if (!svg) return;
+            if (!freqChartDatasets.length || freqChartDatasets.every(item => item.series.length <= 2)) {
+                svg.innerHTML = '';
+                empty.style.display = 'block';
+                empty.textContent = 'No visible leaderboard series have snapshot history for the selected date.';
+                modal.style.display = 'flex';
+                return;
+            }
+
+            empty.style.display = 'none';
+            renderFrequencyChartSvg();
+            modal.style.display = 'flex';
+        }
+
+        function clearFrequencyChartComparison() {
+            if (!freqChartDatasets.length) return;
+            freqChartDatasets = freqChartDatasets.slice(0, 1);
+            const subtitle = document.getElementById('freqChartSubtitle');
+            if (subtitle) subtitle.textContent = freqChartDatasets[0]?.label || '';
+            refreshFrequencyChartStats();
+            renderFrequencyChartLegend();
+            renderFrequencyChartSvg();
+        }
+
+        function closeFrequencyChart() {
+            document.getElementById('freqChartModal').style.display = 'none';
+            freqChartDragActive = false;
+            hideFrequencyChartTooltip();
+        }
+
+        function renderFrequencyChartSvg() {
+            const svg = document.getElementById('freqChartSvg');
+            if (!svg || !freqChartDatasets || freqChartDatasets.length === 0) return;
+
+            const width = 860;
+            const height = 340;
+            const padding = { top: 20, right: 24, bottom: 42, left: 56 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            const minTime = freqChartDatasets[0].series[0].time;
+            const maxTime = freqChartDatasets[0].series[freqChartDatasets[0].series.length - 1].time;
+            const maxCount = Math.max(...freqChartDatasets.flatMap(dataset => dataset.series.map(point => point.count)), 1);
+
+            const xScale = (time) => padding.left + ((time - minTime) / Math.max(maxTime - minTime, 1)) * chartWidth;
+            const yScale = (count) => padding.top + chartHeight - ((count / maxCount) * chartHeight);
+
+            freqChartHoverPoints = freqChartDatasets.map((dataset, datasetIndex) => ({
+                ...dataset,
+                color: FREQ_CHART_COLORS[datasetIndex % FREQ_CHART_COLORS.length],
+                points: dataset.series.map(point => ({
+                    ...point,
+                    x: xScale(point.time),
+                    y: yScale(point.count)
+                }))
+            }));
+
+            const yTicks = [];
+            for (let i = 0; i <= maxCount; i++) {
+                yTicks.push(i);
+            }
+
+            const xTicks = [
+                { label: '00:00', time: minTime },
+                { label: '06:00', time: minTime + 6 * 60 * 60 * 1000 },
+                { label: '12:00', time: minTime + 12 * 60 * 60 * 1000 },
+                { label: '18:00', time: minTime + 18 * 60 * 60 * 1000 },
+                { label: '23:59', time: maxTime }
+            ];
+
+            const seriesMarkup = freqChartHoverPoints.map(dataset => {
+                let path = '';
+                dataset.points.forEach((point, index) => {
+                    if (index === 0) {
+                        path += `M ${point.x} ${point.y}`;
+                        return;
+                    }
+                    const prev = dataset.points[index - 1];
+                    path += ` L ${point.x} ${prev.y} L ${point.x} ${point.y}`;
+                });
+
+                return `
+                    <path d="${path}" fill="none" stroke="${dataset.color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></path>
+                    ${dataset.points.filter(point => point.hit).map(point => `
+                        <circle cx="${point.x}" cy="${point.y}" r="4.5" fill="${dataset.color}" stroke="#0f172a" stroke-width="2"></circle>
+                    `).join('')}
+                `;
+            }).join('');
+
+            svg.innerHTML = `
+                <rect x="0" y="0" width="${width}" height="${height}" fill="rgba(8, 13, 30, 0.35)" rx="16"></rect>
+                ${yTicks.map(tick => `
+                    <g>
+                        <line x1="${padding.left}" y1="${yScale(tick)}" x2="${width - padding.right}" y2="${yScale(tick)}" stroke="rgba(148, 163, 184, 0.12)" stroke-width="1"></line>
+                        <text x="${padding.left - 10}" y="${yScale(tick) + 4}" fill="#94a3b8" font-size="11" text-anchor="end">${tick}</text>
+                    </g>
+                `).join('')}
+                ${xTicks.map(tick => `
+                    <g>
+                        <line x1="${xScale(tick.time)}" y1="${padding.top}" x2="${xScale(tick.time)}" y2="${height - padding.bottom}" stroke="rgba(148, 163, 184, 0.08)" stroke-width="1"></line>
+                        <text x="${xScale(tick.time)}" y="${height - 14}" fill="#94a3b8" font-size="11" text-anchor="middle">${tick.label}</text>
+                    </g>
+                `).join('')}
+                <line x1="${padding.left}" y1="${height - padding.bottom}" x2="${width - padding.right}" y2="${height - padding.bottom}" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2"></line>
+                <line x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height - padding.bottom}" stroke="rgba(148, 163, 184, 0.35)" stroke-width="1.2"></line>
+                ${seriesMarkup}
+                <line id="freqChartCrosshair" x1="${padding.left}" y1="${padding.top}" x2="${padding.left}" y2="${height - padding.bottom}" stroke="rgba(6, 182, 212, 0.55)" stroke-width="1.2" stroke-dasharray="4 4" style="display:none;"></line>
+                <rect id="freqChartOverlay" x="${padding.left}" y="${padding.top}" width="${chartWidth}" height="${chartHeight}" fill="transparent" style="cursor:crosshair;"></rect>
+            `;
+
+            const overlay = document.getElementById('freqChartOverlay');
+            if (!overlay) return;
+
+            const updateFromPointer = (event) => {
+                const rect = svg.getBoundingClientRect();
+                const relativeX = ((event.clientX - rect.left) / Math.max(rect.width, 1)) * width;
+                const hoveredTime = minTime + ((relativeX - padding.left) / Math.max(chartWidth, 1)) * (maxTime - minTime);
+                updateFrequencyChartTooltip(hoveredTime, rect, width, height, xScale);
+            };
+
+            const stopDrag = () => {
+                freqChartDragActive = false;
+            };
+
+            overlay.onpointerdown = (event) => {
+                freqChartDragActive = true;
+                overlay.setPointerCapture?.(event.pointerId);
+                updateFromPointer(event);
+            };
+            overlay.onpointermove = (event) => {
+                if (freqChartDragActive || event.buttons === 0 || event.pressure === 0) {
+                    updateFromPointer(event);
+                } else {
+                    updateFromPointer(event);
+                }
+            };
+            overlay.onpointerup = (event) => {
+                updateFromPointer(event);
+                stopDrag();
+            };
+            overlay.onpointerleave = () => {
+                if (freqChartDragActive) return;
+                hideFrequencyChartTooltip();
+            };
+            overlay.onlostpointercapture = stopDrag;
+        }
+
+        function updateFrequencyChartTooltip(hoveredTime, rect, svgWidth, svgHeight, xScale) {
+            const tooltip = document.getElementById('freqChartTooltip');
+            const crosshair = document.getElementById('freqChartCrosshair');
+            if (!tooltip || !crosshair || !freqChartHoverPoints.length) return;
+
+            const clampedTime = Math.max(freqChartHoverPoints[0].series[0].time, Math.min(hoveredTime, freqChartHoverPoints[0].series[freqChartHoverPoints[0].series.length - 1].time));
+            const values = freqChartHoverPoints.map(dataset => {
+                let current = dataset.points[0];
+                dataset.points.forEach(point => {
+                    if (point.time <= clampedTime) current = point;
+                });
+                return {
+                    label: dataset.label,
+                    color: dataset.color,
+                    count: current.count
+                };
+            });
+            const displayTime = formatChartTime(clampedTime);
+
+            tooltip.style.display = 'block';
+            tooltip.innerHTML = `
+                <strong>${displayTime}</strong>
+                ${values.map(item => `<span style="color:${item.color};">${item.label}: ${item.count}</span>`).join('')}
+            `;
+
+            const scaleX = rect.width / svgWidth;
+            const left = xScale(clampedTime) * scaleX;
+            const top = 36;
+
+            tooltip.style.left = `${left}px`;
+            tooltip.style.top = `${top}px`;
+
+            crosshair.style.display = 'block';
+            crosshair.setAttribute('x1', xScale(clampedTime));
+            crosshair.setAttribute('x2', xScale(clampedTime));
+        }
+
+        function hideFrequencyChartTooltip() {
+            const tooltip = document.getElementById('freqChartTooltip');
+            const crosshair = document.getElementById('freqChartCrosshair');
+            if (tooltip) tooltip.style.display = 'none';
+            if (crosshair) crosshair.style.display = 'none';
+        }
+
+        function setupAutoRefresh() {
+            const checkbox = document.getElementById('autoRefresh');
+            const toggle = () => {
+                if (checkbox.checked) {
+                    if (refreshTimer) clearInterval(refreshTimer);
+                    refreshTimer = setInterval(() => {
+                        console.log('Auto-refreshing...');
+                        fetchData();
+                    }, 10000);
+                } else if (refreshTimer) {
+                    clearInterval(refreshTimer);
+                    refreshTimer = null;
+                }
+            };
+            checkbox.addEventListener('change', toggle);
+
+            // [V20260202_1245] Initial check
+            if (!isHistoricalView()) {
+                toggle();
+            } else {
+                checkHistoricalMode();
+            }
+        }
+
+        function showDrilldown(product, strategy) {
+            drilldownMode = 'snapshots';
+            updateDrilldownHeaders();
+            const modal = document.getElementById('drilldownModal');
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+            const body = document.getElementById('modalTableBody');
+            const statsGrid = document.getElementById('modalStats');
+
+            title.textContent = `${product} Snapshot History`;
+            subtitle.textContent = strategy;
+
+            // Find all snapshots where this combo appeared
+            const history = [];
+            let totalRankScore = 0;
+            let bestRank = 99;
+            let currentNet = 0;
+
+            // Process snapshots in reverse chronological order
+            [...snapshots].reverse().forEach(snap => {
+                const hit = snap.leaders.find(l => l.product === product && l.strategy === strategy);
+                if (hit) {
+                    const score = (11 - hit.rank);
+                    history.push({
+                        time: snap.time,
+                        net: hit.net,
+                        rank: hit.rank,
+                        score: score,
+                        score_rank: hit.score_rank
+                    });
+                    totalRankScore += score;
+                    if (hit.rank < bestRank) bestRank = hit.rank;
+                    if (currentNet === 0) currentNet = hit.net; // first one in reverse is the latest
+                }
+            });
+
+            // Populate Summary Stats
+            statsGrid.innerHTML = `
+                <div class="drilldown-stat-item">
+                    <label>Total Score</label>
+                    <strong>${totalRankScore}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Best Rank</label>
+                    <strong>#${bestRank === 99 ? '--' : bestRank}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Latest Net</label>
+                    <strong class="${currentNet >= 0 ? 'pnl-pos' : 'pnl-neg'}">${formatPnL(currentNet)}</strong>
+                </div>
+                <div class="drilldown-stat-item">
+                    <label>Snapshots</label>
+                    <strong>${history.length}</strong>
+                </div>
+            `;
+
+            // Store drilldown data and render table
+            drilldownHistory = history;
+            drilldownSortCol = 'time';
+            drilldownSortAsc = false; // latest first
+            renderDrilldownTable();
+            modal.style.display = 'flex';
+        }
+
+        function closeDrilldown() {
+            document.getElementById('drilldownModal').style.display = 'none';
+        }
+
+        function toggleDrilldownSort(col) {
+            if (drilldownSortCol === col) {
+                drilldownSortAsc = !drilldownSortAsc;
+            } else {
+                drilldownSortCol = col;
+                drilldownSortAsc = false;
+            }
+            renderDrilldownTable();
+        }
+
+        function getDrilldownValue(item, col) {
+            switch (col) {
+                // Trade Mode
+                case 'entry_time': return new Date(item.entry_time || 0).getTime();
+                case 'net_return': return item.net_return || 0;
+                case 'alt_net_return': return item.alt_net || item.alt_net_return || 0;
+                case 'entry_price': return item.entry_price || 0;
+                case 'product': return (item.product || '').toLowerCase();
+                case 'direction': return (item.direction || '').toLowerCase();
+                // Snapshot Mode
+                case 'time':
+                    return new Date(item.time || 0).getTime();
+                case 'net':
+                    return typeof item.net === 'number' ? item.net : 0;
+                case 'rank':
+                    return typeof item.rank === 'number' ? item.rank : 0;
+                case 'score_rank':
+                    return typeof item.score_rank === 'number' ? item.score_rank : 999;
+                case 'score':
+                    return typeof item.score === 'number' ? item.score : 0;
+                default:
+                    return 0;
+            }
+        }
+
+        function updateDrilldownSortIndicators() {
+            // Include all possible columns for both modes
+            const allCols = ['time', 'net', 'rank', 'score_rank', 'score', 'entry_time', 'product', 'direction', 'entry_price', 'net_return', 'alt_net_return'];
+            allCols.forEach(col => {
+                const el = document.getElementById(`drilldownSort-${col}`);
+                if (!el) return;
+                if (drilldownSortCol === col) {
+                    el.textContent = drilldownSortAsc ? '▲' : '▼';
+                } else {
+                    el.textContent = '';
+                }
+            });
+        }
+
+        function renderDrilldownTable() {
+            const body = document.getElementById('modalTableBody');
+            if (!body) return;
+
+            const data = drilldownMode === 'snapshots' ? drilldownHistory : drilldownTrades;
+
+            if (!data || data.length === 0) {
+                body.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;color:var(--text-dim);">No data found.</td></tr>';
+                updateDrilldownSortIndicators();
+                return;
+            }
+
+            const sorted = [...data].sort((a, b) => {
+                const aVal = getDrilldownValue(a, drilldownSortCol);
+                const bVal = getDrilldownValue(b, drilldownSortCol);
+                if (typeof aVal === 'string' && typeof bVal === 'string') {
+                    if (aVal < bVal) return drilldownSortAsc ? -1 : 1;
+                    if (aVal > bVal) return drilldownSortAsc ? 1 : -1;
+                    return 0;
+                }
+                if (aVal === bVal) return 0;
+                return drilldownSortAsc ? aVal - bVal : bVal - aVal;
+            });
+
+            body.innerHTML = sorted.map(h => {
+                if (drilldownMode === 'snapshots') {
+                    const timeStr = new Date(h.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const isRank1 = h.rank === 1;
+                    return `
+                        <tr>
+                            <td class="mono">${timeStr}</td>
+                            <td class="mono ${h.net >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="font-weight:600;">${formatPnL(h.net)}</td>
+                            <td>
+                                <span style="font-weight:700; color:${isRank1 ? 'var(--accent-2)' : (h.rank <= 5 ? 'var(--positive)' : 'inherit')};">
+                                    #${h.rank}
+                                </span>
+                            </td>
+                            <td>
+                                <span class="mono" style="font-weight:600; color:var(--text-dim);">#${h.score_rank || '-'}</span>
+                            </td>
+                            <td class="mono" style="opacity:0.6;">+${h.score}</td>
+                        </tr>
+                    `;
+                } else {
+                    // Trade Mode
+                    const timeStr = new Date(h.entry_time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                    const net = h.net_return || 0;
+                    const alt = h.alt_net || h.alt_net_return || 0;
+                    return `
+                        <tr>
+                            <td class="mono" style="font-size:0.85rem; color:var(--text-dim);">${timeStr}</td>
+                            <td style="font-weight:600;">${h.product}</td>
+                            <td class="mono" style="font-size:0.85rem;">${h.direction}</td>
+                            <td class="mono">${(h.entry_price || 0).toFixed(5)}</td>
+                            <td class="mono ${net >= 0 ? 'pnl-pos' : 'pnl-neg'}" style="font-weight:600;">${formatPnL(net)}</td>
+                            <td class="mono ${alt >= 0 ? 'pnl-pos' : 'pnl-neg'}">${formatPnL(alt)}</td>
+                        </tr>
+                    `;
+                }
+            }).join('');
+
+            updateDrilldownSortIndicators();
+        }
+
+        async function showStrategyTradeDrilldown(product, strategy) {
+            const sortedSnaps = [...snapshots].sort((a, b) => new Date(a.time) - new Date(b.time));
+            const firstRank1Snap = sortedSnaps.find(s => {
+                const item = s.leaders.find(l => l.product === product && l.strategy === strategy);
+                return item && item.rank === 1;
+            });
+
+            if (!firstRank1Snap) {
+                alert("This strategy has never hit Rank #1 in the current loaded dataset.");
+                return;
+            }
+            const cutoffTime = new Date(firstRank1Snap.time).getTime();
+
+            // Loading state
+            document.getElementById('modalTableBody').innerHTML = '<tr><td colspan="6" style="text-align:center;padding:20px;">Loading trades...</td></tr>';
+
+            // Switch mode and headers
+            drilldownMode = 'trades';
+            updateDrilldownHeaders();
+
+            const modal = document.getElementById('drilldownModal');
+            const title = document.getElementById('modalTitle');
+            const subtitle = document.getElementById('modalSubtitle');
+
+            title.textContent = `${product} Rank #1 Follow-through`;
+            subtitle.textContent = `${strategy}`;
+
+            modal.style.display = 'flex';
+
+            try {
+                // Fetch Trades
+                const url = `/api/trades?mode=${runMode}&date=${getActiveDate() || ''}&product=${product}&strategy=${strategy}`;
+                const resp = await fetch(url);
+                const data = await resp.json();
+                const allTrades = data.trades || [];
+
+                // Filter Trades (After first Rank 1)
+                drilldownTrades = allTrades.filter(t => {
+                    const tTime = new Date(t.entry_time).getTime();
+                    return tTime >= cutoffTime;
+                });
+
+                // Sort Descending by default
+                drilldownSortCol = 'entry_time';
+                drilldownSortAsc = false;
+
+                // Stats
+                const totalNet = drilldownTrades.reduce((sum, t) => sum + (t.net_return || 0), 0);
+                const winRate = drilldownTrades.length ? (drilldownTrades.filter(t => (t.net_return || 0) > 0).length / drilldownTrades.length * 100) : 0;
+
+                const statsGrid = document.getElementById('modalStats');
+                statsGrid.innerHTML = `
+                    <div class="drilldown-stat-item"><label>Post-Rank1 Net</label><strong class="${totalNet >= 0 ? 'pnl-pos' : 'pnl-neg'}">${formatPnL(totalNet)}</strong></div>
+                    <div class="drilldown-stat-item"><label>Trade Count</label><strong>${drilldownTrades.length}</strong></div>
+                    <div class="drilldown-stat-item"><label>Win Rate</label><strong>${winRate.toFixed(1)}%</strong></div>
+                    <div class="drilldown-stat-item"><label>Trigger Time</label><strong style="font-size:0.9rem;">${new Date(cutoffTime).toLocaleTimeString()}</strong></div>
+                `;
+
+                renderDrilldownTable();
+
+            } catch (err) {
+                document.getElementById('modalTableBody').innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--negative);">Error loading trades: ${err.message}</td></tr>`;
+            }
+        }
+
+        function updateDrilldownHeaders() {
+            const tr = document.getElementById('drilldownHeaderRow');
+            if (!tr) return;
+            if (drilldownMode === 'snapshots') {
+                tr.innerHTML = `
+                    <th onclick="toggleDrilldownSort('time')">Timestamp <span class="sort-indicator" id="drilldownSort-time"></span></th>
+                    <th onclick="toggleDrilldownSort('net')">Net P&L <span class="sort-indicator" id="drilldownSort-net"></span></th>
+                    <th onclick="toggleDrilldownSort('rank')">Rank (Net) <span class="sort-indicator" id="drilldownSort-rank"></span></th>
+                    <th onclick="toggleDrilldownSort('score_rank')">Rank (Score) <span class="sort-indicator" id="drilldownSort-score_rank"></span></th>
+                    <th onclick="toggleDrilldownSort('score')">Score Match <span class="sort-indicator" id="drilldownSort-score"></span></th>
+                `;
+            } else {
+                tr.innerHTML = `
+                     <th onclick="toggleDrilldownSort('entry_time')">Time <span class="sort-indicator" id="drilldownSort-entry_time"></span></th>
+                     <th onclick="toggleDrilldownSort('product')">Product <span class="sort-indicator" id="drilldownSort-product"></span></th>
+                     <th onclick="toggleDrilldownSort('direction')">Type <span class="sort-indicator" id="drilldownSort-direction"></span></th>
+                     <th onclick="toggleDrilldownSort('entry_price')">Price <span class="sort-indicator" id="drilldownSort-entry_price"></span></th>
+                     <th onclick="toggleDrilldownSort('net_return')">Net <span class="sort-indicator" id="drilldownSort-net_return"></span></th>
+                     <th onclick="toggleDrilldownSort('alt_net_return')">Alt Net <span class="sort-indicator" id="drilldownSort-alt_net_return"></span></th>
+                `;
+            }
+        }
+
+        // Close modal on backdrop click
+        window.onclick = function (event) {
+            const drilldownModal = document.getElementById('drilldownModal');
+            const freqChartModal = document.getElementById('freqChartModal');
+            if (event.target == drilldownModal) {
+                closeDrilldown();
+            }
+            if (event.target == freqChartModal) {
+                closeFrequencyChart();
+            }
+        }
+
+        /* [V20260130_1010] Grid Live Activation Logic */
+
+        // [V20260203_2230] Helper to check if current view matches configured frequency_datasource
+        function isDataSourceAllowed() {
+            const allowed = configFrequencyDatasource || 'breakout';
+            if (dataSourceKey === 'standard' && allowed === 'breakout') return true;
+            if (dataSourceKey === 'dnaNet' && allowed === 'dna_net') return true;
+            if (dataSourceKey === 'dnaAlt' && allowed === 'dna_alt') return true;
+            return false;
+        }
+
+        async function fetchGridLive() {
+            try {
+                const resp = await fetch(`/api/grid_live?mode=${runMode}`);
+                if (resp.ok) {
+                    const res = await resp.json();
+                    gridLiveItems = res.data || [];
+                }
+            } catch (err) {
+                console.error('Failed to fetch grid_live:', err);
+            }
+        }
+
+        async function toggleGridLive(product, strategy) {
+            // [V20260203_2230] Config-based Guard
+            if (!isDataSourceAllowed()) {
+                alert(`Monitoring updates are restricted to '${configFrequencyDatasource}' data source.`);
+                return;
+            }
+            // End Guard
+
+            // [V20260130_1655] Robust Group Detection
+            // Determine the correct group for this product. 
+            // 1. Try to find an existing item in gridLiveItems with the same product.
+            // 2. Fallback to using the product name itself.
+            const existingItem = gridLiveItems.find(m => m.product === product);
+            const targetGroup = existingItem ? existingItem.group : product;
+
+            // Get all models currently in this target group
+            const groupItems = gridLiveItems.filter(m => m.group === targetGroup);
+            let models = groupItems.map(item => ({
+                model: item.model,
+                product: item.product,
+                metric: item.metric || 'net'
+            }));
+
+            const matchIndex = models.findIndex(m => m.model === strategy);
+
+            if (matchIndex > -1) {
+                // Remove if already monitored in this group
+                models.splice(matchIndex, 1);
+            } else {
+                // Add new model
+                models.push({
+                    model: strategy,
+                    product: product,
+                    metric: 'net'
+                });
+            }
+
+            try {
+                const resp = await fetch('/api/grid_live', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        group: targetGroup,
+                        models: models,
+                        mode: runMode,
+                        source: 'rank_alert_ui'
+                    })
+                });
+
+                if (resp.ok) {
+                    // Refresh local state and UI
+                    await fetchGridLive();
+                    renderTable();
+                    renderConsistencyList();
+                } else {
+                    const err = await resp.json();
+                    alert(`Failed to update monitoring: ${err.message}`);
+                }
+            } catch (err) {
+                console.error('Grid live update error:', err);
+                alert('Connection error while updating monitoring.');
+            }
+        }
+
+        /* [V20260130_1720] Rank Alert Logic */
+
+        function shouldShowRankAlert(type, newRankIdx = null) {
+            if (!rankAlertEnabled || rankAlertSuspended) return false;
+            switch (rankAlertPreference) {
+                case 'rank1':
+                    return type === 'rank1';
+                case 'rank2':
+                    return type === 'improvement' && newRankIdx === 1;
+                case 'rank3plus':
+                    return type === 'improvement' && newRankIdx >= 2;
+                default:
+                    return type === 'rank1' || type === 'improvement';
+            }
+        }
+
+        function checkRankChanges(leadersList) {
+
+            if (!leadersList || leadersList.length === 0) return;
+
+            // Sort current leaders to be sure
+            const sorted = [...leadersList].sort((a, b) => getLeaderNet(b) - getLeaderNet(a));
+
+            // 1. Check Rank #1 Change
+            // -----------------------
+            const top = sorted[0];
+            const topKey = `${top.product}|${top.strategy}`;
+            let rank1Changed = false;
+
+            let autoActionExecuted = false;
+
+            if (currentRank1 === null) {
+                currentRank1 = topKey;
+            } else if (topKey !== currentRank1) {
+                // Change detected
+                rank1Changed = true;
+                console.log(`[RankAlert] New Leader: ${top.product} ${top.strategy} (Was: ${currentRank1})`);
+                currentRank1 = topKey;
+
+                // Auto-action logic (Rank #1 priority)
+                // [V20260203_1245] ONLY auto-execute if 'Suspend Visual' is checked (Auto Mode)
+                if (rankAlertEnabled && rankAlertSuspended) {
+                    const action = rankAlertDefaultAction || RANK_ALERT_FALLBACK_ACTION;
+                    console.log(`[RankAlert] Auto-executing action: ${action}`);
+                    handleRankAction(action, top, 'rank_alert_auto');
+                    autoActionExecuted = true;
+                }
+
+                if (!autoActionExecuted && rankAlertEnabled && shouldShowRankAlert('rank1')) {
+                    showRankAlert(top, 'rank1');
+                }
+            }
+
+            // 2. Check Rank Improvements (Top 5)
+            // ----------------------------------
+            if (rankImprovementAlertEnabled && !rank1Changed) { // Don't double alert if #1 changed (handled above)
+                for (let i = 0; i < Math.min(sorted.length, 5); i++) {
+                    const item = sorted[i];
+                    const key = `${item.product}|${item.strategy}`;
+                    const currentRank = i;
+
+                    if (previousRanks[key] !== undefined) {
+                        const oldRank = previousRanks[key];
+                        // If moved UP (lower index) into/within Top 5
+                        if (currentRank < oldRank) {
+                            console.log(`[RankAlert] Improvement: ${item.product} ${item.strategy} #${oldRank + 1}->#${currentRank + 1}`);
+                            if (shouldShowRankAlert('improvement', currentRank)) {
+                                showRankAlert(item, 'improvement', oldRank, currentRank);
+                            }
+                            // Show only the highest ranked improvement per tick to avoid spam
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Update Previous Ranks state for next tick
+            sorted.forEach((item, idx) => {
+                previousRanks[`${item.product}|${item.strategy}`] = idx;
+            });
+
+            ensureTopInGridLive(top, rank1Changed && autoActionExecuted);
+        }
+
+        function isLeaderMonitored(leader) {
+            if (!gridLiveItems || gridLiveItems.length === 0) return false;
+            return gridLiveItems.some(item => {
+                const metric = (item.metric || 'net').toLowerCase();
+                return item.product === leader.product && item.model === leader.strategy && metric === 'net';
+            });
+        }
+
+        function ensureTopInGridLive(leader, skipIfHandled) {
+            // [V20260203_1250] In Manual Mode (Visual Alerts), NEVER auto-ensure.
+            if (!rankAlertSuspended) return;
+
+            if (!leader) return;
+            const leaderKey = `${leader.product}|${leader.strategy}`;
+            if (lastEnsuredTopKey === leaderKey && isLeaderMonitored(leader)) {
+                return;
+            }
+            lastEnsuredTopKey = leaderKey;
+            if (skipIfHandled) {
+                return;
+            }
+            if (isLeaderMonitored(leader)) {
+                return;
+            }
+            console.log(`[RankAlert] Ensuring ${leader.product} ${leader.strategy} is monitored via auto-action fallback.`);
+            const action = rankAlertDefaultAction || RANK_ALERT_FALLBACK_ACTION;
+            handleRankAction(action, leader, 'rank_alert_ensure');
+        }
+
+        function getCurrentTopLeader() {
+            if (!leaders || leaders.length === 0) {
+                return null;
+            }
+            const sorted = [...leaders].sort((a, b) => getLeaderNet(b) - getLeaderNet(a));
+            return sorted[0];
+        }
+
+        // [V20260131_0450] Debugging helper: Call window.testRankAlert() in console
+        window.testRankAlert = () => {
+            const top = getCurrentTopLeader();
+            if (top) {
+                showRankAlert(top, 'rank1');
+            } else {
+                showRankAlert({ product: 'TEST_PROD', strategy: 'Test_Strategy', final_net: 123.45 }, 'improvement', 5, 2);
+            }
+        };
+
+        function showRankAlert(item, type, oldRankIdx = null, newRankIdx = null) {
+            const alertBox = document.getElementById('rankAlert');
+            const titleEl = alertBox.querySelector('.notif-header strong') || alertBox.querySelector('strong');
+
+            // Update Title / Icon based on type
+            if (type === 'improvement') {
+                if (titleEl) titleEl.innerHTML = '<i class="fas fa-arrow-up"></i> Rank Improved!';
+            } else {
+                if (titleEl) titleEl.innerHTML = '<i class="fas fa-trophy"></i> New Rank #1!';
+            }
+
+            document.getElementById('alertProduct').textContent = item.product;
+            document.getElementById('alertStrategy').textContent = item.strategy;
+
+            const netEl = document.getElementById('alertNet');
+            netEl.textContent = formatPnL(item.final_net);
+            netEl.className = `notif-stat ${item.final_net >= 0 ? 'pnl-pos' : 'pnl-neg'}`;
+
+            // Add/Update Extra Info for Context
+            let extInfo = document.getElementById('alertExtraInfo');
+            if (!extInfo) {
+                extInfo = document.createElement('div');
+                extInfo.id = 'alertExtraInfo';
+                extInfo.style.fontSize = '0.85rem';
+                extInfo.style.marginTop = '8px';
+                extInfo.style.opacity = '0.8';
+                extInfo.style.textAlign = 'center';
+                // Insert after stats
+                const statRow = alertBox.querySelector('.notif-stats') || netEl.parentNode;
+                statRow.parentNode.insertBefore(extInfo, statRow.nextSibling);
+            }
+
+            if (type === 'improvement' && oldRankIdx !== null) {
+                extInfo.innerHTML = `Moved from <span style="color:var(--text-dim)">#${oldRankIdx + 1}</span> to <span style="color:var(--positive);font-weight:bold;">#${newRankIdx + 1}</span>`;
+                extInfo.style.display = 'block';
+            } else {
+                extInfo.style.display = 'none';
+            }
+
+            // Store item data on the element for action handlers
+            alertBox.dataset.product = item.product;
+            alertBox.dataset.strategy = item.strategy;
+            alertBox.dataset.net = item.final_net;
+
+            // Reset checkbox
+            const repeatChk = document.getElementById('rankAlertRepeat');
+            if (repeatChk) repeatChk.checked = false;
+
+            alertBox.style.display = 'block';
+        }
+
+        function hideRankAlert() {
+            document.getElementById('rankAlert').style.display = 'none';
+        }
+
+        async function handleRankAction(action, dataOverride = null, source = null) {
+            const alertBox = document.getElementById('rankAlert');
+            // If dataOverride is provided (auto-action), use it. Otherwise read from DOM.
+            const product = dataOverride ? dataOverride.product : alertBox.dataset.product;
+            const strategy = dataOverride ? dataOverride.strategy : alertBox.dataset.strategy;
+
+            if (!product || !strategy) {
+                hideRankAlert();
+                return;
+            }
+
+            // [V20260203_2230] Config-based Guard
+            if (!isDataSourceAllowed()) {
+                console.warn(`[RankAlert] Action ignored: Current source '${dataSourceKey}' does not match config '${configFrequencyDatasource}'.`);
+                if (!dataOverride) hideRankAlert();
+                return;
+            }
+            // End Guard
+
+            // Check Persistence (only via UI interaction)
+            if (!dataOverride) {
+                const repeat = document.getElementById('rankAlertRepeat').checked;
+                if (repeat && action !== 'none' && action !== 'disable') {
+                    // Save preference
+                    updateConfig({ rank_alert_default_action: action });
+                    rankAlertDefaultAction = action;
+                }
+            }
+
+            const actionOrigin = source || 'rank_alert_ui';
+            console.log(`[RankAlert] Executing: ${action} for ${product} ${strategy} (source=${actionOrigin})`);
+
+            try {
+                if (action === 'monitor_only') {
+                    // Replace ALL with this 1 item
+                    await fetch('/api/grid_live', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            group: product,
+                            replace_all: true,
+                            models: [{
+                                model: strategy,
+                                product: product,
+                                metric: 'net'
+                            }]
+                            , mode: runMode
+                            , source: actionOrigin
+                        })
+                    });
+                    await fetchGridLive();
+                    renderTable();
+                }
+                else if (action === 'monitor_priority' || action === 'add_monitor') {
+                    // Add to list (Priority is treated same as Add for now, just ensure it gets added)
+                    // We can reuse toggleGridLive logic but forcing Add.
+                    // But toggleGridLive toggles. We want FORCE ADD.
+                    // Also need to find correct group like toggleGridLive does.
+
+                    const existingItem = gridLiveItems.find(m => m.product === product);
+                    const targetGroup = existingItem ? existingItem.group : product;
+
+                    // Get existing for group
+                    const groupItems = gridLiveItems.filter(m => m.group === targetGroup);
+                    let models = groupItems.map(item => ({
+                        model: item.model,
+                        product: item.product,
+                        metric: item.metric || 'net'
+                    }));
+
+                    // Add if not exists
+                    if (!models.some(m => m.model === strategy)) {
+                        models.push({
+                            model: strategy,
+                            product: product,
+                            metric: 'net'
+                        });
+
+                        await fetch('/api/grid_live', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                group: targetGroup,
+                                models: models
+                                , mode: runMode
+                                , source: actionOrigin
+                            })
+                        });
+                        await fetchGridLive();
+                        renderTable();
+                    }
+                }
+                else if (action === 'disable') {
+                    rankAlertEnabled = false;
+                    updateConfig({ rank_alert_enabled: false });
+                }
+            } catch (err) {
+                console.error("Rank Action Failed", err);
+                // Don't alert user on auto-action fail to avoid spam, just log
+                if (!dataOverride) alert("Failed to execute action");
+            }
+
+            hideRankAlert();
+        }
+
+        function updateNotificationControlsUI() {
+            const select = document.getElementById('rankAlertThresholdSelect');
+            if (select) select.value = rankAlertPreference;
+            const suspendToggle = document.getElementById('rankAlertSuspend');
+            if (suspendToggle) suspendToggle.checked = rankAlertSuspended;
+        }
+
+        function bindNotificationControls() {
+            const select = document.getElementById('rankAlertThresholdSelect');
+            if (select) {
+                select.value = rankAlertPreference;
+                select.addEventListener('change', (event) => {
+                    rankAlertPreference = event.target.value;
+                    updateConfig({ rank_alert_threshold: rankAlertPreference });
+                });
+            }
+            const suspendToggle = document.getElementById('rankAlertSuspend');
+            if (suspendToggle) {
+                suspendToggle.checked = rankAlertSuspended;
+                suspendToggle.addEventListener('change', (event) => {
+                    rankAlertSuspended = event.target.checked;
+                    updateConfig({ rank_alert_suspended: rankAlertSuspended });
+                });
+            }
+        }
+
+        async function updateConfig(updates) {
+            try {
+                // Must load current config first to merge? Or API handles merge?
+                // TradeViewer API update_config overwrites file!
+                // Wait, verify trade_viewer_api.py update_config implementation.
+                // It does json.dump(data, f). It REPLACEES file with POST body.
+                // So we MUST fetch then update then save.
+
+                const currResp = await fetch('/api/config');
+                if (!currResp.ok) return;
+                const currCfg = await currResp.json();
+                let newCfg = { ...currCfg.config, ...updates }; // config wrapper? 
+                // api/config GET returns {success:true, config: {...}}
+                // api/config POST expects plain dict? 
+
+                await fetch('/api/config', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newCfg)
+                });
+            } catch (e) { console.error("Config update failed", e); }
+        }
+
+        async function initExplorer() {
+            try {
+                const cfgResp = await fetch('config.json');
+                if (cfgResp.ok) {
+                    const cfg = await cfgResp.json();
+                    if (cfg.run_mode) runMode = String(cfg.run_mode).toLowerCase();
+                    if (cfg.frequency_datasource) configFrequencyDatasource = String(cfg.frequency_datasource).toLowerCase();
+                    productTypeByProduct = Object.fromEntries(
+                        Object.entries(cfg.product_type_by_product || {}).map(([key, value]) => [
+                            String(key || '').trim().toUpperCase(),
+                            normalizeProductTypeValue(value)
+                        ])
+                    );
+
+                    // [V20260131_0255] Sync Mode Selector
+                    const modeSel = document.getElementById('runModeSelect');
+                    if (modeSel) modeSel.value = runMode;
+
+                    // [V20260130_1720] Load Rank Alert Prefs
+                    if (typeof cfg.rank_alert_enabled === 'boolean') {
+                        rankAlertEnabled = cfg.rank_alert_enabled;
+                    }
+                    if (cfg.rank_alert_default_action) {
+                        rankAlertDefaultAction = cfg.rank_alert_default_action;
+                    }
+                    if (cfg.rank_alert_threshold) {
+                        rankAlertPreference = cfg.rank_alert_threshold;
+                    }
+                    if (typeof cfg.rank_alert_suspended === 'boolean') {
+                        rankAlertSuspended = cfg.rank_alert_suspended;
+                    }
+                    updateNotificationControlsUI();
+                }
+            } catch (err) {
+                console.warn('Unable to load config.json, defaulting to live', err);
+            }
+            await fetchData();
+            setupAutoRefresh();
+        }
+
+
+        function isLeaderMonitored(leader) {
+            if (!gridLiveItems || gridLiveItems.length === 0) return false;
+            return gridLiveItems.some(item => {
+                const metric = (item.metric || 'net').toLowerCase();
+                return item.product === leader.product && item.model === leader.strategy && metric === 'net';
+            });
+        }
+
+        bindNotificationControls();
+        initExplorer();
+    </script>
+</body>
+
+</html>

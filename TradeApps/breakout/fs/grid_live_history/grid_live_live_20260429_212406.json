@@ -1,0 +1,14 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_Rev_2_tp20.0_sl30.0",
+            "product": "GBPEUR_C",
+            "metric": "buy_net",
+            "source": "strategy_performance",
+            "manual": true,
+            "group": "GBPEUR_C",
+            "activated_at": "2026-04-29T16:14:00"
+        }
+    ],
+    "sim": []
+}

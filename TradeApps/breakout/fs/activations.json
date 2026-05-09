@@ -1,0 +1,33 @@
+{
+    "live": {
+        "breakout_R_Rev_2_tp5.0_sl30.0_sell_net": {
+            "active": false,
+            "activated_at": null,
+            "manual": false,
+            "products": null,
+            "auto_promote": false
+        },
+        "breakout_Rev_2_tp10.0_sl3.0_sell_net": {
+            "active": false,
+            "activated_at": null,
+            "manual": false,
+            "products": null,
+            "auto_promote": false
+        },
+        "breakout_2_tp3.0_sl20.0_buy_net": {
+            "active": false,
+            "activated_at": null,
+            "manual": false,
+            "products": null,
+            "auto_promote": false
+        },
+        "breakout_2_tp3.0_sl20.0_sell_net": {
+            "active": false,
+            "activated_at": null,
+            "manual": false,
+            "products": null,
+            "auto_promote": false
+        }
+    },
+    "sim": {}
+}

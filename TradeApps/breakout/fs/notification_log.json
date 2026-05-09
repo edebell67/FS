@@ -1,0 +1,904 @@
+{
+  "logs": [
+    {
+      "timestamp": "2026-02-19T11:24:54.701073Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T11:19:14.643601Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T11:12:55.906634Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl50.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T10:25:43.853192Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T10:24:50.800001Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl50.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T10:21:51.749510Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T02:26:09.418659Z",
+      "bias_from": null,
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T01:06:22.983741Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp3.0_sl20.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-19T01:06:22.768996Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl30.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T12:18:50.262626Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp3.0_sl50.0",
+      "recommended_product": "NZDAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T10:32:33.201784Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp3.0_sl30.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T10:25:13.269695Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp3.0_sl30.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T04:14:49.980013Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T04:14:45.858613Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T03:52:01.597013Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T03:35:52.365199Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-18T03:35:46.680925Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_4_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T17:21:17.045645Z",
+      "bias_from": "BUY",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_3_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T17:21:12.300769Z",
+      "bias_from": "BUY",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_3_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T16:19:51.325060Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T16:19:19.019366Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:42:07.528198Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:33:50.589315Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:33:50.264407Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:32:51.369480Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:32:51.011487Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T14:23:57.146356Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl30.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T13:52:08.375252Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp3.0_sl20.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T13:34:16.017784Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl50.0",
+      "recommended_product": "NZDAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T03:20:54.255310Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_Rev_4_tp5.0_sl30.0",
+      "recommended_product": "EUR",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T03:19:50.476325Z",
+      "bias_from": null,
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_Rev_4_tp5.0_sl30.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T23:55:51.852491Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp3.0_sl20.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T21:31:20.064971Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "GBPEUR_S",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T16:33:04.185818Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl50.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T15:26:55.269850Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp3.0_sl20.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T14:26:57.435561Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_3_tp3.0_sl20.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T13:17:54.797017Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl50.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T13:17:54.084914Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl50.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T05:07:50.679709Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_4_tp3.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T05:07:01.975005Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_4_tp3.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T05:05:50.618026Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "CHF",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T05:05:01.920477Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "CHF",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:52:50.349952Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_4_tp3.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:51:57.222075Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_4_tp3.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:40:50.833040Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:40:50.553324Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:24:52.058018Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl20.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:24:51.410442Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl20.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:23:51.898844Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T04:23:51.581066Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T03:13:51.872032Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl20.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T03:13:51.553254Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl20.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T03:06:51.946199Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl50.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T03:06:51.624350Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl50.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T01:08:51.428212Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_2_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T01:08:51.136836Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_2_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T00:59:52.055935Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_4_tp5.0_sl50.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-16T00:59:51.409881Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_4_tp5.0_sl50.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-15T23:45:02.646684Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T19:25:38.636234Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T16:06:01.003807Z",
+      "bias_from": "BUY",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T15:58:36.215299Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T15:58:28.627900Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T06:00:16.911518Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl50.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T05:38:50.462633Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_4_tp5.0_sl30.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T04:37:03.437977Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T04:36:58.356224Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "NZD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T04:36:40.007529Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-15T04:34:58.961231Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp3.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-14T22:04:39.981011Z",
+      "bias_from": "BUY",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp5.0_sl30.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-14T18:20:18.812059Z",
+      "bias_from": "BUY",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp3.0_sl20.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "sim"
+    },
+    {
+      "timestamp": "2026-02-13T22:22:17.009830Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:24:15.985352Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:24:14.765622Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:14:14.807932Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_4_tp3.0_sl30.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:14:04.323462Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_4_tp3.0_sl30.0",
+      "recommended_product": "EURNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:12:14.741406Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:12:04.350964Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "GBP",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:02:15.607633Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp3.0_sl50.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T21:01:59.778066Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_2_tp3.0_sl50.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:38:15.328746Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:37:49.279911Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:36:16.064738Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_S",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:35:49.305508Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_S",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:32:14.398517Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl30.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:31:44.331113Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_3_tp5.0_sl30.0",
+      "recommended_product": "AUD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:27:15.384122Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_3_tp5.0_sl50.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T19:26:44.271380Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_3_tp5.0_sl50.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T04:20:15.277911Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T04:18:16.536692Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T03:36:49.323392Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_4_tp5.0_sl30.0",
+      "recommended_product": "EURAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T03:34:49.338590Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_3_tp5.0_sl30.0",
+      "recommended_product": "GBPNZD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T03:13:15.587825Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_2_tp5.0_sl50.0",
+      "recommended_product": "GBPEUR_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T02:24:14.625112Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+      "recommended_product": "GBPAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-13T02:13:35.209316Z",
+      "bias_from": "SELL",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+      "recommended_product": "NZDAUD_C",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-12T22:02:26.995387Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-12T12:58:28.172461Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_4_tp3.0_sl50.0",
+      "recommended_product": "CHF",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-12T12:57:42.767861Z",
+      "bias_from": "SELL",
+      "bias_to": "BUY",
+      "recommended_strategy": "breakout_4_tp3.0_sl50.0",
+      "recommended_product": "CHF",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-12T12:55:53.458368Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-12T12:55:42.999704Z",
+      "bias_from": "BUY",
+      "bias_to": "SELL",
+      "recommended_strategy": "breakout_R_2_tp5.0_sl50.0",
+      "recommended_product": "CAD",
+      "action": "auto_activated",
+      "run_mode": "live"
+    }
+  ]
+}

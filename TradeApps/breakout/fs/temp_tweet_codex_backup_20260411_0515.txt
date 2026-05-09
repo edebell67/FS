@@ -1,0 +1,17 @@
+Update at 2026-04-11 00:00
+
+2026-04-10
+1. SI 9365
+2. NQ 2400
+3. CL 2295
+4. GBPNZD 900
+
+Weekly details follow. #StrategyWarehouse #FuturesTrading #AlgoTrading
+
+Part 2: Week to 2026-04-10    Today
+1. SI: brk R 2 tp20   23165 | 0
+2. NQ: brk 2 tp30      7725 | 0
+3. CL: brk R 2 tp30    6225 | 0
+4. GBPAUD: brk R 2 tp20   3100 | 0
+
+#StrategyWarehouse #FuturesTrading #AlgoTrading

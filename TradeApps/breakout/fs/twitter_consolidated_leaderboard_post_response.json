@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-05-04T08:49:03.915377",
+  "run_date": "2026-05-04",
+  "request": {
+    "url": "http://localhost:5000/api/social/x_api_post",
+    "trigger": "breakout_consolidated_leaderboard_every_4_hours",
+    "text_length": 252,
+    "text": "Today : 2026-05-04\n1 NZD bR3t20 370\n2 NZD bR3t20 370\n3 NZD bR3t20 370\n4 NZD bR3t20 370\n5 NZD bR4t20 370\n\nWeekly So far\n1 NZD bR3t20 370\n2 NZD bR3t20 370\n3 NZD bR3t20 370\n4 NZD bR3t20 370\n5 NZD bR4t20 370\n\n#StrategyWarehouse #FuturesTrading #AlgoTrading"
+  },
+  "response": {
+    "status_code": 200,
+    "payload": {
+      "message": "Tweet posted successfully",
+      "reply_to_tweet_id": null,
+      "success": true,
+      "tweet_id": "2051207467913097726"
+    }
+  },
+  "attempts": [
+    {
+      "attempt": 1,
+      "text_length": 252,
+      "text": "Today : 2026-05-04\n1 NZD bR3t20 370\n2 NZD bR3t20 370\n3 NZD bR3t20 370\n4 NZD bR3t20 370\n5 NZD bR4t20 370\n\nWeekly So far\n1 NZD bR3t20 370\n2 NZD bR3t20 370\n3 NZD bR3t20 370\n4 NZD bR3t20 370\n5 NZD bR4t20 370\n\n#StrategyWarehouse #FuturesTrading #AlgoTrading"
+    }
+  ]
+}

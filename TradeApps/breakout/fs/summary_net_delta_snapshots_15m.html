@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary Net Delta Snapshots</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+        :root {
+            --bg: #070a12;
+            --panel: rgba(13, 18, 31, 0.86);
+            --panel-2: rgba(17, 24, 39, 0.92);
+            --line: rgba(148, 163, 184, 0.18);
+            --text: #f8fafc;
+            --muted: #94a3b8;
+            --green: #22c55e;
+            --red: #ef4444;
+            --amber: #f59e0b;
+            --cyan: #06b6d4;
+            --blue: #3b82f6;
+        }
+
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background:
+                radial-gradient(circle at top left, rgba(6, 182, 212, 0.18), transparent 34rem),
+                radial-gradient(circle at top right, rgba(245, 158, 11, 0.12), transparent 30rem),
+                var(--bg);
+            color: var(--text);
+            font-family: 'Outfit', sans-serif;
+        }
+        .main { margin-left: 260px; padding: 22px 34px 56px; }
+        .topbar {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 18px;
+        }
+        h1 { margin: 0; font-size: 2rem; letter-spacing: -0.04em; }
+        .subtitle { color: var(--muted); margin-top: 6px; font-size: 0.94rem; }
+        .meta { color: var(--muted); font-size: 0.82rem; text-align: right; line-height: 1.5; }
+        .controls {
+            display: flex;
+            gap: 12px;
+            align-items: end;
+            flex-wrap: wrap;
+            padding: 14px;
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 18px;
+            margin-bottom: 18px;
+        }
+        label {
+            display: block;
+            color: var(--muted);
+            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        input, select, button {
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text);
+            border-radius: 11px;
+            padding: 10px 12px;
+            font: inherit;
+        }
+        select option { background: #0f172a; color: #f8fafc; }
+        button {
+            cursor: pointer;
+            font-weight: 700;
+            background: linear-gradient(135deg, #0891b2, #2563eb);
+            border: 0;
+        }
+        .chart-btn {
+            padding: 7px 10px;
+            border-radius: 9px;
+            font-size: 0.82rem;
+            background: linear-gradient(135deg, #f59e0b, #ea580c);
+            color: #0f172a;
+            border: 0;
+            font-weight: 800;
+            transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease, background 180ms ease, color 180ms ease;
+            box-shadow: 0 10px 24px rgba(234, 88, 12, 0.2);
+        }
+        .chart-btn:hover {
+            filter: brightness(1.05);
+        }
+        .chart-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        .chart-btn.is-busy {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            color: #eff6ff;
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
+        }
+        .chart-btn.is-success {
+            background: linear-gradient(135deg, #34d399, #22c55e);
+            color: #052e16;
+            box-shadow: 0 12px 26px rgba(34, 197, 94, 0.24);
+        }
+        .chart-btn.is-error {
+            background: linear-gradient(135deg, #fb7185, #dc2626);
+            color: #fff1f2;
+            box-shadow: 0 12px 26px rgba(220, 38, 38, 0.26);
+        }
+        .chart-btn[disabled] {
+            cursor: wait;
+        }
+        .load-btn {
+            transition: transform 120ms ease, box-shadow 180ms ease, filter 180ms ease, background 180ms ease, color 180ms ease;
+            box-shadow: 0 10px 24px rgba(37, 99, 235, 0.22);
+        }
+        .load-btn:hover {
+            filter: brightness(1.05);
+        }
+        .load-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+        .load-btn.is-busy {
+            background: linear-gradient(135deg, #06b6d4, #2563eb);
+            color: #eff6ff;
+            box-shadow: 0 12px 26px rgba(37, 99, 235, 0.28);
+        }
+        .load-btn.is-success {
+            background: linear-gradient(135deg, #34d399, #22c55e);
+            color: #052e16;
+            box-shadow: 0 12px 26px rgba(34, 197, 94, 0.24);
+        }
+        .load-btn.is-error {
+            background: linear-gradient(135deg, #fb7185, #dc2626);
+            color: #fff1f2;
+            box-shadow: 0 12px 26px rgba(220, 38, 38, 0.26);
+        }
+        .load-btn[disabled] {
+            cursor: wait;
+        }
+        button.secondary {
+            background: rgba(148, 163, 184, 0.12);
+            border: 1px solid var(--line);
+        }
+        .snapshot-strip {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 8px 2px 14px;
+            margin-bottom: 12px;
+        }
+        .snap-chip {
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.78);
+            color: var(--muted);
+            border-radius: 999px;
+            padding: 7px 10px;
+            white-space: nowrap;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        .snap-chip.active {
+            background: rgba(6, 182, 212, 0.18);
+            color: var(--text);
+            border-color: rgba(6, 182, 212, 0.55);
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .aggregate-panel {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 18px;
+            padding: 14px;
+            margin-bottom: 16px;
+        }
+        .aggregate-panel h2 {
+            margin: 0 0 10px;
+            font-size: 0.95rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+        .aggregate-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 12px;
+        }
+        .aggregate-card {
+            border: 1px solid var(--line);
+            background: rgba(15, 23, 42, 0.7);
+            border-radius: 16px;
+            padding: 12px;
+        }
+        .aggregate-rank {
+            color: var(--muted);
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 8px;
+        }
+        .aggregate-name {
+            font-size: 1rem;
+            font-weight: 700;
+            line-height: 1.35;
+            margin-bottom: 6px;
+            word-break: break-word;
+        }
+        .aggregate-value {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        .aggregate-meta {
+            color: var(--muted);
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            font-size: 0.82rem;
+        }
+        .summary-card {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            border-radius: 18px;
+            padding: 14px;
+            cursor: pointer;
+        }
+        .summary-card.active { border-color: rgba(6, 182, 212, 0.7); }
+        .summary-card h3 { margin: 0 0 10px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.08em; }
+        .summary-card .net { font-size: 1.8rem; font-weight: 800; }
+        .summary-stats { color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; font-size: 0.82rem; }
+        .table-section {
+            border: 1px solid var(--line);
+            background: var(--panel-2);
+            border-radius: 18px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .table-wrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th, td {
+            padding: 9px 10px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.11);
+            text-align: right;
+            white-space: nowrap;
+        }
+        th {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: #0f172a;
+            color: #cbd5e1;
+            cursor: pointer;
+            user-select: none;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+        th.left, td.left { text-align: left; }
+        tr:hover td { background: rgba(6, 182, 212, 0.05); }
+        .pos { color: var(--green); font-weight: 700; }
+        .neg { color: var(--red); font-weight: 700; }
+        .muted { color: var(--muted); }
+        .group-pill {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 999px;
+            background: rgba(148, 163, 184, 0.14);
+            color: #cbd5e1;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+        .status { color: var(--muted); margin: 12px 0; }
+        @media (max-width: 1024px) {
+            .main { margin-left: 0; padding: 20px; }
+            .summary-grid { grid-template-columns: 1fr; }
+            .topbar { flex-direction: column; }
+            .meta { text-align: left; }
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <main class="main">
+        <div class="topbar">
+            <div>
+                <h1>Summary Net Delta Snapshots</h1>
+                <div class="subtitle">Top 10 strategy/product improvements over rolling 30-minute and 60-minute windows at each 15-minute snapshot.</div>
+            </div>
+            <div class="meta" id="meta">No data loaded.</div>
+        </div>
+
+        <section class="controls">
+            <div>
+                <label for="runMode">Run Mode</label>
+                <select id="runMode">
+                    <option value="live">live</option>
+                    <option value="sim">sim</option>
+                </select>
+            </div>
+            <div>
+                <label for="productType">Product Type</label>
+                <select id="productType">
+                    <option value="forex">forex</option>
+                    <option value="indices">indices</option>
+                    <option value="crypto">crypto</option>
+                    <option value="metals">metals</option>
+                    <option value="energy">energy</option>
+                </select>
+            </div>
+            <div>
+                <label for="dateInput">Date</label>
+                <input id="dateInput" type="date">
+            </div>
+            <div>
+                <label for="windowMode">Window</label>
+                <select id="windowMode">
+                    <option value="30m">30 minutes</option>
+                    <option value="60m">60 minutes</option>
+                </select>
+            </div>
+            <div>
+                <label for="autoFollowLatest">Latest Mode</label>
+                <select id="autoFollowLatest">
+                    <option value="on">auto follow latest</option>
+                    <option value="off">manual snapshot</option>
+                </select>
+            </div>
+            <div>
+                <label for="autoRefreshToggle">Auto Refresh</label>
+                <select id="autoRefreshToggle">
+                    <option value="on">on</option>
+                    <option value="off">off</option>
+                </select>
+            </div>
+            <div>
+                <label for="negativeNetFilter">Snapshot Net</label>
+                <select id="negativeNetFilter">
+                    <option value="all">include all</option>
+                    <option value="non_negative">exclude negative net</option>
+                </select>
+            </div>
+            <button type="button" id="loadButton" class="load-btn" onclick="loadSnapshots(false, this)">Load</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(-1)">Prev</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(1)">Next</button>
+        </section>
+
+        <div class="snapshot-strip" id="snapshotStrip"></div>
+        <div class="summary-grid" id="summaryGrid"></div>
+        <section class="aggregate-panel">
+            <h2>Top 3 By Total Appearance Delta Value</h2>
+            <div class="aggregate-grid" id="aggregateGrid"></div>
+        </section>
+        <div class="status" id="status"></div>
+
+        <div class="table-section">
+            <div class="table-wrap">
+                <table>
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const columns = [
+            ['strategy_group', 'Group', 'left'],
+            ['strategy', 'Strategy', 'left'],
+            ['product', 'Product', 'left'],
+            ['baseline_time', 'Baseline'],
+            ['current_time', 'Current'],
+            ['baseline_net', 'Base Net'],
+            ['current_net', 'Current Net'],
+            ['delta_net', 'Delta Net'],
+            ['chart_action', 'Chart']
+        ];
+
+        let payload = null;
+        let summarySeriesMap = new Map();
+        let summaryLatestSourceTime = null;
+        let selectedIndex = 0;
+        let sortKey = 'delta_net';
+        let sortAsc = false;
+        const AUTO_REFRESH_MS = 60000;
+        let refreshTimerId = null;
+        let lastLoadedSnapshotTime = '';
+        const chartButtonResetTimers = new WeakMap();
+        let loadButtonResetTimerId = null;
+
+        function todayStr() {
+            const d = new Date();
+            return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+        }
+
+        function parseTpSl(strategy) {
+            const match = String(strategy || '').match(/tp([\d.]+)_sl([\d.]+)/i);
+            if (!match) return [null, null];
+            const tp = Number(match[1]);
+            const sl = Number(match[2]);
+            if (!Number.isFinite(tp) || !Number.isFinite(sl)) return [null, null];
+            return [tp, sl];
+        }
+
+        function classifyStrategy(strategy) {
+            const [tp, sl] = parseTpSl(strategy);
+            if (tp && sl) {
+                if (sl >= tp * 5.0) return 'scalper';
+                if (tp >= sl * 2.0) return 'rev_scalper';
+            }
+            return 'remainder';
+        }
+
+        function parseIsoDate(value) {
+            if (!value) return null;
+            const d = new Date(value);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function alignToSnapshot(dateValue) {
+            if (!(dateValue instanceof Date) || Number.isNaN(dateValue.getTime())) return null;
+            const aligned = new Date(dateValue.getTime());
+            aligned.setSeconds(0, 0);
+            aligned.setMinutes(Math.floor(aligned.getMinutes() / 15) * 15);
+            return aligned;
+        }
+
+        function formatMoney(value) {
+            const n = Number(value || 0);
+            return `${n >= 0 ? '+' : ''}${n.toFixed(0)}`;
+        }
+
+        function pnlClass(value) {
+            const n = Number(value || 0);
+            return n >= 0 ? 'pos' : 'neg';
+        }
+
+        function fmtTime(value) {
+            if (!value) return '-';
+            const d = new Date(value);
+            if (isNaN(d.getTime())) return value;
+            return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+        }
+
+        function setStatus(text) {
+            document.getElementById('status').textContent = text || '';
+        }
+
+        function isAutoFollowLatest() {
+            return document.getElementById('autoFollowLatest').value === 'on';
+        }
+
+        function isAutoRefreshEnabled() {
+            return document.getElementById('autoRefreshToggle').value === 'on';
+        }
+
+        function excludeNegativeNet() {
+            return document.getElementById('negativeNetFilter').value === 'non_negative';
+        }
+
+        function sourceKey(strategy, product) {
+            return `${strategy || ''}||${product || ''}`;
+        }
+
+        function appearanceKey(row) {
+            return `${row.strategy || ''}||${row.product || ''}`;
+        }
+
+        function getSelectedRows(snapshot) {
+            const windowMode = document.getElementById('windowMode').value;
+            let rows = [...(windowMode === '60m' ? (snapshot.top10_60m || []) : (snapshot.top10_30m || []))];
+            if (excludeNegativeNet()) {
+                rows = rows.filter(row => Number(row.current_net || 0) >= 0);
+            }
+            return rows;
+        }
+
+        function getImportPayloadItems(items) {
+            const seen = new Set();
+            const dedup = [];
+            items.forEach(item => {
+                const strategy = String(item.strategy || '').trim();
+                const product = String(item.product || '').trim();
+                if (!strategy || !product) return;
+                const key = `${strategy}|${product}`;
+                if (seen.has(key)) return;
+                seen.add(key);
+                dedup.push({
+                    strategy,
+                    product,
+                    group: `${strategy} | ${product}`,
+                    parm_raw: '',
+                });
+            });
+            return dedup;
+        }
+
+        function setChartButtonState(buttonEl, state, text) {
+            if (!buttonEl) return;
+            if (!buttonEl.dataset.baseLabel) buttonEl.dataset.baseLabel = buttonEl.textContent.trim() || 'Chart';
+            const resetTimer = chartButtonResetTimers.get(buttonEl);
+            if (resetTimer) {
+                clearTimeout(resetTimer);
+                chartButtonResetTimers.delete(buttonEl);
+            }
+            buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+            if (state) buttonEl.classList.add(`is-${state}`);
+            buttonEl.textContent = text || buttonEl.dataset.baseLabel;
+            buttonEl.disabled = state === 'busy';
+        }
+
+        function scheduleChartButtonReset(buttonEl, delayMs = 1600) {
+            if (!buttonEl) return;
+            const timerId = setTimeout(() => {
+                buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+                buttonEl.textContent = buttonEl.dataset.baseLabel || 'Chart';
+                buttonEl.disabled = false;
+                chartButtonResetTimers.delete(buttonEl);
+            }, delayMs);
+            chartButtonResetTimers.set(buttonEl, timerId);
+        }
+
+        function setLoadButtonState(buttonEl, state, text) {
+            if (!buttonEl) return;
+            if (!buttonEl.dataset.baseLabel) buttonEl.dataset.baseLabel = buttonEl.textContent.trim() || 'Load';
+            if (loadButtonResetTimerId !== null) {
+                clearTimeout(loadButtonResetTimerId);
+                loadButtonResetTimerId = null;
+            }
+            buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+            if (state) buttonEl.classList.add(`is-${state}`);
+            buttonEl.textContent = text || buttonEl.dataset.baseLabel;
+            buttonEl.disabled = state === 'busy';
+        }
+
+        function scheduleLoadButtonReset(buttonEl, delayMs = 1600) {
+            if (!buttonEl) return;
+            loadButtonResetTimerId = setTimeout(() => {
+                buttonEl.classList.remove('is-busy', 'is-success', 'is-error');
+                buttonEl.textContent = buttonEl.dataset.baseLabel || 'Load';
+                buttonEl.disabled = false;
+                loadButtonResetTimerId = null;
+            }, delayMs);
+        }
+
+        function sendToMultiChart(items, label, buttonEl) {
+            const dedup = getImportPayloadItems(items);
+            if (!dedup.length) return;
+            setChartButtonState(buttonEl, 'busy', 'Sending...');
+            const payloadToSend = {
+                created_at: new Date().toISOString(),
+                mode: document.getElementById('runMode').value,
+                date: document.getElementById('dateInput').value || todayStr(),
+                source: 'summary_net_delta_snapshots_15m',
+                label,
+                preferred_metric: 'net',
+                append: true,
+                items: dedup,
+            };
+            try {
+                localStorage.setItem('multi_chart_import_payload', JSON.stringify(payloadToSend));
+            } catch (e) {
+                setChartButtonState(buttonEl, 'error', 'Failed');
+                scheduleChartButtonReset(buttonEl, 2200);
+                alert(`Could not send data to Multi-Chart: ${e.message}`);
+                return;
+            }
+
+            const mcChannel = new BroadcastChannel('multi_chart_channel');
+            let responded = false;
+            mcChannel.onmessage = (e) => {
+                if (e.data === 'PONG') {
+                    responded = true;
+                    mcChannel.postMessage('IMPORT');
+                    setChartButtonState(buttonEl, 'success', 'Sent');
+                    scheduleChartButtonReset(buttonEl);
+                }
+            };
+            mcChannel.postMessage('PING');
+            setTimeout(() => {
+                if (!responded) {
+                    window.open('multi_chart.html?import=1', '_blank');
+                    setChartButtonState(buttonEl, 'success', 'Opened');
+                    scheduleChartButtonReset(buttonEl);
+                }
+                try { mcChannel.close(); } catch (_) { }
+            }, 300);
+        }
+
+        function openTop3Chart(strategy, product, buttonEl) {
+            sendToMultiChart([{ strategy, product }], `Summary Delta Top 3: ${strategy} / ${product}`, buttonEl);
+        }
+
+        function openRowChart(strategy, product, buttonEl) {
+            sendToMultiChart([{ strategy, product }], `Summary Delta Row: ${strategy} / ${product}`, buttonEl);
+        }
+
+        function latestPointAtOrBefore(series, targetTime) {
+            if (!Array.isArray(series) || !(targetTime instanceof Date)) return null;
+            let latest = null;
+            for (const point of series) {
+                if (!(point.t instanceof Date)) continue;
+                if (point.t <= targetTime) latest = point;
+                else break;
+            }
+            return latest;
+        }
+
+        function buildSummarySeries(summaryData) {
+            const seriesMap = new Map();
+            let latestTime = null;
+            const strategies = (summaryData && summaryData.strategies) || {};
+            Object.entries(strategies).forEach(([strategy, products]) => {
+                Object.entries(products || {}).forEach(([product, series]) => {
+                    if (!Array.isArray(series)) return;
+                    const normalized = series
+                        .map(point => ({
+                            t: parseIsoDate(point.t),
+                            net: Number(point.net || 0),
+                        }))
+                        .filter(point => point.t instanceof Date && !Number.isNaN(point.t.getTime()))
+                        .sort((a, b) => a.t - b.t);
+                    if (!normalized.length) return;
+                    const lastPoint = normalized[normalized.length - 1];
+                    if (!latestTime || lastPoint.t > latestTime) latestTime = lastPoint.t;
+                    seriesMap.set(sourceKey(strategy, product), normalized);
+                });
+            });
+            summarySeriesMap = seriesMap;
+            summaryLatestSourceTime = latestTime;
+        }
+
+        function shouldRebuildFromSummary(artifactPayload) {
+            if (!(summaryLatestSourceTime instanceof Date)) return false;
+            const alignedSource = alignToSnapshot(summaryLatestSourceTime);
+            if (!(alignedSource instanceof Date)) return false;
+            if (!artifactPayload?.snapshots?.length) return true;
+            const artifactLatest = parseIsoDate(artifactPayload.snapshots[artifactPayload.snapshots.length - 1].time);
+            return !(artifactLatest instanceof Date) || artifactLatest < alignedSource;
+        }
+
+        function buildSummaryDeltaRows(snapshotTime, windowMinutes) {
+            const baselineTime = new Date(snapshotTime.getTime() - windowMinutes * 60000);
+            const rows = [];
+            for (const [key, series] of summarySeriesMap.entries()) {
+                const currentPoint = latestPointAtOrBefore(series, snapshotTime);
+                const baselinePoint = latestPointAtOrBefore(series, baselineTime);
+                if (!currentPoint || !baselinePoint) continue;
+                const [strategy, product] = key.split('||');
+                rows.push({
+                    snapshot_time: snapshotTime.toISOString(),
+                    window_minutes: windowMinutes,
+                    strategy_group: classifyStrategy(strategy),
+                    strategy,
+                    product,
+                    baseline_time: baselinePoint.t.toISOString(),
+                    current_time: currentPoint.t.toISOString(),
+                    baseline_net: Number(baselinePoint.net.toFixed(2)),
+                    current_net: Number(currentPoint.net.toFixed(2)),
+                    delta_net: Number((currentPoint.net - baselinePoint.net).toFixed(2)),
+                });
+            }
+            rows.sort((a, b) =>
+                Number(b.delta_net || 0) - Number(a.delta_net || 0) ||
+                Number(b.current_net || 0) - Number(a.current_net || 0) ||
+                String(a.strategy || '').localeCompare(String(b.strategy || '')) ||
+                String(a.product || '').localeCompare(String(b.product || ''))
+            );
+            return rows.slice(0, 10);
+        }
+
+        function summarizeRows(rows) {
+            const deltas = rows.map(row => Number(row.delta_net || 0));
+            return {
+                row_count: rows.length,
+                best_delta: deltas.length ? Number(Math.max(...deltas).toFixed(2)) : 0,
+                avg_delta: deltas.length ? Number((deltas.reduce((sum, value) => sum + value, 0) / deltas.length).toFixed(2)) : 0,
+            };
+        }
+
+        function buildPayloadFromSummaryData(mode, productType, date) {
+            const dayStart = parseIsoDate(`${date}T00:00:00`);
+            const endTime = alignToSnapshot(summaryLatestSourceTime);
+            const snapshots = [];
+            if (!(dayStart instanceof Date) || !(endTime instanceof Date)) {
+                return null;
+            }
+            for (let current = new Date(dayStart.getTime()); current <= endTime; current = new Date(current.getTime() + 15 * 60000)) {
+                const top10_30m = buildSummaryDeltaRows(current, 30);
+                const top10_60m = buildSummaryDeltaRows(current, 60);
+                snapshots.push({
+                    time: current.toISOString(),
+                    top10_30m,
+                    top10_60m,
+                    summary_30m: summarizeRows(top10_30m),
+                    summary_60m: summarizeRows(top10_60m),
+                });
+            }
+            return {
+                generated_at: new Date().toISOString(),
+                date,
+                run_mode: mode,
+                product_type: productType,
+                snapshot_minutes: 15,
+                windows_minutes: [30, 60],
+                top_n: 10,
+                source: shouldRebuildFromSummary(payload) ? '_summary_net.json (live rebuild)' : '_summary_net_delta_snapshots_15m.json',
+                source_latest_time: summaryLatestSourceTime ? summaryLatestSourceTime.toISOString() : null,
+                series_count: summarySeriesMap.size,
+                snapshot_count: snapshots.length,
+                default_window: '30m',
+                snapshots,
+            };
+        }
+
+        function buildAppearanceLeaders() {
+            if (!payload?.snapshots?.length) return [];
+            const windowMode = document.getElementById('windowMode').value;
+            const totals = new Map();
+            const cutoffTime = parseIsoDate(payload.snapshots[selectedIndex]?.time);
+
+            payload.snapshots.slice(0, selectedIndex + 1).forEach(snapshot => {
+                const rows = windowMode === '60m' ? (snapshot.top10_60m || []) : (snapshot.top10_30m || []);
+                rows.forEach(row => {
+                    const key = appearanceKey(row);
+                    const existing = totals.get(key) || {
+                        strategy: row.strategy,
+                        product: row.product,
+                        strategy_group: row.strategy_group,
+                        appearances: 0,
+                        total_delta_net: 0,
+                        best_delta_net: Number.NEGATIVE_INFINITY,
+                        current_net: 0,
+                        current_time: '',
+                    };
+                    existing.appearances += 1;
+                    existing.total_delta_net += Number(row.delta_net || 0);
+                    existing.best_delta_net = Math.max(existing.best_delta_net, Number(row.delta_net || 0));
+                    const summaryPoint = latestPointAtOrBefore(summarySeriesMap.get(sourceKey(row.strategy, row.product)), cutoffTime);
+                    if (summaryPoint) {
+                        existing.current_net = Number(summaryPoint.net.toFixed(2));
+                        existing.current_time = summaryPoint.t.toISOString();
+                    } else {
+                        existing.current_net = Number(row.current_net || 0);
+                        existing.current_time = row.current_time || '';
+                    }
+                    if (excludeNegativeNet() && Number(existing.current_net || 0) < 0) {
+                        totals.delete(key);
+                        return;
+                    }
+                    totals.set(key, existing);
+                });
+            });
+
+            return [...totals.values()]
+                .map(item => ({
+                    ...item,
+                    total_delta_net: Number(item.total_delta_net.toFixed(2)),
+                    best_delta_net: Number(item.best_delta_net.toFixed(2)),
+                    current_net: Number(item.current_net.toFixed(2)),
+                }))
+                .sort((a, b) =>
+                    b.total_delta_net - a.total_delta_net ||
+                    b.appearances - a.appearances ||
+                    a.strategy.localeCompare(b.strategy) ||
+                    a.product.localeCompare(b.product)
+                )
+                .slice(0, 3);
+        }
+
+        function renderAppearanceLeaders() {
+            const grid = document.getElementById('aggregateGrid');
+            const rows = buildAppearanceLeaders();
+            if (!rows.length) {
+                grid.innerHTML = `<div class="muted">No top-10 appearance data available yet.</div>`;
+                return;
+            }
+            const cutoffTime = payload?.snapshots?.[selectedIndex]?.time;
+            grid.innerHTML = rows.map((row, index) => `
+                <article class="aggregate-card">
+                    <div class="aggregate-rank">Rank ${index + 1}</div>
+                    <div class="aggregate-name">${row.strategy}<br><span class="muted">${row.product}</span></div>
+                    <div class="aggregate-value ${pnlClass(row.total_delta_net)}">${formatMoney(row.total_delta_net)}</div>
+                    <div style="margin-bottom: 10px;">
+                        <button type="button" class="chart-btn" onclick="openTop3Chart('${String(row.strategy).replace(/'/g, "\\'")}', '${String(row.product).replace(/'/g, "\\'")}', this)">Chart</button>
+                    </div>
+                    <div class="aggregate-meta">
+                        <span>Appearances: ${row.appearances}</span>
+                        <span>Best Delta: ${formatMoney(row.best_delta_net)}</span>
+                        <span>Current Net: ${formatMoney(row.current_net)}</span>
+                        <span>Cutoff: ${fmtTime(cutoffTime)}</span>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function syncSelectedIndexToLatest(previousSnapshotTime) {
+            if (!payload?.snapshots?.length) {
+                selectedIndex = 0;
+                return;
+            }
+            if (isAutoFollowLatest()) {
+                selectedIndex = payload.snapshots.length - 1;
+                return;
+            }
+            const matchedIndex = payload.snapshots.findIndex(snapshot => snapshot.time === previousSnapshotTime);
+            selectedIndex = matchedIndex >= 0 ? matchedIndex : Math.max(0, payload.snapshots.length - 1);
+        }
+
+        function stopRefreshTimer() {
+            if (refreshTimerId === null) return;
+            window.clearInterval(refreshTimerId);
+            refreshTimerId = null;
+        }
+
+        function startRefreshTimer() {
+            if (!isAutoRefreshEnabled() || refreshTimerId !== null) return;
+            refreshTimerId = window.setInterval(() => {
+                loadSnapshots(true);
+            }, AUTO_REFRESH_MS);
+        }
+
+        function syncRefreshTimer() {
+            if (isAutoRefreshEnabled()) startRefreshTimer();
+            else stopRefreshTimer();
+        }
+
+        async function loadSnapshots(isBackgroundRefresh = false, triggerButton = null) {
+            const mode = document.getElementById('runMode').value;
+            const type = document.getElementById('productType').value;
+            const date = document.getElementById('dateInput').value || todayStr();
+            const deltaPath = `json/${mode}/${type}/${date}/_summary_net_delta_snapshots_15m.json?t=${Date.now()}`;
+            const summaryPath = `json/${mode}/${type}/${date}/_summary_net.json?t=${Date.now()}`;
+            if (!isBackgroundRefresh) setStatus(`Loading ${deltaPath}`);
+            if (!isBackgroundRefresh && triggerButton) setLoadButtonState(triggerButton, 'busy', 'Loading...');
+            const previousSnapshotTime = payload?.snapshots?.[selectedIndex]?.time || '';
+            try {
+                const [deltaResponse, summaryResponse] = await Promise.all([fetch(deltaPath), fetch(summaryPath)]);
+                if (!summaryResponse.ok) throw new Error(`Summary source HTTP ${summaryResponse.status}`);
+                const summaryText = await summaryResponse.text();
+                if (summaryText.trim().startsWith('<')) {
+                    throw new Error(`No summary_net source found for ${type} ${date}.`);
+                }
+                buildSummarySeries(JSON.parse(summaryText));
+
+                let deltaPayload = null;
+                if (deltaResponse.ok) {
+                    const deltaText = await deltaResponse.text();
+                    if (!deltaText.trim().startsWith('<')) {
+                        deltaPayload = JSON.parse(deltaText);
+                    }
+                }
+
+                payload = shouldRebuildFromSummary(deltaPayload)
+                    ? buildPayloadFromSummaryData(mode, type, date)
+                    : deltaPayload;
+                if (!payload) {
+                    throw new Error(`Unable to build or load delta snapshot payload for ${type} ${date}.`);
+                }
+                document.getElementById('windowMode').value = payload.default_window || '30m';
+                syncSelectedIndexToLatest(previousSnapshotTime);
+                lastLoadedSnapshotTime = payload?.snapshots?.[payload.snapshots.length - 1]?.time || '';
+                render();
+                if (!isBackgroundRefresh && triggerButton) {
+                    setLoadButtonState(triggerButton, 'success', 'Loaded');
+                    scheduleLoadButtonReset(triggerButton);
+                }
+                setStatus(isBackgroundRefresh ? `Auto-refreshed ${fmtTime(lastLoadedSnapshotTime)}.` : '');
+            } catch (err) {
+                payload = null;
+                document.getElementById('snapshotStrip').innerHTML = '';
+                document.getElementById('summaryGrid').innerHTML = '';
+                document.getElementById('aggregateGrid').innerHTML = '';
+                document.getElementById('tableHead').innerHTML = '';
+                document.getElementById('tableBody').innerHTML = '';
+                if (!isBackgroundRefresh && triggerButton) {
+                    setLoadButtonState(triggerButton, 'error', 'Failed');
+                    scheduleLoadButtonReset(triggerButton, 2200);
+                }
+                setStatus(`Unable to load delta snapshot artifact. ${err.message}`);
+            }
+        }
+
+        function selectSnapshot(index) {
+            if (!payload) return;
+            selectedIndex = Math.max(0, Math.min(index, payload.snapshots.length - 1));
+            render();
+        }
+
+        function selectAdjacent(delta) {
+            selectSnapshot(selectedIndex + delta);
+        }
+
+        function changeSort(key) {
+            if (sortKey === key) sortAsc = !sortAsc;
+            else { sortKey = key; sortAsc = false; }
+            renderTable();
+        }
+
+        function render() {
+            if (!payload || !payload.snapshots || payload.snapshots.length === 0) return;
+            const snap = payload.snapshots[selectedIndex];
+            document.getElementById('meta').innerHTML = [
+                `Generated: ${payload.generated_at || '--'}`,
+                `Source: ${payload.source || '--'}`,
+                `Series: ${payload.series_count || 0}`,
+                `Snapshots: ${payload.snapshot_count || payload.snapshots.length}`,
+                `Latest: ${fmtTime(lastLoadedSnapshotTime)}`
+            ].join('<br>');
+            renderSnapshotStrip();
+            renderSummary();
+            renderAppearanceLeaders();
+            renderTable();
+        }
+
+        function renderSnapshotStrip() {
+            const strip = document.getElementById('snapshotStrip');
+            strip.innerHTML = payload.snapshots.map((snap, idx) => `
+                <button class="snap-chip ${idx === selectedIndex ? 'active' : ''}" onclick="selectSnapshot(${idx})">
+                    ${fmtTime(snap.time)}
+                </button>
+            `).join('');
+        }
+
+        function renderSummary() {
+            const grid = document.getElementById('summaryGrid');
+            const snap = payload.snapshots[selectedIndex];
+            const active = document.getElementById('windowMode').value;
+            const windows = [
+                ['30m', 'Last 30m', snap.summary_30m || {}],
+                ['60m', 'Last 60m', snap.summary_60m || {}]
+            ];
+            grid.innerHTML = windows.map(([value, label, summary]) => `
+                <article class="summary-card ${active === value ? 'active' : ''}" onclick="document.getElementById('windowMode').value='${value}'; renderTable(); renderSummary();">
+                    <h3>${label}</h3>
+                    <div class="net ${pnlClass(summary.best_delta || 0)}">${formatMoney(summary.best_delta || 0)}</div>
+                    <div class="summary-stats">
+                        <span>Rows: ${summary.row_count || 0}</span>
+                        <span>Avg Delta: ${formatMoney(summary.avg_delta || 0)}</span>
+                    </div>
+                </article>
+            `).join('');
+        }
+
+        function renderTable() {
+            const head = document.getElementById('tableHead');
+            const tbody = document.getElementById('tableBody');
+            const snap = payload.snapshots[selectedIndex];
+            if (!snap) return;
+
+            head.innerHTML = `<tr>${columns.map(([key, label, align]) => `
+                <th class="${align || ''}" ${key === 'chart_action' ? '' : `onclick="changeSort('${key}')"`}>${label}${sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
+            `).join('')}</tr>`;
+
+            const rows = getSelectedRows(snap);
+            rows.sort((a, b) => {
+                const av = a[sortKey];
+                const bv = b[sortKey];
+                let result;
+                if (typeof av === 'number' || typeof bv === 'number') result = Number(av || 0) - Number(bv || 0);
+                else result = String(av || '').localeCompare(String(bv || ''));
+                return sortAsc ? result : -result;
+            });
+
+            tbody.innerHTML = rows.map(row => `
+                <tr>
+                    ${columns.map(([key, , align]) => {
+                        let value = row[key];
+                        let cls = align || '';
+                        if (key === 'chart_action') value = `<button type="button" class="chart-btn" onclick="openRowChart('${String(row.strategy).replace(/'/g, "\\'")}', '${String(row.product).replace(/'/g, "\\'")}', this)">Chart</button>`;
+                        if (key === 'strategy_group') value = `<span class="group-pill">${value}</span>`;
+                        if (['baseline_time', 'current_time'].includes(key)) value = fmtTime(value);
+                        if (['baseline_net', 'current_net', 'delta_net'].includes(key)) {
+                            cls += ` ${pnlClass(value)}`;
+                            value = formatMoney(value);
+                        }
+                        return `<td class="${cls}">${value ?? ''}</td>`;
+                    }).join('')}
+                </tr>
+            `).join('');
+
+            const latestSuffix = isAutoFollowLatest() ? ' | Auto-follow latest on' : ' | Manual snapshot mode';
+            const refreshSuffix = isAutoRefreshEnabled() ? ' | Auto-refresh on' : ' | Auto-refresh off';
+            setStatus(`Showing ${rows.length} rows for ${document.getElementById('windowMode').value} at ${fmtTime(snap.time)}.${latestSuffix}${refreshSuffix}`);
+        }
+
+        document.getElementById('dateInput').value = todayStr();
+        document.getElementById('windowMode').addEventListener('change', () => { renderSummary(); renderAppearanceLeaders(); renderTable(); });
+        document.getElementById('autoFollowLatest').addEventListener('change', () => {
+            if (payload && isAutoFollowLatest()) {
+                selectedIndex = Math.max(0, payload.snapshots.length - 1);
+                render();
+            } else if (payload) {
+                renderTable();
+            }
+        });
+        document.getElementById('autoRefreshToggle').addEventListener('change', () => {
+            syncRefreshTimer();
+            if (payload) renderTable();
+            else setStatus(isAutoRefreshEnabled() ? 'Auto-refresh enabled.' : 'Auto-refresh disabled.');
+        });
+        document.getElementById('negativeNetFilter').addEventListener('change', () => {
+            if (payload) render();
+        });
+        syncRefreshTimer();
+        loadSnapshots();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,29 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_2_tp20.0_sl20.0",
+            "product": "GBPNZD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0427_023046_809_GBPNZD_C_breakout_R_2_tp20_0_sl20_0",
+            "source": "TB_AUTO_TB_0427_023046_809_GBPNZD_C_breakout_R_2_tp20_0_sl20_0",
+            "activated_at": "2026-04-27T13:10:01"
+        },
+        {
+            "model": "breakout_R_4_tp20.0_sl50.0",
+            "product": "GBPEUR_C",
+            "metric": "buy_net",
+            "group": "AUTO_TB_0427_121227_217_GBPEUR_C_breakout_R_4_tp20_0_sl50_0",
+            "source": "TB_AUTO_TB_0427_121227_217_GBPEUR_C_breakout_R_4_tp20_0_sl50_0",
+            "activated_at": "2026-04-27T13:10:01"
+        },
+        {
+            "model": "breakout_Rev_4_tp20.0_sl20.0",
+            "product": "GBPNZD_C",
+            "metric": "buy_net",
+            "group": "AUTO_TB_0427_121228_199_GBPNZD_C_breakout_Rev_4_tp20_0_sl20_0",
+            "source": "TB_AUTO_TB_0427_121228_199_GBPNZD_C_breakout_Rev_4_tp20_0_sl20_0",
+            "activated_at": "2026-04-27T13:10:01"
+        }
+    ],
+    "sim": []
+}

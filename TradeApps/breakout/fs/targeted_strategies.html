@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Targeted Strategies - AI Picker</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-deep: #080a18;
+            --bg-accent: #0f1225;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --indigo-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-deep) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 30px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            margin-left: 260px;
+        }
+
+        @media (max-width: 1024px) {
+            .container {
+                margin-left: 70px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin-left: 0;
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--header-shadow);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            font-weight: 800;
+            background: var(--indigo-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 15px;
+            letter-spacing: -1.5px;
+        }
+
+        .bias-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            margin-top: 10px;
+        }
+
+        .bias-badge {
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9em;
+        }
+
+        .bias-buy {
+            color: var(--emerald);
+        }
+
+        .bias-sell {
+            color: var(--rose);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75em;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.6em;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .table-container {
+            background: var(--glass-bg);
+            border-radius: 24px;
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(15px);
+            box-shadow: var(--card-shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            color: var(--amber);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1.2px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        td {
+            padding: 18px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            font-size: 0.95em;
+        }
+
+        tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .scalper-badge {
+            background: rgba(168, 85, 247, 0.15);
+            color: var(--accent-secondary);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75em;
+            font-weight: 700;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .push-action {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 0.75em;
+            transition: all 0.3s;
+            text-transform: uppercase;
+        }
+
+        .btn-activate {
+            background: var(--indigo-gradient);
+            color: white;
+        }
+
+        .btn-activate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        }
+
+        .last-update {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            font-size: 0.75em;
+            color: var(--text-dim);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 5px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(5px);
+        }
+
+        .market-choppy {
+            color: var(--amber);
+        }
+
+        .market-trending {
+            color: var(--emerald);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar-container"></div>
+    <div class="container">
+        <div class="header">
+            <h1 id="pageTitle">Targeted Strategies</h1>
+            <p id="subSummary" style="color: var(--text-dim); margin-bottom: 20px;">AI Picker is scanning for active
+                bias and best momentum pairs...</p>
+
+            <div class="bias-indicator">
+                <span id="biasLabel" class="bias-badge">Calculating Bias...</span>
+                <span id="marketBadge" class="bias-badge" style="opacity: 0.7"></span>
+            </div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Day Start Bias</div>
+                <div id="dayBias" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">1HR Momentum</div>
+                <div id="recentBias" class="stat-value">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Buy P&L (1hr)</div>
+                <div id="buyPnl" class="stat-value neutral">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Sell P&L (1hr)</div>
+                <div id="sellPnl" class="stat-value neutral">$0.00</div>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Strategy / Configuration</th>
+                        <th style="text-align: center;">Trades</th>
+                        <th style="text-align: right;">Net Return</th>
+                        <th style="text-align: center;">Type</th>
+                        <th style="text-align: right;">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="strategyTable">
+                    <!-- Rows injected by JS -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="last-update" id="lastUpdate">Updating...</div>
+
+    <script>
+        async function updateData() {
+            try {
+                // Determine path based on current mode
+                const dateStr = new Date().toISOString().split('T')[0];
+                const resp = await fetch(`json/live/${dateStr}/_targeted_strategies.json`);
+                if (!resp.ok) throw new Error("File not found");
+
+                const data = await resp.json();
+
+                // Update Header & Stats
+                document.getElementById('biasLabel').innerText = `BIAS: ${data.bias}`;
+                document.getElementById('biasLabel').className = `bias-badge ${data.bias === 'BUY' ? 'bias-buy' : 'bias-sell'}`;
+
+                document.getElementById('marketBadge').innerText = `| ${data.market_condition}`;
+                document.getElementById('marketBadge').className = `bias-badge ${data.market_condition === 'CHOPPY' ? 'market-choppy' : 'market-trending'}`;
+
+                document.getElementById('dayBias').innerText = data.day_bias;
+                document.getElementById('recentBias').innerText = data.recent_bias;
+
+                const buyEl = document.getElementById('buyPnl');
+                buyEl.innerText = `$${data.recent_buy_pnl.toLocaleString()}`;
+                buyEl.className = `stat-value ${data.recent_buy_pnl >= 0 ? 'positive' : 'negative'}`;
+
+                const sellEl = document.getElementById('sellPnl');
+                sellEl.innerText = `$${data.recent_sell_pnl.toLocaleString()}`;
+                sellEl.className = `stat-value ${data.recent_sell_pnl >= 0 ? 'positive' : 'negative'}`;
+
+                document.getElementById('lastUpdate').innerText = `Last AI Scan: ${new Date(data.last_update).toLocaleTimeString()}`;
+
+                // Update Table
+                const tbody = document.getElementById('strategyTable');
+                tbody.innerHTML = '';
+
+                data.strategies.forEach(s => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td style="font-weight: 600;">\${s.strategy}</td>
+                        <td style="text-align: center; color: var(--text-dim);">\${s.trades}</td>
+                        <td style="text-align: right; font-weight: 700;" class="\${s.net >= 0 ? 'positive' : 'negative'}">$\${s.net.toLocaleString()}</td>
+                        <td style="text-align: center;">\${s.scalper ? '<span class="scalper-badge">SCALPER</span>' : '<span style="color: var(--text-dim); font-size: 0.7em;">TREND</span>'}</td>
+                        <td style="text-align: right;">
+                            <div class="push-action" style="justify-content: flex-end;">
+                                <button class="btn-action btn-activate" onclick="window.location.href='strategy_performance.html?search=\${s.strategy}'">
+                                    <i class="fas fa-bolt"></i> View / Push
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+            } catch (err) {
+                console.error("Picker Error:", err);
+                document.getElementById('biasLabel').innerText = "Waiting for Picker Output...";
+            }
+        }
+
+        updateData();
+        setInterval(updateData, 10000);
+    </script>
+    <script src="sidebar-loader.js"></script>
+</body>
+
+</html>

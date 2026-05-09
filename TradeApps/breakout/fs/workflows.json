@@ -1,0 +1,160 @@
+{
+    "version": "V20260216_0010",
+    "updated_at": "2026-05-08T03:13:55.031310",
+    "workflows": [
+        {
+            "id": "TB_workflow",
+            "name": "TB_workflow",
+            "description": "Auto pipeline: pick top Summary row, expand same-parameter family, optimize start-from range, save+activate TB.",
+            "enabled": false,
+            "start_time": "00:00",
+            "end_time": "23:59",
+            "timezone": "local",
+            "steps": [
+                "Select best Performance Summary Breakdown row by total net",
+                "Send selection to Multi Chart and add all same-parameter strategies/metrics",
+                "Adjust start-from so max net range is under configured threshold",
+                "Save as Trade Bucket and activate"
+            ],
+            "config": {
+                "metric": "net",
+                "max_range_target": 150,
+                "minimum_difference": 5.0,
+                "run_interval_sec": 900,
+                "max_buckets_per_day": 3
+            },
+            "updated_at": "2026-02-19T02:22:39.626502"
+        },
+        {
+            "id": "profile_match_workflow",
+            "name": "profile_match_workflow",
+            "description": "Find current strategy/product pairs above profitability threshold and push to Multi Charts feed.",
+            "enabled": false,
+            "start_time": "03:00",
+            "end_time": "23:59",
+            "timezone": "local",
+            "steps": [
+                "Scan current Top20 strategies for profitability >= threshold",
+                "Filter by minimum trade count, min total net >= X, and min avg net >= X",
+                "Optionally expand to all same-parameter strategies/metrics when preparing Multi Chart payload",
+                "Optionally adjust start-time baseline so highest net range is under 150 before TB send",
+                "Send matching strategy/product pairs to Multi Charts via grid feed"
+            ],
+            "config": {
+                "min_profitability_pct": 100,
+                "min_trade_count": 3,
+                "min_total_net": 100,
+                "min_avg_net": 25,
+                "max_items": 7,
+                "metric": "net",
+                "delta_type": "delta1",
+                "run_interval_sec": 300,
+                "scalper_only": true,
+                "add_to_tb": true,
+                "enforce_market_bias": false,
+                "bias_recent_profitable_count": 3,
+                "add_same_parameter_strategies_metrics": false,
+                "adjust_start_time_under_150": false,
+                "rev_scalper_only": true,
+                "product_type": "forex",
+                "product_types": [
+                    "forex"
+                ],
+                "trade_alt_net": false,
+                "strategy_groups": [
+                    "breakout_r_rev"
+                ]
+            },
+            "updated_at": "2026-05-08T03:13:55.031300"
+        },
+        {
+            "id": "multi_chart_prune_negative_non_live",
+            "name": "multi_chart_prune_negative_non_live",
+            "description": "Scan multi-chart every minute and remove non-live cards only when all chart sums(net) in the card are negative.",
+            "enabled": false,
+            "start_time": "00:00",
+            "end_time": "23:59",
+            "timezone": "local",
+            "steps": [
+                "Scan visible Multi Chart cards every minute",
+                "Skip cards currently LIVE",
+                "Remove cards where all sum(net) values are negative"
+            ],
+            "config": {
+                "run_interval_sec": 60,
+                "negative_threshold": 0,
+                "product_type": "forex",
+                "product_types": [
+                    "forex"
+                ],
+                "strategy_groups": []
+            },
+            "updated_at": "2026-05-02T00:42:03.390226"
+        },
+        {
+            "id": "tb_prune_all_negative",
+            "name": "tb_prune_all_negative",
+            "description": "Every minute, remove trade buckets where all strategy net values are below threshold.",
+            "enabled": true,
+            "start_time": "00:00",
+            "end_time": "23:59",
+            "timezone": "local",
+            "steps": [
+                "Scan trade buckets for current mode/date",
+                "Evaluate strategy nets in each bucket",
+                "Delete bucket if all strategy nets are below threshold"
+            ],
+            "config": {
+                "run_interval_sec": 60,
+                "negative_threshold": -20,
+                "product_type": "forex",
+                "product_types": [
+                    "forex"
+                ]
+            },
+            "updated_at": "2026-04-22T23:53:23.561287"
+        },
+        {
+            "id": "top_x_multi_chart_workflow",
+            "name": "Top X Multi-Chart Loader",
+            "description": "Extracts the Top X (by positive total net) strategies from the Top 20 list and forces them into the Multi-Chart view.",
+            "enabled": false,
+            "start_time": "01:00",
+            "end_time": "23:59",
+            "timezone": "local",
+            "steps": [
+                "Fetch the current mode/date Top 20 strategies",
+                "Filter by Scalper and/or Rev Scalper type if selected",
+                "Filter out strategies with negative or zero net in the selected metric (optionally require Total Net > 0)",
+                "Sort the filtered list descending by Total Net",
+                "Select exactly Top X strategies from the sorted list",
+                "Optionally add the best matching strategy to TB and activate",
+                "Optionally include all same-parameter strategies/metrics in the Multi-Chart payload",
+                "Send the matching strategies to the Multi Charts import payload"
+            ],
+            "config": {
+                "top_x": 1,
+                "include_scalper": true,
+                "include_rev_scalper": false,
+                "add_to_tb": true,
+                "t_split_for_tb": true,
+                "add_same_parameter_strategies_metrics": false,
+                "run_interval_sec": 300,
+                "metric": "net",
+                "delta_type": "delta1",
+                "product_type": "forex",
+                "require_positive_total_net": true,
+                "product_types": [
+                    "forex"
+                ],
+                "trade_alt_net": false,
+                "sort_by_most_trades": true,
+                "merge_charts": false,
+                "strategy_groups": [
+                    "breakout_r_rev"
+                ]
+            },
+            "updated_at": "2026-05-01T00:25:52.929337"
+        }
+    ]
+}

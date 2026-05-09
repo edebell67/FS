@@ -1,0 +1,29 @@
+{
+    "live": [
+        {
+            "model": "breakout_Rev_4_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "net",
+            "group": "AUTO_TB_0424_124841_141_EUR_breakout_Rev_4_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_124841_141_EUR_breakout_Rev_4_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:45:19"
+        },
+        {
+            "model": "breakout_Rev_3_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "net",
+            "group": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:45:19"
+        },
+        {
+            "model": "breakout_Rev_4_tp20.0_sl5.0",
+            "product": "CAD",
+            "metric": "net",
+            "group": "AUTO_TB_0424_161048_052_CAD_breakout_Rev_4_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_161048_052_CAD_breakout_Rev_4_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:45:19"
+        }
+    ],
+    "sim": []
+}

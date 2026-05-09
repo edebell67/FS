@@ -1,0 +1,22 @@
+Strategy                       | Product  | Params                    | Trades | Net Return   | Score
+----------------------------------------------------------------------------------------------------
+breakout_4_tp10.0_sl20.0       | GBPNZD_C | default                   | 20     | 1435.00      | 1897.38
+breakout_4_tp10.0_sl30.0       | GBPAUD_C | default                   | 23     | 1270.00      | 1752.87
+breakout_4_tp10.0_sl50.0       | GBPNZD_C | default                   | 16     | 1375.00      | 1691.87
+breakout_4_tp10.0_sl30.0       | GBPNZD_C | default                   | 19     | 1245.00      | 1619.78
+breakout_3_tp10.0_sl30.0       | GBPAUD_C | default                   | 20     | 1205.00      | 1593.27
+breakout_4_tp10.0_sl20.0       | GBPAUD_C | default                   | 23     | 1115.00      | 1538.94
+breakout_Rev_2_tp10.0_sl20.0   | EURAUD_C | default                   | 39     | 792.50       | 1269.63
+breakout_Rev_2_tp10.0_sl30.0   | EURAUD_C | default                   | 39     | 735.00       | 1177.51
+breakout_Rev_2_tp10.0_sl50.0   | EURAUD_C | default                   | 39     | 735.00       | 1177.51
+breakout_4_tp10.0_sl20.0       | GBPEUR_C | default                   | 27     | 810.00       | 1172.2
+breakout_3_tp5.0_sl50.0        | GBPAUD_C | default                   | 24     | 825.00       | 1153.3
+breakout_2_tp10.0_sl30.0       | GBPNZD_C | default                   | 16     | 852.50       | 1048.96
+breakout_4_tp10.0_sl50.0       | GBPEUR_C | default                   | 17     | 810.00       | 1016.77
+breakout_2_tp10.0_sl20.0       | GBPNZD_C | default                   | 26     | 692.50       | 991.22
+breakout_2_tp3.0_sl50.0        | GBPEUR_C | default                   | 37     | 605.00       | 955.77
+breakout_2_tp5.0_sl50.0        | GBPAUD_C | default                   | 20     | 665.00       | 879.28
+breakout_2_tp10.0_sl30.0       | GBPAUD_C | default                   | 22     | 645.00       | 878.31
+breakout_R_Rev_2_tp10.0_sl50.0 | GBPAUD_C | default                   | 24     | 607.50       | 849.25
+breakout_4_tp10.0_sl50.0       | GBP      | default                   | 9      | 800.00       | 800.0
+breakout_3_tp5.0_sl30.0        | GBPAUD_C | default                   | 26     | 555.00       | 794.41

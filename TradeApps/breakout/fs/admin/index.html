@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PostgreSQL Admin Suite</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; }
+        .container { max-width: 1000px; margin: auto; }
+        header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-bottom: 30px; }
+        h1 { color: #2c3e50; margin: 0; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: transform 0.2s; cursor: pointer; text-decoration: none; color: inherit; display: block; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 6px 12px rgba(0,0,0,0.15); }
+        .card h2 { color: #3498db; margin-top: 0; }
+        .card p { color: #7f8c8d; line-height: 1.5; }
+        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; background: #2ecc71; color: white; }
+    </style>
+    <script src="/theme.js?v=V20260423_0018" defer></script>
+</head>
+<body class="breakout-admin-page">
+    <div class="container">
+        <header>
+            <h1>PostgreSQL Admin Suite</h1>
+            <div class="status-badge">PG MODE ACTIVE</div>
+        </header>
+
+        <div class="grid">
+            <a href="summary_dashboard.html" class="card">
+                <h2>Summary Dashboard</h2>
+                <p>Grouped performance metrics (Product > Model > Strategy > Signal). View Net Returns and Trade Counts.</p>
+            </a>
+
+            <a href="product_manager.html" class="card">
+                <h2>Product Setup</h2>
+                <p>Manage <b>product_forex</b>. Update volumes, commissions, tick sizes, and strategy parameters for all models.</p>
+            </a>
+
+            <a href="config_editor.html" class="card">
+                <h2>System Config</h2>
+                <p>Direct access to the <b>config</b> table. Manage trading windows, risk limits, and operational toggles.</p>
+            </a>
+
+            <a href="dna_lab.html" class="card">
+                <h2>DNA Lab</h2>
+                <p>Generate new DNA data for products. Trigger the advanced forex signal generator for fresh optimization.</p>
+            </a>
+        </div>
+    </div>
+</body>
+</html>

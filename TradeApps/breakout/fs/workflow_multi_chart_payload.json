@@ -1,0 +1,68 @@
+{
+    "source": "profile_match_workflow",
+    "mode": "live",
+    "date": "2026-05-08",
+    "preferred_metric": "net",
+    "delta_type": "delta1",
+    "group": "WF_PROFILE_FOREX_2026-05-08_100_031039",
+    "preset_name": "WF_PROFILE_FOREX_2026-05-08_100_031039",
+    "created_at": "2026-05-08T03:10:39",
+    "run_id": "live_2026-05-08_1778206239",
+    "product_types": [
+        "forex"
+    ],
+    "strategy_groups": [
+        "breakout_r_rev"
+    ],
+    "items": [
+        {
+            "strategy": "breakout_R_Rev_4_tp10.0_sl50.0",
+            "product": "EURAUD_C",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_EURAUD_C_breakout_R_Rev_4_tp10_0_sl50_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_4_tp10.0_sl50.0",
+            "product": "NZDAUD_C",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_NZDAUD_C_breakout_R_Rev_4_tp10_0_sl50_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_3_tp20.0_sl3.0",
+            "product": "AUD",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_AUD_breakout_R_Rev_3_tp20_0_sl3_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_3_tp20.0_sl5.0",
+            "product": "AUD",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_AUD_breakout_R_Rev_3_tp20_0_sl5_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_4_tp20.0_sl3.0",
+            "product": "AUD",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_AUD_breakout_R_Rev_4_tp20_0_sl3_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_4_tp20.0_sl5.0",
+            "product": "AUD",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_AUD_breakout_R_Rev_4_tp20_0_sl5_0",
+            "parm_raw": ""
+        },
+        {
+            "strategy": "breakout_R_Rev_3_tp10.0_sl3.0",
+            "product": "AUD",
+            "product_type": "forex",
+            "group": "WF_PROFILE_FOREX_2026-05-08_100_031039_AUD_breakout_R_Rev_3_tp10_0_sl3_0",
+            "parm_raw": ""
+        }
+    ]
+}

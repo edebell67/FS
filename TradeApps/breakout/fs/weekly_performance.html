@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Strategy Performance - Breakout Trading</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-deep: #080a18;
+            --bg-accent: #0f1225;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent-primary: #6366f1;
+            --accent-secondary: #a855f7;
+            --emerald: #10b981;
+            --rose: #f43f5e;
+            --amber: #f59e0b;
+            --indigo-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            --card-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-deep) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 20px 18px;
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding-left: 260px; /* Sidebar offset */
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--header-shadow);
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.4em;
+            font-weight: 800;
+            background: var(--indigo-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+            letter-spacing: -1px;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filters {
+            display: flex;
+            gap: 10px;
+            background: var(--glass-bg);
+            padding: 6px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-dim);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-btn.active {
+            background: var(--indigo-gradient);
+            color: white;
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .pagination {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            background: var(--glass-bg);
+            padding: 6px 15px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .pag-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pag-btn:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .current-week {
+            font-weight: 700;
+            font-size: 1.1em;
+            min-width: 200px;
+            text-align: center;
+        }
+
+        .table-container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            border: 1px solid var(--glass-border);
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            table-layout: fixed;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 0;
+            font-size: 0.85em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-dim);
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .sort-btn {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: inherit;
+            font: inherit;
+            text-transform: inherit;
+            letter-spacing: inherit;
+            padding: 18px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            cursor: pointer;
+        }
+
+        .sort-btn:hover {
+            color: var(--text-main);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .sort-btn.active {
+            color: var(--text-main);
+        }
+
+        .sort-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .sort-indicator {
+            min-width: 14px;
+            text-align: right;
+            color: var(--accent-primary);
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 0.95em;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            font-weight: 500;
+        }
+
+        th.col-rank,
+        td.col-rank {
+            width: 56px;
+        }
+
+        th.col-rank .sort-btn,
+        td.col-rank {
+            padding-left: 12px;
+            padding-right: 12px;
+        }
+
+        th.col-strategy,
+        td.col-strategy {
+            width: 310px;
+        }
+
+        th.col-live-trade,
+        td.col-live-trade {
+            width: 88px;
+            text-align: center;
+        }
+
+        th.col-chart,
+        td.col-chart {
+            width: 72px;
+            text-align: center;
+        }
+
+        th.col-day,
+        td.col-day,
+        th.col-total,
+        td.col-total {
+            width: 92px;
+            text-align: right;
+        }
+
+        th.col-trades,
+        td.col-trades {
+            width: 78px;
+            text-align: center;
+        }
+
+        th.col-live-trade .sort-btn,
+        th.col-chart .sort-btn,
+        th.col-day .sort-btn,
+        th.col-total .sort-btn,
+        th.col-trades .sort-btn {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        td.col-live-trade,
+        td.col-chart,
+        td.col-day,
+        td.col-total,
+        td.col-trades {
+            padding-left: 10px;
+            padding-right: 10px;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .strategy-cell {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .strategy-cell.scalper {
+            color: #fbbf24;
+            font-weight: 800;
+            text-shadow: 0 0 8px rgba(251, 191, 36, 0.3);
+        }
+
+        .strategy-cell.rev-scalper {
+            color: #60a5fa;
+            font-weight: 800;
+            text-shadow: 0 0 8px rgba(59, 130, 246, 0.3);
+        }
+
+        .gen-strategy-cell {
+            color: var(--text-dim);
+        }
+
+        .net-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        .pos { color: var(--emerald); }
+        .neg { color: var(--rose); }
+        .neutral { color: var(--text-dim); }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(8, 10, 24, 0.8);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid var(--glass-border);
+            border-top-color: var(--accent-primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .trades-badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--accent-primary);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            font-weight: 700;
+        }
+
+        .last-update {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-top: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+            font-weight: 500;
+        }
+
+        .update-failed {
+            color: var(--rose);
+            font-weight: 600;
+        }
+
+        /* Toggle Switch Styles */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+            vertical-align: middle;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.1);
+            transition: .4s;
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background: var(--indigo-gradient);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .gen-strategy-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .chart-action-cell {
+            text-align: center;
+        }
+
+        .chart-action-cell .pag-btn {
+            margin: 0 auto;
+        }
+
+        .disabled-toggle {
+            opacity: 0.3;
+            cursor: not-allowed !important;
+        }
+
+        .disabled-toggle .slider {
+            cursor: not-allowed !important;
+        }
+
+        /* Auto Select Styles */
+        .auto-select-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            background: var(--glass-bg);
+            padding: 10px 15px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+            flex-wrap: wrap;
+            max-width: 700px;
+        }
+
+        .auto-select-label {
+            font-size: 0.85em;
+            font-weight: 700;
+            color: var(--text-dim);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .auto-select-dropdown {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: var(--text-main);
+            padding: 8px 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .auto-select-dropdown:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .auto-select-dropdown option {
+            background: var(--bg-accent);
+            color: var(--text-main);
+        }
+
+        .auto-select-permitted {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 100%;
+        }
+
+        .auto-select-permitted-title {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-dim);
+        }
+
+        .auto-select-permitted-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .permit-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 10px;
+            border-radius: 999px;
+            border: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-dim);
+            cursor: pointer;
+            user-select: none;
+            transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+        }
+
+        .permit-chip:hover {
+            border-color: var(--accent-primary);
+            color: var(--text-main);
+        }
+
+        .permit-chip input {
+            accent-color: var(--accent-primary);
+        }
+
+        .permit-chip.active {
+            background: rgba(99, 102, 241, 0.18);
+            border-color: rgba(99, 102, 241, 0.55);
+            color: var(--text-main);
+        }
+
+        .auto-select-status {
+            min-width: 280px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+
+        .auto-select-status[data-state="pending"] {
+            color: var(--amber);
+        }
+
+        .auto-select-status[data-state="active"] {
+            color: var(--emerald);
+        }
+
+        .auto-select-status[data-state="idle"] {
+            color: var(--text-dim);
+        }
+
+        .refresh-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--glass-bg);
+            padding: 10px 15px;
+            border-radius: 16px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .refresh-label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-dim);
+        }
+
+        .refresh-meta {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-dim);
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar-container"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Weekly Strategy Performance</h1>
+            <p style="color: var(--text-dim); font-weight: 500;">Aggregated Net Return by Product & Strategy</p>
+            <div id="last-update-container" class="last-update">
+                <span>Last updated: <span id="last-update-time">--</span></span>
+                <span id="last-update-age"></span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <div class="filters">
+                <button id="btn-forex" class="filter-btn active" onclick="setProductType('forex')">
+                    <i class="fas fa-euro-sign"></i> Forex
+                </button>
+                <button id="btn-indices" class="filter-btn" onclick="setProductType('indices')">
+                    <i class="fas fa-chart-line"></i> Indices
+                </button>
+                <button id="btn-metals" class="filter-btn" onclick="setProductType('metals')">
+                    <i class="fas fa-gem"></i> Metals
+                </button>
+                <button id="btn-crypto" class="filter-btn" onclick="setProductType('crypto')">
+                    <i class="fab fa-bitcoin"></i> Crypto
+                </button>
+                <button id="btn-energy" class="filter-btn" onclick="setProductType('energy')">
+                    <i class="fas fa-fire"></i> Energy
+                </button>
+            </div>
+
+            <!-- [2026-04-07 18:45] V20260407_1845 - Added Auto Select Control -->
+            <div class="auto-select-container">
+                <span class="auto-select-label"><i class="fas fa-robot"></i> Auto Select:</span>
+                <select id="autoSelectMode" class="auto-select-dropdown" onchange="handleAutoSelectChange(this.value)">
+                    <option value="None">None</option>
+                    <option value="All">All (Top Weekly)</option>
+                    <option value="Scalper">Scalper (Top Weekly)</option>
+                    <option value="Rev_scalper">Rev_scalper (Top Weekly)</option>
+                </select>
+                <span id="autoSelectStatus" class="auto-select-status" data-state="idle">Auto-select disabled.</span>
+                <div class="auto-select-permitted">
+                    <span class="auto-select-permitted-title">Permitted Product Types</span>
+                    <div id="autoSelectPermittedTypes" class="auto-select-permitted-grid"></div>
+                </div>
+            </div>
+
+            <div class="refresh-controls">
+                <span class="refresh-label"><i class="fas fa-rotate"></i> Auto Refresh</span>
+                <label class="switch" title="Refresh weekly performance automatically every 5 seconds">
+                    <input id="autoRefreshToggle" type="checkbox" onchange="handleAutoRefreshToggle(this.checked)">
+                    <span class="slider"></span>
+                </label>
+                <span id="autoRefreshMeta" class="refresh-meta">Off</span>
+            </div>
+
+            <div class="pagination">
+                <button class="pag-btn" onclick="changeWeek(-1)" title="Previous Week">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <div class="current-week" id="week-display">Loading...</div>
+                <button class="pag-btn" onclick="changeWeek(1)" title="Next Week">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr id="table-header">
+                        <th>#</th>
+                        <th>Product | Strategy</th>
+                        <th>Gen Strategy</th>
+                        <th>Chart</th>
+                        <!-- Dynamic date headers will go here -->
+                        <th>Total</th>
+                        <th>Trades</th>
+                    </tr>
+                </thead>
+                <tbody id="performance-body">
+                    <!-- Data rows will go here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="loading-overlay" id="loading">
+        <div class="spinner"></div>
+    </div>
+
+    <script src="sidebar-loader.js"></script>
+    <script>
+        let currentProductType = 'forex';
+        const _today = new Date(); const _pad = n => String(n).padStart(2, '0');
+        let currentTargetDate = `${_today.getFullYear()}-${_pad(_today.getMonth() + 1)}-${_pad(_today.getDate())}`;
+        let currentData = null;
+        let lastUpdatedTime = null;
+        let sortState = { key: 'rank', direction: 'asc' };
+        let activations = {};
+        let activationsLoaded = false;
+        let scalperRatio = 5;
+        let revScalperRatio = 2;
+        let autoSelectModes = {}; // [2026-04-07 19:40] V20260407_1940 - Scoped by product type
+        let autoSelectPermittedTypes = [];
+        let vtradePersistenceSeconds = 60;
+        let pendingAutoWinner = null;
+        let leadershipChangeDetectedAt = null;
+        let productTypeByProduct = {};
+        let weeklyStateLoaded = false;
+        let weeklyDataRequestId = 0;
+        const weeklyDataCache = new Map();
+        const WEEKLY_STATE_STORAGE_KEY = 'breakout_weekly_performance_state_v1';
+        const WEEKLY_AUTO_REFRESH_STORAGE_KEY = 'breakout_weekly_performance_auto_refresh_v1';
+        const AUTO_REFRESH_INTERVAL_MS = 5000;
+        let autoRefreshEnabled = false;
+        let autoRefreshTimer = null;
+        const supportedProductTypes = [
+            { key: 'forex', label: 'Forex', icon: 'fas fa-euro-sign' },
+            { key: 'indices', label: 'Indices', icon: 'fas fa-chart-line' },
+            { key: 'metals', label: 'Metals', icon: 'fas fa-gem' },
+            { key: 'crypto', label: 'Crypto', icon: 'fab fa-bitcoin' },
+            { key: 'energy', label: 'Energy', icon: 'fas fa-fire' }
+        ];
+
+        function formatWeekDisplay(startDate, endDate) {
+            return `${startDate} to ${endDate}`;
+        }
+
+        function updateAgeDisplay() {
+            if (!lastUpdatedTime) return;
+            const now = new Date();
+            const diffSeconds = Math.floor((now - lastUpdatedTime) / 1000);
+            let ageText = diffSeconds < 60 ? `${diffSeconds}s ago` : diffSeconds < 3600 ? `${Math.floor(diffSeconds / 60)}m ${diffSeconds % 60}s ago` : `${Math.floor(diffSeconds / 3600)}h ${Math.floor((diffSeconds % 3600) / 60)}m ago`;
+            const ageEl = document.getElementById('last-update-age');
+            if (ageEl) ageEl.innerText = `(${ageText})`;
+        }
+
+        function getStoredAutoRefreshEnabled() {
+            try {
+                return localStorage.getItem(WEEKLY_AUTO_REFRESH_STORAGE_KEY) === 'true';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function storeAutoRefreshEnabled() {
+            try {
+                localStorage.setItem(WEEKLY_AUTO_REFRESH_STORAGE_KEY, autoRefreshEnabled ? 'true' : 'false');
+            } catch (e) { }
+        }
+
+        function updateAutoRefreshUi() {
+            const toggle = document.getElementById('autoRefreshToggle');
+            const meta = document.getElementById('autoRefreshMeta');
+            if (toggle) toggle.checked = autoRefreshEnabled;
+            if (meta) meta.innerText = autoRefreshEnabled ? `On · every ${AUTO_REFRESH_INTERVAL_MS / 1000}s` : 'Off';
+        }
+
+        function stopAutoRefreshLoop() {
+            if (autoRefreshTimer) {
+                clearInterval(autoRefreshTimer);
+                autoRefreshTimer = null;
+            }
+        }
+
+        function startAutoRefreshLoop() {
+            stopAutoRefreshLoop();
+            if (!autoRefreshEnabled) return;
+            autoRefreshTimer = setInterval(() => {
+                fetchData({ useCache: false, refreshActivations: true, showOverlay: false, patchRowsOnly: true });
+            }, AUTO_REFRESH_INTERVAL_MS);
+        }
+
+        function handleAutoRefreshToggle(isEnabled) {
+            autoRefreshEnabled = Boolean(isEnabled);
+            storeAutoRefreshEnabled();
+            updateAutoRefreshUi();
+            startAutoRefreshLoop();
+            if (autoRefreshEnabled) {
+                fetchData({ useCache: false, refreshActivations: true, showOverlay: false, patchRowsOnly: true });
+            }
+        }
+
+        async function loadActivations() {
+            if (activationsLoaded) return activations;
+            try {
+                const response = await fetch(`/api/activations?mode=live`);
+                const data = await response.json();
+                if (data.success) {
+                    activations = data.activations || {};
+                    activationsLoaded = true;
+                }
+            } catch (error) { console.error('Error loading activations:', error); }
+            return activations;
+        }
+
+        async function toggleGenStrategy(product, strategy, isChecked, isManual = true) {
+            const buyKey = `breakout_${strategy}_buy_net`;
+            const sellKey = `breakout_${strategy}_sell_net`;
+            const payload = {
+                mode: 'live',
+                source: 'weekly_performance',
+                sync_grid_live: true,
+                activations: {
+                    [buyKey]: { active: isChecked, manual: isManual, source: 'weekly_performance', auto_promote: isChecked, products: [product] },
+                    [sellKey]: { active: isChecked, manual: isManual, source: 'weekly_performance', auto_promote: isChecked, products: [product] }
+                }
+            };
+            try {
+                const response = await fetch('/api/activations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    activations = result.activations || {};
+                    activationsLoaded = true;
+                    updateAutoSelectStatus();
+                    if (currentData) renderTable();
+                } else if (isManual) { alert('Failed: ' + result.message); fetchData(); }
+            } catch (error) { if (isManual) alert('Error. Check console.'); fetchData(); }
+        }
+
+        function isStrategyActive(product, strategy) {
+            const b = activations[`breakout_${strategy}_buy_net`];
+            const s = activations[`breakout_${strategy}_sell_net`];
+            return (b && b.active && (b.products || []).includes(product.toUpperCase())) || (s && s.active && (s.products || []).includes(product.toUpperCase()));
+        }
+
+        function getStoredWeeklyState() {
+            try {
+                const raw = localStorage.getItem(WEEKLY_STATE_STORAGE_KEY);
+                if (!raw) return null;
+                return JSON.parse(raw);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function storeWeeklyState() {
+            try {
+                localStorage.setItem(WEEKLY_STATE_STORAGE_KEY, JSON.stringify({
+                    auto_select_modes: autoSelectModes,
+                    auto_select_permitted_types: autoSelectPermittedTypes,
+                    selected_product_type: currentProductType,
+                    selected_target_date: currentTargetDate
+                }));
+            } catch (e) { }
+        }
+
+        function bootstrapWeeklyScope(state) {
+            if (!state || typeof state !== 'object') return;
+
+            const selectedProductType = String(state.selected_product_type || '').trim().toLowerCase();
+            if (supportedProductTypes.some(type => type.key === selectedProductType)) {
+                currentProductType = selectedProductType;
+            }
+
+            const selectedTargetDate = String(state.selected_target_date || '').trim();
+            if (/^\d{4}-\d{2}-\d{2}$/.test(selectedTargetDate)) {
+                currentTargetDate = selectedTargetDate;
+            }
+        }
+
+        function applyWeeklyStateToUi() {
+            const mode = autoSelectModes[currentProductType] || 'None';
+            document.getElementById('autoSelectMode').value = mode;
+            renderPermittedTypeSelector();
+            updateAutoSelectStatus();
+        }
+
+        function hydrateWeeklyState(state) {
+            if (!state || typeof state !== 'object') return;
+            if (state.scalper_ratio) scalperRatio = parseFloat(state.scalper_ratio);
+            if (state.rev_scalper_ratio) revScalperRatio = parseFloat(state.rev_scalper_ratio);
+            vtradePersistenceSeconds = parseInt(state.vtrade_persistence_seconds || 60);
+            autoSelectModes = state.auto_select_modes || {};
+            autoSelectPermittedTypes = normalizePermittedTypes(state.auto_select_permitted_types || []);
+            productTypeByProduct = normalizeProductTypeMap(state.product_type_by_product || productTypeByProduct || {});
+            bootstrapWeeklyScope(state);
+            storeWeeklyState();
+            applyWeeklyStateToUi();
+        }
+
+        async function loadConfig(force = false) {
+            if (!force && weeklyStateLoaded) {
+                applyWeeklyStateToUi();
+                return;
+            }
+
+            if (!force) {
+                const stored = getStoredWeeklyState();
+                if (stored) {
+                    bootstrapWeeklyScope(stored);
+                    hydrateWeeklyState(stored);
+                }
+            }
+
+            try {
+                const response = await fetch('/api/weekly_performance_state');
+                const data = await response.json();
+                if (data && data.state) {
+                    hydrateWeeklyState(data.state);
+                    weeklyStateLoaded = true;
+                }
+            } catch (e) { }
+        }
+
+        async function persistWeeklyState(payload) {
+            storeWeeklyState();
+            try {
+                const response = await fetch('/api/weekly_performance_state', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const result = await response.json();
+                if (result && result.state) {
+                    hydrateWeeklyState(result.state);
+                    weeklyStateLoaded = true;
+                }
+            } catch (e) { }
+        }
+
+        async function handleAutoSelectChange(val) {
+            autoSelectModes[currentProductType] = val;
+            clearPendingAutoLeader();
+            storeWeeklyState();
+            applyWeeklyStateToUi();
+            await persistWeeklyState({ auto_select_modes: autoSelectModes });
+            await evaluateAutoSelect();
+        }
+
+        function normalizePermittedTypes(rawTypes) {
+            if (!Array.isArray(rawTypes)) return [];
+            const normalized = [];
+            for (const rawType of rawTypes) {
+                const type = String(rawType || '').trim().toLowerCase();
+                if (!type || normalized.includes(type)) continue;
+                normalized.push(type);
+            }
+            return normalized;
+        }
+
+        function normalizeProductTypeMap(rawMapping) {
+            const normalized = {};
+            if (!rawMapping || typeof rawMapping !== 'object') return normalized;
+            for (const [rawProduct, rawType] of Object.entries(rawMapping)) {
+                const product = String(rawProduct || '').trim().toUpperCase();
+                const productType = String(rawType || '').trim().toLowerCase();
+                if (!product || !productType) continue;
+                normalized[product] = productType;
+            }
+            return normalized;
+        }
+
+        function isCurrentProductTypePermitted() {
+            return autoSelectPermittedTypes.includes(currentProductType);
+        }
+
+        function syncProductTypeMapFromCurrentData() {
+            if (!Array.isArray(currentData?.top_strategies)) return;
+            for (const item of currentData.top_strategies) {
+                const product = String(item.product || '').trim().toUpperCase();
+                const productType = String(item.product_type || currentProductType || '').trim().toLowerCase();
+                if (!product || !productType) continue;
+                productTypeByProduct[product] = productType;
+            }
+        }
+
+        function resolveProductTypeForProduct(product, fallbackProductType = null) {
+            const productKey = String(product || '').trim().toUpperCase();
+            if (productTypeByProduct[productKey]) return productTypeByProduct[productKey];
+            const fallback = String(fallbackProductType || '').trim().toLowerCase();
+            return fallback || null;
+        }
+
+        function renderPermittedTypeSelector() {
+            const container = document.getElementById('autoSelectPermittedTypes');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const type of supportedProductTypes) {
+                const label = document.createElement('label');
+                label.className = `permit-chip${autoSelectPermittedTypes.includes(type.key) ? ' active' : ''}`;
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.checked = autoSelectPermittedTypes.includes(type.key);
+                input.addEventListener('change', () => handlePermittedTypeToggle(type.key, input.checked));
+                const icon = document.createElement('i');
+                icon.className = type.icon;
+                const text = document.createElement('span');
+                text.textContent = type.label;
+                label.appendChild(input);
+                label.appendChild(icon);
+                label.appendChild(text);
+                container.appendChild(label);
+            }
+        }
+
+        async function handlePermittedTypeToggle(productType, isChecked) {
+            const next = new Set(autoSelectPermittedTypes);
+            if (isChecked) next.add(productType);
+            else next.delete(productType);
+            autoSelectPermittedTypes = Array.from(next);
+            clearPendingAutoLeader();
+            storeWeeklyState();
+            applyWeeklyStateToUi();
+            await persistWeeklyState({ auto_select_permitted_types: autoSelectPermittedTypes });
+            await evaluateAutoSelect();
+        }
+
+        function normalizeLeaderCandidate(item) {
+            if (!item || !item.product || !item.strategy_name_parm) return null;
+            return {
+                product: String(item.product).toUpperCase(),
+                strategy: item.strategy_name_parm,
+                genStrategyName: item.gen_strategy_name || '',
+                totalNet: Number(item.total_net || 0),
+                productType: item.product_type || currentProductType
+            };
+        }
+
+        function sameLeader(a, b) {
+            if (!a || !b) return false;
+            return String(a.product || '').toUpperCase() === String(b.product || '').toUpperCase()
+                && String(a.strategy || '') === String(b.strategy || '');
+        }
+
+        function getCurrentAutoLeadersForScope(productType) {
+            const leaders = [];
+            const seen = new Set();
+            for (const [key, entry] of Object.entries(activations)) {
+                if (entry.active && entry.manual === false && entry.auto_promote === true) {
+                    const prod = String((entry.products || [])[0] || '').toUpperCase();
+                    const resolvedProductType = resolveProductTypeForProduct(prod, currentProductType);
+                    if (resolvedProductType !== productType) continue;
+
+                    const stratMatch = key.match(/^breakout_(.*)_(buy|sell)_net$/);
+                    if (!stratMatch || !prod) continue;
+                    const dedupeKey = `${prod}|${stratMatch[1]}`;
+                    if (seen.has(dedupeKey)) continue;
+                    seen.add(dedupeKey);
+                    leaders.push({ product: prod, strategy: stratMatch[1], productType: resolvedProductType });
+                }
+            }
+            return leaders;
+        }
+
+        function formatLeaderLabel(leader) {
+            if (!leader) return 'No active leader';
+            return `${leader.product} | ${leader.strategy}`;
+        }
+
+        function clearPendingAutoLeader() {
+            pendingAutoWinner = null;
+            leadershipChangeDetectedAt = null;
+        }
+
+        function logAutoSelectEvent(message, details = null) {
+            const scope = `[auto-select:${currentProductType}]`;
+            if (details) { console.log(`${scope} ${message}`, details); return; }
+            console.log(`${scope} ${message}`);
+        }
+
+        function getPendingAutoLeaderRemainingSeconds() {
+            if (!pendingAutoWinner || leadershipChangeDetectedAt === null) return 0;
+            const elapsedMs = Date.now() - leadershipChangeDetectedAt;
+            const remainingMs = Math.max(0, (vtradePersistenceSeconds * 1000) - elapsedMs);
+            return Math.ceil(remainingMs / 1000);
+        }
+
+        function updateAutoSelectStatus() {
+            const statusEl = document.getElementById('autoSelectStatus');
+            if (!statusEl) return;
+            const mode = autoSelectModes[currentProductType] || 'None';
+            if (mode === 'None') {
+                statusEl.dataset.state = 'idle';
+                statusEl.innerText = `Auto-select disabled for ${currentProductType}.`;
+                return;
+            }
+
+            if (!isCurrentProductTypePermitted()) {
+                statusEl.dataset.state = 'idle';
+                statusEl.innerText = `Auto-select blocked for ${currentProductType}. Select this product type in Permitted Product Types.`;
+                return;
+            }
+
+            if (pendingAutoWinner && leadershipChangeDetectedAt !== null) {
+                const remaining = getPendingAutoLeaderRemainingSeconds();
+                statusEl.dataset.state = 'pending';
+                statusEl.innerText = `Pending leader ${formatLeaderLabel(pendingAutoWinner)}. Switching in ${remaining}s...`;      
+                return;
+            }
+
+            const activeLeader = getCurrentAutoLeadersForScope(currentProductType)[0];
+            if (activeLeader) {
+                statusEl.dataset.state = 'active';
+                statusEl.innerText = `Active leader ${formatLeaderLabel(activeLeader)}. Delay ${vtradePersistenceSeconds}s.`;
+                return;
+            }
+
+            statusEl.dataset.state = 'idle';
+            statusEl.innerText = `Waiting for a positive ${currentProductType} leader.`;
+        }
+
+        async function applyAutoLeaderSelection(topCandidate, scopedAutoLeaders) {
+            // Only deactivate auto-leaders in the CURRENT scope
+            for (const old of scopedAutoLeaders) {
+                if (!topCandidate || !sameLeader(old, topCandidate)) {
+                    await toggleGenStrategy(old.product, old.strategy, false, false);
+                }
+            }
+
+            if (topCandidate && !scopedAutoLeaders.some(old => sameLeader(old, topCandidate))) {
+                await toggleGenStrategy(topCandidate.product, topCandidate.strategy, true, false);
+            }
+
+            clearPendingAutoLeader();
+            logAutoSelectEvent('applied leader selection', {
+                activeLeader: topCandidate ? formatLeaderLabel(topCandidate) : 'none',
+                deactivatedLeaders: scopedAutoLeaders
+                    .filter(old => !topCandidate || !sameLeader(old, topCandidate))
+                    .map(formatLeaderLabel)
+            });
+            updateAutoSelectStatus();
+            if (currentData) renderTable();
+        }
+
+        async function evaluateAutoSelect() {
+            const mode = autoSelectModes[currentProductType] || 'None';
+            if (!currentData || !currentData.top_strategies) {
+                clearPendingAutoLeader();
+                updateAutoSelectStatus();
+                return;
+            }
+
+            syncProductTypeMapFromCurrentData();
+            const scopedAutoLeaders = getCurrentAutoLeadersForScope(currentProductType);
+            if (mode === 'None') {
+                clearPendingAutoLeader();
+                if (scopedAutoLeaders.length > 0) {
+                    logAutoSelectEvent('mode disabled for scope, clearing scoped auto-leaders');
+                    await applyAutoLeaderSelection(null, scopedAutoLeaders);
+                    return;
+                }
+                updateAutoSelectStatus();
+                return;
+            }
+            if (!isCurrentProductTypePermitted()) {
+                clearPendingAutoLeader();
+                if (scopedAutoLeaders.length > 0) {
+                    logAutoSelectEvent('current product type is not permitted, clearing scoped auto-leaders');
+                    await applyAutoLeaderSelection(null, scopedAutoLeaders);
+                    return;
+                }
+                updateAutoSelectStatus();
+                return;
+            }
+            const currentAutoLeader = scopedAutoLeaders[0] || null;
+            let topCandidate = null;
+            for (const item of currentData.top_strategies) {
+                if (Number(item.total_net) <= 0) continue;
+                if (resolveProductTypeForProduct(item.product, item.product_type || currentProductType) !== currentProductType) continue;
+                
+                // [2026-04-07 19:30] V20260407_1930 - Respect Manual Rejection
+                const bKey = `breakout_${item.strategy_name_parm}_buy_net`;
+                const sKey = `breakout_${item.strategy_name_parm}_sell_net`;
+                const bE = activations[bKey], sE = activations[sKey];
+                if ((bE && bE.manual && !bE.active) || (sE && sE.manual && !sE.active)) continue;
+
+                const style = classifyStrategyStyle(item.strategy_name_parm);
+                const match = mode === 'All'
+                    || (mode === 'Scalper' && style.isScalper)
+                    || (mode === 'Rev_scalper' && style.isRevScalper);
+                if (match) {
+                    topCandidate = normalizeLeaderCandidate(item);
+                    break;
+                }
+            }
+
+            if (!topCandidate) {
+                if (scopedAutoLeaders.length > 0) {
+                    logAutoSelectEvent('no candidate remains in scope, clearing auto-pilot');
+                    await applyAutoLeaderSelection(null, scopedAutoLeaders);
+                }
+                return;
+            }
+
+            if (!currentAutoLeader) {
+                logAutoSelectEvent('activating first auto-leader immediately', { leader: formatLeaderLabel(topCandidate) });
+                await applyAutoLeaderSelection(topCandidate, scopedAutoLeaders);
+                return;
+            }
+
+            if (sameLeader(currentAutoLeader, topCandidate)) {
+                clearPendingAutoLeader();
+                if (scopedAutoLeaders.length > 1) {
+                    await applyAutoLeaderSelection(topCandidate, scopedAutoLeaders);
+                } else {
+                    updateAutoSelectStatus();
+                }
+                return;
+            }
+
+            if (!sameLeader(pendingAutoWinner, topCandidate)) {
+                pendingAutoWinner = topCandidate;
+                leadershipChangeDetectedAt = Date.now();
+                updateAutoSelectStatus();
+                return;
+            }
+
+            if (getPendingAutoLeaderRemainingSeconds() > 0) {
+                updateAutoSelectStatus();
+                return;
+            }
+
+            logAutoSelectEvent('switching active leader after delay');
+            await applyAutoLeaderSelection(topCandidate, scopedAutoLeaders);
+        }
+
+        function classifyStrategyStyle(rawStrategy) {
+            const raw = String(rawStrategy || '').toLowerCase();
+            const tpMatch = raw.match(/tp([\d.]+)/), slMatch = raw.match(/sl([\d.]+)/);
+            if (!tpMatch || !slMatch) return { cellClass: '', isScalper: false, isRevScalper: false };
+            const tp = parseFloat(tpMatch[1]), sl = parseFloat(slMatch[1]);
+            const isS = tp > 0 && sl >= tp * scalperRatio, isR = sl > 0 && tp >= sl * revScalperRatio;
+            return { cellClass: isS ? 'scalper' : isR ? 'rev-scalper' : '', isScalper: isS, isRevScalper: isR };
+        }
+
+        function escapeHtml(value) {
+            return String(value ?? '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function formatNetValue(value) {
+            const numeric = Number(value || 0);
+            const cssClass = numeric > 0 ? 'pos' : numeric < 0 ? 'neg' : 'neutral';
+            return `<span class="net-val ${cssClass}">${numeric.toFixed(2)}</span>`;
+        }
+
+        function compareValues(left, right, numeric = false) {
+            if (numeric) {
+                return Number(left || 0) - Number(right || 0);
+            }
+            return String(left ?? '').localeCompare(String(right ?? ''), undefined, { sensitivity: 'base' });
+        }
+
+        function setSort(key) {
+            if (sortState.key === key) {
+                sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortState.key = key;
+                sortState.direction = key === 'rank' ? 'asc' : 'desc';
+            }
+            if (currentData) renderTable();
+        }
+
+        function createHeaderCell(label, key, numeric = false) {
+            const th = document.createElement('th');
+            const button = document.createElement('button');
+            button.className = `sort-btn${sortState.key === key ? ' active' : ''}`;
+            button.type = 'button';
+            button.addEventListener('click', () => setSort(key));
+
+            const labelSpan = document.createElement('span');
+            labelSpan.className = 'sort-label';
+            labelSpan.textContent = label;
+            button.appendChild(labelSpan);
+
+            const indicator = document.createElement('span');
+            indicator.className = 'sort-indicator';
+            indicator.textContent = sortState.key === key ? (sortState.direction === 'asc' ? '▲' : '▼') : '';
+            button.appendChild(indicator);
+
+            if (numeric) {
+                button.style.justifyContent = 'flex-end';
+            }
+
+            th.appendChild(button);
+            return th;
+        }
+
+        function createStaticHeaderCell(label, className = '') {
+            const th = document.createElement('th');
+            if (className) th.className = className;
+            th.textContent = label;
+            if (className.includes('col-live-trade') || className.includes('col-chart')) {
+                th.style.textAlign = 'center';
+            }
+            return th;
+        }
+
+        function getStrategyRowKey(item) {
+            return `${String(item.product || '').toUpperCase()}|${String(item.strategy_name_parm || '')}`;
+        }
+
+        function updateTableHeader(dateKeys, dateLabels = {}) {
+            const headerRow = document.getElementById('table-header');
+            if (!headerRow) return;
+
+            headerRow.innerHTML = '';
+            headerRow.appendChild(Object.assign(createHeaderCell('#', 'rank'), { className: 'col-rank' }));
+            headerRow.appendChild(Object.assign(createHeaderCell('Product | Strategy', 'strategy_label'), { className: 'col-strategy' }));
+            headerRow.appendChild(createStaticHeaderCell('Live Trade', 'col-live-trade'));
+            headerRow.appendChild(createStaticHeaderCell('Chart', 'col-chart'));
+
+            dateKeys.forEach(d => {
+                headerRow.appendChild(Object.assign(createHeaderCell(dateLabels[d] || d.substring(5), `date:${d}`, true), { className: 'col-day' }));
+            });
+            headerRow.appendChild(Object.assign(createHeaderCell('Total', 'total', true), { className: 'col-total' }));
+            headerRow.appendChild(Object.assign(createHeaderCell('Trades', 'trades', true), { className: 'col-trades' }));
+            headerRow.dataset.dateKeys = JSON.stringify(dateKeys);
+        }
+
+        function createStrategyRow(item, index, dateKeys) {
+            const tr = document.createElement('tr');
+            tr.dataset.rowKey = getStrategyRowKey(item);
+
+            tr.appendChild(Object.assign(document.createElement('td'), { className: 'col-rank' }));
+            tr.appendChild(Object.assign(document.createElement('td'), { className: 'strategy-cell col-strategy' }));
+
+            const toggleCell = document.createElement('td');
+            toggleCell.className = 'gen-strategy-cell col-live-trade';
+            const toggleContainer = document.createElement('div');
+            toggleContainer.className = 'gen-strategy-container';
+            const toggleLabel = document.createElement('label');
+            toggleLabel.className = 'switch';
+            const toggleInput = document.createElement('input');
+            toggleInput.type = 'checkbox';
+            const slider = document.createElement('span');
+            slider.className = 'slider';
+            toggleLabel.appendChild(toggleInput);
+            toggleLabel.appendChild(slider);
+            toggleContainer.appendChild(toggleLabel);
+            toggleCell.appendChild(toggleContainer);
+            tr.appendChild(toggleCell);
+
+            const chartCell = document.createElement('td');
+            chartCell.className = 'col-chart chart-action-cell';
+            const chartButton = document.createElement('button');
+            chartButton.className = 'pag-btn';
+            chartButton.type = 'button';
+            chartButton.title = 'Open chart';
+            chartButton.innerHTML = '<i class="fas fa-chart-area"></i>';
+            chartCell.appendChild(chartButton);
+            tr.appendChild(chartCell);
+
+            dateKeys.forEach(() => {
+                const td = document.createElement('td');
+                td.className = 'col-day';
+                tr.appendChild(td);
+            });
+
+            tr.appendChild(Object.assign(document.createElement('td'), { className: 'col-total' }));
+            tr.appendChild(Object.assign(document.createElement('td'), { className: 'col-trades' }));
+
+            updateStrategyRow(tr, item, index, dateKeys);
+            return tr;
+        }
+
+        function updateStrategyRow(tr, item, index, dateKeys) {
+            const style = classifyStrategyStyle(item.strategy_name_parm);
+            const isActive = isStrategyActive(item.product, item.strategy_name_parm);
+            const safeStrategyLabel = escapeHtml(item.strategy_label);
+            const product = String(item.product || '');
+            const strategyParm = String(item.strategy_name_parm || '');
+            const cells = tr.children;
+
+            tr.dataset.rowKey = getStrategyRowKey(item);
+
+            cells[0].textContent = `${index + 1}`;
+            cells[1].className = `strategy-cell col-strategy ${style.cellClass}`.trim();
+            cells[1].textContent = safeStrategyLabel;
+
+            const toggleInput = cells[2].querySelector('input[type="checkbox"]');
+            const toggleLabel = cells[2].querySelector('label.switch');
+            if (toggleInput) {
+                toggleInput.checked = isActive;
+                toggleInput.onchange = () => toggleGenStrategy(product, strategyParm, toggleInput.checked, true);
+            }
+            if (toggleLabel) {
+                toggleLabel.title = `Toggle auto-promotion for ${product} | ${strategyParm}`;
+            }
+
+            const chartButton = cells[3].querySelector('button');
+            if (chartButton) {
+                chartButton.onclick = () => sendSingleRowToMultiChart(strategyParm, product);
+            }
+
+            dateKeys.forEach((d, idx) => {
+                cells[4 + idx].innerHTML = formatNetValue(item.daily?.[d] || 0);
+            });
+
+            const totalIndex = 4 + dateKeys.length;
+            cells[totalIndex].innerHTML = formatNetValue(item.total_net || 0);
+            cells[totalIndex + 1].innerHTML = `<span class="trades-badge">${Number(item.total_trades || 0)}</span>`;
+        }
+
+        function getSortedStrategies() {
+            const rows = Array.isArray(currentData?.top_strategies) ? [...currentData.top_strategies] : [];
+            const dateLabels = currentData?.date_labels
+                ? Object.keys(currentData.date_labels)
+                : rows[0]?.daily
+                    ? Object.keys(rows[0].daily)
+                    : (currentData?.date_range || []);
+            const keyedRows = rows.map((row, index) => ({ ...row, __rank: index + 1 }));
+
+            keyedRows.sort((a, b) => {
+                let comparison = 0;
+                const key = sortState.key;
+
+                if (key === 'rank') {
+                    comparison = compareValues(a.__rank, b.__rank, true);
+                } else if (key === 'strategy_label') {
+                    comparison = compareValues(a.strategy_label, b.strategy_label);
+                } else if (key === 'gen_strategy_name') {
+                    comparison = compareValues(a.gen_strategy_name, b.gen_strategy_name);
+                } else if (key === 'total') {
+                    comparison = compareValues(a.total_net, b.total_net, true);
+                } else if (key === 'trades') {
+                    comparison = compareValues(a.total_trades, b.total_trades, true);
+                } else if (key.startsWith('date:')) {
+                    const dateKey = key.slice(5);
+                    comparison = compareValues(a.daily?.[dateKey], b.daily?.[dateKey], true);
+                }
+
+                if (comparison === 0) {
+                    comparison = compareValues(a.__rank, b.__rank, true);
+                }
+                return sortState.direction === 'asc' ? comparison : -comparison;
+            });
+
+            return { rows: keyedRows, dateLabels };
+        }
+
+        function renderTable(options = {}) {
+            const { patchRowsOnly = false } = options;
+            const headerRow = document.getElementById('table-header');
+            const body = document.getElementById('performance-body');
+            if (!headerRow || !body) return;
+            const dateLabels = currentData?.date_labels || {};
+
+            const { rows, dateLabels: dateKeys } = getSortedStrategies();
+            const existingDateKeys = JSON.parse(headerRow.dataset.dateKeys || '[]');
+            const canPatchRowsOnly = patchRowsOnly
+                && JSON.stringify(existingDateKeys) === JSON.stringify(dateKeys);
+
+            if (!canPatchRowsOnly) {
+                updateTableHeader(dateKeys, dateLabels);
+                body.innerHTML = '';
+                rows.forEach((item, index) => body.appendChild(createStrategyRow(item, index, dateKeys)));
+                return;
+            }
+
+            const existingRows = new Map(
+                Array.from(body.querySelectorAll('tr[data-row-key]')).map(row => [row.dataset.rowKey, row])
+            );
+            const nextRows = [];
+
+            rows.forEach((item, index) => {
+                const rowKey = getStrategyRowKey(item);
+                let tr = existingRows.get(rowKey);
+                if (!tr) {
+                    tr = createStrategyRow(item, index, dateKeys);
+                } else {
+                    updateStrategyRow(tr, item, index, dateKeys);
+                    existingRows.delete(rowKey);
+                }
+                nextRows.push(tr);
+            });
+
+            existingRows.forEach(row => row.remove());
+            nextRows.forEach(row => body.appendChild(row));
+        }
+
+        function getWeeklyCacheKey() {
+            return `${currentProductType}|${currentTargetDate}`;
+        }
+
+        async function fetchData(options = {}) {
+            const {
+                refreshState = false,
+                refreshActivations = false,
+                useCache = true,
+                showOverlay = true,
+                patchRowsOnly = false
+            } = options;
+            const requestId = ++weeklyDataRequestId;
+            const cacheKey = getWeeklyCacheKey();
+            if (showOverlay) showLoading(true);
+            try {
+                if (refreshActivations || !activationsLoaded) {
+                    await loadActivations();
+                }
+                await loadConfig(refreshState);
+
+                let data = null;
+                if (useCache && weeklyDataCache.has(cacheKey)) {
+                    data = weeklyDataCache.get(cacheKey);
+                } else {
+                    const response = await fetch(`/api/weekly_performance?product_type=${currentProductType}&target_date=${currentTargetDate}`);
+                    data = await response.json();
+                    if (!data.error) {
+                        weeklyDataCache.set(cacheKey, data);
+                    }
+                }
+
+                if (requestId !== weeklyDataRequestId) return;
+                if (data.error) { alert(data.error); return; }
+                currentData = data;
+                lastUpdatedTime = new Date();
+                syncProductTypeMapFromCurrentData();
+                const timeEl = document.getElementById('last-update-time');
+                if (timeEl) timeEl.innerText = lastUpdatedTime.toLocaleTimeString();
+                updateAgeDisplay();
+
+                await evaluateAutoSelect(); 
+                renderTable({ patchRowsOnly });
+                updateDisplay();
+            } catch (err) { console.error("Fetch error:", err); }
+            finally { if (showOverlay) showLoading(false); }
+        }
+
+        function updateDisplay() {
+            const range = currentData.date_range;
+            document.getElementById('week-display').innerText = formatWeekDisplay(range[0], range[1]);
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                const id = btn.id.replace('btn-', '');
+                if (id === currentProductType) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function setProductType(type) { 
+            currentProductType = type; 
+            clearPendingAutoLeader();
+            storeWeeklyState();
+            applyWeeklyStateToUi();
+            fetchData(); 
+        }
+
+        function changeWeek(dir) {
+            const base = currentData?.week_start || currentTargetDate;
+            const [y, m, d] = base.split('-').map(Number);
+            const date = new Date(y, m - 1, d);
+            date.setDate(date.getDate() + (dir * 7));
+            const pad = n => String(n).padStart(2, '0');
+            currentTargetDate = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+            storeWeeklyState();
+            fetchData();
+        }
+        function showLoading(s) { document.getElementById('loading').style.display = s ? 'flex' : 'none'; }
+        function buildModelName(b, p) { return p ? `${b}_${p}` : b; }
+        function sendSingleRowToMultiChart(s, p) { sendSummarySelectionToMultiChart([{ strategy: s, product: p }], `${s} | ${p}`); }
+
+        function sendSummarySelectionToMultiChart(items, label = "Summary", preferredMetric = "net") {
+            const dedup = []; const seen = new Set();
+            for (const it of items) {
+                const bS = String(it.strategy || "").trim(), p = String(it.product || "").trim(), pR = String(it.params || "").trim();
+                if (!bS || !p) continue;
+                const strategy = (pR && !bS.includes("_tp") && !bS.endsWith(`_${pR}`)) ? buildModelName(bS, pR) : bS;
+                const key = `${strategy}|${p}`;
+                if (seen.has(key)) continue; seen.add(key);
+                dedup.push({ strategy, product: p, group: `${strategy} | ${p}`, parm_raw: pR });
+            }
+            if (!dedup.length) { alert("No valid items."); return; }
+            localStorage.setItem("multi_chart_import_payload", JSON.stringify({
+                created_at: new Date().toISOString(), mode: "live", date: currentTargetDate, source: "weekly_performance", label, preferred_metric: preferredMetric, append: true, items: dedup
+            }));
+            const bc = new BroadcastChannel("multi_chart_channel");
+            let resp = false;
+            bc.onmessage = (e) => { if (e.data === "PONG") { resp = true; bc.postMessage("IMPORT"); } };
+            bc.postMessage("PING");
+            setTimeout(() => { if (!resp) window.open("multi_chart.html?import=1", "_blank"); }, 300);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const stored = getStoredWeeklyState();
+            if (stored) {
+                bootstrapWeeklyScope(stored);
+            }
+            autoRefreshEnabled = getStoredAutoRefreshEnabled();
+            updateAutoRefreshUi();
+            fetchData();
+            startAutoRefreshLoop();
+            setInterval(() => {
+                updateAgeDisplay();
+                updateAutoSelectStatus();
+                if (pendingAutoWinner && currentData && autoSelectModes[currentProductType] !== 'None' && getPendingAutoLeaderRemainingSeconds() <= 0) {
+                    evaluateAutoSelect();
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

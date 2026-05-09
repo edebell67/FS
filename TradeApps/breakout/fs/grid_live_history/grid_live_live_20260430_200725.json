@@ -1,0 +1,29 @@
+{
+    "live": [
+        {
+            "model": "momentum_0_tp5.0_sl7.0",
+            "product": "GBPEUR_C",
+            "metric": "net",
+            "group": "freq_GBPEUR_C_momentum_0_tp5_0_sl7_0",
+            "source": "freq_switch_rule",
+            "activated_at": "2026-04-30T18:59:03"
+        },
+        {
+            "model": "breakout_R_Rev_2_tp10.0_sl3.0",
+            "product": "NZDAUD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0430_162624_941_NZDAUD_C_breakout_R_Rev_2_tp10_0_sl3_0",
+            "source": "TB_AUTO_TB_0430_162624_941_NZDAUD_C_breakout_R_Rev_2_tp10_0_sl3_0",
+            "activated_at": "2026-04-30T20:07:20"
+        },
+        {
+            "model": "breakout_R_Rev_2_tp10.0_sl5.0",
+            "product": "GBPEUR_S",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0430_173601_495_GBPEUR_S_breakout_R_Rev_2_tp10_0_sl5_0",
+            "source": "TB_AUTO_TB_0430_173601_495_GBPEUR_S_breakout_R_Rev_2_tp10_0_sl5_0",
+            "activated_at": "2026-04-30T20:07:20"
+        }
+    ],
+    "sim": []
+}

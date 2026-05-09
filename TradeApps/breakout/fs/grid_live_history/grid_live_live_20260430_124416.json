@@ -1,0 +1,13 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_4_tp20.0_sl3.0",
+            "product": "EURAUD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0430_073033_014_EURAUD_C_breakout_R_4_tp20_0_sl3_0",
+            "source": "TB_AUTO_TB_0430_073033_014_EURAUD_C_breakout_R_4_tp20_0_sl3_0",
+            "activated_at": "2026-04-30T12:44:14"
+        }
+    ],
+    "sim": []
+}

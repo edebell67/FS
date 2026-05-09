@@ -1,0 +1,18 @@
+{
+  "subscribers": [
+    {
+      "id": "576fc20d-9f3d-42e3-920b-8afee5b77d53",
+      "email": "test@example.com",
+      "verified": false,
+      "verification_token": "d18b405a-54c5-4703-88af-6932d595be9d",
+      "created_at": "2026-02-24T15:49:12.231884",
+      "source": "website",
+      "preferences": {
+        "daily_summary": true,
+        "bias_shifts": true,
+        "milestones": false,
+        "new_leader": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{
+    "live": [
+        {
+            "model": "breakout_R_2_tp20.0_sl20.0",
+            "product": "GBPNZD_C",
+            "metric": "sell_net",
+            "group": "AUTO_TB_0427_023046_809_GBPNZD_C_breakout_R_2_tp20_0_sl20_0",
+            "source": "TB_AUTO_TB_0427_023046_809_GBPNZD_C_breakout_R_2_tp20_0_sl20_0",
+            "activated_at": "2026-04-27T12:12:25"
+        }
+    ],
+    "sim": []
+}

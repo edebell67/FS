@@ -1,0 +1,49 @@
+====================================================================================================
+TOP 30 MOST PROFITABLE BUY STRATEGIES (by total buy_net)
+====================================================================================================
+Rank   Strategy                                 Product      Buy Net      Trades   Avg/Trade    Win%    
+----------------------------------------------------------------------------------------------------
+1      breakout_2_tp10.0_sl30.0                 EURAUD_C     $900.00      10       $90.00       100.0  %
+2      breakout_4_tp10.0_sl50.0                 GBPEUR_C     $900.00      10       $90.00       100.0  %
+3      breakout_2_tp10.0_sl20.0                 EURAUD_C     $810.00      9        $90.00       100.0  %
+4      breakout_Rev_2_tp10.0_sl20.0             EURAUD_C     $760.00      18       $42.22       72.2   %
+5      breakout_Rev_2_tp10.0_sl30.0             EURAUD_C     $760.00      18       $42.22       72.2   %
+6      breakout_Rev_2_tp10.0_sl50.0             EURAUD_C     $760.00      18       $42.22       72.2   %
+7      breakout_R_Rev_2_tp10.0_sl50.0           GBPEUR_C     $735.00      9        $81.67       100.0  %
+8      breakout_2_tp10.0_sl30.0                 GBPAUD_C     $720.00      8        $90.00       100.0  %
+9      breakout_3_tp10.0_sl20.0                 EURAUD_C     $720.00      8        $90.00       100.0  %
+10     breakout_4_tp10.0_sl50.0                 GBPNZD_C     $720.00      8        $90.00       100.0  %
+11     breakout_3_tp10.0_sl30.0                 GBPAUD_C     $712.50      9        $79.17       100.0  %
+12     breakout_R_Rev_2_tp10.0_sl50.0           GBPAUD_C     $707.50      9        $78.61       100.0  %
+13     breakout_4_tp10.0_sl20.0                 GBPAUD_C     $690.00      11       $62.73       90.9   %
+14     breakout_4_tp10.0_sl30.0                 GBPAUD_C     $680.00      12       $56.67       91.7   %
+15     breakout_4_tp10.0_sl20.0                 GBPEUR_C     $660.00      14       $47.14       85.7   %
+16     breakout_R_Rev_4_tp10.0_sl50.0           GBPAUD_C     $647.50      8        $80.94       100.0  %
+17     breakout_R_Rev_3_tp10.0_sl50.0           GBPAUD_C     $637.50      8        $79.69       100.0  %
+18     breakout_R_Rev_2_tp10.0_sl30.0           EURAUD_C     $632.50      11       $57.50       100.0  %
+19     breakout_2_tp10.0_sl30.0                 GBPNZD_C     $630.00      7        $90.00       100.0  %
+20     breakout_3_tp10.0_sl30.0                 EURAUD_C     $630.00      7        $90.00       100.0  %
+21     breakout_4_tp10.0_sl30.0                 EURAUD_C     $630.00      7        $90.00       100.0  %
+22     breakout_Rev_2_tp10.0_sl20.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+23     breakout_Rev_2_tp10.0_sl30.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+24     breakout_Rev_2_tp10.0_sl50.0             GBPNZD_C     $625.00      16       $39.06       75.0   %
+25     breakout_R_Rev_2_tp10.0_sl20.0           EURNZD_C     $607.50      9        $67.50       100.0  %
+26     breakout_R_Rev_2_tp10.0_sl20.0           GBPEUR_C     $602.50      11       $54.77       90.9   %
+27     breakout_4_tp10.0_sl20.0                 GBPNZD_C     $600.00      10       $60.00       90.0   %
+28     breakout_4_tp10.0_sl20.0                 EURAUD_C     $600.00      10       $60.00       90.0   %
+29     breakout_Rev_2_tp10.0_sl20.0             GBP          $590.00      10       $59.00       80.0   %
+30     breakout_Rev_4_tp10.0_sl30.0             GBPEUR_C     $575.00      19       $30.26       73.7   %
+
+====================================================================================================
+PATTERN ANALYSIS - What makes BUY strategies profitable?
+====================================================================================================
+
+1. STRATEGY TYPE PATTERNS:
+Traceback (most recent call last):
+  File "C:\Users\edebe\eds\TradeApps\breakout\fs\analyze_buy_patterns.py", line 74, in <module>
+    print(f"   {strategy_type:<20} \u2192 Avg: ${avg_net:>8.2f} | Total: ${total_net:>10.2f} | Count: {len(nets)}")
+    ~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Python313\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2192' in position 24: character maps to <undefined>

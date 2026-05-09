@@ -1,0 +1,650 @@
+[
+  {
+    "strategy": "breakout_3_tp10.0_sl50.0",
+    "activity": 42,
+    "seq_trades": 9,
+    "total_net": 825.0
+  },
+  {
+    "strategy": "breakout_R_2_tp10.0_sl30.0",
+    "activity": 36,
+    "seq_trades": 12,
+    "total_net": 752.5
+  },
+  {
+    "strategy": "breakout_4_tp5.0_sl50.0",
+    "activity": 52,
+    "seq_trades": 17,
+    "total_net": 640.0
+  },
+  {
+    "strategy": "breakout_4_tp10.0_sl50.0",
+    "activity": 38,
+    "seq_trades": 9,
+    "total_net": 605.0
+  },
+  {
+    "strategy": "breakout_R_2_tp10.0_sl20.0",
+    "activity": 36,
+    "seq_trades": 7,
+    "total_net": 565.0
+  },
+  {
+    "strategy": "breakout_3_tp5.0_sl20.0",
+    "activity": 83,
+    "seq_trades": 18,
+    "total_net": 530.0
+  },
+  {
+    "strategy": "breakout_2_tp3.0_sl30.0",
+    "activity": 97,
+    "seq_trades": 23,
+    "total_net": 490.0
+  },
+  {
+    "strategy": "breakout_4_tp3.0_sl30.0",
+    "activity": 98,
+    "seq_trades": 27,
+    "total_net": 485.0
+  },
+  {
+    "strategy": "breakout_2_tp5.0_sl20.0",
+    "activity": 87,
+    "seq_trades": 21,
+    "total_net": 480.0
+  },
+  {
+    "strategy": "breakout_R_2_tp5.0_sl20.0",
+    "activity": 69,
+    "seq_trades": 19,
+    "total_net": 462.5
+  },
+  {
+    "strategy": "breakout_R_3_tp5.0_sl50.0",
+    "activity": 27,
+    "seq_trades": 10,
+    "total_net": 420.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp3.0_sl50.0",
+    "activity": 35,
+    "seq_trades": 19,
+    "total_net": 417.5
+  },
+  {
+    "strategy": "breakout_Rev_2_tp10.0_sl20.0",
+    "activity": 140,
+    "seq_trades": 27,
+    "total_net": 395.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp10.0_sl30.0",
+    "activity": 140,
+    "seq_trades": 27,
+    "total_net": 395.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp10.0_sl50.0",
+    "activity": 140,
+    "seq_trades": 27,
+    "total_net": 395.0
+  },
+  {
+    "strategy": "breakout_R_3_tp10.0_sl50.0",
+    "activity": 22,
+    "seq_trades": 8,
+    "total_net": 395.0
+  },
+  {
+    "strategy": "breakout_R_2_tp10.0_sl50.0",
+    "activity": 19,
+    "seq_trades": 6,
+    "total_net": 365.0
+  },
+  {
+    "strategy": "breakout_4_tp5.0_sl20.0",
+    "activity": 97,
+    "seq_trades": 21,
+    "total_net": 355.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp3.0_sl50.0",
+    "activity": 39,
+    "seq_trades": 16,
+    "total_net": 345.0
+  },
+  {
+    "strategy": "breakout_3_tp3.0_sl30.0",
+    "activity": 95,
+    "seq_trades": 21,
+    "total_net": 330.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp3.0_sl30.0",
+    "activity": 74,
+    "seq_trades": 21,
+    "total_net": 327.5
+  },
+  {
+    "strategy": "breakout_R_3_tp5.0_sl30.0",
+    "activity": 36,
+    "seq_trades": 11,
+    "total_net": 327.5
+  },
+  {
+    "strategy": "breakout_4_tp10.0_sl20.0",
+    "activity": 46,
+    "seq_trades": 9,
+    "total_net": 285.0
+  },
+  {
+    "strategy": "breakout_2_tp3.0_sl50.0",
+    "activity": 67,
+    "seq_trades": 27,
+    "total_net": 275.0
+  },
+  {
+    "strategy": "breakout_R_3_tp3.0_sl50.0",
+    "activity": 39,
+    "seq_trades": 13,
+    "total_net": 275.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp5.0_sl20.0",
+    "activity": 46,
+    "seq_trades": 15,
+    "total_net": 270.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp10.0_sl20.0",
+    "activity": 61,
+    "seq_trades": 14,
+    "total_net": 257.5
+  },
+  {
+    "strategy": "breakout_R_3_tp10.0_sl30.0",
+    "activity": 25,
+    "seq_trades": 8,
+    "total_net": 242.5
+  },
+  {
+    "strategy": "breakout_3_tp5.0_sl30.0",
+    "activity": 68,
+    "seq_trades": 22,
+    "total_net": 235.0
+  },
+  {
+    "strategy": "breakout_3_tp3.0_sl50.0",
+    "activity": 73,
+    "seq_trades": 23,
+    "total_net": 220.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp3.0_sl30.0",
+    "activity": 55,
+    "seq_trades": 22,
+    "total_net": 220.0
+  },
+  {
+    "strategy": "breakout_R_4_tp3.0_sl50.0",
+    "activity": 40,
+    "seq_trades": 11,
+    "total_net": 220.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp3.0_sl20.0",
+    "activity": 106,
+    "seq_trades": 23,
+    "total_net": 215.0
+  },
+  {
+    "strategy": "breakout_3_tp10.0_sl20.0",
+    "activity": 60,
+    "seq_trades": 12,
+    "total_net": 197.5
+  },
+  {
+    "strategy": "breakout_R_3_tp5.0_sl20.0",
+    "activity": 51,
+    "seq_trades": 13,
+    "total_net": 187.5
+  },
+  {
+    "strategy": "breakout_4_tp10.0_sl30.0",
+    "activity": 47,
+    "seq_trades": 9,
+    "total_net": 185.0
+  },
+  {
+    "strategy": "breakout_4_tp3.0_sl20.0",
+    "activity": 110,
+    "seq_trades": 33,
+    "total_net": 177.5
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp10.0_sl20.0",
+    "activity": 49,
+    "seq_trades": 7,
+    "total_net": 177.5
+  },
+  {
+    "strategy": "breakout_R_3_tp3.0_sl20.0",
+    "activity": 81,
+    "seq_trades": 23,
+    "total_net": 170.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp5.0_sl20.0",
+    "activity": 65,
+    "seq_trades": 13,
+    "total_net": 165.0
+  },
+  {
+    "strategy": "breakout_R_4_tp5.0_sl20.0",
+    "activity": 55,
+    "seq_trades": 13,
+    "total_net": 165.0
+  },
+  {
+    "strategy": "breakout_R_4_tp3.0_sl20.0",
+    "activity": 90,
+    "seq_trades": 20,
+    "total_net": 150.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp3.0_sl20.0",
+    "activity": 91,
+    "seq_trades": 21,
+    "total_net": 147.5
+  },
+  {
+    "strategy": "breakout_R_4_tp3.0_sl30.0",
+    "activity": 68,
+    "seq_trades": 19,
+    "total_net": 137.5
+  },
+  {
+    "strategy": "breakout_2_tp10.0_sl20.0",
+    "activity": 49,
+    "seq_trades": 9,
+    "total_net": 110.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp10.0_sl20.0",
+    "activity": 49,
+    "seq_trades": 8,
+    "total_net": 105.0
+  },
+  {
+    "strategy": "breakout_R_3_tp10.0_sl20.0",
+    "activity": 32,
+    "seq_trades": 9,
+    "total_net": 92.5
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp5.0_sl20.0",
+    "activity": 55,
+    "seq_trades": 10,
+    "total_net": 80.0
+  },
+  {
+    "strategy": "breakout_R_4_tp10.0_sl20.0",
+    "activity": 30,
+    "seq_trades": 7,
+    "total_net": 62.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp10.0_sl20.0",
+    "activity": 126,
+    "seq_trades": 25,
+    "total_net": 47.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp10.0_sl30.0",
+    "activity": 126,
+    "seq_trades": 25,
+    "total_net": 47.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp10.0_sl50.0",
+    "activity": 126,
+    "seq_trades": 25,
+    "total_net": 47.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp10.0_sl20.0",
+    "activity": 115,
+    "seq_trades": 15,
+    "total_net": 17.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp10.0_sl30.0",
+    "activity": 115,
+    "seq_trades": 15,
+    "total_net": 17.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp10.0_sl50.0",
+    "activity": 115,
+    "seq_trades": 15,
+    "total_net": 17.5
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp3.0_sl20.0",
+    "activity": 94,
+    "seq_trades": 22,
+    "total_net": 5.0
+  },
+  {
+    "strategy": "breakout_4_tp5.0_sl30.0",
+    "activity": 78,
+    "seq_trades": 19,
+    "total_net": 2.5
+  },
+  {
+    "strategy": "breakout_3_tp3.0_sl20.0",
+    "activity": 112,
+    "seq_trades": 27,
+    "total_net": 0.0
+  },
+  {
+    "strategy": "breakout_R_3_tp3.0_sl30.0",
+    "activity": 82,
+    "seq_trades": 16,
+    "total_net": -5.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp10.0_sl30.0",
+    "activity": 43,
+    "seq_trades": 11,
+    "total_net": -40.0
+  },
+  {
+    "strategy": "breakout_3_tp10.0_sl30.0",
+    "activity": 51,
+    "seq_trades": 6,
+    "total_net": -72.5
+  },
+  {
+    "strategy": "breakout_4_tp3.0_sl50.0",
+    "activity": 73,
+    "seq_trades": 29,
+    "total_net": -82.5
+  },
+  {
+    "strategy": "breakout_R_2_tp5.0_sl30.0",
+    "activity": 43,
+    "seq_trades": 18,
+    "total_net": -95.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp10.0_sl30.0",
+    "activity": 36,
+    "seq_trades": 10,
+    "total_net": -95.0
+  },
+  {
+    "strategy": "breakout_2_tp3.0_sl20.0",
+    "activity": 112,
+    "seq_trades": 30,
+    "total_net": -97.5
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp5.0_sl30.0",
+    "activity": 48,
+    "seq_trades": 14,
+    "total_net": -125.0
+  },
+  {
+    "strategy": "breakout_R_4_tp5.0_sl30.0",
+    "activity": 42,
+    "seq_trades": 11,
+    "total_net": -157.5
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp5.0_sl30.0",
+    "activity": 35,
+    "seq_trades": 12,
+    "total_net": -177.5
+  },
+  {
+    "strategy": "breakout_R_2_tp3.0_sl20.0",
+    "activity": 84,
+    "seq_trades": 28,
+    "total_net": -182.5
+  },
+  {
+    "strategy": "breakout_R_4_tp10.0_sl30.0",
+    "activity": 22,
+    "seq_trades": 7,
+    "total_net": -185.0
+  },
+  {
+    "strategy": "breakout_Rev_4_tp3.0_sl20.0",
+    "activity": 223,
+    "seq_trades": 54,
+    "total_net": -200.0
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp5.0_sl30.0",
+    "activity": 34,
+    "seq_trades": 11,
+    "total_net": -205.0
+  },
+  {
+    "strategy": "breakout_Rev_4_tp3.0_sl30.0",
+    "activity": 223,
+    "seq_trades": 54,
+    "total_net": -210.0
+  },
+  {
+    "strategy": "breakout_Rev_4_tp3.0_sl50.0",
+    "activity": 223,
+    "seq_trades": 54,
+    "total_net": -215.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp3.0_sl30.0",
+    "activity": 52,
+    "seq_trades": 14,
+    "total_net": -220.0
+  },
+  {
+    "strategy": "breakout_2_tp10.0_sl30.0",
+    "activity": 47,
+    "seq_trades": 9,
+    "total_net": -220.0
+  },
+  {
+    "strategy": "breakout_R_2_tp3.0_sl30.0",
+    "activity": 52,
+    "seq_trades": 17,
+    "total_net": -230.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp10.0_sl30.0",
+    "activity": 38,
+    "seq_trades": 9,
+    "total_net": -230.0
+  },
+  {
+    "strategy": "breakout_R_4_tp10.0_sl50.0",
+    "activity": 11,
+    "seq_trades": 3,
+    "total_net": -325.0
+  },
+  {
+    "strategy": "breakout_R_2_tp5.0_sl50.0",
+    "activity": 32,
+    "seq_trades": 5,
+    "total_net": -330.0
+  },
+  {
+    "strategy": "breakout_Rev_3_tp5.0_sl30.0",
+    "activity": 206,
+    "seq_trades": 31,
+    "total_net": -332.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp5.0_sl50.0",
+    "activity": 206,
+    "seq_trades": 31,
+    "total_net": -332.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp5.0_sl20.0",
+    "activity": 206,
+    "seq_trades": 31,
+    "total_net": -342.5
+  },
+  {
+    "strategy": "breakout_2_tp5.0_sl30.0",
+    "activity": 61,
+    "seq_trades": 12,
+    "total_net": -345.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp5.0_sl50.0",
+    "activity": 26,
+    "seq_trades": 4,
+    "total_net": -380.0
+  },
+  {
+    "strategy": "breakout_R_2_tp3.0_sl50.0",
+    "activity": 47,
+    "seq_trades": 6,
+    "total_net": -390.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp10.0_sl50.0",
+    "activity": 26,
+    "seq_trades": 3,
+    "total_net": -400.0
+  },
+  {
+    "strategy": "breakout_R_Rev_4_tp3.0_sl50.0",
+    "activity": 32,
+    "seq_trades": 5,
+    "total_net": -415.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp3.0_sl20.0",
+    "activity": 298,
+    "seq_trades": 59,
+    "total_net": -420.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp3.0_sl30.0",
+    "activity": 297,
+    "seq_trades": 59,
+    "total_net": -420.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp3.0_sl50.0",
+    "activity": 297,
+    "seq_trades": 59,
+    "total_net": -425.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp5.0_sl50.0",
+    "activity": 41,
+    "seq_trades": 4,
+    "total_net": -425.0
+  },
+  {
+    "strategy": "breakout_R_Rev_2_tp10.0_sl50.0",
+    "activity": 27,
+    "seq_trades": 3,
+    "total_net": -452.5
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp10.0_sl50.0",
+    "activity": 26,
+    "seq_trades": 3,
+    "total_net": -452.5
+  },
+  {
+    "strategy": "breakout_R_Rev_3_tp5.0_sl50.0",
+    "activity": 22,
+    "seq_trades": 3,
+    "total_net": -455.0
+  },
+  {
+    "strategy": "breakout_R_4_tp5.0_sl50.0",
+    "activity": 21,
+    "seq_trades": 2,
+    "total_net": -460.0
+  },
+  {
+    "strategy": "breakout_Rev_2_tp5.0_sl20.0",
+    "activity": 230,
+    "seq_trades": 39,
+    "total_net": -567.5
+  },
+  {
+    "strategy": "breakout_Rev_2_tp5.0_sl30.0",
+    "activity": 230,
+    "seq_trades": 39,
+    "total_net": -567.5
+  },
+  {
+    "strategy": "breakout_Rev_2_tp5.0_sl50.0",
+    "activity": 230,
+    "seq_trades": 39,
+    "total_net": -570.0
+  },
+  {
+    "strategy": "breakout_3_tp5.0_sl50.0",
+    "activity": 49,
+    "seq_trades": 5,
+    "total_net": -627.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp5.0_sl30.0",
+    "activity": 183,
+    "seq_trades": 31,
+    "total_net": -632.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp5.0_sl50.0",
+    "activity": 183,
+    "seq_trades": 31,
+    "total_net": -632.5
+  },
+  {
+    "strategy": "breakout_Rev_4_tp5.0_sl20.0",
+    "activity": 183,
+    "seq_trades": 31,
+    "total_net": -635.0
+  },
+  {
+    "strategy": "breakout_2_tp5.0_sl50.0",
+    "activity": 37,
+    "seq_trades": 6,
+    "total_net": -692.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp3.0_sl20.0",
+    "activity": 259,
+    "seq_trades": 57,
+    "total_net": -752.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp3.0_sl50.0",
+    "activity": 259,
+    "seq_trades": 57,
+    "total_net": -752.5
+  },
+  {
+    "strategy": "breakout_Rev_3_tp3.0_sl30.0",
+    "activity": 259,
+    "seq_trades": 57,
+    "total_net": -792.5
+  },
+  {
+    "strategy": "breakout_2_tp10.0_sl50.0",
+    "activity": 39,
+    "seq_trades": 3,
+    "total_net": -792.5
+  }
+]

@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Activations Explorer - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f0c29;
+            color: #e0e0e0;
+            margin: 0;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            padding: 40px;
+            max-width: 1400px;
+        }
+
+        .header-section {
+            margin-bottom: 40px;
+        }
+
+        .header-section h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .controls-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 15px;
+            align-items: center;
+        }
+
+        select,
+        input {
+            padding: 10px 15px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            outline: none;
+        }
+
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        .activation-card {
+            background: rgba(30, 41, 59, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .activation-card:hover {
+            transform: translateY(-4px);
+            background: rgba(30, 41, 59, 0.6);
+            border-color: #6366f155;
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .strategy-name {
+            font-size: 1.15em;
+            font-weight: 700;
+            color: #fff;
+            word-break: break-all;
+            line-height: 1.3;
+        }
+
+        .status-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            align-items: flex-end;
+            flex-shrink: 0;
+        }
+
+        .badge {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge.active {
+            background: #10b98122;
+            color: #10b981;
+            border: 1px solid #10b98133;
+        }
+
+        .badge.inactive {
+            background: #ef444422;
+            color: #ef4444;
+            border: 1px solid #ef444433;
+        }
+
+        .badge.manual {
+            background: #3b82f622;
+            color: #3b82f6;
+            border: 1px solid #3b82f633;
+        }
+
+        .badge.mode {
+            background: #6366f122;
+            color: #a5b4fc;
+            border: 1px solid #6366f133;
+        }
+
+        .key-row {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            font-size: 0.75em;
+            color: #64748b;
+            background: rgba(0, 0, 0, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            word-break: break-all;
+        }
+
+        .product-section {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .section-label {
+            font-size: 0.75em;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .product-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .product-tag {
+            background: rgba(99, 102, 241, 0.1);
+            color: #a5b4fc;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            font-weight: 600;
+        }
+
+        .meta-info {
+            margin-top: auto;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 0.75em;
+            color: #475569;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #loading {
+            text-align: center;
+            padding: 100px;
+            color: #6366f1;
+        }
+
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 50px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 15px;
+            color: #94a3b8;
+        }
+
+        .remove-btn {
+            background: #ef444415;
+            color: #ef4444;
+            border: 1px solid #ef444433;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.7em;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 10px;
+            align-self: flex-end;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .remove-btn:hover {
+            background: #ef4444;
+            color: white;
+            border-color: #ef4444;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="main-content">
+        <div class="header-section">
+            <h1>Activation Explorer</h1>
+            <p>Direct view into activations.json system state</p>
+        </div>
+
+        <div class="controls-row">
+            <div class="control-group">
+                <label>Run Mode </label>
+                <select id="modeSelect" onchange="loadActivations()">
+                    <option value="live">LIVE</option>
+                    <option value="sim">SIMULATION</option>
+                </select>
+            </div>
+            <div class="control-group" style="flex-grow: 1;">
+                <input type="text" id="searchInput" style="width: 100%;" placeholder="Search strategy or product..."
+                    onkeyup="filterCards()">
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="checkbox" id="autoRefreshCheck" onchange="toggleAutoRefresh()"
+                    style="width: 18px; height: 18px; cursor: pointer;" checked>
+                <label for="autoRefreshCheck" style="cursor: pointer; font-size: 0.9em; user-select: none;">Auto</label>
+            </div>
+            <button onclick="loadActivations()"
+                style="background: rgba(99, 102, 241, 0.2); color: #fff; border: 1px solid #6366f144; padding: 10px 20px; border-radius: 8px; cursor: pointer;"
+                title="Refresh">
+                <i class="fas fa-sync-alt"></i>
+            </button>
+            <button onclick="removeAllActivations()"
+                style="background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-trash-sweep"></i> Remove All
+            </button>
+        </div>
+
+        <div id="loading" style="display: none;">
+            <i class="fas fa-circle-notch fa-spin fa-3x"></i>
+            <p style="margin-top: 15px; font-weight: 500;">Fetching activations...</p>
+        </div>
+
+        <div class="strategy-grid" id="activationsGrid">
+            <!-- Cards will be injected here -->
+        </div>
+    </div>
+
+    <script>
+        let allActivations = {};
+
+        function parseKey(key) {
+            let mode = 'Unknown';
+            let direction = 'Unknown';
+            let strategy = key;
+
+            if (key.endsWith('_buy_net')) { direction = 'BUY'; mode = 'NET'; strategy = key.replace('_buy_net', ''); }
+            else if (key.endsWith('_sell_net')) { direction = 'SELL'; mode = 'NET'; strategy = key.replace('_sell_net', ''); }
+            else if (key.endsWith('_buy_alt')) { direction = 'BUY'; mode = 'ALT'; strategy = key.replace('_buy_alt', ''); }
+            else if (key.endsWith('_sell_alt')) { direction = 'SELL'; mode = 'ALT'; strategy = key.replace('_sell_alt', ''); }
+
+            return { strategy, direction, mode };
+        }
+
+        function parseActivationDate(value) {
+            if (!value) return null;
+            if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+            const text = String(value).trim();
+            if (!text) return null;
+
+            const hasExplicitTimezone = /(?:Z|[+-]\d{2}:\d{2})$/i.test(text);
+            if (!hasExplicitTimezone) {
+                const match = text.match(
+                    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/
+                );
+                if (match) {
+                    const [, year, month, day, hour, minute, second, fractional = '0'] = match;
+                    const milliseconds = Number(fractional.padEnd(3, '0').slice(0, 3));
+                    const localDate = new Date(
+                        Number(year),
+                        Number(month) - 1,
+                        Number(day),
+                        Number(hour),
+                        Number(minute),
+                        Number(second),
+                        milliseconds
+                    );
+                    return Number.isNaN(localDate.getTime()) ? null : localDate;
+                }
+            }
+
+            const parsed = new Date(text);
+            return Number.isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function formatActivationTimestamp(value) {
+            const parsed = parseActivationDate(value);
+            if (!parsed) {
+                return { time: 'Never', date: '' };
+            }
+
+            return {
+                time: parsed.toLocaleTimeString(),
+                date: parsed.toLocaleDateString(),
+            };
+        }
+
+        async function loadActivations(isBackground = false) {
+            const mode = document.getElementById('modeSelect').value;
+            const grid = document.getElementById('activationsGrid');
+            const loading = document.getElementById('loading');
+
+            if (!isBackground) {
+                grid.innerHTML = '';
+                loading.style.display = 'block';
+            }
+
+            try {
+                const response = await fetch(`/api/activations?mode=${mode}&_t=${Date.now()}`);
+                const data = await response.json();
+
+                if (!isBackground) loading.style.display = 'none';
+
+                if (data.success) {
+                    allActivations = data.activations;
+                    renderCards(allActivations);
+                } else {
+                    if (!isBackground) grid.innerHTML = `<div class="no-results" style="color: #ef4444">Error: ${data.message}</div>`;
+                }
+            } catch (e) {
+                if (!isBackground) {
+                    loading.style.display = 'none';
+                    grid.innerHTML = `<div class="no-results" style="color: #ef4444">Failed to fetch API. Is the server running? (${e.message})</div>`;
+                }
+            }
+        }
+
+        function renderCards(activations) {
+            const grid = document.getElementById('activationsGrid');
+            grid.innerHTML = '';
+
+            const keys = Object.keys(activations).sort();
+            const keySet = new Set(keys);
+            const skipKeys = new Set();
+
+            if (keys.length === 0) {
+                grid.innerHTML = '<div class="no-results">No activations found for this mode.</div>';
+                return;
+            }
+
+            keys.forEach(key => {
+                if (skipKeys.has(key)) return;
+                const entry = activations[key];
+                const { strategy, direction, mode } = parseKey(key);
+                const activationTimestamp = formatActivationTimestamp(entry.activated_at);
+                let displayDirection = direction;
+                let displayMode = mode;
+                let displayKey = key;
+
+                // If buy/sell NET pair exists for same strategy, render as BOTH • NET once.
+                if (key.endsWith('_buy_net')) {
+                    const sellKey = key.replace('_buy_net', '_sell_net');
+                    if (keySet.has(sellKey)) {
+                        displayDirection = 'BOTH';
+                        displayMode = 'NET';
+                        displayKey = key.replace('_buy_net', '_both_net');
+                        skipKeys.add(sellKey);
+                    }
+                }
+                if (key.endsWith('_sell_net')) {
+                    const buyKey = key.replace('_sell_net', '_buy_net');
+                    if (keySet.has(buyKey)) {
+                        displayDirection = 'BOTH';
+                        displayMode = 'NET';
+                        displayKey = key.replace('_sell_net', '_both_net');
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = 'activation-card';
+                card.dataset.key = key.toLowerCase();
+                card.dataset.strategy = strategy.toLowerCase();
+
+                const products = entry.products || [];
+                card.dataset.products = products.join(',').toLowerCase();
+                card.dataset.source = (entry.source || 'ui').toLowerCase();
+
+                const productsHtml = products.map(p => `<span class="product-tag">${p}</span>`).join('') || '<span style="color: #64748b">No products assigned</span>';
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <div class="strategy-name">${strategy}</div>
+                        <div class="status-badges">
+                            <span class="badge ${entry.active ? 'active' : 'inactive'}">${entry.active ? 'Active' : 'Offline'}</span>
+                            <span class="badge mode">${displayDirection} • ${displayMode}</span>
+                            ${entry.manual ? '<span class="badge manual">Manual</span>' : ''}
+                        </div>
+                    </div>
+
+                    <div class="key-row">
+                        ${displayKey}
+                    </div>
+
+                    <div style="font-size: 0.8em; color: var(--accent-primary); font-family: 'JetBrains Mono', monospace; background: rgba(99, 102, 241, 0.1); padding: 4px 10px; border-radius: 6px; align-self: flex-start; border: 1px solid rgba(99, 102, 241, 0.2);">
+                        <i class="fas fa-tag" style="font-size: 0.8em; margin-right: 4px;"></i>
+                        <span style="font-weight: 700; color: #94a3b8; margin-right: 5px;">SOURCE:</span>
+                        <span style="color: #a5b4fc;">${entry.source || '-'}</span>
+                    </div>
+
+                    <div class="product-section">
+                        <div class="section-label">Assigned Products</div>
+                        <div class="product-list">
+                            ${productsHtml}
+                        </div>
+                    </div>
+
+                    <div class="meta-info">
+                        <div style="display: flex; flex-direction: column;">
+                            <span>Updated: ${activationTimestamp.time}</span>
+                            <span>${activationTimestamp.date}</span>
+                        </div>
+                        <button class="remove-btn" onclick="removeActivation('${key}')">
+                            <i class="fas fa-trash-alt"></i> Remove
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function filterCards() {
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const cards = document.querySelectorAll('.activation-card');
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const searchScope = `${card.dataset.key} ${card.dataset.products} ${card.dataset.source}`;
+                if (searchScope.includes(term)) {
+                    card.style.display = 'flex';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            const grid = document.getElementById('activationsGrid');
+            const existingNoResults = document.getElementById('noResultsFilter');
+
+            if (visibleCount === 0) {
+                if (!existingNoResults) {
+                    const nr = document.createElement('div');
+                    nr.id = 'noResultsFilter';
+                    nr.className = 'no-results';
+                    nr.textContent = 'No matching activations found.';
+                    grid.appendChild(nr);
+                }
+            } else if (existingNoResults) {
+                existingNoResults.remove();
+            }
+        }
+
+        async function removeActivation(key) {
+            if (!confirm(`Are you sure you want to PERMANENTLY remove this activation?\n\nKey: ${key}`)) return;
+
+            const mode = document.getElementById('modeSelect').value;
+
+            try {
+                const response = await fetch('/api/activations/remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, key, _t: Date.now() })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadActivations();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Removal failed: ' + e.message);
+            }
+        }
+
+        async function removeAllActivations() {
+            const mode = document.getElementById('modeSelect').value;
+            const keys = Object.keys(allActivations);
+
+            if (keys.length === 0) return alert("Nothing to remove.");
+
+            if (!confirm(`WARNING: This will PERMANENTLY remove ALL ${keys.length} activations for ${mode.toUpperCase()} mode.\n\nAre you absolutely sure?`)) return;
+
+            try {
+                const response = await fetch('/api/activations/remove_all', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mode, _t: Date.now() })
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    loadActivations();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            } catch (e) {
+                alert('Bulk removal failed: ' + e.message);
+            }
+        }
+
+        let refreshTimer = null;
+
+        function toggleAutoRefresh() {
+            const isChecked = document.getElementById('autoRefreshCheck').checked;
+            if (isChecked) {
+                if (!refreshTimer) {
+                    refreshTimer = setInterval(() => loadActivations(true), 15000); // 15 seconds silent
+                }
+            } else {
+                if (refreshTimer) {
+                    clearInterval(refreshTimer);
+                    refreshTimer = null;
+                }
+            }
+        }
+
+        window.onload = function () {
+            loadActivations();
+            toggleAutoRefresh();
+        };
+    </script>
+</body>
+
+</html>

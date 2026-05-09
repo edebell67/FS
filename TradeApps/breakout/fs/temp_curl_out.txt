@@ -1,0 +1,10 @@
+{
+  "count": 0,
+  "date": "2026-02-24",
+  "indexed": true,
+  "mode": "live",
+  "session_max_net": 0.0,
+  "success": true,
+  "trades": [],
+  "version": "V20260222_1347"
+}

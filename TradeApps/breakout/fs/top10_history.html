@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top 10 History - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+        :root {
+            --bg-deep: #080a18;
+            --bg-accent: #0f1225;
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --text-main: #f1f5f9;
+            --text-dim: #94a3b8;
+            --accent-primary: #6366f1;
+            --amber: #f59e0b;
+            --emerald: #10b981;
+            --indigo-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+            --header-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: radial-gradient(circle at 50% 0%, #1e1b4b 0%, var(--bg-deep) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1720px;
+            margin: 0 auto;
+            padding: 30px;
+            margin-left: 260px;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 28px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--header-shadow);
+            position: relative;
+        }
+
+        .version-tag {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--amber);
+            padding: 6px 14px;
+            border-radius: 99px;
+            font-size: 0.75em;
+            font-family: 'JetBrains Mono', monospace;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            font-weight: 700;
+        }
+
+        .header h1 {
+            font-size: 3em;
+            font-weight: 800;
+            background: var(--indigo-gradient);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 12px;
+            letter-spacing: -1.5px;
+        }
+
+        .header p {
+            color: var(--text-dim);
+            font-size: 1.1em;
+            font-weight: 500;
+        }
+
+        .controls {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+            align-items: center;
+            justify-content: flex-start;
+            flex-wrap: wrap;
+            padding: 24px 30px;
+            background: var(--glass-bg);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-group label {
+            color: var(--text-dim);
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-group select, .filter-group input {
+            padding: 10px 15px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(15,23,42,0.5);
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+            min-width: 150px;
+            font-size: 1em;
+        }
+        
+        .filter-group input[type="text"] {
+            min-width: 250px;
+        }
+
+        button.refresh {
+            padding: 12px 24px;
+            border-radius: 14px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-family: inherit;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 700;
+            margin-left: auto;
+            margin-top: 22px;
+            transition: all 0.2s;
+        }
+        
+        button.refresh:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .table-container {
+            background: var(--glass-bg);
+            border-radius: 28px;
+            padding: 30px;
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(20px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        th {
+            text-align: left;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.03);
+            color: var(--text-dim);
+            text-transform: uppercase;
+            font-size: 0.8em;
+            letter-spacing: 1px;
+            position: sticky;
+            top: 0; 
+            z-index: 10;
+        }
+
+        td {
+            padding: 14px 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: #e2e8f0;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .cell-timestamp {
+            color: var(--text-dim);
+            font-size: 0.9em;
+        }
+        
+        .cell-strat {
+            font-weight: 600;
+            color: #c7d2fe;
+        }
+
+        .cell-net {
+            font-weight: 800;
+        }
+
+        .badge-pick {
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--emerald);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8em;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .badge-no-pick {
+            color: var(--text-dim);
+            font-size: 0.85em;
+            font-style: italic;
+            opacity: 0.5;
+        }
+
+        .loading-state {
+            text-align: center;
+            color: #64748b;
+            padding: 60px;
+            font-size: 1.2em;
+        }
+
+        @media (max-width: 1024px) {
+            .container { margin-left: 70px; }
+        }
+    </style>
+</head>
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <div class="container">
+        <div class="header">
+            <div class="version-tag">V20260324_1630 FS</div>
+            <h1>📈 Top 10 History</h1>
+            <p>Evaluate Strategy Persistence & Pick Now Predictor</p>
+        </div>
+
+        <div class="controls">
+            <div class="filter-group">
+                <label>Mode</label>
+                <select id="runMode" onchange="loadData()">
+                    <option value="live">Live</option>
+                    <option value="sim">Sim</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Date</label>
+                <input type="date" id="targetDate" onchange="loadData()">
+            </div>
+            <div class="filter-group">
+                <label>Product Type</label>
+                <select id="productType" onchange="loadData()">
+                    <option value="forex">forex</option>
+                    <option value="crypto">crypto</option>
+                    <option value="equities">equities</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>Strategy Filter</label>
+                <input type="text" id="stratFilter" placeholder="Type to filter..." oninput="renderTable()">
+            </div>
+            <div class="filter-group">
+                <label>Product Filter</label>
+                <input type="text" id="prodFilter" placeholder="e.g. GBPNZD" oninput="renderTable()">
+            </div>
+            <div class="filter-group">
+                <label>Only Pick Now</label>
+                <select id="pickFilter" onchange="renderTable()">
+                    <option value="all">Show All</option>
+                    <option value="yes">Only Pick_Now: True</option>
+                </select>
+            </div>
+            
+            <button class="refresh" onclick="loadData()"><i class="fas fa-sync-alt"></i> Refresh Data</button>
+        </div>
+
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Rank</th>
+                        <th>Strategy</th>
+                        <th>Product</th>
+                        <th>Net</th>
+                        <th>Pick Now</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr><td colspan="6" class="loading-state">Initializing...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="sidebar-loader.js"></script>
+    <script>
+        let rawData = []; // Will hold flattened history
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('targetDate').value = new Date().toISOString().split('T')[0];
+            loadData();
+            
+            // Auto update every 5 minutes
+            setInterval(loadData, 300000);
+        });
+
+        async function loadData() {
+            const mode = document.getElementById('runMode').value;
+            const tDate = document.getElementById('targetDate').value;
+            const pType = document.getElementById('productType').value;
+            
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '<tr><td colspan="6" class="loading-state"><i class="fas fa-spinner fa-spin"></i> Fetching Data...</td></tr>';
+            
+            try {
+                const res = await fetch(`/api/top10_history?mode=${mode}&date=${tDate}&product_type=${pType}&_=${Date.now()}`);
+                if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+                const json = await res.json();
+                
+                if (!json.success || !json.history) {
+                    throw new Error(json.message || "Invalid JSON structure");
+                }
+
+                flattenAndSortData(json.history);
+                renderTable();
+
+            } catch (err) {
+                tbody.innerHTML = `<tr><td colspan="6" class="loading-state" style="color: #ef4444;"><i class="fas fa-exclamation-triangle"></i> Error loading data: ${err.message}</td></tr>`;
+            }
+        }
+
+        function flattenAndSortData(historySnapshots) {
+            rawData = [];
+            
+            // Expected format:  history = [ { timestamp: "...", top10: [ {strategy, product, net, pick_now}, ... ] } ]
+            historySnapshots.forEach(snap => {
+                const ts = snap.timestamp;
+                const fmtTime = ts ? ts.split('T')[1].substring(0, 8) : '--:--:--';
+                
+                const top10 = snap.top10 || [];
+                top10.forEach((strat, idx) => {
+                    rawData.push({
+                        timestampRaw: ts,
+                        timeFormatted: fmtTime,
+                        rank: idx + 1,
+                        strategy: strat.strategy || '',
+                        product: strat.product || '',
+                        net: typeof strat.net === 'number' ? strat.net.toFixed(2) : '0.00',
+                        pick_now: !!strat.pick_now
+                    });
+                });
+            });
+
+            // Sort Descending by Timestamp
+            rawData.sort((a,b) => {
+                const ta = a.timestampRaw || '';
+                const tb = b.timestampRaw || '';
+                return tb.localeCompare(ta);
+            });
+        }
+
+        function renderTable() {
+            const stratF = document.getElementById('stratFilter').value.toLowerCase();
+            const prodF = document.getElementById('prodFilter').value.toLowerCase();
+            const pickF = document.getElementById('pickFilter').value;
+            
+            const tbody = document.getElementById('tableBody');
+            
+            const filtered = rawData.filter(r => {
+                if (stratF && !r.strategy.toLowerCase().includes(stratF)) return false;
+                if (prodF && !r.product.toLowerCase().includes(prodF)) return false;
+                if (pickF === 'yes' && !r.pick_now) return false;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" class="loading-state">No matching records found.</td></tr>';
+                return;
+            }
+
+            let html = '';
+            filtered.forEach(r => {
+                const isPos = parseFloat(r.net) >= 0;
+                const netClass = isPos ? 'cell-net' : 'cell-net';
+                const netCol = isPos ? '#10b981' : '#f43f5e';
+                
+                const pickBadge = r.pick_now 
+                    ? `<span class="badge-pick"><i class="fas fa-check-circle"></i> YES</span>` 
+                    : `<span class="badge-no-pick">-</span>`;
+
+                html += `
+                    <tr>
+                        <td class="cell-timestamp">${r.timeFormatted}</td>
+                        <td style="color:#94a3b8; font-weight:800;">#${r.rank}</td>
+                        <td class="cell-strat">${r.strategy}</td>
+                        <td style="color:#cbd5e1;">${r.product}</td>
+                        <td class="${netClass}" style="color:${netCol};">${r.net}</td>
+                        <td>${pickBadge}</td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

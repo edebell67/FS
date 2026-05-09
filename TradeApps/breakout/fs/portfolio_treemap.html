@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Treemap | Breakout</title>
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="sidebar.css" rel="stylesheet">
+    <link href="pnl_graph.css" rel="stylesheet">
+    <style>
+        .filter-panel {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        #treemapChart {
+            width: 100%;
+            height: calc(100vh - 250px);
+            background: rgba(10, 15, 30, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            overflow: hidden;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(8, 10, 24, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 24px;
+        }
+    </style>
+</head>
+<body class="with-sidebar">
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-pie"></i> Portfolio Treemap</h1>
+            <div class="status-indicator">
+                <span class="status-pulse"></span>
+                <span id="itemCount">0</span> Strategies Loaded
+                <button onclick="resetFilters()" class="btn btn-outline btn-icon" style="margin-left: 15px; height: 30px; width: auto; padding: 0 10px;" title="Reset All Filters">
+                    <i class="fas fa-undo"></i> Reset
+                </button>
+            </div>
+        </header>
+
+        <section class="glass-card" style="margin-bottom: 20px;">
+            <div class="card-title"><i class="fas fa-filter"></i> Performance Filters</div>
+            <div class="filter-panel">
+                <div class="field-group">
+                    <label>Run Mode</label>
+                    <select id="runMode" onchange="loadData()">
+                        <option value="live">Live</option>
+                        <option value="sim">Simulation</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Date</label>
+                    <input type="date" id="tradeDate" onchange="loadData()">
+                </div>
+                <div class="field-group">
+                    <label>Product Type</label>
+                    <select id="filterProductType" onchange="onTypeChange()">
+                        <option value="all">All Types</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Product</label>
+                    <select id="filterProduct" onchange="applyFilters()">
+                        <option value="all">All Products</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Strategy Name</label>
+                    <select id="filterStrategyName" onchange="applyFilters()">
+                        <option value="all">All Names</option>
+                    </select>
+                </div>
+                <div class="field-group">
+                    <label>Logic/Window</label>
+                    <select id="filterWindow" onchange="applyFilters()">
+                        <option value="all">All Logic</option>
+                    </select>
+                </div>
+            </div>
+        </section>
+
+        <main style="position: relative;">
+            <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+                <div class="text-center">
+                    <i class="fas fa-circle-notch fa-spin fa-3x mb-3" style="color: var(--accent-primary);"></i>
+                    <p>Analyzing Warehouse Performance...</p>
+                </div>
+            </div>
+            <div id="treemapChart"></div>
+        </main>
+    </div>
+
+    <script>
+        let rawData = [];
+        let filteredData = [];
+        let isFirstLoad = true;
+
+        // Initialize defaults
+        document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
+
+        async function loadData() {
+            const mode = document.getElementById('runMode').value;
+            const date = document.getElementById('tradeDate').value;
+            const pType = document.getElementById('filterProductType').value;
+            const overlay = document.getElementById('loadingOverlay');
+
+            overlay.style.display = 'flex';
+
+            try {
+                // [V20260323_1945] Pass product_type to backend for server-side filtering
+                const resp = await fetch(`/api/portfolio_stats?mode=${mode}&date=${date}&product_type=${pType}`);
+                const json = await resp.json();
+
+                if (json.success) {
+                    rawData = json.items;
+                    document.getElementById('itemCount').textContent = rawData.length;
+
+                    // On first load, enforce forex if it exists
+                    if (isFirstLoad) {
+                        const types = [...new Set(rawData.map(d => d.product_type))];
+                        if (types.includes('forex') && pType === 'all') {
+                            document.getElementById('filterProductType').value = 'forex';
+                            // Refetch with specific type for initial efficiency
+                            overlay.style.display = 'none';
+                            isFirstLoad = false;
+                            return loadData();
+                        }
+                        isFirstLoad = false;
+                    }
+
+                    populateFilterOptions();
+                    applyFilters();
+                } else {
+                    console.error("API Error:", json.message);
+                    alert("Failed to load data: " + json.message);
+                }
+            } catch (err) {
+                console.error("Fetch Error:", err);
+            } finally {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function resetFilters() {
+            document.getElementById('filterProductType').value = 'all';
+            document.getElementById('filterProduct').value = 'all';
+            document.getElementById('filterStrategyName').value = 'all';
+            document.getElementById('filterWindow').value = 'all';
+            loadData(); // Refetch all
+        }
+
+        function populateFilterOptions() {
+            const fType = document.getElementById('filterProductType').value;
+
+            // Filter raw data for options population if product_type is selected
+            const dataForOptions = fType === 'all' ? rawData : rawData.filter(d => d.product_type === fType);
+
+            const filters = {
+                'filterProductType': [...new Set(rawData.map(d => d.product_type))].sort(),
+                'filterProduct': [...new Set(dataForOptions.map(d => d.product))].sort(),
+                'filterStrategyName': [...new Set(dataForOptions.map(d => d.strategy_name))].sort(),
+                'filterWindow': [...new Set(dataForOptions.map(d => d.strategy_window))].sort()
+            };
+
+            for (const [id, options] of Object.entries(filters)) {
+                const select = document.getElementById(id);
+                const currentVal = select.value;
+
+                select.innerHTML = id === 'filterProductType' ? '<option value="all">All Types</option>' : '<option value="all">All</option>';
+
+                options.forEach(opt => {
+                    const el = document.createElement('option');
+                    el.value = opt;
+                    el.textContent = opt;
+                    select.appendChild(el);
+                });
+
+                // Maintain selection if still valid, otherwise reset to all
+                if (options.includes(currentVal)) {
+                    select.value = currentVal;
+                } else {
+                    // Special case for initial load default
+                    if (id === 'filterProductType' && currentVal === 'all' && options.includes('forex')) {
+                        // Already handled by loadData but here for safety
+                    } else {
+                        select.value = 'all';
+                    }
+                }
+            }
+        }
+
+        function applyFilters() {
+            const fType = document.getElementById('filterProductType').value;
+            const fProd = document.getElementById('filterProduct').value;
+            const fName = document.getElementById('filterStrategyName').value;
+            const fWin = document.getElementById('filterWindow').value;
+
+            filteredData = rawData.filter(d => {
+                if (fType !== 'all' && d.product_type !== fType) return false;
+                if (fProd !== 'all' && d.product !== fProd) return false;
+                if (fName !== 'all' && d.strategy_name !== fName) return false;
+                if (fWin !== 'all' && d.strategy_window !== fWin) return false;
+                return true;
+            });
+
+            renderTreemap();
+        }
+
+        function onTypeChange() {
+            // Clear selections for sub-filters when category changes
+            document.getElementById('filterProduct').value = 'all';
+            document.getElementById('filterStrategyName').value = 'all';
+            document.getElementById('filterWindow').value = 'all';
+
+            // [V20260323_1945] Refetch from backend when type changes
+            loadData();
+        }
+        function renderTreemap() {
+            if (filteredData.length === 0) {
+                Plotly.purge('treemapChart');
+                document.getElementById('treemapChart').innerHTML = '<div style="display:flex; justify-content:center; align-items:center; height:100%; color: var(--text-dim);">No data matches filters</div>';
+                return;
+            }
+
+            // Build Hierarchical Structure for Plotly
+            const nodes = new Map();
+            const rootId = "Portfolio";
+            nodes.set(rootId, { id: rootId, parent: "", value: 0, net: 0, label: "Full Portfolio" });
+
+            filteredData.forEach(d => {
+                const typeId = `${rootId}/${d.product_type}`;
+                const prodId = `${typeId}/${d.product}`;
+                const nameId = `${prodId}/${d.strategy_name}`;
+                const winId = `${nameId}/${d.strategy_window}`;
+                const stratId = `${winId}/${d.strategy_params}`;
+
+                if (!nodes.has(typeId)) nodes.set(typeId, { id: typeId, parent: rootId, value: 0, net: 0, label: d.product_type.toUpperCase() });
+                if (!nodes.has(prodId)) nodes.set(prodId, { id: prodId, parent: typeId, value: 0, net: 0, label: d.product });
+                if (!nodes.has(nameId)) nodes.set(nameId, { id: nameId, parent: prodId, value: 0, net: 0, label: d.strategy_name });
+                if (!nodes.has(winId)) nodes.set(winId, { id: winId, parent: nameId, value: 0, net: 0, label: `W:${d.strategy_window}` });
+
+                const weight = Math.abs(d.net) || 1;
+                nodes.set(stratId, { 
+                    id: stratId, 
+                    parent: winId, 
+                    value: weight, 
+                    net: d.net, 
+                    label: d.strategy_params 
+                });
+
+                [rootId, typeId, prodId, nameId, winId].forEach(pid => {
+                    const node = nodes.get(pid);
+                    node.value += weight;
+                    node.net += d.net;
+                });
+            });
+
+            const nodeArr = Array.from(nodes.values());
+            
+            // Calculate dynamic range for maximum color contrast
+            // We only look at leaf nodes (strategies) for the range calculation
+            const leafNets = filteredData.map(d => d.net);
+            const maxVal = Math.max(...leafNets.map(Math.abs));
+            const colorRange = Math.max(maxVal, 1.0); // Floor of 1.0 to avoid flat scale
+
+            const data = [{
+                type: "treemap",
+                ids: nodeArr.map(n => n.id),
+                labels: nodeArr.map(n => n.label),
+                parents: nodeArr.map(n => n.parent),
+                values: nodeArr.map(n => n.value),
+                branchvalues: "total",
+                // Show actual signed Net P&L in labels
+                text: nodeArr.map(n => {
+                    const formattedNet = n.net.toFixed(2);
+                    return `${n.label}<br>${formattedNet}`;
+                }),
+                textinfo: "text",
+                marker: {
+                    colors: nodeArr.map(n => n.net),
+                    colorscale: 'RdYlGn',
+                    reversescale: true, // Red for negative, Green for positive
+                    cmin: -colorRange,
+                    cmax: colorRange,
+                    cmid: 0,
+                    showscale: true,
+                    line: { width: 1, color: '#000' }
+                },
+                hoverinfo: "label+color",
+                hovertemplate: '<b>%{label}</b><br>Net P&L: %{color:.2f}<extra></extra>'
+            }];
+
+            const layout = {
+                template: "plotly_dark",
+                margin: { t: 30, l: 10, r: 10, b: 10 },
+                paper_bgcolor: 'rgba(0,0,0,0)',
+                plot_bgcolor: 'rgba(0,0,0,0)',
+                font: { family: 'Outfit, sans-serif' }
+            };
+
+            Plotly.newPlot('treemapChart', data, layout, { responsive: true });
+        }
+
+        window.addEventListener('load', loadData);
+    </script>
+</body>
+</html>

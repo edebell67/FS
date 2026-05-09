@@ -1,0 +1,70 @@
+{
+    "live": [
+        {
+            "model": "breakout_Rev_4_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "net",
+            "group": "AUTO_TB_0424_124841_141_EUR_breakout_Rev_4_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_124841_141_EUR_breakout_Rev_4_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:59:56"
+        },
+        {
+            "model": "breakout_Rev_3_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "net",
+            "group": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:59:56"
+        },
+        {
+            "model": "breakout_Rev_4_tp20.0_sl5.0",
+            "product": "CAD",
+            "metric": "net",
+            "group": "AUTO_TB_0424_161048_052_CAD_breakout_Rev_4_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0424_161048_052_CAD_breakout_Rev_4_tp20_0_sl5_0",
+            "activated_at": "2026-04-24T23:59:56"
+        },
+        {
+            "model": "breakout_Rev_3_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "buy_net",
+            "activated_at": "2026-04-24T23:59:56",
+            "group": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "source": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0"
+        }
+    ],
+    "sim": [
+        {
+            "model": "breakout_Rev_3_tp20.0_sl5.0",
+            "product": "EUR",
+            "metric": "buy_net",
+            "activated_at": "2026-04-26T03:33:47",
+            "group": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0",
+            "source": "AUTO_TB_0424_124842_614_EUR_breakout_Rev_3_tp20_0_sl5_0"
+        },
+        {
+            "model": "breakout_2_tp20.0_sl5.0",
+            "product": "EURNZD_C",
+            "metric": "net",
+            "group": "AUTO_TB_0426_030145_731_EURNZD_C_breakout_Rev_2_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0426_030145_731_EURNZD_C_breakout_Rev_2_tp20_0_sl5_0",
+            "activated_at": "2026-04-26T04:38:43"
+        },
+        {
+            "model": "breakout_Rev_4_tp20.0_sl5.0",
+            "product": "EURNZD_C",
+            "metric": "net",
+            "group": "AUTO_TB_0426_032754_124_EURNZD_C_breakout_Rev_4_tp20_0_sl5_0",
+            "source": "TB_AUTO_TB_0426_032754_124_EURNZD_C_breakout_Rev_4_tp20_0_sl5_0",
+            "activated_at": "2026-04-26T04:38:43"
+        },
+        {
+            "model": "breakout_2_tp5.0_sl50.0",
+            "product": "EURNZD_C",
+            "metric": "buy_net",
+            "group": "AUTO_TB_0426_040921_254_EURNZD_C_breakout_2_tp5_0_sl50_0",
+            "source": "TB_AUTO_TB_0426_040921_254_EURNZD_C_breakout_2_tp5_0_sl50_0",
+            "activated_at": "2026-04-26T04:38:43"
+        }
+    ]
+}

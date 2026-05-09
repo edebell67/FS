@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Market Updates - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #070b17; color: #e2e8f0; }
+        .main { margin-left: 260px; padding: 20px; }
+        @media (max-width: 1024px) { .main { margin-left: 70px; padding: 14px; } }
+        .header { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap; }
+        .title { font-size: 1.4rem; font-weight: 700; }
+        .controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+        .controls select, .controls input, .controls button { background: #0f172a; border: 1px solid #334155; color: #e2e8f0; border-radius: 8px; padding: 8px; }
+        .controls button { cursor: pointer; }
+        .grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 12px; }
+        @media (max-width: 1100px) { .grid { grid-template-columns: 1fr; } }
+        .card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px; }
+        .card h3 { margin: 0 0 8px 0; font-size: 1rem; color: #93c5fd; }
+        .row { display: flex; justify-content: space-between; gap: 10px; font-size: 0.92rem; border-bottom: 1px dashed rgba(148,163,184,0.2); padding: 6px 0; }
+        .row:last-child { border-bottom: none; }
+        .label { color: #94a3b8; }
+        .val { color: #e2e8f0; font-weight: 600; }
+        .history-item { padding: 10px; border: 1px solid rgba(148,163,184,0.2); border-radius: 10px; margin-bottom: 10px; background: rgba(15,23,42,0.45); }
+        .history-head { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .headline { font-weight: 700; color: #bfdbfe; }
+        .stamp { color: #94a3b8; font-size: 0.82rem; }
+        .narr { color: #dbeafe; font-size: 0.9rem; line-height: 1.35; }
+        .forecast { color: #86efac; font-size: 0.88rem; margin-top: 6px; }
+        .signal { font-size: 0.75rem; padding: 3px 8px; border-radius: 999px; border: 1px solid transparent; white-space: nowrap; }
+        .sig-high { color: #fecaca; background: rgba(239,68,68,0.2); border-color: rgba(239,68,68,0.45); }
+        .sig-med { color: #fde68a; background: rgba(245,158,11,0.2); border-color: rgba(245,158,11,0.45); }
+        .sig-low { color: #bbf7d0; background: rgba(34,197,94,0.2); border-color: rgba(34,197,94,0.45); }
+        .mobile-list { display: grid; gap: 8px; }
+        .mobile-item { border: 1px solid rgba(148,163,184,0.22); border-radius: 10px; padding: 10px; background: rgba(2,6,23,0.6); }
+        .mobile-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; margin-bottom: 6px; }
+        .mobile-main { font-size: 0.9rem; color: #f1f5f9; }
+        .mobile-sub { font-size: 0.8rem; color: #94a3b8; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div class="main">
+        <div class="header">
+            <div class="title"><i class="fas fa-newspaper"></i> Market Updates</div>
+            <div class="controls">
+                <select id="mode">
+                    <option value="live">LIVE</option>
+                    <option value="sim">SIM</option>
+                </select>
+                <input id="date" type="date">
+                <input id="limit" type="number" min="1" max="2000" value="200" style="width: 90px;">
+                <button onclick="loadUpdates()">Refresh</button>
+            </div>
+        </div>
+
+        <div class="grid">
+            <div class="card">
+                <h3>Latest Full Narrative</h3>
+                <div id="latest">Loading...</div>
+            </div>
+            <div class="card">
+                <h3>Mobile Digest (Signal Ready)</h3>
+                <div id="mobile" class="mobile-list"></div>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top:12px;">
+            <h3>History</h3>
+            <div id="history">Loading...</div>
+        </div>
+    </div>
+    <script src="sidebar-loader.js"></script>
+    <script>
+        function signalClass(level) {
+            if (level === 'HIGH') return 'sig-high';
+            if (level === 'MEDIUM') return 'sig-med';
+            return 'sig-low';
+        }
+        function escapeHtml(v) {
+            return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+        function getSignal(u) {
+            const t = u?.totals || {};
+            const w = u?.windows?.last_30m || {};
+            const imbalance = Math.abs(Number(t.imbalance || 0));
+            const momentumGap = Math.abs(Number(w.buy_net || 0) - Number(w.sell_net || 0));
+            if (imbalance >= 3000 || momentumGap >= 1500) return { level: 'HIGH', text: 'Likely notification: high directional pressure' };
+            if (imbalance >= 1200 || momentumGap >= 600) return { level: 'MEDIUM', text: 'Likely notification: moderate directional pressure' };
+            return { level: 'LOW', text: 'Likely notification: monitor only' };
+        }
+        function shortDigest(u) {
+            const t = u?.totals || {};
+            const w = u?.windows?.last_30m || {};
+            return `${u?.bias || 'N/A'} | Buy ${Number(t.buy_net || 0).toFixed(0)} / Sell ${Number(t.sell_net || 0).toFixed(0)} | 30m ${Number(w.buy_net || 0).toFixed(0)}:${Number(w.sell_net || 0).toFixed(0)}`;
+        }
+        async function loadUpdates() {
+            const mode = document.getElementById('mode').value;
+            const date = document.getElementById('date').value;
+            const limit = Number(document.getElementById('limit').value || 200);
+            const latestEl = document.getElementById('latest');
+            const mobileEl = document.getElementById('mobile');
+            const historyEl = document.getElementById('history');
+            latestEl.textContent = 'Loading...';
+            mobileEl.innerHTML = '';
+            historyEl.textContent = 'Loading...';
+            try {
+                const latestResp = await fetch(`/api/market_update?mode=${encodeURIComponent(mode)}&date=${encodeURIComponent(date)}&_t=${Date.now()}`);
+                const latestData = await latestResp.json();
+                const histResp = await fetch(`/api/market_update/history?mode=${encodeURIComponent(mode)}&date=${encodeURIComponent(date)}&limit=${limit}&_t=${Date.now()}`);
+                const histData = await histResp.json();
+
+                if (!latestData.success || !latestData.exists || !latestData.update) {
+                    latestEl.innerHTML = '<div class="row"><span class="label">Status</span><span class="val">No update yet</span></div>';
+                } else {
+                    const u = latestData.update;
+                    latestEl.innerHTML = `
+                        <div class="row"><span class="label">Created</span><span class="val">${escapeHtml(u.created_at)}</span></div>
+                        <div class="row"><span class="label">Bias / Condition</span><span class="val">${escapeHtml(u.bias)} / ${escapeHtml(u.market_condition)}</span></div>
+                        <div class="row"><span class="label">Headline</span><span class="val">${escapeHtml(u.headline)}</span></div>
+                        <div class="row"><span class="label">Narrative</span><span class="val" style="max-width:70%; text-align:right;">${escapeHtml(u.narrative)}</span></div>
+                        <div class="row"><span class="label">Forecast</span><span class="val">${escapeHtml(u.forecast)}</span></div>
+                    `;
+                }
+
+                const history = (histData && histData.history) || [];
+                if (!history.length) {
+                    historyEl.innerHTML = '<div class="row"><span class="label">History</span><span class="val">No records</span></div>';
+                    mobileEl.innerHTML = '<div class="mobile-item"><div class="mobile-main">No digest available.</div></div>';
+                    return;
+                }
+
+                mobileEl.innerHTML = history.slice(0, 12).map(u => {
+                    const sig = getSignal(u);
+                    return `
+                        <div class="mobile-item">
+                            <div class="mobile-top">
+                                <span class="signal ${signalClass(sig.level)}">${sig.level}</span>
+                                <span class="stamp">${escapeHtml(u.created_at || '--')}</span>
+                            </div>
+                            <div class="mobile-main">${escapeHtml(shortDigest(u))}</div>
+                            <div class="mobile-sub">${escapeHtml(sig.text)}</div>
+                        </div>
+                    `;
+                }).join('');
+
+                historyEl.innerHTML = history.map(u => {
+                    const sig = getSignal(u);
+                    return `
+                        <div class="history-item">
+                            <div class="history-head">
+                                <div class="headline">${escapeHtml(u.headline || 'Market Update')}</div>
+                                <div>
+                                    <span class="signal ${signalClass(sig.level)}">${sig.level}</span>
+                                    <span class="stamp">${escapeHtml(u.created_at || '--')}</span>
+                                </div>
+                            </div>
+                            <div class="narr">${escapeHtml(u.narrative || '--')}</div>
+                            <div class="forecast">${escapeHtml(u.forecast || '')}</div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                latestEl.innerHTML = `<div class="row"><span class="label">Error</span><span class="val">${escapeHtml(e.message || e)}</span></div>`;
+                historyEl.innerHTML = '';
+                mobileEl.innerHTML = '';
+            }
+        }
+        (function init() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const dd = String(d.getDate()).padStart(2, '0');
+            document.getElementById('date').value = `${y}-${m}-${dd}`;
+            loadUpdates();
+            setInterval(loadUpdates, 30000);
+        })();
+    </script>
+</body>
+</html>

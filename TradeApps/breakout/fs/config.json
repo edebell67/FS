@@ -1,0 +1,182 @@
+{
+    "DATA_SOURCE": "file_system",
+    "ai_picker_notifications_enabled": true,
+    "ai_picker_prompt": false,
+    "alt_activation_mode": "auto",
+    "archive": false,
+    "auto_alt_net_check": false,
+    "auto_alt_threshold": 0,
+    "auto_archive_threshold": 1000,
+    "auto_net_check": true,
+    "auto_net_threshold": 0,
+    "auto_trade_count_mode": "max_count",
+    "automated_trade_source": "Frequency",
+    "automated_trade_sources": [
+        "Frequency",
+        "Trade Bucket"
+    ],
+    "bias_calc": "filtered_sum_net",
+    "bypass_criteria_check": "immediately",
+    "close_pending_timeout": 300,
+    "crypto_trade_qty_percent": 50,
+    "daily_target": 500,
+    "default_min_value": 10,
+    "endpoints": {
+        "live": [
+            "http://127.0.0.1:8002/api/vw_000_fx_quotes",
+            "http://127.0.0.1:8002/api/vw_000_crypto_quotes",
+            "http://127.0.0.1:8002/api/vw_000_index_quotes",
+            "http://127.0.0.1:8002/api/vw_000_futures_quotes"
+        ],
+        "sim": [
+            "http://127.0.0.1:8002/api/vw_000_fx_quotes_sim",
+            "http://127.0.0.1:8002/api/vw_000_crypto_quotes",
+            "http://127.0.0.1:8002/api/vw_000_futures_quotes"
+        ]
+    },
+    "enforce_market_bias": false,
+    "enforce_market_bias_exit": false,
+    "frequency_datasource": "breakout",
+    "grid_auto_refil": false,
+    "kill_switch": false,
+    "l_trade_generation_mode": "normal",
+    "market_update_enabled": false,
+    "market_update_interval_minutes": 1,
+    "max_live_tb": 3,
+    "max_live_trades": 1,
+    "max_trades_to_tws": 1,
+    "min_auto_avg_return": 1,
+    "min_auto_trades": 3,
+    "min_auto_win_rate": 1,
+    "min_value_by_product": {},
+    "min_value_by_product_type": {
+        "forex": 10.0
+    },
+    "multi_vtrade": false,
+    "net_activation_mode": "auto",
+    "picker_count_diff_threshold": 0.05,
+    "picker_pnl_spread_threshold": 2000,
+    "momentum_step_pips": 3,
+    "realtime_stats_profit_check_threshold_pct": 100,
+    "realtime_stats_loss_check_threshold_pct": 100,
+    "realtime_trade_close_config": {
+        "enabled": true,
+        "enabled_policies": [
+            "opposite_signal",
+            "net_pips_after_cost_threshold"
+        ],
+        "evaluate_on_realtime_stats": true,
+        "evaluate_on_trade_log": true,
+        "policies": {
+            "net_pips_after_cost_threshold": {
+                "enabled": true,
+                "threshold_options": [
+                    3,
+                    5,
+                    10,
+                    20
+                ],
+                "threshold_pips": 5
+            },
+            "opposite_signal": {
+                "enabled": true,
+                "ignore_no_trade": true,
+                "ignore_stale_snapshot": true,
+                "require_executable_signal": true
+            }
+        }
+    },
+    "pip_buffer": 0.00015,
+    "pip_multiplier_by_product": {},
+    "pip_multiplier_by_product_type": {
+        "crypto": 1,
+        "forex": 10000,
+        "metals": 100
+    },
+    "product_type": "forex",
+    "product_type_by_product": {},
+    "product_type_cost": {
+        "crypto": null,
+        "energy": null,
+        "forex": 5,
+        "indices": null,
+        "metals": null
+    },
+    "product_types": [
+        "forex"
+    ],
+    "profitability_guard": {
+        "count_x": 5,
+        "mode": "recent_x",
+        "threshold_y": 1
+    },
+    "rank_alert_default_action": "auto_trade",
+    "rank_alert_enabled": false,
+    "rank_alert_suspended": true,
+    "rank_alert_threshold": "rank1",
+    "rev_scalper_ratio": 2,
+    "run_mode": "live",
+    "scalper_ratio": 6,
+    "send_json_files": "C:\\Users\\edebe\\eds\\trades_rt3\\orders",
+    "send_json_files_sim": "C:\\Users\\edebe\\eds\\trades_rt3_sim\\orders",
+    "sl_pips": [
+        3,
+        5,
+        20,
+        30,
+        50
+    ],
+    "sleep_time": 5,
+    "state_persistence": true,
+    "supabase_anon_key": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5cWJhZ2dsaGVzZ3doYXljb256Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNTY1MDUsImV4cCI6MjA4NjgzMjUwNX0.Avmmv_lmIQchLdJheQ3tapg9whvC3ZLeyxjms6TLNJc",
+    "supabase_url": "https://uyqbagglhesgwhayconz.supabase.co",
+    "top_n_strategies": 1,
+    "tp_pips": [
+        3,
+        5,
+        10,
+        20
+    ],
+    "trade_bucket_max_strategies": 3,
+    "trade_file_min_age_minutes": 30,
+    "trade_products": [
+        "AUD",
+        "CAD",
+        "CHF",
+        "EUR",
+        "EURAUD_C",
+        "EURNZD_C",
+        "GBP",
+        "GBPAUD_C",
+        "GBPEUR_C",
+        "GBPEUR_S",
+        "GBPNZD_C",
+        "NZD",
+        "NZDAUD_C"
+    ],
+    "trade_qty_percent": 50,
+    "v_trade_exit_at_target": false,
+    "virtual_trade_live_by_default": false,
+    "vtrade_persistence_seconds": 300,
+    "vtrade_selection_type": "top_net",
+    "window_size": [
+        2,
+        3,
+        4
+    ],
+    "auto_select_modes": {
+        "forex": "Rev_scalper"
+    },
+    "auto_select_permitted_types": [],
+    "min_move_by_product": {},
+    "pick_now": {
+        "min_appearances": 20,
+        "min_net_trend": 100,
+        "min_snapshots": 60
+    },
+    "trade_mini_config": {
+        "enabled_products": [],
+        "symbol_map": {}
+    },
+    "l_trade_auto_execution": true
+}

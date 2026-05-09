@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workflow Automation - Breakout</title>
+    <link rel="stylesheet" href="sidebar.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg: #070b17;
+            --panel: rgba(255, 255, 255, 0.03);
+            --panel-border: rgba(255, 255, 255, 0.08);
+            --text: #e2e8f0;
+            --dim: #94a3b8;
+            --good: #10b981;
+            --bad: #ef4444;
+            --accent: #60a5fa;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at top, #13203f 0%, var(--bg) 55%);
+            color: var(--text);
+        }
+
+        .main {
+            margin-left: 260px;
+            padding: 28px;
+        }
+
+        @media (max-width: 1024px) {
+            .main {
+                margin-left: 70px;
+            }
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 12px;
+        }
+
+        .title {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .sub {
+            color: var(--dim);
+            font-size: 0.95rem;
+            margin-top: 4px;
+        }
+
+        .updated {
+            color: var(--dim);
+            font-size: 0.85rem;
+            white-space: nowrap;
+        }
+
+        .grid {
+            display: grid;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 14px;
+            padding: 16px;
+        }
+
+        .card-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+
+        .wf-name {
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+
+        .status {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 999px;
+            border: 1px solid transparent;
+        }
+
+        .status.on {
+            color: #6ee7b7;
+            border-color: rgba(16, 185, 129, 0.45);
+            background: rgba(16, 185, 129, 0.14);
+        }
+
+        .status.off {
+            color: #fda4af;
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.12);
+        }
+
+        .desc {
+            color: var(--dim);
+            margin-bottom: 12px;
+            font-size: 0.9rem;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: 200px 140px 140px 160px auto;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .controls label {
+            color: var(--dim);
+            font-size: 0.85rem;
+        }
+
+        .row {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        input[type="time"], select, input[type="number"] {
+            background: #0f172a;
+            border: 1px solid #334155;
+            color: var(--text);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+        }
+
+        .btn {
+            background: rgba(96, 165, 250, 0.2);
+            color: #bfdbfe;
+            border: 1px solid rgba(96, 165, 250, 0.45);
+            border-radius: 8px;
+            padding: 9px 12px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .btn:hover {
+            background: rgba(96, 165, 250, 0.28);
+        }
+
+        .steps {
+            margin: 8px 0 0 18px;
+            padding: 0;
+            color: #cbd5e1;
+            font-size: 0.9rem;
+        }
+
+        .wf-link {
+            color: #93c5fd;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 5000;
+        }
+
+        .modal-box {
+            width: min(760px, 92vw);
+            max-height: 82vh;
+            overflow: auto;
+            background: #0b1226;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            padding: 16px;
+        }
+
+        .modal-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .close-x {
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+            border-radius: 8px;
+            padding: 6px 10px;
+            cursor: pointer;
+        }
+
+        .foot-note {
+            margin-top: 16px;
+            color: var(--dim);
+            font-size: 0.82rem;
+        }
+
+        @media (max-width: 920px) {
+            .controls {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="sidebar-container"></div>
+    <div class="main">
+        <div class="header">
+            <div>
+                <div class="title"><i class="fas fa-diagram-project"></i> Workflow Automation</div>
+                <div class="sub">Manage scheduled workflow automations. First workflow: <b>TB_workflow</b>.</div>
+            </div>
+            <div class="updated" id="updatedAt">Updated: --</div>
+        </div>
+
+        <div class="grid" id="workflowGrid"></div>
+        <div class="foot-note">Schedule window uses local server time. More workflows can be added from backend config.
+        </div>
+    </div>
+
+    <div class="modal" id="wfModal" onclick="if(event.target.id==='wfModal') closeWorkflowModal();">
+        <div class="modal-box">
+            <div class="modal-head">
+                <div style="font-weight:700; font-size:1.1rem;" id="wfModalTitle">Workflow</div>
+                <button class="close-x" onclick="closeWorkflowModal()">Close</button>
+            </div>
+            <div id="wfModalBody"></div>
+        </div>
+    </div>
+
+    <script src="sidebar-loader.js"></script>
+    <script>
+        let workflows = [];
+
+        async function parseApiJsonSafe(response) {
+            const text = await response.text();
+            try {
+                return { ok: true, data: JSON.parse(text) };
+            } catch (e) {
+                return {
+                    ok: false,
+                    data: {
+                        success: false,
+                        message: `HTTP ${response.status} ${response.statusText}: ${text.slice(0, 180)}`
+                    }
+                };
+            }
+        }
+
+        function esc(v) {
+            return String(v ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function normalizeWorkflowProductTypes(cfg) {
+            const out = [];
+            if (Array.isArray(cfg?.product_types)) {
+                cfg.product_types.forEach(v => {
+                    const val = String(v || '').trim().toLowerCase();
+                    if (val && !out.includes(val)) out.push(val);
+                });
+            }
+            const single = String(cfg?.product_type || '').trim().toLowerCase();
+            if (single && !out.includes(single)) out.push(single);
+            return out.length ? out : ['forex'];
+        }
+
+        function renderProductTypeMultiSelect(id, cfg) {
+            const selected = normalizeWorkflowProductTypes(cfg);
+            const options = ['forex', 'indices', 'crypto', 'metals'];
+            return `
+                <select id="ptype_${esc(id)}" multiple size="4" style="min-height: 112px;">
+                    ${options.map(pt => `<option value="${pt}" ${selected.includes(pt) ? 'selected' : ''}>${pt.charAt(0).toUpperCase() + pt.slice(1)}</option>`).join('')}
+                </select>
+            `;
+        }
+
+        function getSelectedWorkflowProductTypes(id) {
+            const el = document.getElementById(`ptype_${id}`);
+            if (!el) return ['forex'];
+            const values = Array.from(el.selectedOptions || []).map(o => String(o.value || '').trim().toLowerCase()).filter(Boolean);
+            return values.length ? values : ['forex'];
+        }
+
+        const WORKFLOW_STRATEGY_GROUP_OPTIONS = [
+            { key: 'breakout', label: 'Breakout' },
+            { key: 'breakout_r', label: 'Breakout R' },
+            { key: 'breakout_rev', label: 'Breakout Rev' },
+            { key: 'breakout_r_rev', label: 'Breakout R Rev' }
+        ];
+
+        function normalizeWorkflowStrategyGroups(cfg) {
+            const out = [];
+            if (Array.isArray(cfg?.strategy_groups)) {
+                cfg.strategy_groups.forEach(v => {
+                    const val = String(v || '').trim().toLowerCase();
+                    if (WORKFLOW_STRATEGY_GROUP_OPTIONS.some(opt => opt.key === val) && !out.includes(val)) out.push(val);
+                });
+            }
+            return out;
+        }
+
+        function renderStrategyGroupMultiSelect(id, cfg) {
+            const selected = normalizeWorkflowStrategyGroups(cfg);
+            return `
+                <select id="sg_${esc(id)}" multiple size="4" style="min-height: 112px;">
+                    ${WORKFLOW_STRATEGY_GROUP_OPTIONS.map(opt => `<option value="${opt.key}" ${selected.includes(opt.key) ? 'selected' : ''}>${opt.label}</option>`).join('')}
+                </select>
+                <div style="color:#93a4bd; font-size:0.75rem; margin-top:4px;">No selection = all strategy groups</div>
+            `;
+        }
+
+        function getSelectedWorkflowStrategyGroups(id) {
+            const el = document.getElementById(`sg_${id}`);
+            if (!el) return [];
+            const allowed = WORKFLOW_STRATEGY_GROUP_OPTIONS.map(opt => opt.key);
+            return Array.from(el.selectedOptions || [])
+                .map(o => String(o.value || '').trim().toLowerCase())
+                .filter(v => allowed.includes(v));
+        }
+
+        function render() {
+            const el = document.getElementById('workflowGrid');
+            if (!workflows.length) {
+                el.innerHTML = '<div class="card">No workflows configured.</div>';
+                return;
+            }
+
+            el.innerHTML = workflows.map(w => {
+                const activeCls = w.active_now ? 'on' : 'off';
+                const activeTxt = w.active_now ? 'ACTIVE NOW' : 'INACTIVE';
+                const steps = Array.isArray(w.steps) ? w.steps : [];
+                const cfg = w.config || {};
+                let customCfg = '';
+                if (String(w.id) === 'profile_match_workflow') {
+                    customCfg = `
+                    <div class="controls" style="margin-top:8px; grid-template-columns: 220px 180px 180px 180px auto;">
+                        <div class="row">
+                            <label>Min Profitability %</label>
+                            <input type="number" id="pc_${esc(w.id)}" value="${esc(cfg.min_profitability_pct ?? 85)}" step="0.1">
+                        </div>
+                        <div class="row">
+                            <label>Min Trades</label>
+                            <input type="number" id="pt_${esc(w.id)}" value="${esc(cfg.min_trade_count ?? 1)}" step="1">
+                        </div>
+                        <div class="row">
+                            <label>Max Items</label>
+                            <input type="number" id="pi_${esc(w.id)}" value="${esc(cfg.max_items ?? 20)}" step="1">
+                        </div>
+                        <div class="row">
+                            <label>Metric</label>
+                            <select id="pm_${esc(w.id)}">
+                                <option value="net" ${(cfg.metric || 'net') === 'net' ? 'selected' : ''}>NET</option>
+                                <option value="buy_net" ${cfg.metric === 'buy_net' ? 'selected' : ''}>BUY_NET</option>
+                                <option value="sell_net" ${cfg.metric === 'sell_net' ? 'selected' : ''}>SELL_NET</option>
+                                <option value="bias_side" ${cfg.metric === 'bias_side' ? 'selected' : ''}>BIAS_SIDE</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>TB Delta Type</label>
+                            <select id="pdt_${esc(w.id)}">
+                                <option value="delta1" ${cfg.delta_type === 'delta1' ? 'selected' : ''}>delta1</option>
+                                <option value="delta2" ${(cfg.delta_type || 'delta2') === 'delta2' ? 'selected' : ''}>delta2</option>
+                                <option value="delta3" ${cfg.delta_type === 'delta3' ? 'selected' : ''}>delta3</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="controls" style="margin-top:6px; grid-template-columns: 220px 220px auto;">
+                        <div class="row">
+                            <label>Min Total Net</label>
+                            <input type="number" id="ptn_${esc(w.id)}" value="${esc(cfg.min_total_net ?? 0)}" step="0.1">
+                        </div>
+                        <div class="row">
+                            <label>Min Avg Net</label>
+                            <input type="number" id="pan_${esc(w.id)}" value="${esc(cfg.min_avg_net ?? 0)}" step="0.1">
+                        </div>
+                    </div>
+                    <div class="controls" style="margin-top:6px; grid-template-columns: 260px auto;">
+                        <div class="row">
+                            <label>Strategy Groups for Multi Chart</label>
+                            ${renderStrategyGroupMultiSelect(w.id, cfg)}
+                        </div>
+                    </div>
+                    <div style="margin-top:6px; display:flex; align-items:center; justify-content:flex-start; gap:18px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="ps_${esc(w.id)}" ${cfg.scalper_only ? 'checked' : ''}>
+                            <span>Scalper only</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; color:#60a5fa;">
+                            <input type="checkbox" id="prs_${esc(w.id)}" ${cfg.rev_scalper_only ? 'checked' : ''}>
+                            <span>Rev Scalper only</span>
+                        </label>
+                        <div style="display:inline-flex; align-items:center; gap:14px; flex-wrap:nowrap;">
+                            <label style="display:flex; align-items:center; gap:8px; margin:0; white-space:nowrap;">
+                                <input type="checkbox" id="pmb_${esc(w.id)}" ${cfg.enforce_market_bias ? 'checked' : ''}>
+                                <span>Enforce market bias</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; margin:0; white-space:nowrap;">
+                                <span>Last X profitable (bias side)</span>
+                                <input type="number" id="pmx_${esc(w.id)}" value="${esc(cfg.bias_recent_profitable_count ?? 2)}" step="1" min="1" style="width:84px;">
+                            </label>
+                        </div>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="ptb_${esc(w.id)}" ${cfg.add_to_tb ? 'checked' : ''}>
+                            <span>Add to TB (best match)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="ptalt_${esc(w.id)}" ${cfg.trade_alt_net ? 'checked' : ''}>
+                            <span>Trade ALT</span>
+                        </label>
+                    </div>
+                    <div style="margin-top:6px; display:flex; align-items:center; justify-content:flex-start; gap:18px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="pasm_${esc(w.id)}" ${cfg.add_same_parameter_strategies_metrics ? 'checked' : ''}>
+                            <span>add all same-parameter strategies/metrics (this will be actioned when added to multi_chart)</span>
+                        </label>
+                    </div>
+                    <div style="margin-top:6px; display:flex; align-items:center; justify-content:flex-start; gap:18px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="past_${esc(w.id)}" ${cfg.adjust_start_time_under_150 ? 'checked' : ''}>
+                            <span>adjust start time to bring highest net under 150 (this will be action after above)</span>
+                        </label>
+                    </div>
+                `;
+                } else if (String(w.id) === 'top_x_multi_chart_workflow') {
+                    /* [V20260306_1845] Added metric type selector */
+                    customCfg = `
+                    <div class="controls" style="margin-top:8px; grid-template-columns: 220px 220px 180px 260px auto;">
+                        <div class="row">
+                            <label>Top X Items to Extract</label>
+                            <input type="number" id="top_x_${esc(w.id)}" value="${esc(cfg.top_x ?? 6)}" step="1" min="1" max="20">
+                        </div>
+                        <div class="row">
+                            <label>Metric Type</label>
+                            <select id="topx_metric_${esc(w.id)}">
+                                <option value="net" ${(cfg.metric || 'net') === 'net' ? 'selected' : ''}>Total Net</option>
+                                <option value="buy_net" ${cfg.metric === 'buy_net' ? 'selected' : ''}>Buy Net</option>
+                                <option value="sell_net" ${cfg.metric === 'sell_net' ? 'selected' : ''}>Sell Net</option>
+                                <option value="buy_sell" ${cfg.metric === 'buy_sell' ? 'selected' : ''}>Buy + Sell</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>TB Delta Type</label>
+                            <select id="topx_delta_${esc(w.id)}">
+                                <option value="delta1" ${cfg.delta_type === 'delta1' ? 'selected' : ''}>delta1</option>
+                                <option value="delta2" ${(cfg.delta_type || 'delta2') === 'delta2' ? 'selected' : ''}>delta2</option>
+                                <option value="delta3" ${cfg.delta_type === 'delta3' ? 'selected' : ''}>delta3</option>
+                            </select>
+                        </div>
+                        <div class="row">
+                            <label>Strategy Groups for Multi Chart</label>
+                            ${renderStrategyGroupMultiSelect(w.id, cfg)}
+                        </div>
+                    </div>
+                    <div style="margin-top:6px; display:flex; align-items:center; justify-content:flex-start; gap:18px; flex-wrap:wrap;">
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="inc_scalper_${esc(w.id)}" ${cfg.include_scalper !== false ? 'checked' : ''}>
+                            <span>Include Scalpers</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; color:#60a5fa;">
+                            <input type="checkbox" id="inc_rev_scalper_${esc(w.id)}" ${cfg.include_rev_scalper !== false ? 'checked' : ''}>
+                            <span>Include Rev Scalpers</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="topx_tb_${esc(w.id)}" ${cfg.add_to_tb ? 'checked' : ''}>
+                            <span>Add to TB (best match)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="topx_talt_${esc(w.id)}" ${cfg.trade_alt_net ? 'checked' : ''}>
+                            <span>Trade ALT</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="topx_tsplit_${esc(w.id)}" ${cfg.t_split_for_tb ? 'checked' : ''}>
+                            <span>T-split for TB</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; color:#86efac;">
+                            <input type="checkbox" id="topx_pos_tn_${esc(w.id)}" ${cfg.require_positive_total_net !== false ? 'checked' : ''}>      
+                            <span>Require Total Net > 0</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; color:#60a5fa;">
+                            <input type="checkbox" id="topx_most_trades_${esc(w.id)}" ${cfg.sort_by_most_trades ? 'checked' : ''}>
+                            <span>Most trades</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0;">
+                            <input type="checkbox" id="topx_pasm_${esc(w.id)}" ${cfg.add_same_parameter_strategies_metrics ? 'checked' : ''}>       
+                            <span>Add all same-parameter strategies/metrics</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:8px; margin:0; color:#22d3ee;">
+                            <input type="checkbox" id="topx_merge_${esc(w.id)}" ${cfg.merge_charts ? 'checked' : ''}>
+                            <span>merge charts</span>
+                        </label>                    </div>
+                `;
+                }
+
+                return `
+                <div class="card">
+                    <div class="card-head">
+                        <div class="wf-name"><a class="wf-link" onclick="openWorkflowModal('${esc(w.id)}')">${esc(w.name || w.id)}</a></div>
+                        <span class="status ${activeCls}">${activeTxt}</span>
+                    </div>
+                    <div class="desc">${esc(w.description || '')}</div>
+                    <div class="controls">
+                        <div class="row">
+                            <label>Activation</label>
+                            <label style="display:flex; align-items:center; gap:8px;">
+                                <input type="checkbox" id="en_${esc(w.id)}" ${w.enabled ? 'checked' : ''}>
+                                <span>${w.enabled ? 'Enabled' : 'Disabled'}</span>
+                            </label>
+                        </div>
+                        <div class="row">
+                            <label>Start Time</label>
+                            <input type="time" id="st_${esc(w.id)}" value="${esc(w.start_time || '00:00')}">
+                        </div>
+                        <div class="row">
+                            <label>End Time</label>
+                            <input type="time" id="et_${esc(w.id)}" value="${esc(w.end_time || '23:59')}">
+                        </div>
+                        <div class="row">
+                            <label>Product Types</label>
+                            ${renderProductTypeMultiSelect(w.id, cfg)}
+                        </div>
+                        <div class="row">
+                            <label>&nbsp;</label>
+                            <div style="display:flex; gap:8px;">
+                                <button class="btn" id="save_btn_${esc(w.id)}" onclick="saveWorkflow('${esc(w.id)}')"><i class="fas fa-save"></i> Save</button>
+                                <button class="btn" id="run_btn_${esc(w.id)}" onclick="runWorkflowNow('${esc(w.id)}')" style="background: rgba(16,185,129,0.2); border-color: rgba(16,185,129,0.45); color:#86efac;">
+                                    <i class="fas fa-play"></i> Run Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    ${customCfg}
+                    <ol class="steps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+                </div>`;
+            }).join('');
+        }
+
+        async function loadWorkflows() {
+            const r = await fetch('/api/workflows');
+            const parsed = await parseApiJsonSafe(r);
+            const d = parsed.data;
+            if (!d.success) throw new Error(d.message || 'Failed to load workflows');
+            workflows = d.workflows || [];
+            document.getElementById('updatedAt').textContent = `Updated: ${new Date().toLocaleTimeString()}`;
+            render();
+        }
+
+        async function saveWorkflow(id) {
+            const btn = document.getElementById(`save_btn_${id}`);
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+                btn.style.background = 'rgba(96, 165, 250, 0.28)';
+            }
+            const enabled = !!document.getElementById(`en_${id}`).checked;
+            const start_time = document.getElementById(`st_${id}`).value;
+            const end_time = document.getElementById(`et_${id}`).value;
+            const product_types = getSelectedWorkflowProductTypes(id);
+            const strategy_groups = getSelectedWorkflowStrategyGroups(id);
+            const product_type = product_types[0] || 'forex';
+            const payload = { id, enabled, start_time, end_time };
+            payload.config = { product_type, product_types, strategy_groups };
+            if (String(id) === 'profile_match_workflow') {
+                const min_profitability_pct = parseFloat(document.getElementById(`pc_${id}`)?.value || '85');
+                const min_trade_count = parseInt(document.getElementById(`pt_${id}`)?.value || '1', 10);
+                const max_items = parseInt(document.getElementById(`pi_${id}`)?.value || '20', 10);
+                const min_total_net = parseFloat(document.getElementById(`ptn_${id}`)?.value || '0');
+                const min_avg_net = parseFloat(document.getElementById(`pan_${id}`)?.value || '0');
+                const metric = String(document.getElementById(`pm_${id}`)?.value || 'net');
+                const delta_type = String(document.getElementById(`pdt_${id}`)?.value || 'delta2');
+                const scalper_only = !!document.getElementById(`ps_${id}`)?.checked;
+                const rev_scalper_only = !!document.getElementById(`prs_${id}`)?.checked;
+                const enforce_market_bias = !!document.getElementById(`pmb_${id}`)?.checked;
+                const bias_recent_profitable_count = parseInt(document.getElementById(`pmx_${id}`)?.value || '2', 10);
+                const add_to_tb = !!document.getElementById(`ptb_${id}`)?.checked;
+                const trade_alt_net = !!document.getElementById(`ptalt_${id}`)?.checked;
+                const add_same_parameter_strategies_metrics = !!document.getElementById(`pasm_${id}`)?.checked;
+                const adjust_start_time_under_150 = !!document.getElementById(`past_${id}`)?.checked;
+                payload.config = {
+                    ...payload.config,
+                    min_profitability_pct: isNaN(min_profitability_pct) ? 85 : min_profitability_pct,
+                    min_trade_count: isNaN(min_trade_count) ? 1 : min_trade_count,
+                    min_total_net: isNaN(min_total_net) ? 0 : min_total_net,
+                    min_avg_net: isNaN(min_avg_net) ? 0 : min_avg_net,
+                    max_items: isNaN(max_items) ? 20 : max_items,
+                    metric: metric,
+                    delta_type: delta_type,
+                    scalper_only: scalper_only,
+                    rev_scalper_only: rev_scalper_only,
+                    enforce_market_bias: enforce_market_bias,
+                    bias_recent_profitable_count: isNaN(bias_recent_profitable_count) ? 2 : Math.max(1, bias_recent_profitable_count),
+                    add_to_tb: add_to_tb,
+                    trade_alt_net: trade_alt_net,
+                    add_same_parameter_strategies_metrics: add_same_parameter_strategies_metrics,
+                    adjust_start_time_under_150: adjust_start_time_under_150
+                };
+            } else if (String(id) === 'top_x_multi_chart_workflow') {
+                const top_x = parseInt(document.getElementById(`top_x_${id}`)?.value || '6', 10);
+                const include_scalper = !!document.getElementById(`inc_scalper_${id}`)?.checked;
+                const include_rev_scalper = !!document.getElementById(`inc_rev_scalper_${id}`)?.checked;
+                const add_to_tb = !!document.getElementById(`topx_tb_${id}`)?.checked;
+                const trade_alt_net = !!document.getElementById(`topx_talt_${id}`)?.checked;
+                const t_split_for_tb = !!document.getElementById(`topx_tsplit_${id}`)?.checked;
+                const add_same_parameter_strategies_metrics = !!document.getElementById(`topx_pasm_${id}`)?.checked;
+                const merge_charts = !!document.getElementById(`topx_merge_${id}`)?.checked;
+                // [V20260306_1845] Capture metric type selection
+                const metric = String(document.getElementById(`topx_metric_${id}`)?.value || 'net');
+                const delta_type = String(document.getElementById(`topx_delta_${id}`)?.value || 'delta2');
+                payload.config = {
+                    ...payload.config,
+                    top_x: isNaN(top_x) ? 6 : top_x,
+                    metric: metric,
+                    delta_type: delta_type,
+                    include_scalper: include_scalper,
+                    include_rev_scalper: include_rev_scalper,
+                    add_to_tb: add_to_tb,
+                    trade_alt_net: trade_alt_net,
+                    t_split_for_tb: t_split_for_tb,
+                    add_same_parameter_strategies_metrics: add_same_parameter_strategies_metrics,
+                    merge_charts: merge_charts,
+                    // [V20260414_1415] Capture sort_by_most_trades
+                    sort_by_most_trades: !!document.getElementById(`topx_most_trades_${id}`)?.checked,
+                    // [V20260323_1500] Capture require_positive_total_net
+                    require_positive_total_net: !!document.getElementById(`topx_pos_tn_${id}`)?.checked
+                };
+            }
+
+            try {
+                const r = await fetch('/api/workflows/update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const parsed = await parseApiJsonSafe(r);
+                const d = parsed.data;
+                if (!d.success) {
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Save failed';
+                        btn.style.background = 'rgba(239,68,68,0.25)';
+                        btn.style.borderColor = 'rgba(239,68,68,0.45)';
+                        btn.style.color = '#fecaca';
+                        setTimeout(() => {
+                            btn.disabled = false;
+                            btn.innerHTML = originalHtml || '<i class="fas fa-save"></i> Save';
+                            btn.style.background = '';
+                            btn.style.borderColor = '';
+                            btn.style.color = '';
+                        }, 1800);
+                    }
+                    console.log(`Save failed: ${d.message || 'Unknown error'}`);
+                    return;
+                }
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-check"></i> Saved';
+                    btn.style.background = 'rgba(16,185,129,0.25)';
+                    btn.style.borderColor = 'rgba(16,185,129,0.45)';
+                    btn.style.color = '#86efac';
+                }
+                await loadWorkflows();
+                setTimeout(() => {
+                    const newBtn = document.getElementById(`save_btn_${id}`);
+                    if (!newBtn) return;
+                    newBtn.disabled = false;
+                    newBtn.innerHTML = originalHtml || '<i class="fas fa-save"></i> Save';
+                    newBtn.style.background = '';
+                    newBtn.style.borderColor = '';
+                    newBtn.style.color = '';
+                }, 1200);
+            } catch (e) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Save failed';
+                    btn.style.background = 'rgba(239,68,68,0.25)';
+                    btn.style.borderColor = 'rgba(239,68,68,0.45)';
+                    btn.style.color = '#fecaca';
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = originalHtml || '<i class="fas fa-save"></i> Save';
+                        btn.style.background = '';
+                        btn.style.borderColor = '';
+                        btn.style.color = '';
+                    }, 1800);
+                }
+                console.log(`Save failed: ${e.message || 'Unknown error'}`);
+            }
+        }
+
+        async function runWorkflowNow(id) {
+            const btn = document.getElementById(`run_btn_${id}`);
+            const originalHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+                btn.style.background = 'rgba(245,158,11,0.22)';
+                btn.style.borderColor = 'rgba(245,158,11,0.45)';
+                btn.style.color = '#fde68a';
+            }
+            const modeEl = document.getElementById('runMode');
+            const dateEl = document.getElementById('tradeDate');
+            const mode = modeEl ? modeEl.value : undefined;
+            const date = dateEl ? dateEl.value : undefined;
+            try {
+                const r = await fetch('/api/workflows/run', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, mode, date })
+                });
+                const parsed = await parseApiJsonSafe(r);
+                const d = parsed.data;
+                if (!d.success) {
+                    if (btn) {
+                        btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Run failed';
+                        btn.style.background = 'rgba(239,68,68,0.25)';
+                        btn.style.borderColor = 'rgba(239,68,68,0.45)';
+                        btn.style.color = '#fecaca';
+                        setTimeout(() => {
+                            const currentBtn = document.getElementById(`run_btn_${id}`);
+                            if (!currentBtn) return;
+                            currentBtn.disabled = false;
+                            currentBtn.innerHTML = originalHtml || '<i class="fas fa-play"></i> Run Now';
+                            currentBtn.style.background = 'rgba(16,185,129,0.2)';
+                            currentBtn.style.borderColor = 'rgba(16,185,129,0.45)';
+                            currentBtn.style.color = '#86efac';
+                        }, 1800);
+                    }
+                    console.log(`Run failed: ${(d.result && d.result.message) || d.message || 'Unknown error'}`);
+                    return;
+                }
+                console.log(`Run completed: ${JSON.stringify(d.result)}`);
+                await loadWorkflows();
+                const newBtn = document.getElementById(`run_btn_${id}`);
+                if (newBtn) {
+                    newBtn.disabled = true;
+                    newBtn.innerHTML = '<i class="fas fa-check"></i> Run complete';
+                    newBtn.style.background = 'rgba(16,185,129,0.25)';
+                    newBtn.style.borderColor = 'rgba(16,185,129,0.45)';
+                    newBtn.style.color = '#86efac';
+                    setTimeout(() => {
+                        const currentBtn = document.getElementById(`run_btn_${id}`);
+                        if (!currentBtn) return;
+                        currentBtn.disabled = false;
+                        currentBtn.innerHTML = originalHtml || '<i class="fas fa-play"></i> Run Now';
+                        currentBtn.style.background = 'rgba(16,185,129,0.2)';
+                        currentBtn.style.borderColor = 'rgba(16,185,129,0.45)';
+                        currentBtn.style.color = '#86efac';
+                    }, 1200);
+                }
+            } catch (e) {
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-triangle-exclamation"></i> Run failed';
+                    btn.style.background = 'rgba(239,68,68,0.25)';
+                    btn.style.borderColor = 'rgba(239,68,68,0.45)';
+                    btn.style.color = '#fecaca';
+                    setTimeout(() => {
+                        const currentBtn = document.getElementById(`run_btn_${id}`);
+                        if (!currentBtn) return;
+                        currentBtn.disabled = false;
+                        currentBtn.innerHTML = originalHtml || '<i class="fas fa-play"></i> Run Now';
+                        currentBtn.style.background = 'rgba(16,185,129,0.2)';
+                        currentBtn.style.borderColor = 'rgba(16,185,129,0.45)';
+                        currentBtn.style.color = '#86efac';
+                    }, 1800);
+                }
+                console.log(`Run failed: ${e.message || 'Unknown error'}`);
+            }
+        }
+
+        function openWorkflowModal(id) {
+            const wf = workflows.find(x => String(x.id) === String(id));
+            if (!wf) return;
+            document.getElementById('wfModalTitle').textContent = `${wf.name || wf.id} Workflow`;
+            const cfg = wf.config || {};
+            const steps = Array.isArray(wf.steps) ? wf.steps : [];
+            const cfgRows = Object.keys(cfg).sort().map(k => `
+                <div><b>${esc(k)}:</b> ${esc(cfg[k])}</div>
+            `).join('');
+            document.getElementById('wfModalBody').innerHTML = `
+                <div style="color:#94a3b8; margin-bottom:10px;">${esc(wf.description || '')}</div>
+                <div style="display:grid; grid-template-columns: repeat(2, minmax(180px, 1fr)); gap:8px; margin-bottom:10px;">
+                    <div><b>Enabled:</b> ${wf.enabled ? 'Yes' : 'No'}</div>
+                    <div><b>Active Now:</b> ${wf.active_now ? 'Yes' : 'No'}</div>
+                    <div><b>Start:</b> ${esc(wf.start_time || '--')}</div>
+                    <div><b>End:</b> ${esc(wf.end_time || '--')}</div>
+                    ${cfgRows}
+                </div>
+                <div style="font-weight:700; margin:8px 0 4px;">Workflow Steps</div>
+                <ol class="steps">${steps.map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+            `;
+            document.getElementById('wfModal').style.display = 'flex';
+        }
+
+        function closeWorkflowModal() {
+            document.getElementById('wfModal').style.display = 'none';
+        }
+
+        loadWorkflows();
+        setInterval(loadWorkflows, 30000);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,1 @@
+            source_tag = f"trade_bucket:{bucket_name}"

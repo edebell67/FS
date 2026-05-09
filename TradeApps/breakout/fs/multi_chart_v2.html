@@ -1,0 +1,751 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Chart (SQL V2) | Breakout</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="sidebar.css" rel="stylesheet">
+    <link href="pnl_graph.css" rel="stylesheet">
+    <style>
+        /* Multi-Chart Grid Styles */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(450px, 1fr));
+            gap: 20px;
+            padding: 10px 0;
+        }
+
+        .chart-card {
+            background: var(--glass-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            height: 400px;
+            min-height: 400px;
+            max-height: 400px;
+            overflow: hidden;
+            /* [V20260129_1400] Reduced from 350px (datetime: 2026-01-29 14:00) */
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            box-shadow: var(--card-shadow);
+        }
+
+        .chart-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-5px);
+        }
+
+        .chart-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 8px;
+        }
+
+        .chart-card-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chart-card-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+            font-size: 0.9rem;
+        }
+
+        .chart-container {
+            flex: 1;
+            position: relative;
+            min-height: 0;
+        }
+
+        .empty-grid-msg {
+            grid-column: 1 / -1;
+            padding: 100px;
+            text-align: center;
+            color: var(--text-dim);
+            font-style: italic;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 20px;
+            border: 2px dashed var(--glass-border);
+        }
+
+        /* Grouped Legend Styles */
+        .group-values-list {
+            max-height: 80px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .group-value-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .group-value-item .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .group-value-item .lbl {
+            flex: 1;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: var(--text-dim);
+        }
+
+        .group-value-item .val {
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 800;
+        }
+
+        .group-value-item i {
+            cursor: pointer;
+            color: var(--rose);
+            opacity: 0.4;
+            transition: opacity 0.2s;
+        }
+
+        .group-value-item i:hover {
+            opacity: 1;
+        }
+
+        /* [V20260128_0400] Professional Chart Controls */
+        .chart-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 32px;
+        }
+
+        .chart-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+            /* Allow truncation */
+        }
+
+        /* Compact Live Button */
+        .live-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 8px;
+            /* Reduced padding */
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 24px;
+            /* Fixed height */
+            white-space: nowrap;
+        }
+
+        .live-btn i {
+            font-size: 0.7rem;
+        }
+
+        .live-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .live-btn.active {
+            background: rgba(244, 63, 94, 0.15);
+            border-color: var(--rose);
+            color: var(--rose);
+        }
+
+        /* Action Button Group */
+        .chart-actions {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .action-btn {
+            width: 26px;
+            height: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            /* Subtle border */
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .action-btn i {
+            font-size: 0.85rem;
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        .action-btn.add:hover {
+            color: var(--accent-primary);
+            border-color: rgba(96, 165, 250, 0.3);
+        }
+
+        .action-btn.save:hover {
+            color: var(--success);
+            border-color: rgba(52, 211, 153, 0.3);
+        }
+
+        .action-btn.delete:hover {
+            color: var(--rose);
+            border-color: rgba(244, 63, 94, 0.3);
+            background: rgba(244, 63, 94, 0.1);
+        }
+
+        /* [V20260126_1230] Live Trading Styles */
+        .live-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-dim);
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-btn.active {
+            background: rgba(244, 63, 94, 0.1);
+            border-color: var(--rose);
+            color: var(--rose);
+            box-shadow: 0 0 10px rgba(244, 63, 94, 0.2);
+        }
+
+        /* [V20260131_0404] Blue pulse for SIM mode */
+        .live-btn.sim {
+            background: rgba(6, 182, 212, 0.15);
+            border-color: #06b6d4;
+            color: #06b6d4;
+            box-shadow: 0 0 10px rgba(6, 182, 212, 0.2);
+        }
+
+        .live-btn.sim .live-pulse {
+            background: #06b6d4;
+            box-shadow: 0 0 8px #06b6d4;
+        }
+
+        .live-pulse {
+            width: 8px;
+            height: 8px;
+            background: var(--rose);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 rgba(244, 63, 94, 0.4);
+            animation: pulse-rose 2s infinite;
+        }
+
+        @keyframes pulse-rose {
+            0% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0.7);
+            }
+
+            70% {
+                transform: scale(1);
+                box-shadow: 0 0 0 10px rgba(244, 63, 94, 0);
+            }
+
+            100% {
+                transform: scale(0.95);
+                box-shadow: 0 0 0 0 rgba(244, 63, 94, 0);
+            }
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.2);
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 450px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.5);
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 12px;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h2 {
+            font-size: 1.1rem;
+            margin: 0;
+            color: var(--accent-primary);
+        }
+
+        .close-modal {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-dim);
+        }
+
+        .close-modal:hover {
+            color: var(--rose);
+        }
+
+        .modal-body .field-group {
+            margin-bottom: 16px;
+        }
+
+        .modal-footer {
+            margin-top: 24px;
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        /* 2026-01-24 V20260124_2105: Dropdown Visibility Fix */
+        select option {
+            background-color: #1e293b !important;
+            color: #f1f5f9 !important;
+        }
+
+        select {
+            background-color: #0f172a !important;
+            color: #f1f5f9 !important;
+        }
+
+
+        /* Trade Drilldown Styles */
+        .drilldown-table-container {
+            max-height: 500px;
+            overflow-y: auto;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .drilldown-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.75rem;
+        }
+
+        .drilldown-table th {
+            text-align: left;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-dim);
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            user-select: none;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(10px);
+        }
+
+        .drilldown-table th:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--accent-primary);
+        }
+
+        .drilldown-table th i {
+            font-size: 0.6rem;
+            margin-left: 4px;
+            opacity: 0.5;
+        }
+
+        .drilldown-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .drilldown-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+    </style>
+</head>
+
+<body class="with-sidebar">
+
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-database"></i> Multi-Chart Grid (SQL V2)</h1>
+            <div class="status-indicator">
+                <span class="status-pulse"></span>
+                Last Update: <span id="lastUpdate">--:--:--</span>
+            </div>
+        </header>
+
+        <section class="control-grid">
+            <!-- Global Configuration -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-cog"></i> SQL Configuration</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Database</label>
+                        <select id="dbSelect" disabled>
+                            <option value="tradedb">tradedb (SQL Server)</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Reference Date</label>
+                        <input type="date" id="tradeDate">
+                    </div>
+                </div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Analytics Metric</label>
+                        <select id="metricSelector">
+                            <option value="net_return_sum">Net Return Sum</option>
+                            <option value="alt_net_return_sum">Alt Net Return Sum</option>
+                            <option value="buy_net_return_sum">Buy Net Sum</option>
+                            <option value="sell_net_return_sum">Sell Net Sum</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                        <div style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="autoRefreshCheck"
+                                style="width: 14px !important; height: 14px !important; cursor: pointer; margin: 0;"
+                                checked>
+                            <label for="autoRefreshCheck"
+                                style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; cursor: pointer; text-transform: uppercase; margin: 0;">Auto</label>
+                        </div>
+                        <button id="displayButton" class="btn btn-primary">
+                            <i class="fas fa-sync"></i> Fetch SQL
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay Selection -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-plus-circle"></i> Add Filter</div>
+                <div class="control-row" style="gap: 10px;">
+                    <div class="field-group" style="flex: 1.2;">
+                        <label>Product</label>
+                        <select id="productSelector">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="field-group" style="flex: 2;">
+                        <label>Model (Strategy)</label>
+                        <select id="strategySelector">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control-row" style="gap: 10px;">
+                    <div class="field-group" style="flex: 1.2;">
+                        <label>Line Metric</label>
+                        <select id="lineMetricSelector">
+                            <option value="global">Use Global</option>
+                            <option value="net_return_sum">Net Return Sum</option>
+                            <option value="alt_net_return_sum">Alt Net Sum</option>
+                            <option value="buy_net_return_sum">Buy Net Sum</option>
+                            <option value="sell_net_return_sum">Sell Net Sum</option>
+                        </select>
+                    </div>
+                    <div class="field-group" style="flex: 2;">
+                        <label>Card Label</label>
+                        <input type="text" id="groupLabelInput" placeholder="Group Name..." style="font-size: 0.75rem;">
+                    </div>
+                    <button id="addBtn" class="btn btn-primary" style="margin-top: auto; padding: 10px;">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Management & Rank -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-tasks"></i> Smart Rank</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Top / Min Trades</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="number" id="rankCount" min="1" max="50" value="10" style="flex: 1;"
+                                title="Number of models to show">
+                            <input type="number" id="minTradesCount" min="1" max="100" value="10" style="flex: 1;"
+                                title="Minimum daily trades required">
+                        </div>
+                    </div>
+                    <button id="rankApplyButton" class="btn btn-warning" style="margin-top: auto;">
+                        <i class="fas fa-bolt"></i> Auto Top
+                    </button>
+                    <button id="btnShowRankOnes" class="btn"
+                        style="margin-top: auto; padding: 6px 10px; font-size: 0.75rem; background: #CCFF00; color: black; font-weight: bold;">
+                        <i class="fas fa-crown"></i> Rank 1s
+                    </button>
+                </div>
+                <div class="control-row" style="display: flex; gap: 8px;">
+                    <button id="tradeBucketButton" class="btn btn-success" style="flex: 1;">
+                        <i class="fas fa-folder-plus"></i> Bucket
+                    </button>
+                    <button id="clearAllButton" class="btn btn-danger" style="flex: 1;">
+                        <i class="fas fa-trash-alt"></i> Clear Grid
+                    </button>
+                </div>
+            </div>
+
+            <!-- Views -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-save"></i> Layout Presets</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Save View</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="viewNameInput" placeholder="Set Name...">
+                            <button id="saveViewButton" class="btn btn-success btn-icon">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Load View</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="loadViewDropdown" style="flex: 1;">
+                                <option value="">-- Presets --</option>
+                            </select>
+                            <button id="presetSelectorButton" class="btn btn-outline" type="button" title="Select presets">
+                                <i class="fas fa-filter"></i>
+                            </button>
+                            <button id="deleteViewButton" class="btn btn-danger btn-icon">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div id="presetSelectorPanel"
+                            style="display:none; margin-top:8px; background: rgba(9, 14, 28, 0.98); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 8px;">
+                            <div id="presetSelectorList" style="max-height: 200px; overflow-y: auto; display:flex; flex-direction:column; gap:6px;"></div>
+                            <div style="display:flex; gap:8px; margin-top:8px;">
+                                <button id="presetSelectorDeleteButton" class="btn btn-danger" type="button" style="flex:1;">Delete</button>
+                                <button id="presetSelectorDoneButton" class="btn btn-outline" type="button" style="flex:1;">Done</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Time Selection -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-clock"></i> Reference Start</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Start From</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="time" id="startTimeInput" step="1">
+                            <button id="resetStartTimeButton" class="btn btn-warning" title="Reset to 00:00:00">
+                                <i class="fas fa-undo"></i> 00:00
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); text-align: center;" id="startTimeRangeLabel">
+                    Full Day Range: --:--:-- → --:--:--
+                </div>
+            </div>
+        </section>
+
+        <!-- Playback Controller -->
+        <section class="playback-card" id="playbackPanel">
+            <div class="playback-header">
+                <div>
+                    <span class="card-title" style="border: none; margin: 0; padding: 0;">
+                        <i class="fas fa-history"></i> Time Playback Simulation
+                    </span>
+                </div>
+                <div id="playbackSpeedLabel" class="speed-badge">1x SPEED</div>
+                <div class="playback-clock" id="currentPlaybackTime">00:00:00</div>
+            </div>
+
+            <div class="slider-container">
+                <input type="range" id="timeSlider" min="0" max="86400" value="0">
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); margin-top: 8px;">
+                    <span id="startTimeLabel">00:00:00</span>
+                    <span id="endTimeLabel">23:59:59</span>
+                </div>
+            </div>
+
+            <div class="playback-actions">
+                <button class="btn btn-outline" id="playbackReset"><i class="fas fa-step-backward"></i></button>
+                <button class="btn btn-outline" id="playbackSlower"><i class="fas fa-minus"></i></button>
+                <button class="btn btn-primary" id="playbackPlay" style="width: 120px;">
+                    <i class="fas fa-play"></i> <span>Play</span>
+                </button>
+                <button class="btn btn-outline" id="playbackFaster"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-outline" id="playbackEnd"><i class="fas fa-step-forward"></i></button>
+            </div>
+        </section>
+
+        <!-- Multi Chart Grid -->
+        <main class="chart-grid" id="chartGrid">
+            <div class="empty-grid-msg">No charts added yet. Data is fetched from the SQL View. Select a product/model
+                above or use "Auto Top" to populate.
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for Adding Overlays -->
+    <div id="addOverlayModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2><i class="fas fa-layer-group"></i> Add Group Comparison</h2>
+                <span class="close-modal" id="closeAddOverlayModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="modalTargetGroup">
+
+                <div class="field-group">
+                    <label>Select Product</label>
+                    <select id="modalProductSelector"></select>
+                </div>
+
+                <div class="field-group">
+                    <label>Select Model</label>
+                    <select id="modalStrategySelector"></select>
+                </div>
+
+                <div class="field-group">
+                    <label>Metric Line</label>
+                    <select id="modalMetricSelector">
+                        <option value="net_return_sum">Net Return Sum</option>
+                        <option value="alt_net_return_sum">Alt Net Return Sum</option>
+                        <option value="buy_net_return_sum">Buy Net Return Sum</option>
+                        <option value="sell_net_return_sum">Sell Net Return Sum</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" style="margin-right: 10px;" onclick="closeModal()">Cancel</button>
+                <button id="modalAddBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Add to Card
+                </button>
+            </div>
+        </div>
+    </div>
+    </div>
+
+
+    <!-- Trade Drilldown Modal -->
+    <div id="tradeDrilldownModal" class="modal">
+        <div class="modal-content glass-card" style="max-width: 800px; width: 95%;">
+            <div class="modal-header">
+                <h2><i class="fas fa-list"></i> Trade Drilldown</h2>
+                <span class="close-modal" id="closeTradeDrilldownModal">&times;</span>
+            </div>
+            <div class="modal-body">
+                <h3 id="drilldownTitle" style="font-size: 0.9rem; color: var(--text-dim); margin-bottom: 15px;"></h3>
+                <div class="drilldown-table-container">
+                    <table class="drilldown-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortDrilldownTable(0)">Time <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(1)">Model <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(2)">Type <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(3)">Signal <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(4)">Result <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(5)">Total <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(6)">Exit <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(7)">Status <i class="fas fa-sort"></i></th>
+                                <th onclick="sortDrilldownTable(8)">L-Trade <i class="fas fa-sort"></i></th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody id="drilldownTableBody">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transfer Card Modal [V20260128_2145] -->
+    <div id="transferCardModal" class="modal">
+        <div class="modal-content glass-card">
+            <div class="modal-header">
+                <h2><i class="fas fa-exchange-alt"></i> Transfer Card to View</h2>
+                <span class="close-modal" onclick="closeTransferModal()">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="transferTargetGroup">
+                <div class="field-group">
+                    <label>Select Target View (Preset)</label>
+                    <select id="transferViewSelector"></select>
+                </div>
+                <p style="font-size: 0.75rem; color: var(--text-dim); margin-top: 10px;">
+                    This will move all strategies in this card to the selected preset and remove them from the current
+                    display.
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" style="margin-right: 10px;"
+                    onclick="closeTransferModal()">Cancel</button>
+                <button id="confirmTransferBtn" class="btn btn-primary" onclick="submitTransfer()">
+                    <i class="fas fa-check"></i> Transfer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Logic -->
+    <script src="multi_chart_v2.js?v=V20260126_0400"></script>
+</body>
+
+</html>

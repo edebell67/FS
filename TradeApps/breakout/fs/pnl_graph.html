@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P&L Graph | Breakout</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="sidebar.css" rel="stylesheet">
+    <link href="pnl_graph.css?v=20260120_0325" rel="stylesheet">
+</head>
+
+<body class="with-sidebar">
+
+    <div id="sidebar-container"></div>
+    <script src="sidebar-loader.js"></script>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-chart-area"></i> Multi-Overlay P&L Graph</h1>
+            <div class="status-indicator">
+                <span class="status-pulse"></span>
+                Last Update: <span id="lastUpdate">--:--:--</span>
+            </div>
+        </header>
+
+        <section class="control-grid">
+            <!-- Global Configuration -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-cog"></i> Global Configuration</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Run Mode</label>
+                        <select id="runMode">
+                            <option value="live">Live</option>
+                            <option value="sim">Simulation</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Trade Date</label>
+                        <input type="date" id="tradeDate">
+                    </div>
+                </div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Analytics Metric</label>
+                        <select id="metricSelector">
+                            <option value="net">Total Net</option>
+                            <option value="buy_net">Buy Net</option>
+                            <option value="sell_net">Sell Net</option>
+                            <option value="buy_trades">Buy Trades (+)</option>
+                            <option value="sell_trades">Sell Trades (+)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                        <div style="display: flex; align-items: center; gap: 6px; cursor: pointer;">
+                            <input type="checkbox" id="autoRefreshCheck"
+                                style="width: 14px !important; height: 14px !important; cursor: pointer; margin: 0;"
+                                checked>
+                            <label for="autoRefreshCheck"
+                                style="font-size: 0.7rem; color: var(--text-dim); font-weight: 700; cursor: pointer; text-transform: uppercase; margin: 0;">Auto</label>
+                        </div>
+                        <button id="displayButton" class="btn btn-primary">
+                            <i class="fas fa-sync"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Overlay Selection -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-plus-circle"></i> Add Overlay</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Product</label>
+                        <select id="productSelector">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <div class="field-group">
+                        <label>Strategy</label>
+                        <select id="strategySelector">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Parameter</label>
+                        <select id="paramSelector">
+                            <option value="">Loading...</option>
+                        </select>
+                    </div>
+                    <button id="addBtn" class="btn btn-primary" style="margin-top: auto;">
+                        <i class="fas fa-plus"></i> Add
+                    </button>
+                </div>
+            </div>
+
+            <!-- Management & Rank -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-tasks"></i> Smart Actions</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Rank Auto-Select</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="rankType" style="flex: 2;">
+                                <option value="top">Top</option>
+                                <option value="bottom">Bottom</option>
+                            </select>
+                            <input type="number" id="rankCount" min="1" max="20" value="5" style="flex: 1;">
+                        </div>
+                    </div>
+                    <button id="rankApplyButton" class="btn btn-warning" style="margin-top: auto;">
+                        <i class="fas fa-bolt"></i> Auto
+                    </button>
+                </div>
+                <div class="control-row">
+                    <button id="tradeBucketButton" class="btn btn-success" style="flex: 1;">
+                        <i class="fas fa-layer-group"></i> Create Bucket
+                    </button>
+                    <button id="clearAllButton" class="btn btn-danger" style="flex: 1;">
+                        <i class="fas fa-trash-alt"></i> Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Views -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-save"></i> Layout Presets</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Save Current View</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="text" id="viewNameInput" placeholder="Alpha Set...">
+                            <button id="saveViewButton" class="btn btn-success btn-icon">
+                                <i class="fas fa-save"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Load Saved View</label>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="loadViewDropdown" style="flex: 1;">
+                                <option value="">-- Presets --</option>
+                            </select>
+                            <button id="deleteViewButton" class="btn btn-danger btn-icon">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Start Time Selection (New Card) -->
+            <div class="glass-card">
+                <div class="card-title"><i class="fas fa-clock"></i> Reference Start</div>
+                <div class="control-row">
+                    <div class="field-group">
+                        <label>Start From</label>
+                        <div style="display: flex; gap: 8px;">
+                            <input type="time" id="startTimeInput" step="1">
+                            <button id="resetStartTimeButton" class="btn btn-warning" title="Reset to 00:00:00">
+                                <i class="fas fa-undo"></i> 00:00
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-dim); text-align: center;" id="startTimeRangeLabel">
+                    Full Day Range: --:--:-- → --:--:--
+                </div>
+            </div>
+        </section>
+
+        <!-- Active Overlays Tags -->
+        <div class="active-list" id="activeOverlays">
+            <!-- Dynamically populated -->
+        </div>
+
+        <!-- Playback Controller -->
+        <section class="playback-card" id="playbackPanel">
+            <div class="playback-header">
+                <div>
+                    <span class="card-title" style="border: none; margin: 0; padding: 0;">
+                        <i class="fas fa-history"></i> Time Playback Simulation
+                    </span>
+                </div>
+                <div id="playbackSpeedLabel" class="speed-badge">1x SPEED</div>
+                <div class="playback-clock" id="currentPlaybackTime">00:00:00</div>
+            </div>
+
+            <div class="slider-container">
+                <input type="range" id="timeSlider" min="0" max="86400" value="0">
+                <div
+                    style="display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); margin-top: 8px;">
+                    <span id="startTimeLabel">00:00:00</span>
+                    <span id="endTimeLabel">23:59:59</span>
+                </div>
+            </div>
+
+            <div class="playback-actions">
+                <button class="btn btn-outline" id="playbackReset"><i class="fas fa-step-backward"></i></button>
+                <button class="btn btn-outline" id="playbackSlower"><i class="fas fa-minus"></i></button>
+                <button class="btn btn-primary" id="playbackPlay" style="width: 120px;">
+                    <i class="fas fa-play"></i> <span>Play</span>
+                </button>
+                <button class="btn btn-outline" id="playbackFaster"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-outline" id="playbackEnd"><i class="fas fa-step-forward"></i></button>
+            </div>
+        </section>
+
+        <!-- Main Chart -->
+        <main class="graph-wrapper">
+            <canvas id="pnlChart"></canvas>
+        </main>
+    </div>
+
+    <!-- Main Logic -->
+    <script>
+        const script = document.createElement('script');
+        script.src = 'pnl_graph.js?v=20260120_0325';
+        document.body.appendChild(script);
+    </script>
+</body>
+
+</html>

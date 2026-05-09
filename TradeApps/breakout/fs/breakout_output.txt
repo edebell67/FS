@@ -1,0 +1,156 @@
+Starting live breakout trading for GBP | window=5 | poll=10s
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33475 @ 2025-12-09 09:46:41.889418
+[DEBUG] Processing tick (window size: 0/5)
+[DEBUG] Price window: min=1.33475, max=1.33475
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33482 @ 2025-12-09 09:46:53.892436
+[DEBUG] Processing tick (window size: 1/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:47:04.473261
+[DEBUG] Processing tick (window size: 2/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:47:13.945796
+[DEBUG] Processing tick (window size: 3/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:47:22.528212
+[DEBUG] Processing tick (window size: 4/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:47:33.846570
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Breakout check: price=1.33480, LONG threshold=1.33482, SHORT threshold=1.33475
+[DEBUG] No breakout - price within range [1.33475, 1.33482]
+[DEBUG] Price window: min=1.33480, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33490 @ 2025-12-09 09:47:44.742153
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Breakout check: price=1.33490, LONG threshold=1.33482, SHORT threshold=1.33480
+[DEBUG] LONG breakout detected! 1.33490 > 1.33482
+*** NEW ENTRY *** (LONG #1) at 1.33490 @ 2025-12-09 09:47:44.742153
+[DEBUG] Price window: min=1.33480, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33500 @ 2025-12-09 09:47:54.770952
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33480, max=1.33500
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33500 @ 2025-12-09 09:48:04.795658
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33480, max=1.33500
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33505 @ 2025-12-09 09:48:14.894671
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33480, max=1.33505
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33508 @ 2025-12-09 09:48:24.992217
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33480, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33502 @ 2025-12-09 09:48:35.073187
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33500 @ 2025-12-09 09:48:43.409894
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33500 @ 2025-12-09 09:48:54.874380
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33510 @ 2025-12-09 09:49:05.160916
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33510
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33502 @ 2025-12-09 09:49:15.389671
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33510
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33508 @ 2025-12-09 09:49:24.635646
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33500, max=1.33510
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33498 @ 2025-12-09 09:49:34.348330
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33498, max=1.33510
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33495 @ 2025-12-09 09:49:45.382324
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33495, max=1.33510
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33488 @ 2025-12-09 09:49:55.711685
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33488, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33493 @ 2025-12-09 09:50:05.561436
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33488, max=1.33508
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33493 @ 2025-12-09 09:50:15.852261
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33488, max=1.33498
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33493 @ 2025-12-09 09:50:25.619475
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33488, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33495 @ 2025-12-09 09:50:35.970602
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33488, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:50:45.649421
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33478, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33475 @ 2025-12-09 09:50:55.888252
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33475, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33482 @ 2025-12-09 09:51:06.172748
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33475, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:51:16.283968
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33475, max=1.33495
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:51:26.373048
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:51:36.466813
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33475, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:51:46.599182
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33478, max=1.33482
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:51:56.055996
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33478, max=1.33480
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33467 @ 2025-12-09 09:52:06.671740
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33467, max=1.33480
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33470 @ 2025-12-09 09:52:16.797530
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33467, max=1.33480
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33478 @ 2025-12-09 09:52:26.803793
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33467, max=1.33480
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33480 @ 2025-12-09 09:52:36.920823
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33467, max=1.33480
+[DEBUG] Fetched 1 quote(s) from API
+[DEBUG] Latest price: 1.33467 @ 2025-12-09 09:52:47.036082
+[DEBUG] Processing tick (window size: 5/5)
+[DEBUG] Price window: min=1.33467, max=1.33480
+
+Stopping live trading loop. Goodbye!

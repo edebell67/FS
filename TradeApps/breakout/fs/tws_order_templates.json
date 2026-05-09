@@ -1,0 +1,459 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "created": "2026-04-06",
+    "description": "TWS API order templates by product_type for breakout L-Trade generation",
+    "source": "IB TWS API Documentation + IBKR Campus",
+    "status": "draft - requires validation"
+  },
+  "forex": {
+    "description": "Spot FX via IDEALPRO",
+    "secType": "CASH",
+    "status": "WORKING",
+    "contract_fields": {
+      "symbol": "Base currency (GBP, EUR, AUD, etc.)",
+      "secType": "CASH",
+      "exchange": "IDEALPRO",
+      "currency": "USD (quote currency)"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Units in base currency (e.g., 20000)",
+      "tif": "GTC or DAY"
+    },
+    "products": {
+      "GBP": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 20000
+      },
+      "EUR": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 20000
+      },
+      "AUD": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 25000
+      },
+      "CAD": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 25000
+      },
+      "CHF": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 20000
+      },
+      "NZD": {
+        "exchange": "IDEALPRO",
+        "currency": "USD",
+        "minQty": 25000
+      }
+    },
+    "example": {
+      "symbol": "GBP",
+      "secType": "CASH",
+      "exchange": "IDEALPRO",
+      "currency": "USD",
+      "action": "BUY",
+      "orderType": "MKT",
+      "quantity": 20000,
+      "guidePrice": 1.265,
+      "comment": "breakout NET OPEN #123",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "abc123"
+    },
+    "notes": "Quantity in base currency units. Current working implementation."
+  },
+  "indices": {
+    "description": "Index futures via CME/CBOT",
+    "secType": "FUT",
+    "status": "DRAFT - NEEDS VALIDATION",
+    "contract_fields": {
+      "symbol": "Futures symbol (ES, NQ, YM, RTY)",
+      "secType": "FUT",
+      "exchange": "CME",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "YYYYMM format (e.g., 202606)",
+      "multiplier": "Contract multiplier (varies by product)"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Number of contracts (integer)",
+      "tif": "DAY or GTC",
+      "clearingIntent": "IB (optional)",
+      "extOperator": "CME Rule 576 compliance (optional)"
+    },
+    "products": {
+      "ES": {
+        "exchange": "CME",
+        "multiplier": "50",
+        "tickSize": 0.25,
+        "tickValue": 12.5,
+        "name": "E-mini S&P 500"
+      },
+      "NQ": {
+        "exchange": "CME",
+        "multiplier": "20",
+        "tickSize": 0.25,
+        "tickValue": 5.0,
+        "name": "E-mini NASDAQ 100"
+      },
+      "YM": {
+        "exchange": "CBOT",
+        "multiplier": "5",
+        "tickSize": 1.0,
+        "tickValue": 5.0,
+        "name": "Mini Dow"
+      },
+      "RTY": {
+        "exchange": "CME",
+        "multiplier": "50",
+        "tickSize": 0.1,
+        "tickValue": 5.0,
+        "name": "E-mini Russell 2000"
+      },
+      "MES": {
+        "exchange": "CME",
+        "multiplier": "5",
+        "tickSize": 0.25,
+        "tickValue": 1.25,
+        "name": "Micro E-mini S&P 500"
+      },
+      "MNQ": {
+        "exchange": "CME",
+        "multiplier": "2",
+        "tickSize": 0.25,
+        "tickValue": 0.5,
+        "name": "Micro E-mini NASDAQ"
+      }
+    },
+    "example": {
+      "symbol": "ES",
+      "secType": "FUT",
+      "exchange": "CME",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "202606",
+      "multiplier": "50",
+      "action": "BUY",
+      "orderType": "MKT",
+      "totalQuantity": 1,
+      "tif": "DAY",
+      "guidePrice": 5250.0,
+      "comment": "breakout NET OPEN #124",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "def456",
+      "clearingIntent": "IB"
+    },
+    "notes": "Requires lastTradeDateOrContractMonth. Quantity is number of contracts. CME Rule 576 may require extOperator field."
+  },
+  "energy": {
+    "description": "Energy futures via NYMEX/IPE",
+    "secType": "FUT",
+    "status": "DRAFT - NEEDS VALIDATION",
+    "contract_fields": {
+      "symbol": "Futures symbol (CL, BZ, NG)",
+      "secType": "FUT",
+      "exchange": "NYMEX",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "YYYYMM format",
+      "multiplier": "Contract multiplier"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Number of contracts",
+      "tif": "DAY or GTC"
+    },
+    "products": {
+      "CL": {
+        "exchange": "NYMEX",
+        "multiplier": "1000",
+        "tickSize": 0.01,
+        "tickValue": 10.0,
+        "name": "WTI Crude Oil"
+      },
+      "BZ": {
+        "exchange": "IPE",
+        "multiplier": "1000",
+        "tickSize": 0.01,
+        "tickValue": 10.0,
+        "name": "Brent Crude Oil"
+      },
+      "NG": {
+        "exchange": "NYMEX",
+        "multiplier": "10000",
+        "tickSize": 0.001,
+        "tickValue": 10.0,
+        "name": "Natural Gas"
+      },
+      "MCL": {
+        "exchange": "NYMEX",
+        "multiplier": "100",
+        "tickSize": 0.01,
+        "tickValue": 1.0,
+        "name": "Micro WTI Crude"
+      }
+    },
+    "example": {
+      "symbol": "CL",
+      "secType": "FUT",
+      "exchange": "NYMEX",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "202606",
+      "multiplier": "1000",
+      "action": "BUY",
+      "orderType": "MKT",
+      "totalQuantity": 1,
+      "tif": "DAY",
+      "guidePrice": 78.5,
+      "comment": "breakout NET OPEN #125",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "ghi789"
+    },
+    "notes": "CL = 1000 barrels per contract. MCL = micro contract (100 barrels)."
+  },
+  "metals": {
+    "description": "Metals futures via COMEX",
+    "secType": "FUT",
+    "status": "DRAFT - NEEDS VALIDATION",
+    "contract_fields": {
+      "symbol": "Futures symbol (GC, HG, SI)",
+      "secType": "FUT",
+      "exchange": "COMEX",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "YYYYMM format",
+      "multiplier": "Contract multiplier"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Number of contracts",
+      "tif": "DAY or GTC"
+    },
+    "products": {
+      "GC": {
+        "exchange": "COMEX",
+        "multiplier": "100",
+        "tickSize": 0.1,
+        "tickValue": 10.0,
+        "name": "Gold"
+      },
+      "HG": {
+        "exchange": "COMEX",
+        "multiplier": "25000",
+        "tickSize": 0.0005,
+        "tickValue": 12.5,
+        "name": "Copper"
+      },
+      "SI": {
+        "exchange": "COMEX",
+        "multiplier": "5000",
+        "tickSize": 0.005,
+        "tickValue": 25.0,
+        "name": "Silver"
+      },
+      "SIL": {
+        "exchange": "COMEX",
+        "multiplier": "1000",
+        "tickSize": 0.005,
+        "tickValue": 5.0,
+        "name": "Micro Silver"
+      }
+    },
+    "example": {
+      "symbol": "GC",
+      "secType": "FUT",
+      "exchange": "COMEX",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "202606",
+      "multiplier": "100",
+      "action": "BUY",
+      "orderType": "MKT",
+      "totalQuantity": 1,
+      "tif": "DAY",
+      "guidePrice": 2350.0,
+      "comment": "breakout NET OPEN #126",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "jkl012"
+    },
+    "notes": "GC = 100 troy ounces. SI = 5000 troy ounces. HG = 25000 pounds."
+  },
+  "rates": {
+    "description": "Interest rate futures via CBOT",
+    "secType": "FUT",
+    "status": "DRAFT - NEEDS VALIDATION",
+    "contract_fields": {
+      "symbol": "Futures symbol (ZB, ZF, ZN, ZT)",
+      "secType": "FUT",
+      "exchange": "CBOT",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "YYYYMM format",
+      "multiplier": "Contract multiplier"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Number of contracts",
+      "tif": "DAY or GTC"
+    },
+    "products": {
+      "ZB": {
+        "exchange": "CBOT",
+        "multiplier": "1000",
+        "tickSize": 0.03125,
+        "tickValue": 31.25,
+        "name": "30-Year T-Bond"
+      },
+      "ZN": {
+        "exchange": "CBOT",
+        "multiplier": "1000",
+        "tickSize": 0.015625,
+        "tickValue": 15.625,
+        "name": "10-Year T-Note"
+      },
+      "ZF": {
+        "exchange": "CBOT",
+        "multiplier": "1000",
+        "tickSize": 0.0078125,
+        "tickValue": 7.8125,
+        "name": "5-Year T-Note"
+      },
+      "ZT": {
+        "exchange": "CBOT",
+        "multiplier": "2000",
+        "tickSize": 0.00390625,
+        "tickValue": 7.8125,
+        "name": "2-Year T-Note"
+      }
+    },
+    "example": {
+      "symbol": "ZB",
+      "secType": "FUT",
+      "exchange": "CBOT",
+      "currency": "USD",
+      "lastTradeDateOrContractMonth": "202606",
+      "multiplier": "1000",
+      "action": "BUY",
+      "orderType": "MKT",
+      "totalQuantity": 1,
+      "tif": "DAY",
+      "guidePrice": 118.15625,
+      "comment": "breakout NET OPEN #127",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "mno345"
+    },
+    "notes": "Prices quoted in 32nds (e.g., 118-05 = 118 + 5/32 = 118.15625). Tick sizes are fractions of 32nds."
+  },
+  "crypto": {
+    "description": "Cryptocurrency via PAXOS",
+    "secType": "CRYPTO",
+    "status": "DRAFT - NEEDS VALIDATION",
+    "contract_fields": {
+      "symbol": "Crypto symbol (BTC, ETH)",
+      "secType": "CRYPTO",
+      "exchange": "PAXOS",
+      "currency": "USD"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT or LMT",
+      "totalQuantity": "Fractional quantity allowed",
+      "tif": "GTC"
+    },
+    "products": {
+      "BTC": {
+        "exchange": "PAXOS",
+        "minQty": 0.0001,
+        "name": "Bitcoin"
+      },
+      "ETH": {
+        "exchange": "PAXOS",
+        "minQty": 0.001,
+        "name": "Ethereum"
+      },
+      "SOL": {
+        "exchange": "PAXOS",
+        "minQty": 0.01,
+        "name": "Solana",
+        "status": "VERIFY_AVAILABILITY"
+      },
+      "XRP": {
+        "exchange": "PAXOS",
+        "minQty": 1.0,
+        "name": "Ripple",
+        "status": "VERIFY_AVAILABILITY"
+      }
+    },
+    "alternative_futures": {
+      "description": "Crypto futures alternative via CME",
+      "BTC_FUT": {
+        "symbol": "BRR",
+        "exchange": "CMECRYPTO",
+        "secType": "FUT",
+        "multiplier": "5"
+      },
+      "ETH_FUT": {
+        "symbol": "ETH",
+        "exchange": "CMECRYPTO",
+        "secType": "FUT",
+        "multiplier": "50"
+      }
+    },
+    "example": {
+      "symbol": "BTC",
+      "secType": "CRYPTO",
+      "exchange": "PAXOS",
+      "currency": "USD",
+      "action": "BUY",
+      "orderType": "MKT",
+      "totalQuantity": 0.01,
+      "tif": "GTC",
+      "guidePrice": 68500.0,
+      "comment": "breakout NET OPEN #128",
+      "source": "breakout",
+      "source_group": "breakout",
+      "guid": "pqr678"
+    },
+    "notes": "Fractional quantities allowed. SOL and XRP availability on PAXOS needs verification. Alternative: use CME crypto futures (BRR, ETH)."
+  },
+  "_field_reference": {
+    "contract_fields": {
+      "symbol": "Trading symbol",
+      "secType": "Security type: CASH, FUT, CRYPTO, STK, OPT, FOP",
+      "exchange": "Trading exchange",
+      "currency": "Settlement currency",
+      "lastTradeDateOrContractMonth": "Expiry for derivatives (YYYYMM or YYYYMMDD)",
+      "multiplier": "Contract multiplier for derivatives",
+      "localSymbol": "IB internal symbol (alternative to symbol+expiry)"
+    },
+    "order_fields": {
+      "action": "BUY or SELL",
+      "orderType": "MKT, LMT, STP, STP LMT, etc.",
+      "totalQuantity": "Number of units/contracts",
+      "lmtPrice": "Limit price (for LMT orders)",
+      "auxPrice": "Stop price (for STP orders)",
+      "tif": "Time in force: DAY, GTC, IOC, GTD, OPG, FOK",
+      "clearingIntent": "IB, Away, or PTA",
+      "clearingAccount": "Required for FUT/FOP",
+      "extOperator": "CME Rule 576 compliance"
+    },
+    "custom_fields": {
+      "guidePrice": "Reference price for execution",
+      "comment": "Order comment/reference",
+      "source": "Order source screen",
+      "source_group": "Group for cap tracking",
+      "guid": "Unique identifier"
+    }
+  }
+}

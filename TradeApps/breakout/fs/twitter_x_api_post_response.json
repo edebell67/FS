@@ -1,0 +1,17 @@
+{
+  "timestamp": "2026-04-11T13:06:47.420542",
+  "run_date": "2026-04-11",
+  "request": {
+    "url": "http://localhost:5000/api/social/x_api_post",
+    "trigger": "breakout_top2_cross_product_every_4_hours",
+    "text_length": 0,
+    "text": ""
+  },
+  "response": {
+    "status_code": 409,
+    "payload": {
+      "success": false,
+      "error": "Top-2 X posting workflow is suspended. Use run_twitter_consolidated_leaderboard_workflow.py for the only approved recurring X post."
+    }
+  }
+}

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Promotion Blocks | Breakout</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link href="sidebar.css" rel="stylesheet">
+    <link href="pnl_graph.css" rel="stylesheet">
+    <style>
+        .page-wrap { margin-left: 250px; padding: 16px 20px; }
+        .toolbar {
+            display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+            background: var(--glass-card); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 10px 12px; margin-bottom: 12px;
+        }
+        .toolbar input, .toolbar select, .toolbar button {
+            background: rgba(255,255,255,0.06); color: #e5e7eb;
+            border: 1px solid rgba(255,255,255,0.15); border-radius: 8px;
+            padding: 8px 10px; font-size: 13px;
+        }
+        .toolbar button { cursor: pointer; }
+        .cards { display: grid; grid-template-columns: repeat(4, minmax(180px, 1fr)); gap: 10px; margin-bottom: 12px; }
+        .card {
+            background: var(--glass-card); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 10px 12px;
+        }
+        .k { color: #94a3b8; font-size: 12px; }
+        .v { font-family: monospace; font-size: 18px; font-weight: 700; color: #f8fafc; }
+        .panel {
+            background: var(--glass-card); border: 1px solid var(--glass-border);
+            border-radius: 12px; padding: 10px; margin-bottom: 12px;
+        }
+        .panel h3 { margin: 4px 0 8px; font-size: 14px; color: #e2e8f0; }
+        .grid-list { display: grid; grid-template-columns: repeat(2, minmax(280px, 1fr)); gap: 6px; }
+        .grid-item {
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.03); border-radius: 8px; padding: 8px; font-size: 12px;
+        }
+        .table-wrap { overflow: auto; max-height: 64vh; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 8px; border-bottom: 1px solid rgba(255,255,255,0.08); font-size: 12px; vertical-align: top; }
+        th { position: sticky; top: 0; background: #0f172a; text-align: left; color: #cbd5e1; z-index: 2; }
+        td { color: #e2e8f0; }
+        .reason { color: #fda4af; font-weight: 600; }
+        .detail { color: #93c5fd; }
+        .mono { font-family: monospace; }
+        .btn-link {
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.04);
+            color: #e5e7eb; border-radius: 6px; padding: 4px 8px; cursor: pointer;
+        }
+        .muted { color: #94a3b8; }
+        .modal {
+            display: none; position: fixed; inset: 0; background: rgba(2,6,23,0.75); z-index: 3000;
+            align-items: center; justify-content: center;
+        }
+        .modal-card {
+            width: min(1000px, 94vw); max-height: 82vh; overflow: auto;
+            background: #0b1220; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; padding: 12px;
+        }
+        pre { white-space: pre-wrap; font-size: 12px; color: #e2e8f0; }
+    </style>
+</head>
+<body>
+    <div id="sidebar-container"></div>
+    <div class="page-wrap">
+        <div class="toolbar">
+            <select id="mode">
+                <option value="live">live</option>
+                <option value="sim">sim</option>
+            </select>
+            <input type="date" id="date">
+            <input type="text" id="search" placeholder="Search product / strategy / block reason..." style="min-width: 340px;">
+            <label class="muted"><input type="checkbox" id="includeClosed" checked> include closed</label>
+            <label class="muted"><input type="checkbox" id="autoRefresh" checked> auto</label>
+            <button id="refreshBtn"><i class="fas fa-sync"></i> Refresh</button>
+            <span id="stamp" class="muted"></span>
+        </div>
+
+        <div class="cards">
+            <div class="card"><div class="k">Blocked Trades</div><div class="v" id="countBlocked">0</div></div>
+            <div class="card"><div class="k">Unique Strategies</div><div class="v" id="countStrategies">0</div></div>
+            <div class="card"><div class="k">Unique Products</div><div class="v" id="countProducts">0</div></div>
+            <div class="card"><div class="k">Current Grid Items</div><div class="v" id="countGrid">0</div></div>
+        </div>
+
+        <div class="panel">
+            <h3>Current Grid Context</h3>
+            <div id="gridList" class="grid-list"></div>
+        </div>
+
+        <div class="panel">
+            <h3>Promotion Blocked Trades</h3>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Trade</th>
+                            <th>Product</th>
+                            <th>Strategy</th>
+                            <th>Dir</th>
+                            <th>Status</th>
+                            <th>Reason</th>
+                            <th>Detail</th>
+                            <th>Context</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="ctxModal" class="modal" onclick="if(event.target===this) closeCtx()">
+        <div class="modal-card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                <strong>Grid Context At Block</strong>
+                <button class="btn-link" onclick="closeCtx()">Close</button>
+            </div>
+            <pre id="ctxBody">{}</pre>
+        </div>
+    </div>
+
+    <script src="sidebar-loader.js"></script>
+    <script>
+        const rowsEl = document.getElementById('rows');
+        const gridEl = document.getElementById('gridList');
+        const stampEl = document.getElementById('stamp');
+        const dateEl = document.getElementById('date');
+        let refreshTimer = null;
+        dateEl.valueAsDate = new Date();
+
+        function esc(v) {
+            return String(v ?? '').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+        }
+
+        function openCtx(obj) {
+            document.getElementById('ctxBody').textContent = JSON.stringify(obj || {}, null, 2);
+            document.getElementById('ctxModal').style.display = 'flex';
+        }
+        function closeCtx() {
+            document.getElementById('ctxModal').style.display = 'none';
+        }
+        window.openCtx = openCtx;
+        window.closeCtx = closeCtx;
+
+        async function refreshData() {
+            const mode = document.getElementById('mode').value;
+            const date = dateEl.value;
+            const includeClosed = document.getElementById('includeClosed').checked;
+            const q = (document.getElementById('search').value || '').trim();
+            const url = `/api/promotion_blocks?mode=${encodeURIComponent(mode)}&date=${encodeURIComponent(date)}&include_closed=${includeClosed}&limit=50&q=${encodeURIComponent(q)}`;
+            const resp = await fetch(url);
+            const data = await resp.json();
+            if (!data.success) {
+                rowsEl.innerHTML = `<tr><td colspan="9" class="reason">API error: ${esc(data.message || 'unknown')}</td></tr>`;
+                return;
+            }
+
+            const blocks = data.blocks || [];
+            const grid = data.grid_live || [];
+
+            document.getElementById('countBlocked').textContent = blocks.length;
+            document.getElementById('countStrategies').textContent = new Set(blocks.map(x => x.script_name)).size;
+            document.getElementById('countProducts').textContent = new Set(blocks.map(x => x.product)).size;
+            document.getElementById('countGrid').textContent = grid.length;
+            stampEl.textContent = `Updated: ${new Date().toLocaleString()} · showing latest 50${q ? ` · search='${q}'` : ''}`;
+
+            gridEl.innerHTML = grid.map(g => `
+                <div class="grid-item mono">
+                    ${esc(g.model)}<br>
+                    ${esc(g.product)} · ${esc(g.metric)}<br>
+                    <span class="muted">source: ${esc(g.source || '-')} | group: ${esc(g.group || '-')}</span>
+                </div>
+            `).join('') || '<div class="muted">No grid items.</div>';
+
+            rowsEl.innerHTML = blocks.map((b, i) => `
+                <tr>
+                    <td class="mono">${esc((b.entry_time || '').replace('T',' ').slice(0,19))}</td>
+                    <td class="mono">${esc(b.trade_id)}<br><span class="muted">${esc(b.filename)}</span></td>
+                    <td class="mono">${esc(b.product)}</td>
+                    <td class="mono">${esc(b.script_name)}</td>
+                    <td>${esc(b.direction)}</td>
+                    <td>${esc(b.status)}</td>
+                    <td class="reason">${esc(b.trade_block_reason)}</td>
+                    <td class="detail">${esc(b.trade_block_reason_detail || '')}</td>
+                    <td><button class="btn-link ctx-btn" data-idx="${i}">View</button></td>
+                </tr>
+            `).join('');
+            rowsEl.querySelectorAll('.ctx-btn').forEach(btn => {
+                const idx = parseInt(btn.getAttribute('data-idx') || '-1', 10);
+                btn.onclick = () => openCtx((blocks[idx] || {}).grid_live_context_at_block || {});
+            });
+
+            if (!blocks.length) {
+                rowsEl.innerHTML = '<tr><td colspan="9" class="muted">No blocked promotions found for selected scope.</td></tr>';
+            }
+        }
+
+        function toggleAutoRefresh() {
+            const enabled = document.getElementById('autoRefresh').checked;
+            if (enabled) {
+                if (!refreshTimer) refreshTimer = setInterval(() => refreshData().catch(() => {}), 15000);
+            } else if (refreshTimer) {
+                clearInterval(refreshTimer);
+                refreshTimer = null;
+            }
+        }
+
+        document.getElementById('refreshBtn').addEventListener('click', refreshData);
+        document.getElementById('mode').addEventListener('change', refreshData);
+        document.getElementById('date').addEventListener('change', refreshData);
+        document.getElementById('includeClosed').addEventListener('change', refreshData);
+        document.getElementById('autoRefresh').addEventListener('change', toggleAutoRefresh);
+        document.getElementById('search').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') refreshData();
+        });
+        toggleAutoRefresh();
+        refreshData().catch(err => {
+            rowsEl.innerHTML = `<tr><td colspan="9" class="reason">${esc(err.message || err)}</td></tr>`;
+        });
+    </script>
+</body>
+</html>

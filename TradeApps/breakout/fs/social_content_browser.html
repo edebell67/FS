@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Social Content Browser - Strategy Warehouse</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/theme.js?v=V20260423_0018" defer></script>
+    <style>
+        .card { transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .copy-btn:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans">
+    <div class="container mx-auto px-4 py-8">
+        <header class="mb-8 border-b border-gray-800 pb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <h1 class="text-3xl font-bold text-blue-400 flex items-center gap-3">
+                    <i class="fas fa-share-nodes"></i> Social Content Browser
+                </h1>
+                <p class="text-gray-400 mt-2">Manual posting & script dashboard for Strategy Warehouse</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <label class="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg cursor-pointer flex items-center gap-2 transition shadow-lg shadow-blue-900/20">
+                    <i class="fas fa-file-import"></i> Load JSON
+                    <input type="file" id="jsonInput" class="hidden" accept=".json">
+                </label>
+                <div id="fileInfo" class="text-sm text-gray-500 italic hidden"></div>
+            </div>
+        </header>
+
+        <nav class="flex gap-2 mb-8 bg-gray-800 p-1 rounded-xl w-fit">
+            <button onclick="filterBy('all')" class="tab-btn px-6 py-2 rounded-lg font-medium transition bg-gray-700 text-white shadow-sm" data-filter="all">All</button>
+            <button onclick="filterBy('twitter')" class="tab-btn px-6 py-2 rounded-lg font-medium transition text-gray-400 hover:text-white" data-filter="twitter">Twitter</button>
+            <button onclick="filterBy('tiktok')" class="tab-btn px-6 py-2 rounded-lg font-medium transition text-gray-400 hover:text-white" data-filter="tiktok">TikTok</button>
+        </nav>
+
+        <div id="contentGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+            <!-- Content will be injected here -->
+            <div id="emptyState" class="col-span-full py-20 text-center">
+                <div class="text-6xl text-gray-800 mb-4"><i class="fas fa-cloud-upload-alt"></i></div>
+                <h3 class="text-xl text-gray-500">Upload a JSON file from social_content_generator.py to begin</h3>
+                <p class="text-gray-600 mt-2">Example: `python social_content_generator.py --all --pretty --output out.json`</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let fullData = null;
+        let currentFilter = 'all';
+
+        document.getElementById('jsonInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileInfo').textContent = file.name;
+            document.getElementById('fileInfo').classList.remove('hidden');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    fullData = JSON.parse(e.target.result);
+                    renderContent();
+                } catch (err) {
+                    alert('Error parsing JSON: ' + err.message);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function filterBy(platform) {
+            currentFilter = platform;
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                if (btn.dataset.filter === platform) {
+                    btn.classList.add('bg-gray-700', 'text-white', 'shadow-sm');
+                    btn.classList.remove('text-gray-400');
+                } else {
+                    btn.classList.remove('bg-gray-700', 'text-white', 'shadow-sm');
+                    btn.classList.add('text-gray-400');
+                }
+            });
+            renderContent();
+        }
+
+        function renderContent() {
+            const grid = document.getElementById('contentGrid');
+            grid.innerHTML = '';
+
+            if (!fullData) return;
+
+            let items = [];
+
+            // Extract Twitter posts
+            if (fullData.twitter && (currentFilter === 'all' || currentFilter === 'twitter')) {
+                fullData.twitter.posts.forEach(post => {
+                    items.push({ ...post, platform: 'twitter' });
+                });
+            }
+
+            // Extract TikTok scripts
+            if (fullData.tiktok && (currentFilter === 'all' || currentFilter === 'tiktok')) {
+                fullData.tiktok.scripts.forEach(script => {
+                    items.push({ ...script, platform: 'tiktok' });
+                });
+            }
+
+            if (items.length === 0) {
+                grid.innerHTML = `
+                    <div class="col-span-full py-20 text-center">
+                        <div class="text-6xl text-gray-800 mb-4"><i class="fas fa-search"></i></div>
+                        <h3 class="text-xl text-gray-500">No matching content found in this file</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            items.forEach((item, idx) => {
+                const card = createCard(item, idx);
+                grid.appendChild(card);
+            });
+        }
+
+        function createCard(item, idx) {
+            const div = document.createElement('div');
+            div.className = 'card bg-gray-800 rounded-2xl overflow-hidden border border-gray-700 shadow-xl flex flex-col';
+            
+            const isTwitter = item.platform === 'twitter';
+            const icon = isTwitter ? 'fa-brands fa-twitter text-blue-400' : 'fa-brands fa-tiktok text-pink-500';
+            const badgeColor = isTwitter ? 'bg-blue-900/30 text-blue-300' : 'bg-pink-900/30 text-pink-300';
+            const typeLabel = item.type.replace('_', ' ').toUpperCase();
+
+            let contentHtml = '';
+            let copyText = '';
+
+            if (isTwitter) {
+                copyText = item.text;
+                contentHtml = `
+                    <div class="p-6 flex-grow">
+                        <p class="text-lg leading-relaxed text-gray-100 whitespace-pre-wrap">${highlightHashtags(item.text)}</p>
+                        <div class="mt-4 flex flex-wrap gap-2">
+                            ${(item.hashtags || []).map(h => `<span class="text-xs bg-gray-700 text-gray-400 px-2 py-1 rounded">${h}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+            } else {
+                copyText = item.spoken_text;
+                contentHtml = `
+                    <div class="p-6 flex-grow flex flex-col gap-4">
+                        <div class="bg-gray-900/50 p-4 rounded-xl border border-gray-700">
+                            <h4 class="text-xs font-bold text-gray-500 mb-2 uppercase tracking-widest">Spoken Text</h4>
+                            <p class="text-gray-100 leading-relaxed italic">"${item.spoken_text}"</p>
+                        </div>
+                        
+                        <div>
+                            <h4 class="text-xs font-bold text-gray-500 mb-3 uppercase tracking-widest">Visual Cues</h4>
+                            <div class="space-y-2">
+                                ${item.visual_cues.map(cue => `
+                                    <div class="flex items-center gap-3 text-sm">
+                                        <span class="text-pink-500 font-mono w-8">${cue.time}s</span>
+                                        <span class="bg-gray-700 px-2 py-0.5 rounded text-gray-300 border border-gray-600">${cue.cue}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-900/30 p-3 rounded-lg border border-dashed border-gray-700 mt-2">
+                            <h4 class="text-xs font-bold text-gray-500 mb-1 uppercase tracking-widest">Caption</h4>
+                            <p class="text-xs text-gray-400">${item.caption}</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            div.innerHTML = `
+                <div class="px-6 py-4 bg-gray-750 border-b border-gray-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <i class="${icon} text-xl"></i>
+                        <span class="text-xs font-bold px-2 py-1 rounded-full ${badgeColor}">${typeLabel}</span>
+                    </div>
+                    <span class="text-xs text-gray-500 font-mono">#${idx + 1}</span>
+                </div>
+                ${contentHtml}
+                <div class="p-4 bg-gray-900/50 border-t border-gray-700 flex gap-2">
+                    <button onclick="copyToClipboard(this, \`${escapeHtml(copyText)}\`)" class="copy-btn flex-grow bg-blue-600 hover:bg-blue-500 text-white py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition active:bg-blue-700">
+                        <i class="fas fa-copy"></i> Copy Content
+                    </button>
+                    ${!isTwitter ? `
+                        <button onclick="copyToClipboard(this, \`${escapeHtml(item.caption)}\` )" class="copy-btn bg-gray-700 hover:bg-gray-600 text-gray-300 px-4 py-2 rounded-lg font-bold transition flex items-center gap-2" title="Copy Caption">
+                            <i class="fas fa-closed-captioning"></i>
+                        </button>
+                    ` : ''}
+                </div>
+            `;
+            return div;
+        }
+
+        function highlightHashtags(text) {
+            return text.replace(/(#\w+)/g, '<span class="text-blue-400">$1</span>');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        async function copyToClipboard(btn, text) {
+            try {
+                // Handle HTML entities in text from escapeHtml
+                const temp = document.createElement('textarea');
+                temp.innerHTML = text;
+                const cleanText = temp.value;
+
+                await navigator.clipboard.writeText(cleanText);
+                const originalHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                btn.classList.add('bg-green-600');
+                btn.classList.remove('bg-blue-600', 'bg-gray-700');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('bg-green-600');
+                    if (originalHtml.includes('Copy Content')) {
+                        btn.classList.add('bg-blue-600');
+                    } else {
+                        btn.classList.add('bg-gray-700');
+                    }
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy: ', err);
+            }
+        }
+    </script>
+</body>
+</html>
