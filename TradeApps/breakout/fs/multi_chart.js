@@ -100,6 +100,39 @@ function buildProductTypeQuery() {
     return `product_type=${encodeURIComponent(getSelectedProductType())}`;
 }
 
+function buildImportChartKeys(payload) {
+    if (!payload || !Array.isArray(payload.items)) return [];
+    const seen = new Set();
+    const keys = [];
+    payload.items.forEach(item => {
+        const strategy = String(item?.strategy || '').trim();
+        const product = String(item?.product || '').trim();
+        if (!strategy || !product) return;
+        const key = `${strategy}|${product}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        keys.push(key);
+    });
+    return keys;
+}
+
+function buildTradeFileUrl(filename, options = {}) {
+    const mode = document.getElementById('runMode').value;
+    const date = document.getElementById('tradeDate').value;
+    const params = new URLSearchParams({
+        mode,
+        date,
+        filename,
+        product_type: getSelectedProductType(),
+        _t: String(Date.now()),
+    });
+    const chartKeys = Array.isArray(options.chartKeys) ? options.chartKeys : [];
+    chartKeys.forEach(key => {
+        if (key) params.append('chart_key', key);
+    });
+    return `/api/trade_file?${params.toString()}`;
+}
+
 function populateProductTypeSelect(config) {
     const select = document.getElementById('productTypeSelect');
     if (!select) return;
@@ -762,75 +795,81 @@ function updateRefreshIndicator() {
     }
 }
 
-async function fetchData() {
+async function fetchData(options = {}) {
     const mode = document.getElementById('runMode').value;
     // [V20260131_0315] Sync mode to liveMonitor
     if (liveMonitor && liveMonitor.setMode) liveMonitor.setMode(mode);
 
-    const date = document.getElementById('tradeDate').value;
-    const url = `/api/trade_file?mode=${mode}&date=${date}&filename=_summary_net.json&${buildProductTypeQuery()}&_t=${Date.now()}`;
+    const includeFrequency = options.includeFrequency !== false;
+    const includeGridLive = options.includeGridLive !== false;
+    const summaryUrl = buildTradeFileUrl('_summary_net.json', { chartKeys: options.chartKeys || [] });
+    const freqUrl = includeFrequency ? buildTradeFileUrl('_frequency.json') : null;
+    const gridLiveUrl = includeGridLive ? `/api/grid_live?mode=${mode}` : null;
 
     try {
-        const res = await fetch(url);
-        const json = await res.json();
+        // [V20260512_0400] Parallelize all API calls for faster loading
+        const [summaryRes, freqRes, liveRes] = await Promise.all([
+            fetch(summaryUrl),
+            freqUrl ? fetch(freqUrl).catch(() => null) : Promise.resolve(null),
+            gridLiveUrl ? fetch(gridLiveUrl).catch(() => null) : Promise.resolve(null)
+        ]);
 
-        // [V20260202_1330] Fetch Frequency Data for Rank #1 Dots
+        const json = await summaryRes.json();
+
+        // [V20260202_1330] Process Frequency Data for Rank #1 Dots
         try {
-            const freqUrl = `/api/trade_file?mode=${mode}&date=${date}&filename=_frequency.json&${buildProductTypeQuery()}&_t=${Date.now()}`;
-            const fRes = await fetch(freqUrl);
-            if (fRes.ok) {
-                const fJson = await fRes.json();
-                // API wraps content in "content" or returns direct? 
-                // trade_viewer_api returns {success:true, content: ...} usually
+            if (freqRes && freqRes.ok) {
+                const fJson = await freqRes.json();
                 const fData = fJson.content || fJson;
                 if (fData.snapshots) {
                     processFrequencyData(fData.snapshots);
                 }
             }
         } catch (e) {
-            console.warn("Frequency data fetch failed", e);
-            firstRankOneTimes = {}; // Reset on fail
+            console.warn("Frequency data parse failed", e);
+            firstRankOneTimes = {};
         }
 
         // [V20260129_1055] Periodic re-sync logic (datetime: 2026-01-29 11:00)
         try {
-            const liveRes = await fetch(`/api/grid_live?mode=${mode}`);
-            const liveData = await liveRes.json();
-            if (liveData.success) {
-                const gridData = liveData.data || [];
-                let gridDirty = false;
+            if (liveRes && liveRes.ok) {
+                const liveData = await liveRes.json();
+                if (liveData.success) {
+                    const gridData = liveData.data || [];
+                    let gridDirty = false;
 
-                // gridData is now a List of {group, model, product, metric}
-                if (Array.isArray(gridData)) {
-                    gridData.forEach(m => {
-                        const groupName = m.group;
-                        const key = `${m.model} | ${m.product}`;
-                        const normalizedMetric = (m.metric === 'net') ? null : m.metric;
-                        const exists = activeOverlays.find(o => o.key === key && o.group === groupName && o.metric === normalizedMetric);
+                    // gridData is now a List of {group, model, product, metric}
+                    if (Array.isArray(gridData)) {
+                        gridData.forEach(m => {
+                            const groupName = m.group;
+                            const key = `${m.model} | ${m.product}`;
+                            const normalizedMetric = (m.metric === 'net') ? null : m.metric;
+                            const exists = activeOverlays.find(o => o.key === key && o.group === groupName && o.metric === normalizedMetric);
 
-                        if (!exists) {
-                            activeOverlays.push({
-                                key: key,
-                                group: groupName,
-                                metric: normalizedMetric,
-                                activated_at: m.activated_at, // [V20260130_1515] Capture activation time
-                                color: colors[activeOverlays.length % colors.length]
-                            });
-                            gridDirty = true;
-                        } else {
-                            // [V20260130_1530] Ensure activation time is synced even for existing
-                            exists.activated_at = m.activated_at;
-                        }
-                        if (!liveMonitor.isGroupActive(groupName)) {
-                            liveMonitor.activeGroups.add(groupName);
-                        }
-                    });
+                            if (!exists) {
+                                activeOverlays.push({
+                                    key: key,
+                                    group: groupName,
+                                    metric: normalizedMetric,
+                                    activated_at: m.activated_at, // [V20260130_1515] Capture activation time
+                                    color: colors[activeOverlays.length % colors.length]
+                                });
+                                gridDirty = true;
+                            } else {
+                                // [V20260130_1530] Ensure activation time is synced even for existing
+                                exists.activated_at = m.activated_at;
+                            }
+                            if (!liveMonitor.isGroupActive(groupName)) {
+                                liveMonitor.activeGroups.add(groupName);
+                            }
+                        });
 
-                    // [V20260130_1635] Sync LiveMonitor internal memory to prevent redundant updates
-                    liveMonitor.syncState(gridData);
-                }
-                if (gridDirty) {
-                    console.log("[Auto-Sync] Added new cards from grid_live.json");
+                        // [V20260130_1635] Sync LiveMonitor internal memory to prevent redundant updates
+                        liveMonitor.syncState(gridData);
+                    }
+                    if (gridDirty) {
+                        console.log("[Auto-Sync] Added new cards from grid_live.json");
+                    }
                 }
             }
         } catch (e) { console.warn("Grid sync failed:", e); }
@@ -3042,14 +3081,13 @@ if (closeDrilldownModalBtn) closeDrilldownModalBtn.onclick = closeDrilldownModal
 
 async function initMultiChart() {
     initEventHandlers();
-    try {
-        const cfgResp = await fetch('/api/config');
-        const cfgJson = await cfgResp.json();
-        populateProductTypeSelect(cfgJson.config || cfgJson);
-    } catch (e) {
-        populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
-    }
+
+    // [V20260512_0500] Check for pending import FIRST (sync, no await needed)
     const pendingImport = peekSummaryImportPayload();
+    const searchParams = new URLSearchParams(window.location.search || '');
+    const isImportBootstrap = searchParams.get('import') === '1';
+    const importChartKeys = buildImportChartKeys(pendingImport);
+    const shouldFastImport = isImportBootstrap && importChartKeys.length > 0;
     if (pendingImport) {
         if (pendingImport.mode && document.getElementById('runMode')) {
             document.getElementById('runMode').value = String(pendingImport.mode).toLowerCase();
@@ -3058,11 +3096,32 @@ async function initMultiChart() {
             document.getElementById('tradeDate').value = pendingImport.date;
         }
     }
-    await fetchData();
-    initAutoRefresh(); // [V20260128_1900] Move interval start out of fetchData to prevent it dying on error
+
+    // [V20260512_0500] Parallelize ALL initial fetches for maximum speed
+    const configPromise = fetch('/api/config').then(r => r.json()).catch(() => ({ config: { product_type: 'forex', product_types: ['forex'] } }));
+    const workflowImportPromise = shouldFastImport ? Promise.resolve() : consumeWorkflowImportPayload();
+    const dataPromise = shouldFastImport
+        ? fetchData({ chartKeys: importChartKeys, includeFrequency: false, includeGridLive: false })
+        : fetchData();
+
+    // Apply config when ready (non-blocking for data)
+    configPromise.then(cfgJson => {
+        populateProductTypeSelect(cfgJson.config || cfgJson);
+    });
+
+    // Wait for main data to complete
+    await dataPromise;
+    initAutoRefresh();
     populateSavedViews();
     consumeSummaryImportPayload();
-    await consumeWorkflowImportPayload();
+    if (shouldFastImport) {
+        setTimeout(async () => {
+            await fetchData();
+            await consumeWorkflowImportPayload();
+        }, 0);
+    } else {
+        await workflowImportPromise;
+    }
     setInterval(consumeWorkflowImportPayload, 15000);
     if (nonLivePruneInterval) clearInterval(nonLivePruneInterval);
     runNegativeNonLiveCardPruneWorkflow();
@@ -3070,10 +3129,7 @@ async function initMultiChart() {
 }
 initMultiChart();
 
-// [V20260130_1635] Restore Sticky History on Load
-const initialMode = document.getElementById('runMode') ? document.getElementById('runMode').value : 'live';
-if (liveMonitor.setMode) liveMonitor.setMode(initialMode);
-liveMonitor.loadState(buildGroupMap());
+// [V20260512_0400] Removed redundant liveMonitor.loadState() call - grid_live is now synced in fetchData()
 
 function exportDrilldownToCSV() {
     if (!currentDrilldownTrades || currentDrilldownTrades.length === 0) {

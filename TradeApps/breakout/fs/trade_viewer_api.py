@@ -558,6 +558,39 @@ def get_trade_file():
         with open(file_path, 'r') as f:
             content = json.load(f)
 
+        chart_keys = [str(v or '').strip() for v in request.args.getlist('chart_key') if str(v or '').strip()]
+        if safe_name == '_summary_net.json' and chart_keys and isinstance(content, dict):
+            requested_pairs: set[tuple[str, str]] = set()
+            for raw_key in chart_keys:
+                strategy, sep, product_name = raw_key.partition('|')
+                strategy = strategy.strip()
+                product_name = product_name.strip()
+                if strategy and sep and product_name:
+                    requested_pairs.add((strategy, product_name))
+
+            if requested_pairs:
+                filtered_strategies = {}
+                raw_strategies = content.get('strategies')
+                if isinstance(raw_strategies, dict):
+                    for strategy_name, product_map in raw_strategies.items():
+                        if not isinstance(product_map, dict):
+                            continue
+                        requested_products = [
+                            product_name
+                            for req_strategy, product_name in requested_pairs
+                            if req_strategy == strategy_name and product_name in product_map
+                        ]
+                        if not requested_products:
+                            continue
+                        filtered_strategies[strategy_name] = {
+                            product_name: product_map[product_name]
+                            for product_name in requested_products
+                        }
+                content = {
+                    **content,
+                    'strategies': filtered_strategies,
+                }
+
         return jsonify({
             'success': True,
             'filename': filename,
