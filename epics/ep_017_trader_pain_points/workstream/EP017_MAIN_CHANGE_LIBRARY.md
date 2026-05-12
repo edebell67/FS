@@ -302,9 +302,38 @@ Local HEAD:    953df432fbcee15188ca80c48264574e44dfc6c3
 
 ## Current Open Launch Actions
 
-1. Prepare first controlled outreach batch from `marketing/copy_matrix.md`.
-2. Record the outreach run in a dated `ep017` task file before posting.
+1. Resolve X/Twitter posting capability (`xurl` is not installed in this environment) or manually post the prepared copy.
+2. Capture the resulting post URL/ID in `workstream/200_inprogress/20260512_134923_ep017_997_controlled_outreach_run_001.md`.
 3. Track conversions by page_id/pain_point_key after first traffic.
+
+### 2026-05-12 — Controlled outreach run task created
+
+Created lifecycle task:
+
+```text
+workstream/200_inprogress/20260512_134923_ep017_997_controlled_outreach_run_001.md
+```
+
+Selected first launch slice:
+
+- Channel: X/Twitter, pending posting tooling/auth
+- Page: Strongest Models
+- URL: `https://edebell67.github.io/epics/models/`
+- Expected tracking keys: `page_id = strongest_models`, `pain_point_key = finding_right_models`
+
+Draft post prepared at 268 characters:
+
+```text
+Stop guessing which trading model is working today. I’m testing a live leaderboard that tracks 100+ strategy models and surfaces the strongest performers in real time. Data, not hype.
+
+See the leaders: https://edebell67.github.io/epics/models/ #FinTwit #TradingSignals
+```
+
+Posting capability check:
+
+```text
+xurl not installed
+```
 
 ---
 
