@@ -1,0 +1,4 @@
+exists True
+bytes 3773441
+video_meta {'plugin': 'ffmpeg', 'codec': 'h264', 'pix_fmt': 'yuv420p(progressive)', 'audio_codec': 'aac', 'fps': 30.0, 'source_size': (1280, 720), 'size': (1280, 720), 'duration': 62.93}
+mp4_length 62.97
