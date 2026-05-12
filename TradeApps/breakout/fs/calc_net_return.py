@@ -1,9 +1,10 @@
 import json
 import os
 from pathlib import Path
+from paths import BREAKOUT_LEGACY_JSON_ROOT
 
 def calculate_total_net_return():
-    path = Path(r"C:\Users\edebe\eds\TradeApps\breakout\json\live\2026-01-05\virtual")
+    path = BREAKOUT_LEGACY_JSON_ROOT / "live" / "2026-01-05" / "virtual"
     total = 0.0
     count = 0
     closed_count = 0

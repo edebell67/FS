@@ -4,14 +4,15 @@ import time
 from datetime import datetime
 from pathlib import Path
 from collections import defaultdict
+from paths import BREAKOUT_DATA_ROOT, BREAKOUT_ROOT
 
 # [V20260104_0045] 2026-01-04 00:45 - Update output path for frequency tally
 # Tracks the consistency of #1 performers for Buy, Sell, and Combo.
 
-CONFIG_FILE = r"C:\Users\edebe\eds\TradeApps\breakout\config.json"
+CONFIG_FILE = str(BREAKOUT_ROOT / "config.json")
 # FREQUENCY_FILE is now dynamic: json/{run_mode}/{today_str}/_top_one_frequency.json
 VERSION = "V20260104_1415"
-LOCK_FILE = r"C:\Users\edebe\eds\TradeApps\breakout\top_one_frequency.lock"
+LOCK_FILE = str(BREAKOUT_DATA_ROOT / "top_one_frequency.lock")
 
 def load_config():
     if os.path.exists(CONFIG_FILE):
@@ -76,7 +77,7 @@ def run_frequency_update(run_mode):
     today_str = datetime.now().strftime("%Y-%m-%d")
     
     # [V20260104_0335] Use absolute path for output and source data
-    project_root = Path(CONFIG_FILE).parent
+    project_root = BREAKOUT_DATA_ROOT
     output_dir = project_root / "json" / run_mode / today_str
     if not output_dir.exists():
         output_dir.mkdir(parents=True, exist_ok=True)

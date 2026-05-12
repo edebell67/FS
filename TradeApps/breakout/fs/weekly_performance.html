@@ -1474,10 +1474,9 @@
             const cacheKey = getWeeklyCacheKey();
             if (showOverlay) showLoading(true);
             try {
-                if (refreshActivations || !activationsLoaded) {
-                    await loadActivations();
-                }
-                await loadConfig(refreshState);
+                // [V20260512_0430] Parallelize activations and config fetch for faster loading
+                const activationsPromise = (refreshActivations || !activationsLoaded) ? loadActivations() : Promise.resolve();
+                await Promise.all([activationsPromise, loadConfig(refreshState)]);
 
                 let data = null;
                 if (useCache && weeklyDataCache.has(cacheKey)) {

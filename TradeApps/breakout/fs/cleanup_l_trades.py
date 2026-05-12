@@ -3,10 +3,11 @@ import os
 import json
 from pathlib import Path
 import re
+from paths import BREAKOUT_JSON_ROOT
 
 def cleanup_l_trades():
-    base_dir = Path(r'c:\Users\edebe\eds\TradeApps\breakout')
-    json_dir = base_dir / 'json' / 'live' / '2025-12-31'
+    base_dir = Path(__file__).resolve().parent
+    json_dir = BREAKOUT_JSON_ROOT / 'live' / '2025-12-31'
     activations_file = base_dir / 'activations.json'
     
     if not activations_file.exists():

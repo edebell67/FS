@@ -7,15 +7,22 @@ import sys
 import time
 from pathlib import Path
 from urllib import error, request
+from paths import (
+    BREAKOUT_API_HEALTH_URL,
+    BREAKOUT_DATA_FS_ROOT,
+    BREAKOUT_FS_ROOT,
+    BREAKOUT_JSON_ROOT,
+    BREAKOUT_X_API_THREAD_POST_URL,
+)
 
-
-ROOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs")
-GENERATE_SCRIPT = ROOT / "tools" / "social_posting_package" / "generate_posting_package.py"
-WORKFLOW_STATUS = ROOT / "twitter_top5_multi_product_workflow_status.json"
-WORKFLOW_ARTIFACT = ROOT / "twitter_top5_multi_product_workflow_result.json"
-API_HEALTH_URL = "http://localhost:5000/api/health"
-API_POST_URL = "http://localhost:5000/api/social/x_api_thread_post"
-PACKAGE_ROOT = ROOT / "json" / "live" / "social_posting_package"
+SOURCE_ROOT = BREAKOUT_FS_ROOT
+DATA_ROOT = BREAKOUT_DATA_FS_ROOT
+GENERATE_SCRIPT = SOURCE_ROOT / "tools" / "social_posting_package" / "generate_posting_package.py"
+WORKFLOW_STATUS = DATA_ROOT / "twitter_top5_multi_product_workflow_status.json"
+WORKFLOW_ARTIFACT = DATA_ROOT / "twitter_top5_multi_product_workflow_result.json"
+API_HEALTH_URL = BREAKOUT_API_HEALTH_URL
+API_POST_URL = BREAKOUT_X_API_THREAD_POST_URL
+PACKAGE_ROOT = BREAKOUT_JSON_ROOT / "live" / "social_posting_package"
 PACKAGE_FILENAME = "top5_weekly_posting_package.json"
 # [2026-04-07 13:20] V20260407_1320 - Changed to post ONLY the consolidated view
 PACKAGE_PAYLOAD_KEY = "consolidated_twitter_post"
@@ -55,7 +62,7 @@ def _mark_step(status: dict, step: str, ok: bool, details: str) -> None:
 def _run_command(command: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         command,
-        cwd=ROOT,
+        cwd=SOURCE_ROOT,
         text=True,
         encoding="utf-8",
         errors="replace",

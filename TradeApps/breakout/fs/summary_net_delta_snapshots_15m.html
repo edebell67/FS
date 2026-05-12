@@ -391,6 +391,7 @@
         let payload = null;
         let summarySeriesMap = new Map();
         let summaryLatestSourceTime = null;
+        let summaryHydrationPromise = null;
         let selectedIndex = 0;
         let sortKey = 'delta_net';
         let sortAsc = false;
@@ -476,6 +477,12 @@
 
         function appearanceKey(row) {
             return `${row.strategy || ''}||${row.product || ''}`;
+        }
+
+        function clearSummaryContext() {
+            summarySeriesMap = new Map();
+            summaryLatestSourceTime = null;
+            summaryHydrationPromise = null;
         }
 
         function getSelectedRows(snapshot) {
@@ -642,15 +649,6 @@
             summaryLatestSourceTime = latestTime;
         }
 
-        function shouldRebuildFromSummary(artifactPayload) {
-            if (!(summaryLatestSourceTime instanceof Date)) return false;
-            const alignedSource = alignToSnapshot(summaryLatestSourceTime);
-            if (!(alignedSource instanceof Date)) return false;
-            if (!artifactPayload?.snapshots?.length) return true;
-            const artifactLatest = parseIsoDate(artifactPayload.snapshots[artifactPayload.snapshots.length - 1].time);
-            return !(artifactLatest instanceof Date) || artifactLatest < alignedSource;
-        }
-
         function buildSummaryDeltaRows(snapshotTime, windowMinutes) {
             const baselineTime = new Date(snapshotTime.getTime() - windowMinutes * 60000);
             const rows = [];
@@ -716,7 +714,7 @@
                 snapshot_minutes: 15,
                 windows_minutes: [30, 60],
                 top_n: 10,
-                source: shouldRebuildFromSummary(payload) ? '_summary_net.json (live rebuild)' : '_summary_net_delta_snapshots_15m.json',
+                source: '_summary_net.json (live rebuild)',
                 source_latest_time: summaryLatestSourceTime ? summaryLatestSourceTime.toISOString() : null,
                 series_count: summarySeriesMap.size,
                 snapshot_count: snapshots.length,
@@ -742,13 +740,15 @@
                         appearances: 0,
                         total_delta_net: 0,
                         best_delta_net: Number.NEGATIVE_INFINITY,
-                        current_net: 0,
-                        current_time: '',
+                        current_net: Number(row.current_net || 0),
+                        current_time: row.current_time || '',
                     };
                     existing.appearances += 1;
                     existing.total_delta_net += Number(row.delta_net || 0);
                     existing.best_delta_net = Math.max(existing.best_delta_net, Number(row.delta_net || 0));
-                    const summaryPoint = latestPointAtOrBefore(summarySeriesMap.get(sourceKey(row.strategy, row.product)), cutoffTime);
+                    const summaryPoint = summarySeriesMap.size
+                        ? latestPointAtOrBefore(summarySeriesMap.get(sourceKey(row.strategy, row.product)), cutoffTime)
+                        : null;
                     if (summaryPoint) {
                         existing.current_net = Number(summaryPoint.net.toFixed(2));
                         existing.current_time = summaryPoint.t.toISOString();
@@ -837,24 +837,44 @@
             else stopRefreshTimer();
         }
 
+        async function loadSummaryContext(mode, type, date) {
+            const summaryPath = `json/${mode}/${type}/${date}/_summary_net.json?t=${Date.now()}`;
+            const summaryResponse = await fetch(summaryPath);
+            if (!summaryResponse.ok) throw new Error(`Summary source HTTP ${summaryResponse.status}`);
+            const summaryText = await summaryResponse.text();
+            if (summaryText.trim().startsWith('<')) {
+                throw new Error(`No summary_net source found for ${type} ${date}.`);
+            }
+            buildSummarySeries(JSON.parse(summaryText));
+        }
+
+        function hydrateSummaryContextInBackground(mode, type, date) {
+            if (summarySeriesMap.size || summaryHydrationPromise) return;
+            summaryHydrationPromise = loadSummaryContext(mode, type, date)
+                .then(() => {
+                    if (payload) {
+                        renderAppearanceLeaders();
+                        renderTable();
+                    }
+                })
+                .catch(() => {
+                    // Keep the screen responsive even if the background summary hydration fails.
+                })
+                .finally(() => {
+                    summaryHydrationPromise = null;
+                });
+        }
+
         async function loadSnapshots(isBackgroundRefresh = false, triggerButton = null) {
             const mode = document.getElementById('runMode').value;
             const type = document.getElementById('productType').value;
             const date = document.getElementById('dateInput').value || todayStr();
             const deltaPath = `json/${mode}/${type}/${date}/_summary_net_delta_snapshots_15m.json?t=${Date.now()}`;
-            const summaryPath = `json/${mode}/${type}/${date}/_summary_net.json?t=${Date.now()}`;
             if (!isBackgroundRefresh) setStatus(`Loading ${deltaPath}`);
             if (!isBackgroundRefresh && triggerButton) setLoadButtonState(triggerButton, 'busy', 'Loading...');
             const previousSnapshotTime = payload?.snapshots?.[selectedIndex]?.time || '';
             try {
-                const [deltaResponse, summaryResponse] = await Promise.all([fetch(deltaPath), fetch(summaryPath)]);
-                if (!summaryResponse.ok) throw new Error(`Summary source HTTP ${summaryResponse.status}`);
-                const summaryText = await summaryResponse.text();
-                if (summaryText.trim().startsWith('<')) {
-                    throw new Error(`No summary_net source found for ${type} ${date}.`);
-                }
-                buildSummarySeries(JSON.parse(summaryText));
-
+                const deltaResponse = await fetch(deltaPath);
                 let deltaPayload = null;
                 if (deltaResponse.ok) {
                     const deltaText = await deltaResponse.text();
@@ -863,9 +883,14 @@
                     }
                 }
 
-                payload = shouldRebuildFromSummary(deltaPayload)
-                    ? buildPayloadFromSummaryData(mode, type, date)
-                    : deltaPayload;
+                if (deltaPayload?.snapshots?.length) {
+                    payload = deltaPayload;
+                    clearSummaryContext();
+                    hydrateSummaryContextInBackground(mode, type, date);
+                } else {
+                    await loadSummaryContext(mode, type, date);
+                    payload = buildPayloadFromSummaryData(mode, type, date);
+                }
                 if (!payload) {
                     throw new Error(`Unable to build or load delta snapshot payload for ${type} ${date}.`);
                 }

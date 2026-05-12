@@ -9,14 +9,15 @@ from dotenv import load_dotenv
 from pathlib import Path
 from datetime import datetime
 import time
+from paths import BREAKOUT_FS_ROOT, BREAKOUT_JSON_ROOT, BREAKOUT_DATA_FS_ROOT
 
 # Load database configuration from .env file
 load_dotenv()
 
 # --- CONFIGURATION ---
 # Base directory where the 'live' and 'sim' folders are located
-JSON_BASE_DIR = r"C:\Users\edebe\eds\TradeApps\breakout\fs\json"
-ROOT_FS_DIR = r"C:\Users\edebe\eds\TradeApps\breakout\fs"
+JSON_BASE_DIR = BREAKOUT_JSON_ROOT
+ROOT_FS_DIR = BREAKOUT_DATA_FS_ROOT # [V20260510_1955]
 # Set to 'live', 'sim', or ['live', 'sim'] to control what gets processed
 MODES_TO_PROCESS = ['live', 'sim']
 # Optional comma-separated list of YYYY-MM-DD folders to limit processing

@@ -3,6 +3,7 @@ import os
 from datetime import datetime, timedelta
 from pathlib import Path
 from json_layout import configured_product_types, load_layout_config, resolve_day_dir
+from paths import BREAKOUT_JSON_ROOT
 
 def parse_time(ts):
     try:
@@ -12,7 +13,7 @@ def parse_time(ts):
 
 def analyze_day_profile(date_str):
     base_dir = Path(__file__).parent
-    json_root = base_dir / 'json'
+    json_root = BREAKOUT_JSON_ROOT
     config = load_layout_config(base_dir / 'config.json')
     summary_path = None
     for product_type in configured_product_types(config):

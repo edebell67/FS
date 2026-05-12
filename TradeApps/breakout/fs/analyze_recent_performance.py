@@ -1,11 +1,11 @@
 import json
-from pathlib import Path
 from collections import defaultdict
 import math
+from paths import BREAKOUT_JSON_ROOT
 
 def analyze():
     dates = ["2026-02-09", "2026-02-10"]
-    base_path = Path(r"c:\Users\edebe\eds\TradeApps\breakout\fs\json\live")
+    base_path = BREAKOUT_JSON_ROOT / "live"
     
     aggregation = defaultdict(lambda: {"net_return": 0, "count": 0, "wins": 0})
     

@@ -12,6 +12,7 @@ from collections import defaultdict
 import copy
 from pathlib import Path
 from json_layout import configured_product_types, day_dir, iter_day_dirs, load_layout_config, normalize_product_type, product_type_for_product
+from paths import BREAKOUT_JSON_ROOT # [V20260510_1945]
 from tb_leadership_generator import generate_tb_leadership
 
 try:
@@ -20,7 +21,7 @@ except ImportError:
 	def evaluate_pick_now_logic(features, total_snapshots):
 		return (features.get("appearances", 0) >= 20 and features.get("net_trend", 0) > 100 and total_snapshots >= 40)
 
-VERSION = "V20260425_1020"
+VERSION = "V20260510_1945" # Path standardization fix
 UPDATE_INTERVAL = 5  # Target interval in seconds
 
 def log_debug(msg):
@@ -155,7 +156,8 @@ class TargetState:
 class SummaryGenerator:
 	def __init__(self):
 		self.base_dir = Path(os.path.dirname(__file__))
-		self.json_dir = self.base_dir / "json"
+		# [V20260510_1945] Use centralized JSON root
+		self.json_dir = BREAKOUT_JSON_ROOT
 		self.config_path = self.base_dir / "config.json"
 
 		self.processed_files = set()
@@ -337,7 +339,7 @@ class SummaryGenerator:
 				if not isinstance(points, list) or not points:
 					continue
 
-				closed_points = [copy.deepcopy(pt) for pt in points if not pt.get("open")]      
+				closed_points = [copy.deepcopy(pt) for pt in points if not pt.get("open")]
 				if not closed_points:
 					continue
 
@@ -394,9 +396,9 @@ class SummaryGenerator:
 				stat['s_c'] += 1
 				if net_pnl > 0: stat['s_p_c'] += 1
 				if is_live: stat['live_sell'] += net_pnl
-			time_val = t.get('exit_time') or t.get('entry_time') or datetime.now().isoformat()      
-			b_pct = round((stat['b_p_c'] / stat['b_c'] * 100), 1) if stat['b_c'] > 0 else 0.0       
-			s_pct = round((stat['s_p_c'] / stat['s_c'] * 100), 1) if stat['s_c'] > 0 else 0.0       
+			time_val = t.get('exit_time') or t.get('entry_time') or datetime.now().isoformat()
+			b_pct = round((stat['b_p_c'] / stat['b_c'] * 100), 1) if stat['b_c'] > 0 else 0.0
+			s_pct = round((stat['s_p_c'] / stat['s_c'] * 100), 1) if stat['s_c'] > 0 else 0.0
 			state.closed_cache[strat][prod].append({
 				't': time_val,
 				'net': round(stat['net'], 2),
@@ -439,7 +441,7 @@ class SummaryGenerator:
 			with os.scandir(target_dir) as it:
 				for entry in it:
 					if entry.is_dir():
-						relevant.extend(self._get_relevant_json_files(entry.path))      
+						relevant.extend(self._get_relevant_json_files(entry.path))
 					elif entry.is_file() and entry.name.endswith(".json") and "snapshot" not in entry.name:
 						if any(suffix in entry.name for suffix in ("_cl.json", "_cld.json", "_op.json", "_closed_", "_open_")):
 							relevant.append(entry.path)
@@ -462,7 +464,7 @@ class SummaryGenerator:
 			for p in cld_paths:
 				t = load_json_with_retry(p)
 				t = self._hydrate_trade_from_filename(p, t)
-				if t and self._trade_matches_target_product_type(t, context.product_type):      
+				if t and self._trade_matches_target_product_type(t, context.product_type):
 					time_v = t.get('exit_time') or t.get('entry_time') or "0"
 					cld_tuples.append((time_v, p, t))
 			cld_tuples.sort(key=lambda x: (x[0], -self._trade_specificity(x[1], x[2]), os.path.basename(x[1])))
@@ -528,7 +530,7 @@ class SummaryGenerator:
 					read_count += 1
 				t = self._hydrate_trade_from_filename(p, t)
 				if not t: continue
-				if not self._trade_matches_target_product_type(t, context.product_type):        
+				if not self._trade_matches_target_product_type(t, context.product_type):
 					continue
 				payload_status = str(t.get('status') or 'OPEN').upper()
 				if payload_status == 'CLOSED':

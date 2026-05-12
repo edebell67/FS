@@ -2528,18 +2528,9 @@
                 // Initialize from saved preference or default to today
                 initializeDateRangeFilter();
             }
-            // [V20260207_2210] Also fetch config for scalper_ratio
-            try {
-                const cfgResp = await fetch('/api/config');
-                const cfgData = await cfgResp.json();
-                if (cfgData.success && cfgData.config) {
-                    if (cfgData.config.scalper_ratio) scalperRatio = parseFloat(cfgData.config.scalper_ratio);
-                    if (cfgData.config.rev_scalper_ratio) revScalperRatio = parseFloat(cfgData.config.rev_scalper_ratio);
-                    populateProductTypeSelect(cfgData.config);
-                }
-            } catch (ce) { }
-
-            await loadActivations(); // [V20251230_2315] Load activations for Auto Buy/Sell
+            // [V20260512_0430] Parallelize config, activations and stats fetch for faster loading
+            const configPromise = fetch('/api/config').then(r => r.json()).catch(() => null);
+            const activationsPromise = loadActivations();
 
             // [V20260315] Ensure date range is valid
             if (!currentDateRange.start || !currentDateRange.end) {
@@ -2548,7 +2539,21 @@
                 updateDateRangeDisplay();
             }
 
-            await loadStats();
+            // Start stats load in parallel while config processes
+            const statsPromise = loadStats();
+
+            // Apply config when it arrives
+            try {
+                const cfgData = await configPromise;
+                if (cfgData && cfgData.success && cfgData.config) {
+                    if (cfgData.config.scalper_ratio) scalperRatio = parseFloat(cfgData.config.scalper_ratio);
+                    if (cfgData.config.rev_scalper_ratio) revScalperRatio = parseFloat(cfgData.config.rev_scalper_ratio);
+                    populateProductTypeSelect(cfgData.config);
+                }
+            } catch (ce) { }
+
+            // Wait for all to complete
+            await Promise.all([activationsPromise, statsPromise]);
 
             // [V20260315] Reset bias on date range change (handled in applyDatePreset/applyCustomDateRange)
             document.getElementById('autoRefreshCheck').addEventListener('change', startAutoRefresh);

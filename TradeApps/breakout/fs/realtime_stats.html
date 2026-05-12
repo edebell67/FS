@@ -2291,7 +2291,9 @@
                 snapshotCursor = 'latest';
                 fetchDashboard({ forceRefresh: true });
             });
-            loadHighlightConfig().finally(startAutoRefresh);
+            // [V20260512_0430] Load config and start refresh in parallel for faster initial load
+            loadHighlightConfig();
+            startAutoRefresh();
         });
     </script>
 </body>

@@ -1600,15 +1600,13 @@
                 leaders = rawData.leaders || [];
                 snapshots = rawData.snapshots || [];
 
-                // [V20260420] Load _summary_net.json for held-net fallback when held drops out of top-5
-                try {
-                    const summaryPath = freqPath.replace(source.file, `_summary_net.json`);
-                    const summaryResp = await fetch(summaryPath);
-                    if (summaryResp.ok) summaryNetData = await summaryResp.json();
-                } catch(e) { summaryNetData = null; }
-
-                // [V20260130_1720] Rank 1 Alert Check
-                // checkRank1Change(leaders);
+                // [V20260512_0430] Parallelize summary_net and grid_live fetch for faster loading
+                const summaryPath = freqPath.replace(source.file, `_summary_net.json`);
+                const [summaryResult, _] = await Promise.all([
+                    fetch(summaryPath).then(r => r.ok ? r.json() : null).catch(() => null),
+                    fetchGridLive()
+                ]);
+                summaryNetData = summaryResult;
 
                 // [V20260131_0445] Enhanced Rank Alert Check
                 checkRankChanges(leaders);
@@ -1620,7 +1618,6 @@
                 }
                 buildTimelineOptions();
                 updateSummary();
-                await fetchGridLive(); // [V20260130_1010]
                 renderTable();
                 renderTimeline();
                 renderConsistencyList(); // [V20260128_2115] Update new section

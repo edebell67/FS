@@ -8,6 +8,7 @@ from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
 from json_layout import configured_product_types, load_layout_config, resolve_day_dir
+from paths import BREAKOUT_JSON_ROOT
 
 # Dates to analyze
 dates = [
@@ -19,7 +20,7 @@ dates = [
     '2026-02-02',
 ]
 
-base_path = Path(__file__).parent / 'json'
+base_path = BREAKOUT_JSON_ROOT
 config_path = Path(__file__).parent / 'config.json'
 cfg = load_layout_config(config_path)
 

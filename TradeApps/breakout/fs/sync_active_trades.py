@@ -2,12 +2,13 @@
 import os
 import json
 from pathlib import Path
+from paths import BREAKOUT_DATA_ROOT, BREAKOUT_ROOT, TRADES_RT3_LIVE_DIR, TRADES_RT3_SIM_DIR
 
 def sync_active_trades():
     # Use absolute paths
-    base_dir = Path(r'C:\Users\edebe\eds\TradeApps\breakout')
+    base_dir = BREAKOUT_ROOT
     config_file = base_dir / 'config.json'
-    active_trades_file = base_dir / 'active_trades.json'
+    active_trades_file = BREAKOUT_DATA_ROOT / 'active_trades.json'
     
     if not config_file.exists():
         print("Config not found.")
@@ -19,7 +20,7 @@ def sync_active_trades():
     run_mode = config.get('run_mode', 'live').lower()
     key = 'send_json_files' if run_mode == 'live' else 'send_json_files_sim'
     # Default fallback
-    default_dir = r'C:\Users\edebe\eds\trades_rt3\orders' if run_mode == 'live' else r'C:\Users\edebe\eds\trades_rt3_sim\orders'
+    default_dir = str(TRADES_RT3_LIVE_DIR if run_mode == 'live' else TRADES_RT3_SIM_DIR)
     orders_dir = Path(config.get(key, default_dir))
     
     print(f"Syncing active trades from: {orders_dir}")

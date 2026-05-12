@@ -13,9 +13,10 @@ import os
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional, Tuple
 from pathlib import Path
+from paths import BREAKOUT_DATA_FS_ROOT # [V20260510_1955]
 
-# Base path
-BASE_DIR = Path(__file__).parent
+# Base path - [V20260510_1955] Standardized to Data Root for state files
+BASE_DIR = BREAKOUT_DATA_FS_ROOT
 
 
 class NarrativeGenerator:
@@ -185,7 +186,7 @@ class NarrativeGenerator:
         confidence = metrics["confidence"]
 
         winner = "BUY" if buy_net > sell_net else "SELL"
-        winner_emoji = "🟢" if winner == "BUY" else "🔴"
+        winner_emoji = "ðŸŸ¢" if winner == "BUY" else "ðŸ”´"
 
         # Format values with sign
         buy_str = f"+{buy_net:.0f}" if buy_net >= 0 else f"{buy_net:.0f}"
@@ -200,7 +201,7 @@ class NarrativeGenerator:
         if metrics["top_strategy"]:
             lines.append(f"Leader: {metrics['top_strategy'][:20]}")
 
-        lines.append("🎯 piphunter.io")
+        lines.append("ðŸŽ¯ piphunter.io")
 
         return " | ".join(lines)[:280]
 
@@ -368,11 +369,9 @@ Likely winner next round: <span class="highlight">{winner} ({confidence} confide
             }
         }
 
-    def save_narratives(self, output_path: Optional[str] = None) -> str:
-        """Generate and save narratives to JSON file."""
-        result = self.generate_all()
-
-        if output_path is None:
+    def save_narrative(self, result: Dict, output_path: Optional[Path] = None) -> str:
+        """Save the generated narrative to a file."""
+        if not output_path:
             output_path = BASE_DIR / "narratives.json"
 
         with open(output_path, 'w') as f:
@@ -429,40 +428,3 @@ def add_narrative_routes(app):
             }
         except Exception as e:
             return {"error": str(e)}, 500
-
-
-# CLI usage
-if __name__ == "__main__":
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Generate market battle narratives")
-    parser.add_argument("--source", choices=["file", "api"], default="file",
-                       help="Data source: file or api")
-    parser.add_argument("--format", choices=["all", "social", "pulse", "full", "html"],
-                       default="all", help="Output format")
-    parser.add_argument("--output", help="Output file path (for 'all' format)")
-
-    args = parser.parse_args()
-
-    generator = NarrativeGenerator(data_source=args.source)
-
-    if args.format == "all":
-        result = generator.generate_all()
-        if args.output:
-            with open(args.output, 'w') as f:
-                json.dump(result, f, indent=2, default=str)
-            print(f"Saved to {args.output}")
-        else:
-            print(json.dumps(result, indent=2, default=str))
-    else:
-        data = generator.load_data()
-        metrics = generator.extract_metrics(data)
-
-        if args.format == "social":
-            print(generator.generate_social(metrics))
-        elif args.format == "pulse":
-            print(generator.generate_pulse(metrics))
-        elif args.format == "full":
-            print(generator.generate_full(metrics))
-        elif args.format == "html":
-            print(generator.generate_html_snippet(metrics))

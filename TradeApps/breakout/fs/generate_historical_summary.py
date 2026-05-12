@@ -5,6 +5,7 @@ import glob
 from pathlib import Path
 from datetime import datetime
 from summary_net_generator import SummaryGenerator
+from paths import BREAKOUT_JSON_ROOT
 
 def generate_for_dir(target_path, mode='live', date_str=None):
     gen = SummaryGenerator()
@@ -30,7 +31,6 @@ if __name__ == "__main__":
     else:
         target_date = sys.argv[1] if len(sys.argv) > 1 else "2026-02-04"
         target_mode = sys.argv[2] if len(sys.argv) > 2 else "live"
-        base_path = Path(r'C:\Users\edebe\eds\TradeApps\breakout\fs')
-        json_root = base_path / "json"
+        json_root = BREAKOUT_JSON_ROOT
         target_dir = json_root / target_mode / target_date
         generate_for_dir(target_dir, target_mode, target_date)

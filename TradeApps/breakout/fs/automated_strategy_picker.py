@@ -4,6 +4,7 @@ import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from json_layout import iter_day_dirs, load_layout_config
+from paths import BREAKOUT_JSON_ROOT
 
 def get_tp_sl(name):
     tp_match = re.search(r'tp([\d\.]+)', name)
@@ -24,7 +25,7 @@ def parse_time(ts):
         return datetime.min.replace(tzinfo=timezone.utc)
 
 CONFIG_PATH = Path(__file__).resolve().parent / 'config.json'
-DEFAULT_JSON_ROOT = Path(r'C:\Users\edebe\eds\TradeApps\breakout\fs\json')
+DEFAULT_JSON_ROOT = BREAKOUT_JSON_ROOT
 
 def _load_config():
     try:

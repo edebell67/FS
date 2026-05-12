@@ -4,7 +4,9 @@ from pathlib import Path
 from datetime import date, timedelta, datetime
 from dotenv import load_dotenv
 
-load_dotenv(Path(r"C:/Users/edebe/eds/TradeApps/breakout/DB/.env"), override=True)
+from paths import BREAKOUT_FS_ROOT, BREAKOUT_DB_ROOT # [V20260510_1955]
+
+load_dotenv(BREAKOUT_DB_ROOT / ".env", override=True)
 
 import backfill_trades as bf
 

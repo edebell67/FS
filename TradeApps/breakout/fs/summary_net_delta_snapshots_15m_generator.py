@@ -7,11 +7,12 @@ from pathlib import Path
 from typing import Any
 
 from json_layout import load_layout_config, resolve_day_dir
+from paths import BREAKOUT_JSON_ROOT
 
 
 ROOT_PATH = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT_PATH / "config.json"
-JSON_ROOT = ROOT_PATH / "json"
+JSON_ROOT = BREAKOUT_JSON_ROOT
 OUTPUT_NAME = "_summary_net_delta_snapshots_15m.json"
 SNAPSHOT_MINUTES = 15
 TOP_N = 10

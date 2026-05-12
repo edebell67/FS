@@ -9,6 +9,7 @@ import traceback
 from datetime import datetime
 from pathlib import Path
 from json_layout import iter_day_dirs, load_layout_config
+from paths import BREAKOUT_DATA_FS_ROOT, BREAKOUT_FS_ROOT, BREAKOUT_JSON_ROOT, TRADES_RT3_LIVE_DIR
 
 # [V20260126_0900] Grid Live Trading Monitor
 # [V20260128_0145] Added support for JSON-based breakout strategies
@@ -19,13 +20,13 @@ from json_layout import iter_day_dirs, load_layout_config
 
 # --- Configuration ---
 POLL_INTERVAL = 5 # Seconds
-GRID_LIVE_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live.json")
-SENT_TRADES_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live_sent_trades.json")
-CONFIG_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\config.json")
-LOCK_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live_monitor.lock")
+GRID_LIVE_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live.json"
+SENT_TRADES_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live_sent_trades.json"
+CONFIG_FILE = BREAKOUT_FS_ROOT / "config.json"
+LOCK_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live_monitor.lock"
 
 # [V20260128_0145] JSON trades base path for breakout strategies
-JSON_TRADES_BASE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live")
+JSON_TRADES_BASE = BREAKOUT_JSON_ROOT / "live"
 JSON_ROOT = JSON_TRADES_BASE.parent
 
 # SQL Server credentials (from api_server_sql/main.py)
@@ -35,13 +36,13 @@ USERNAME = "sqlaccessfromapi"
 PASSWORD = "apiaccess@4321"
 
 # TWS Order Directory (from common.py)
-TWS_ORDER_DIR = r"C:\Users\edebe\eds\trades_rt3\orders"
+TWS_ORDER_DIR = str(TRADES_RT3_LIVE_DIR)
 
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - [GRID-MONITOR] - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler(r"C:\Users\edebe\eds\TradeApps\breakout\fs\grid_live_monitor.log"),
+        logging.FileHandler(BREAKOUT_DATA_FS_ROOT / "grid_live_monitor.log"),
         logging.StreamHandler()
     ]
 )

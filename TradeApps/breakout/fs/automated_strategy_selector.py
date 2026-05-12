@@ -9,13 +9,14 @@ import json
 from datetime import datetime
 from pathlib import Path
 from json_layout import configured_product_types, load_layout_config, resolve_day_dir
+from paths import BREAKOUT_DATA_FS_ROOT, BREAKOUT_FS_ROOT, BREAKOUT_JSON_ROOT
 
 # --- Configuration ---
-BASE_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs")
-JSON_DIR = BASE_DIR / "json"
+BASE_DIR = BREAKOUT_DATA_FS_ROOT
+JSON_DIR = BREAKOUT_JSON_ROOT
 GRID_LIVE_FILE = BASE_DIR / "grid_live.json"
-HISTORY_FILE = BASE_DIR / "json" / "grid_live_history.json"
-CONFIG_FILE = BASE_DIR / "config.json"
+HISTORY_FILE = BREAKOUT_JSON_ROOT / "grid_live_history.json"
+CONFIG_FILE = BREAKOUT_FS_ROOT / "config.json"
 
 def get_today_str():
     return datetime.now().strftime('%Y-%m-%d')

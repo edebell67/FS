@@ -2,23 +2,25 @@ import json
 import re
 from pathlib import Path
 from collections import defaultdict
+from paths import BREAKOUT_JSON_ROOT # [V20260510_1945]
 
-root = Path("c:/Users/edebe/eds/TradeApps/breakout/fs/json/live/forex")
+# [V20260510_1945] Use centralized path resolution
+root = BREAKOUT_JSON_ROOT / "live" / "forex"
 tp_sl_stats = defaultdict(lambda: {"picks": 0, "net_change": 0, "wins": 0, "losses": 0, "flat": 0})
 
 for date_dir in root.iterdir():
     if not date_dir.is_dir() or len(date_dir.name) != 10:
         continue
-    
+
     backfilled_path = date_dir / "_top10_history_backfilled.json"
     if not backfilled_path.exists():
         continue
-        
+
     try:
         data = json.loads(backfilled_path.read_text())
         if "history" not in data:
             continue
-            
+
         picked_strategies = {}
         # Find first pick time
         for snap in data["history"]:
@@ -29,7 +31,7 @@ for date_dir in root.iterdir():
                         "strategy": item['strategy'],
                         "pick_net": item.get('net', 0)
                     }
-        
+
         # Find end net
         for key in picked_strategies:
             strat, prod = key.split("|")
@@ -44,17 +46,17 @@ for date_dir in root.iterdir():
                         break
                 if found:
                     break
-            
+
             # Record it
             strat_name = picked_strategies[key]["strategy"]
             match = re.search(r'(tp\d+\.\d+_sl\d+\.\d+)', strat_name)
             if match:
                 param = match.group(1)
                 change = end_net - picked_strategies[key]["pick_net"]
-                
+
                 tp_sl_stats[param]["picks"] += 1
                 tp_sl_stats[param]["net_change"] += change
-                
+
                 if change > 0:
                     tp_sl_stats[param]["wins"] += 1
                 elif change < 0:

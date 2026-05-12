@@ -7,9 +7,10 @@ import json
 from pathlib import Path
 from collections import defaultdict
 from json_layout import configured_product_types, load_layout_config, resolve_day_dir
+from paths import BREAKOUT_JSON_ROOT
 
 dates = ['2026-02-09', '2026-02-06', '2026-02-05', '2026-02-04', '2026-02-03', '2026-02-02']
-BASE_PATH = Path(__file__).parent / 'json'
+BASE_PATH = BREAKOUT_JSON_ROOT
 CONFIG_PATH = Path(__file__).parent / 'config.json'
 cfg = load_layout_config(CONFIG_PATH)
 

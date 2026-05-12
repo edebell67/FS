@@ -5,15 +5,23 @@ import subprocess
 import sys
 import time
 from urllib import error, request
+from paths import (
+    BREAKOUT_API_HEALTH_URL,
+    BREAKOUT_DATA_FS_ROOT,
+    BREAKOUT_FS_ROOT,
+    BREAKOUT_JSON_ROOT,
+    BREAKOUT_X_API_POST_URL,
+)
 
-ROOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs")
-GENERATE_SCRIPT = ROOT / "tools" / "social_posting_package" / "generate_posting_package.py"
-TEMP_TWEET = ROOT / "temp_tweet_top2.txt"
-WORKFLOW_STATUS = ROOT / "twitter_workflow_status.json"
-API_HEALTH_URL = "http://localhost:5000/api/health"
-API_POST_URL = "http://localhost:5000/api/social/x_api_post"
-API_RESPONSE_ARTIFACT = ROOT / "twitter_x_api_post_response.json"
-PACKAGE_ROOT = ROOT / "json" / "live" / "social_posting_package"
+SOURCE_ROOT = BREAKOUT_FS_ROOT
+DATA_ROOT = BREAKOUT_DATA_FS_ROOT
+GENERATE_SCRIPT = SOURCE_ROOT / "tools" / "social_posting_package" / "generate_posting_package.py"
+TEMP_TWEET = DATA_ROOT / "temp_tweet_top2.txt"
+WORKFLOW_STATUS = DATA_ROOT / "twitter_workflow_status.json"
+API_HEALTH_URL = BREAKOUT_API_HEALTH_URL
+API_POST_URL = BREAKOUT_X_API_POST_URL
+API_RESPONSE_ARTIFACT = DATA_ROOT / "twitter_x_api_post_response.json"
+PACKAGE_ROOT = BREAKOUT_JSON_ROOT / "live" / "social_posting_package"
 PACKAGE_FILENAME = "top2_cross_product_post.json"
 PACKAGE_PAYLOAD_KEY = "top2_cross_product_post"
 WORKFLOW_TRIGGER = "breakout_top2_cross_product_every_4_hours"
@@ -84,7 +92,7 @@ def _verify_api_health() -> tuple[bool, str]:
 def _run_command(command: list[str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         command,
-        cwd=ROOT,
+        cwd=SOURCE_ROOT,
         text=True,
         encoding="utf-8",
         errors="replace",

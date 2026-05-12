@@ -4,13 +4,11 @@ import re
 import shutil
 from pathlib import Path
 import sys
+from paths import KEY_FILE, TWITTER_SESSION_DIR
 
 if sys.stdout.encoding != 'utf-8':
     import io
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-
-SESSION_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_session")
-KEY_FILE = Path(r"C:\Users\edebe\eds\key.json")
 
 def get_creds():
     with open(KEY_FILE, 'r', encoding='utf-8') as f:

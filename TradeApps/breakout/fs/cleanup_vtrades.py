@@ -9,12 +9,13 @@ This will close all V-Trades except:
 import json
 from pathlib import Path
 from datetime import datetime
+from paths import BREAKOUT_LEGACY_JSON_ROOT
 
 def cleanup_excess_vtrades():
     """Close all excess V-Trades, keeping only the top performer in each direction."""
     
     # Configuration
-    virtual_dir = Path(r'C:\Users\edebe\eds\TradeApps\breakout\json\sim\2025-12-26\virtual')
+    virtual_dir = BREAKOUT_LEGACY_JSON_ROOT / 'sim' / '2025-12-26' / 'virtual'
     threshold_y = 0.0  # Adjust if needed from your config
     
     if not virtual_dir.exists():

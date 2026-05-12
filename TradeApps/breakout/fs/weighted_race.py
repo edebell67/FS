@@ -6,9 +6,10 @@ from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict
 from json_layout import iter_day_dirs, load_layout_config
+from paths import BREAKOUT_JSON_ROOT
 
 CONFIG_PATH = Path(__file__).resolve().parent / 'config.json'
-BASE_ROOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json")
+BASE_ROOT = BREAKOUT_JSON_ROOT
 FREQUENCY_MINUTES = 5
 FORCED_DATE = os.environ.get('FREQUENCY_TARGET_DATE')
 

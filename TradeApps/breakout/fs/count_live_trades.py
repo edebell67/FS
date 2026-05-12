@@ -2,8 +2,9 @@
 import os
 import json
 from pathlib import Path
+from paths import BREAKOUT_LEGACY_JSON_ROOT
 
-BASE_PATH = Path(r'C:\Users\edebe\eds\TradeApps\breakout\json')
+BASE_PATH = BREAKOUT_LEGACY_JSON_ROOT
 
 def count_live_trades():
     count = 0

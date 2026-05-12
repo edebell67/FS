@@ -7,7 +7,7 @@ from collections import defaultdict
 from datetime import datetime
 
 # Add current dir to path
-sys.path.append(str(Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs")))
+sys.path.append(str(Path(__file__).resolve().parent))
 
 try:
     import summary_net_generator

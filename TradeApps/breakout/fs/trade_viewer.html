@@ -1362,8 +1362,8 @@
                     if (runModeEl) runModeEl.value = activeRunMode;
                     updateBiasEnforcementBadges(currentConfig);
                     console.log('Config loaded:', currentConfig, 'Mode:', activeRunMode);
-                    // Refresh activations after config loads the mode
-                    await loadActivations();
+                    // [V20260512_0430] Fire activations load in background (non-blocking)
+                    loadActivations();
                 }
             } catch (error) {
                 console.warn('Config load failed:', error);
@@ -1594,7 +1594,12 @@
                 // For API call, use first strategy or 'all' if none selected
                 const apiStrategyFilter = selectedStrategies.length > 0 ? selectedStrategies[0] : 'all';
                 const apiUrl = `/api/trades?mode=${runMode}&date=${date}&strategy=${apiStrategyFilter}`;
-                const response = await fetch(apiUrl);
+
+                // [V20260512_0430] Parallelize trades and virtual_trades fetch
+                const [response, _] = await Promise.all([
+                    fetch(apiUrl),
+                    fetchVirtualTrades(runMode, date)
+                ]);
 
                 if (!response.ok) {
                     throw new Error(`API returned ${response.status}: ${response.statusText}`);
@@ -1605,8 +1610,6 @@
                 if (!data.success) {
                     throw new Error(data.message || 'Failed to load trades');
                 }
-
-                await fetchVirtualTrades(runMode, date);
 
                 // Update version if provided by API
                 if (data.version) {
@@ -3131,6 +3134,13 @@
                         { label: 'Live JSON Path', key: 'send_json_files', type: 'text' },
                         { label: 'Sim JSON Path', key: 'send_json_files_sim', type: 'text' },
                         { label: 'L-Trade Generation', key: 'l_trade_generation_mode', type: 'select', options: ['normal', 'virtual', 'both'] }
+                    ]
+                },
+                {
+                    title: '📁 Path Settings',
+                    fields: [
+                        { label: 'Generated Data Root', key: 'path_settings.generated_data_root', type: 'text' },
+                        { label: 'JSON Data Root', key: 'path_settings.json_data_root', type: 'text' }
                     ]
                 },
                 {

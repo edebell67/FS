@@ -4,6 +4,7 @@ Quick script to fix malformed V-Trade JSON files with duplicate closing braces.
 """
 import json
 from pathlib import Path
+from paths import BREAKOUT_LEGACY_JSON_ROOT
 
 def fix_vtrade_json_files(base_dir):
     """Remove duplicate closing braces from V-Trade JSON files."""
@@ -35,5 +36,5 @@ def fix_vtrade_json_files(base_dir):
     print(f"\nFixed {fixed_count} files")
 
 if __name__ == '__main__':
-    base_dir = r'C:\Users\edebe\eds\TradeApps\breakout\json'
+    base_dir = str(BREAKOUT_LEGACY_JSON_ROOT)
     fix_vtrade_json_files(base_dir)

@@ -27,6 +27,7 @@ from json_layout import (
     product_type_for_product,
     resolve_day_dir,
 )
+from paths import BREAKOUT_JSON_ROOT, TRADES_RT3_LIVE_DIR, TRADES_RT3_SIM_DIR, QUOTE_API_BASE_URL, BREAKOUT_DATA_FS_ROOT
 from strategy_name_generator import apply_strategy_name_fields, canonical_strategy_name
 
 # [V20260101_2130] Track latest seen trading date for dynamic archiving and mode-agnostic date scoping
@@ -46,11 +47,11 @@ DEFAULT_TRADING_TIMEZONE = "Europe/London"
 #CONFIG_FILE_PATH = os.path.join(os.path.dirname(__file__), 'config.json')
 
 CONFIG_FILE_PATH = Path(__file__).resolve().parent / 'config.json'
-GRID_LIVE_FILE_PATH = Path(__file__).resolve().parent / 'grid_live.json'
-GRID_LIVE_SENT_TRADES_PATH = Path(__file__).resolve().parent / 'grid_live_sent_trades.json'
-L_TRADE_EXECUTION_REQUESTS_DIR = Path(__file__).resolve().parent / 'execution_requests'
+GRID_LIVE_FILE_PATH = BREAKOUT_DATA_FS_ROOT / 'grid_live.json'
+GRID_LIVE_SENT_TRADES_PATH = BREAKOUT_DATA_FS_ROOT / 'grid_live_sent_trades.json'
+L_TRADE_EXECUTION_REQUESTS_DIR = BREAKOUT_DATA_FS_ROOT / 'execution_requests'
 # [2026-04-07 17:15] V20260407_1715 - Added support for dynamic TWS order templates
-TWS_ORDER_TEMPLATES_PATH = Path(__file__).resolve().parent / 'tws_order_templates.json'
+TWS_ORDER_TEMPLATES_PATH = BREAKOUT_DATA_FS_ROOT / 'tws_order_templates.json'
 _TWS_ORDER_TEMPLATES_CACHE: Dict[str, Any] = {'mtime': None, 'data': {}}
 L_TRADE_EXECUTION_PENDING_PREFIX = 'pending:'
 
@@ -659,11 +660,11 @@ def _load_config() -> Dict[str, Any]:
             "min_value_by_product": {},
             "endpoints": {
                 "live": [
-                    "http://127.0.0.1:8002/api/vw_000_fx_quotes",
-                    "http://127.0.0.1:8002/api/vw_000_fx_quotes",
+                    f"{QUOTE_API_BASE_URL}/api/vw_000_fx_quotes",
+                    f"{QUOTE_API_BASE_URL}/api/vw_000_fx_quotes",
                 ],
                 "sim": [
-                    "http://127.0.0.1:8002/api/vw_000_fx_quotes_sim2"
+                    f"{QUOTE_API_BASE_URL}/api/vw_000_fx_quotes_sim2"
                 ],
             },
             "trade_products": ["gbp"],
@@ -964,7 +965,11 @@ def _get_tws_contract_details(product: str, config: Dict[str, Any]) -> Dict[str,
 
 
 def _json_root_dir() -> Path:
-    return Path(CONFIG_FILE_PATH).resolve().parent / 'json'
+    r"""
+    [V20260510_1615] Returns the central JSON data root from paths.py.
+    This respects the 'json_data_root' setting in config.json.
+    """
+    return BREAKOUT_JSON_ROOT
 
 
 def _load_layout_runtime_config() -> Dict[str, Any]:
@@ -1210,7 +1215,7 @@ else:
     DEFAULT_TRADE_PRODUCTS = CONFIG.get('trade_products', ['GBP'])
 POLL_INTERVAL_SECONDS = int(CONFIG.get('sleep_time') if CONFIG.get('sleep_time') is not None else os.getenv('BREAKOUT_POLL_INTERVAL', '10'))
 COMMISSION_PIPS = COMMISSION_USD / PIP_VALUE
-ACTIVATIONS_FILE = os.path.join(os.path.dirname(__file__), 'activations.json')
+ACTIVATIONS_FILE = BREAKOUT_DATA_FS_ROOT / 'activations.json'
 ACTIVATION_SUFFIXES = ('_buy_net', '_sell_net', '_buy_alt', '_sell_alt')
 _ACTIVATIONS_CACHE: Dict[str, Any] = {'mtime': None, 'data': {}}
 # Preserve base defaults for runtime reloads
@@ -1223,9 +1228,9 @@ BASE_SL_PIPS = SL_PIPS
 BASE_POLL_INTERVAL_SECONDS = POLL_INTERVAL_SECONDS
 BASE_COMMISSION_PIPS = COMMISSION_PIPS
 BASE_SPREAD_PIPS = SPREAD_PIPS
-ACTIVATIONS_LOCK_FILE = os.path.join(os.path.dirname(__file__), 'activations.lock') # [2025-12-22 V20251222_1600]
-V_TRADES_LOCK_FILE = os.path.join(os.path.dirname(__file__), 'v_trades.lock') # [2025-12-26 V20251226_1630]
-GLOBAL_ACTIVE_TRADES_FILE = os.path.join(os.path.dirname(__file__), 'active_trades.json')
+ACTIVATIONS_LOCK_FILE = BREAKOUT_DATA_FS_ROOT / 'activations.lock' # [2025-12-22 V20251222_1600]
+V_TRADES_LOCK_FILE = BREAKOUT_DATA_FS_ROOT / 'v_trades.lock' # [2025-12-26 V20251226_1630]
+GLOBAL_ACTIVE_TRADES_FILE = BREAKOUT_DATA_FS_ROOT / 'active_trades.json'
 
 
 @dataclass
@@ -1456,7 +1461,7 @@ class BaseBreakoutStrategy:
         self.latest_ask = None
         self._table_header_printed = False
         
-        self.json_base_dir = os.path.join(os.path.dirname(CONFIG_FILE_PATH), 'json', self.run_mode.lower())
+        self.json_base_dir = str(BREAKOUT_JSON_ROOT / self.run_mode.lower())
         self.config = config # [V20260323_1935] Store config for P&L calculations
         os.makedirs(self.json_base_dir, exist_ok=True)
         self.active_trades_state = _load_active_trades()
@@ -3849,7 +3854,7 @@ def _create_l_trade_order(
     if not is_close:
         max_live_trades_global = int(_config.get('max_live_trades', 1))
         # [V20251231_1145] Use disk scan instead of unreliable active_trades.json
-        json_base_dir = os.path.join(os.path.dirname(CONFIG_FILE_PATH), 'json', run_mode.lower())
+        json_base_dir = str(BREAKOUT_JSON_ROOT / run_mode.lower())
         current_live_count = _get_total_open_live_trades_for_group(json_base_dir, source_group_key)
 
         # Per-group daily target guard (closed PnL)
@@ -4000,10 +4005,10 @@ def _create_l_trade_order(
     
     if run_mode == 'SIM':
         key = 'send_json_files_sim'
-        default_dir = r'C:\Users\edebe\eds\trades_rt3_sim\orders'
+        default_dir = str(TRADES_RT3_SIM_DIR)
     else: # Live mode
         key = 'send_json_files'
-        default_dir = r'C:\Users\edebe\eds\trades_rt3\orders'
+        default_dir = str(TRADES_RT3_LIVE_DIR)
         
     tradeable_dir = _config.get(key, default_dir)
     try:
@@ -4260,9 +4265,9 @@ def _perform_archiving(config: Dict[str, Any]) -> bool:
         Marks source trade files with archive close metadata.
         """
         if mode == 'sim':
-            order_dir = cfg.get('send_json_files_sim') or r'C:\Users\edebe\eds\trades_rt3_sim\orders'
+            order_dir = cfg.get('send_json_files_sim') or str(TRADES_RT3_SIM_DIR)
         else:
-            order_dir = cfg.get('send_json_files') or r'C:\Users\edebe\eds\trades_rt3\orders'
+            order_dir = cfg.get('send_json_files') or str(TRADES_RT3_LIVE_DIR)
         order_path = Path(order_dir)
         order_path.mkdir(parents=True, exist_ok=True)
 
@@ -4391,7 +4396,7 @@ def _perform_archiving(config: Dict[str, Any]) -> bool:
 
     # 2) Clear grid_live entries for current mode.
     try:
-        grid_file = Path(os.path.dirname(CONFIG_FILE_PATH)) / 'grid_live.json'
+        grid_file = BREAKOUT_DATA_FS_ROOT / 'grid_live.json'
         grid_data: Any = {"live": [], "sim": []}
         if grid_file.exists():
             with grid_file.open('r') as f:
@@ -5147,7 +5152,7 @@ def run_multiwindow(
         # [V20260101_2340] Prioritize archive check BEFORE building state to avoid startup delays
         config = _load_config()
         run_mode = config.get('run_mode', 'live').lower()
-        json_base_dir = os.path.join(os.path.dirname(CONFIG_FILE_PATH), 'json', run_mode)
+        json_base_dir = str(BREAKOUT_JSON_ROOT / run_mode)
         
         if config.get('archive'):
             print(f"[{datetime.now()}] [ARCHIVE-START] Archive flag detected on startup. Processing...")

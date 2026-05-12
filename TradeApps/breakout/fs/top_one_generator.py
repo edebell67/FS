@@ -7,6 +7,7 @@ from pathlib import Path
 from datetime import datetime
 import pyodbc
 from json_layout import iter_day_dirs, load_layout_config
+from paths import BREAKOUT_JSON_ROOT
 
 # --- Database Configuration ---
 DB_SERVER = "tcp:EDS,1433"
@@ -188,7 +189,7 @@ def generate_top_one_summary():
 
                         # 2. Determine directory
                         today_str = datetime.now().strftime('%Y-%m-%d')
-                        json_root = CONFIG_PATH.parent / 'json'
+                        json_root = BREAKOUT_JSON_ROOT
                         day_dirs = iter_day_dirs(json_root, run_mode, today_str, config=load_layout_config(CONFIG_PATH))
 
                         if not day_dirs:

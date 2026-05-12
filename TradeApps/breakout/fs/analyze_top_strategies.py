@@ -8,6 +8,7 @@ from datetime import datetime
 import sys
 from pathlib import Path
 from json_layout import configured_product_types, load_layout_config, resolve_day_dir
+from paths import MISC_ROOT
 
 # Get date from command line argument or use default
 if len(sys.argv) > 1:
@@ -90,7 +91,7 @@ for target_time_str in intervals:
         })
 
 # Save to misc directory
-output_file = rf"C:\Users\edebe\eds\misc\top_strategies_{target_date}.txt"
+output_file = MISC_ROOT / f"top_strategies_{target_date}.txt"
 
 with open(output_file, 'w') as f:
     f.write(f"TOP 5 STRATEGIES BY NET VALUE AT EACH 15-MINUTE INTERVAL ({target_date})\n")

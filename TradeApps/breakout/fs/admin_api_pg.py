@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from db_utils import fetch_all, fetch_one, execute_query
 import subprocess
+from paths import ADVANCED_FOREX_SIGNAL_GENERATOR
 
 # [V20260306_0430] PostgreSQL Admin API Implementation
 
@@ -106,7 +107,7 @@ def generate_dna():
     
     # This triggers the existing DNA generation script in the background
     # We use the advanced forex signal generator detected earlier
-    script_path = r"C:\Users\edebe\eds\advanced_forex_signal_generator.py"
+    script_path = str(ADVANCED_FOREX_SIGNAL_GENERATOR)
     try:
         subprocess.Popen(['python', script_path, '--product', product])
         return jsonify({"success": True, "message": f"DNA generation started for {product}"})

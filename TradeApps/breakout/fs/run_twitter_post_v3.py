@@ -5,18 +5,19 @@ import sys
 import time
 
 from playwright.sync_api import sync_playwright
+from paths import BREAKOUT_DATA_FS_ROOT, TWITTER_SESSION_DIR
 
 if sys.stdout.encoding != "utf-8":
     import io
 
     sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 
-SESSION_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_session")
-TWEET_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\temp_tweet.txt")
-STATUS_FILE = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_post_status.json")
-LOGIN_SCREENSHOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_login_check.png")
-SUCCESS_SCREENSHOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_post_success.png")
-ERROR_SCREENSHOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\twitter_post_error.png")
+SESSION_DIR = TWITTER_SESSION_DIR
+TWEET_FILE = BREAKOUT_DATA_FS_ROOT / "temp_tweet.txt"
+STATUS_FILE = BREAKOUT_DATA_FS_ROOT / "twitter_post_status.json"
+LOGIN_SCREENSHOT = BREAKOUT_DATA_FS_ROOT / "twitter_login_check.png"
+SUCCESS_SCREENSHOT = BREAKOUT_DATA_FS_ROOT / "twitter_post_success.png"
+ERROR_SCREENSHOT = BREAKOUT_DATA_FS_ROOT / "twitter_post_error.png"
 
 
 def _new_status() -> dict:

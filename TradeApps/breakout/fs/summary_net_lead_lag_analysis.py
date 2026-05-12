@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, Iterable, List, Tuple
+from paths import BREAKOUT_JSON_ROOT # [V20260510_1955]
 
 
 DEFAULT_MODE = "live"
@@ -39,17 +40,17 @@ def parse_args() -> argparse.Namespace:
 
 
 def summary_net_path(base_dir: Path, mode: str, product_type: str, date_str: str) -> Path:
-    return base_dir / "json" / mode / product_type / date_str / "_summary_net.json"
+    return base_dir / mode / product_type / date_str / "_summary_net.json"
 
 
 def output_json_path(base_dir: Path, mode: str, product_type: str, date_str: str, grain: str) -> Path:
     suffix = "_summary_net_lead_lag_analysis.json" if grain == "strategy" else "_summary_net_lead_lag_analysis_product_level.json"
-    return base_dir / "json" / mode / product_type / date_str / suffix
+    return base_dir / mode / product_type / date_str / suffix
 
 
 def output_md_path(base_dir: Path, mode: str, product_type: str, date_str: str, grain: str) -> Path:
     suffix = "_summary_net_lead_lag_analysis.md" if grain == "strategy" else "_summary_net_lead_lag_analysis_product_level.md"
-    return base_dir / "json" / mode / product_type / date_str / suffix
+    return base_dir / mode / product_type / date_str / suffix
 
 
 def load_summary(path: Path) -> Dict:
@@ -522,7 +523,7 @@ def build_report(
 
 def main() -> int:
     args = parse_args()
-    base_dir = Path(__file__).resolve().parent
+    base_dir = BREAKOUT_JSON_ROOT # [V20260510_1955]
     source_path = summary_net_path(base_dir, args.mode, args.product_type, args.date)
     if not source_path.exists():
         print(f"[ERROR] Source not found: {source_path}")

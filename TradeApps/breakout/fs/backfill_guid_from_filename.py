@@ -14,9 +14,10 @@ import re
 import os
 from pathlib import Path
 from datetime import datetime
+from paths import BREAKOUT_JSON_ROOT
 
 # Base directory for forex trades
-BASE_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live\forex")
+BASE_DIR = BREAKOUT_JSON_ROOT / "live" / "forex"
 
 # Regex to find 8-character hex GUID in filename
 GUID_PATTERN = re.compile(r'_([a-f0-9]{8})_')

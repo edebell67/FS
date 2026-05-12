@@ -1,0 +1,26 @@
+{
+  "history": [
+    {
+      "timestamp": "2026-02-17T17:04:00.061Z",
+      "bias": "BUY",
+      "market_condition": "TRENDING",
+      "status": "STRONG",
+      "recent_buy_pnl": 42117.5,
+      "recent_sell_pnl": -171185,
+      "recent_buy_count": 1854,
+      "recent_sell_count": 1486,
+      "run_mode": "live"
+    },
+    {
+      "timestamp": "2026-02-17T17:03:59.348Z",
+      "bias": "BUY",
+      "market_condition": "TRENDING",
+      "status": "STRONG",
+      "recent_buy_pnl": 42117.5,
+      "recent_sell_pnl": -171185,
+      "recent_buy_count": 1854,
+      "recent_sell_count": 1486,
+      "run_mode": "live"
+    }
+  ]
+}

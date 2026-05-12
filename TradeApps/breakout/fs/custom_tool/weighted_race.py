@@ -1,11 +1,18 @@
 import json
 import re
+import sys
 from pathlib import Path
 from datetime import datetime, timedelta
 from collections import defaultdict
 import argparse
 
-BASE_ROOT = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live")
+FS_DIR = Path(__file__).resolve().parents[1]
+if str(FS_DIR) not in sys.path:
+    sys.path.insert(0, str(FS_DIR))
+
+from paths import BREAKOUT_DATA_FS_ROOT, BREAKOUT_JSON_ROOT
+
+BASE_ROOT = BREAKOUT_JSON_ROOT / "live"
 
 # Determine default date: prefer newest YYYY-MM-DD directory, fallback to today
 
@@ -143,7 +150,7 @@ def main():
         'leaders': summary
     }
 
-    out_path = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs") / '_frequency.json'
+    out_path = BREAKOUT_DATA_FS_ROOT / '_frequency.json'
     with out_path.open('w') as f:
         json.dump(output, f, indent=2)
 

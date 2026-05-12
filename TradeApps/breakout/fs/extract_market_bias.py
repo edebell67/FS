@@ -1,18 +1,18 @@
 import json
-import os
 from datetime import datetime, timezone
+from paths import BREAKOUT_JSON_ROOT
 
 def extract_bias():
     # 1. Determine Path
     # Assuming standard path structure used by the app
     # Default to today's date and live mode
     today_str = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-    base_path = r"c:\Users\edebe\eds\TradeApps\breakout\fs\json\live"
-    file_path = os.path.join(base_path, today_str, "_targeted_strategies.json")
+    base_path = BREAKOUT_JSON_ROOT / "live"
+    file_path = base_path / today_str / "_targeted_strategies.json"
     
     print(f"Reading Highight Criteria from: {file_path}")
 
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         print(f"Error: File not found for today ({today_str}).")
         return
 

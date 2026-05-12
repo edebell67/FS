@@ -15,16 +15,17 @@ import subprocess
 from pathlib import Path
 from datetime import datetime
 from json_layout import iter_day_dirs, load_layout_config, resolve_day_dir
+from paths import BREAKOUT_DATA_FS_ROOT, BREAKOUT_FS_ROOT, BREAKOUT_JSON_ROOT, TRADES_RT3_LIVE_DIR
 
 # --- Configuration ---
 POLL_INTERVAL = 5 # Seconds
-BASE_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs")
-CONFIG_FILE = BASE_DIR / "config.json"
-GRID_LIVE_FILE = BASE_DIR / "grid_live.json"
-SENT_TRADES_FILE = BASE_DIR / "grid_live_sent_trades.json"
-JSON_TRADES_BASE = BASE_DIR / "json"
-TWS_ORDER_DIR = Path(r"C:\Users\edebe\eds\trades_rt3\orders")
-LOCK_FILE = BASE_DIR / "grid_live_monitor.lock"
+BASE_DIR = BREAKOUT_DATA_FS_ROOT
+CONFIG_FILE = BREAKOUT_FS_ROOT / "config.json"
+GRID_LIVE_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live.json"
+SENT_TRADES_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live_sent_trades.json"
+JSON_TRADES_BASE = BREAKOUT_JSON_ROOT
+TWS_ORDER_DIR = TRADES_RT3_LIVE_DIR
+LOCK_FILE = BREAKOUT_DATA_FS_ROOT / "grid_live_monitor.lock"
 
 # --- Logging ---
 logging.basicConfig(

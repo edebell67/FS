@@ -1,7 +1,8 @@
 import os
 from pathlib import Path
+from paths import BREAKOUT_JSON_ROOT
 
-base_dir = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live\2026-01-29")
+base_dir = BREAKOUT_JSON_ROOT / "live" / "2026-01-29"
 
 if base_dir.exists():
     for f in base_dir.glob("*.json.json"):

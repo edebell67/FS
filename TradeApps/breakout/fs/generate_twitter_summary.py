@@ -2,8 +2,9 @@ import json
 import os
 from datetime import datetime
 from pathlib import Path
+from paths import BREAKOUT_JSON_ROOT
 
-BASE_DIR = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live")
+BASE_DIR = BREAKOUT_JSON_ROOT / "live"
 DATE_STR = datetime.now().strftime("%Y-%m-%d")
 
 def get_top_performer(asset_class):

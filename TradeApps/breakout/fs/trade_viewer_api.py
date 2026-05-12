@@ -39,6 +39,7 @@ import common as breakout_common
 from strategy_snapshot_15m_generator import OUTPUT_NAME as STRATEGY_SNAPSHOT_15M_OUTPUT
 from strategy_snapshot_15m_generator import build_payload as build_strategy_snapshot_15m_payload
 from strategy_snapshot_15m_generator import write_payload as write_strategy_snapshot_15m_payload
+from paths import BREAKOUT_DATA_FS_ROOT, BREAKOUT_FS_ROOT, BREAKOUT_JSON_ROOT, TRADES_RT3_LIVE_DIR, TRADES_RT3_SIM_DIR
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # Global Locks
@@ -76,24 +77,30 @@ add_social_routes(app)
 # [V20260224] Add subscriber management routes for PipHunter
 add_subscriber_routes(app)
 
-BASE_PATH = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json")
-ROOT_PATH = BASE_PATH.parent
-CONFIG_FILE = ROOT_PATH / "config.json"
-ACTIVATIONS_FILE = ROOT_PATH / "activations.json"
-WORKFLOWS_FILE = ROOT_PATH / "workflows.json"
-WORKFLOW_MULTI_CHART_PAYLOAD_FILE = ROOT_PATH / "workflow_multi_chart_payload.json"
-WEEKLY_PERFORMANCE_STATE_FILE = ROOT_PATH / "weekly_performance_state.json"
+BASE_PATH = BREAKOUT_JSON_ROOT
+SOURCE_ROOT = BREAKOUT_FS_ROOT # [V20260510_1715] Always local code (C:)
+DATA_ROOT = BREAKOUT_DATA_FS_ROOT # [V20260510_1715] Generated data (can move to X:)
+JSON_STATIC_ROOT = BREAKOUT_JSON_ROOT # [V20260510_1715] Trade JSON (X:)
+
+# Legacy compatibility (to be phased out)
+DATA_ROOT = DATA_ROOT 
+
+CONFIG_FILE = SOURCE_ROOT / "config.json"
+ACTIVATIONS_FILE = DATA_ROOT / "activations.json"
+WORKFLOWS_FILE = DATA_ROOT / "workflows.json"
+WORKFLOW_MULTI_CHART_PAYLOAD_FILE = DATA_ROOT / "workflow_multi_chart_payload.json"
+WEEKLY_PERFORMANCE_STATE_FILE = DATA_ROOT / "weekly_performance_state.json"
 ACTIVATION_SUFFIXES = ("_buy_net", "_sell_net", "_buy_alt", "_sell_alt")
 TOPX_AUDIT_VERSION = "V20260423_1529"
 WORKFLOW_STRATEGY_GROUP_OPTIONS = ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev")
-REALTIME_STATS_CACHE_FILE = ROOT_PATH / "realtime_stats_cache.json"
-REALTIME_STATS_SNAPSHOTS_FILE = ROOT_PATH / "realtime_stats_snapshots.json"
-REALTIME_STATS_SNAPSHOT_INDEX_FILE = ROOT_PATH / "realtime_stats_snapshot_index.json"
-REALTIME_STATS_SNAPSHOT_DIR = ROOT_PATH / "realtime_stats_snapshots"
+REALTIME_STATS_CACHE_FILE = DATA_ROOT / "realtime_stats_cache.json"
+REALTIME_STATS_SNAPSHOTS_FILE = DATA_ROOT / "realtime_stats_snapshots.json"
+REALTIME_STATS_SNAPSHOT_INDEX_FILE = DATA_ROOT / "realtime_stats_snapshot_index.json"
+REALTIME_STATS_SNAPSHOT_DIR = DATA_ROOT / "realtime_stats_snapshots"
 REALTIME_STATS_CACHE_REFRESH_SECONDS = 60
 REALTIME_STATS_SNAPSHOT_SECONDS = 300
 REALTIME_STATS_MAX_SNAPSHOTS = 288
-REALTIME_TRADE_EXECUTION_STORE_FILE = ROOT_PATH / "realtime_trade_execution_store.json"
+REALTIME_TRADE_EXECUTION_STORE_FILE = DATA_ROOT / "realtime_trade_execution_store.json"
 REALTIME_TRADE_EXECUTION_DEFAULT_COST_PIPS = 3.0
 REALTIME_TRADE_SIGNAL_MIN_COUNT = 10
 REALTIME_TRADE_SIGNAL_STALE_SECONDS = 60
@@ -162,7 +169,7 @@ def _sync_weekly_activation_to_grid_live(
     if not model or not product:
         return
 
-    grid_live_file = ROOT_PATH / "grid_live.json"
+    grid_live_file = DATA_ROOT / "grid_live.json"
     normalized_mode = str(mode or "live").lower()
     normalized_product = str(product).strip().upper()
     source = "weekly_performance"
@@ -2959,7 +2966,7 @@ def get_dates():
     
     # [V20260318_1015] Use a specific directory if product_type is provided
     if product_type and product_type != 'all':
-        json_dir = ROOT_PATH / "json" / mode / product_type
+        json_dir = BASE_PATH / mode / product_type
         if json_dir.exists():
             for item in json_dir.iterdir():
                 if item.is_dir() and re.match(r'^\d{4}-\d{2}-\d{2}$', item.name):
@@ -2968,7 +2975,7 @@ def get_dates():
                         dates.add(item.name)
     else:
         # Fallback recursive search for all dates
-        json_root = ROOT_PATH / "json" / mode
+        json_root = BASE_PATH / mode
         if json_root.exists():
             for item in json_root.iterdir():
                 if not item.is_dir():
@@ -3443,7 +3450,7 @@ def push_to_grid_v2():
             print(f"[GRID-LIVE] REJECTED: source='{source_str}' blocked by config allowlist (requested='{requested_source}').")
             return jsonify({'success': True, 'message': 'Skipped (Source Overrule)'})
 
-        grid_file = ROOT_PATH / "grid_live.json"
+        grid_file = DATA_ROOT / "grid_live.json"
 
         with GRID_LIVE_LOCK:
             full_data = {'live': [], 'sim': []}
@@ -3973,7 +3980,7 @@ def remove_all_activations():
         
         # 2. Clear Grid-Live for that mode (to prevent auto-resync)
         # [V20260205_2125] Added to ensure deletions stick
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         if grid_live_file.exists():
             try:
                 with open(grid_live_file, "r") as f:
@@ -4011,7 +4018,7 @@ def _scan_open_trades(mode: str, date_str: str) -> List[Dict[str, Any]]:
     Returns:
         List of dicts with 'path' and 'data' keys
     """
-    json_dir = ROOT_PATH / "json" / mode / date_str
+    json_dir = BASE_PATH / mode / date_str
     if not json_dir.exists():
         return []
     
@@ -4220,7 +4227,7 @@ def _normalize_trade_path(raw_path: Any) -> Optional[Path]:
         path = Path(str(raw_path)).resolve()
     except Exception:
         return None
-    if ROOT_PATH not in path.parents:
+    if DATA_ROOT not in path.parents and JSON_STATIC_ROOT not in path.parents:
         return None
     if not path.exists() or not path.is_file():
         return None
@@ -4703,7 +4710,7 @@ def health():
 
 @app.route("/multi_chart.html")
 def serve_multi_chart():
-    return send_from_directory(ROOT_PATH, "multi_chart.html")
+    return send_from_directory(SOURCE_ROOT, "multi_chart.html")
 
 
 # [V20260225] Live Hub routes for IP-based hosting
@@ -4723,20 +4730,26 @@ def serve_live_assets(subpath):
 
 @app.route("/multi_chart.js")
 def serve_multi_chart_js():
-    return send_from_directory(ROOT_PATH, "multi_chart.js")
+    return send_from_directory(SOURCE_ROOT, "multi_chart.js")
 
 
 @app.route('/', defaults={'path': 'trade_viewer.html'})
 @app.route('/<path:path>')
 def serve_static(path):
-    """Serve any static file from ROOT_PATH, fallback to trade_viewer.html"""
+    """Serve any static file from SOURCE_ROOT, fallback to trade_viewer.html"""
     try:
-        # Prevent accessing files outside of ROOT_PATH
-        if Path(ROOT_PATH / path).exists() and Path(ROOT_PATH / path).is_file():
-            return send_from_directory(ROOT_PATH, path)
-        return send_from_directory(ROOT_PATH, "trade_viewer.html")
+        request_path = Path(path)
+        if request_path.parts and request_path.parts[0] == "json":
+            json_relative = Path(*request_path.parts[1:]) if len(request_path.parts) > 1 else Path()
+            json_candidate = JSON_STATIC_ROOT / json_relative
+            if json_candidate.exists() and json_candidate.is_file():
+                return send_from_directory(JSON_STATIC_ROOT, json_relative.as_posix())
+        # Prevent accessing files outside of SOURCE_ROOT
+        if (SOURCE_ROOT / path).exists() and (SOURCE_ROOT / path).is_file():
+            return send_from_directory(SOURCE_ROOT, path)
+        return send_from_directory(SOURCE_ROOT, "trade_viewer.html")
     except:
-        return send_from_directory(ROOT_PATH, "trade_viewer.html")
+        return send_from_directory(SOURCE_ROOT, "trade_viewer.html")
 
 
 @app.route("/api/top_one", methods=["GET"])
@@ -4798,17 +4811,17 @@ def get_frequency():
 
 @app.route("/sidebar.css")
 def serve_sidebar_css():
-    return send_from_directory(ROOT_PATH, "sidebar.css")
+    return send_from_directory(SOURCE_ROOT, "sidebar.css")
 
 
 @app.route("/pnl_graph.css")
 def serve_pnl_graph_css():
-    return send_from_directory(ROOT_PATH, "pnl_graph.css")
+    return send_from_directory(SOURCE_ROOT, "pnl_graph.css")
 
 
 @app.route("/sidebar.html")
 def serve_sidebar_html():
-    return send_from_directory(ROOT_PATH, "sidebar.html")
+    return send_from_directory(SOURCE_ROOT, "sidebar.html")
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -4892,7 +4905,7 @@ def _archive_grid_live(mode, new_data=None, force=False):
     """
     global _last_grid_archive_time
     try:
-        source_file = ROOT_PATH / "grid_live.json"
+        source_file = DATA_ROOT / "grid_live.json"
         if not source_file.exists():
             return
 
@@ -4937,7 +4950,7 @@ def _archive_grid_live(mode, new_data=None, force=False):
         _last_grid_archive_time = now
 
         # [V20260205_2130] Dedicated history directory
-        history_dir = ROOT_PATH / "grid_live_history"
+        history_dir = DATA_ROOT / "grid_live_history"
         if not history_dir.exists():
             try:
                 history_dir.mkdir(parents=True, exist_ok=True)
@@ -4968,7 +4981,7 @@ def _prune_grid_live_siblings(model: str, product: str, mode: str, reason: str =
         if not model or not product:
             return {"success": False, "removed": 0, "message": "model/product required"}
 
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         if not grid_live_file.exists():
             return {"success": True, "removed": 0, "message": "grid_live.json missing"}
 
@@ -5319,8 +5332,8 @@ def _select_psb_family_entries(mode: str, date_str: str, bias: str, max_items: i
     BUY  -> family side 'buy'
     SELL -> family side 'sell'
     """
-    priority_file = ROOT_PATH / "json" / "strategy_profile" / "priority_strategy_list.json"
-    members_file = ROOT_PATH / "json" / "strategy_profile" / "strategy_profile_equivalent_family_members.json"
+    priority_file = BASE_PATH / "strategy_profile" / "priority_strategy_list.json"
+    members_file = BASE_PATH / "strategy_profile" / "strategy_profile_equivalent_family_members.json"
     summary_file = _resolve_day_dir(mode, date_str) / "_summary_net.json"
 
     if not priority_file.exists() or not members_file.exists() or not summary_file.exists():
@@ -5400,7 +5413,7 @@ def _select_psb_family_entries(mode: str, date_str: str, bias: str, max_items: i
     return entries[:max_items]
 
 def _grid_is_empty(mode: str) -> bool:
-    grid_live_file = ROOT_PATH / "grid_live.json"
+    grid_live_file = DATA_ROOT / "grid_live.json"
     if not grid_live_file.exists():
         return True
     try:
@@ -5446,7 +5459,7 @@ def _is_trade_direction_compatible_with_bucket_metric(trade: dict, bucket_metric
 
 
 def _get_bucket_live_metric(bucket_name: str, mode: str = "live") -> Optional[str]:
-    grid_live_file = ROOT_PATH / "grid_live.json"
+    grid_live_file = DATA_ROOT / "grid_live.json"
     if not grid_live_file.exists():
         return None
     try:
@@ -5736,7 +5749,7 @@ def _auto_fill_grid_if_empty() -> None:
 
     with GRID_LIVE_LOCK:
         full_data = {'live': [], 'sim': []}
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         if grid_live_file.exists():
             try:
                 with open(grid_live_file, "r") as f:
@@ -5945,7 +5958,7 @@ def _force_close_wrong_bias_trades(mode: str, date_str: str) -> int:
         return 0
     order_dir = cfg.get("send_json_files_sim") if mode == "sim" else cfg.get("send_json_files")
     if not order_dir:
-        order_dir = r"C:\Users\edebe\eds\trades_rt3_sim\orders" if mode == "sim" else r"C:\Users\edebe\eds\trades_rt3\orders"
+        order_dir = str(TRADES_RT3_SIM_DIR if mode == "sim" else TRADES_RT3_LIVE_DIR)
     order_path = Path(order_dir)
     order_path.mkdir(parents=True, exist_ok=True)
 
@@ -6334,7 +6347,7 @@ def _sync_bucket_to_grid_live(bucket: dict, mode: str, date_str: str, product_ty
 
         # 1. Archive current state (already done in update_trade_bucket but good to be safe)
         _archive_grid_live(mode, force=True)
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         
         with GRID_LIVE_LOCK:
             full_data = {'live': [], 'sim': []}
@@ -6466,7 +6479,7 @@ def _reconcile_active_buckets(mode: str = 'live'):
         cfg = _load_layout_runtime_config()
         product_types = configured_product_types(cfg)
 
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         with GRID_LIVE_LOCK:
             full_data = {'live': [], 'sim': []}
             if grid_live_file.exists():
@@ -6715,7 +6728,7 @@ def _enforce_max_live_tb_inplace(buckets: List[dict], preferred_live_name: Optio
 
 @app.route("/sidebar-loader.js")
 def serve_sidebar_loader_js():
-    return send_from_directory(ROOT_PATH, "sidebar-loader.js")
+    return send_from_directory(SOURCE_ROOT, "sidebar-loader.js")
 
 
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -7766,7 +7779,7 @@ def promotion_blocks():
         blocks.sort(key=lambda x: (str(x.get('entry_time') or ''), str(x.get('filename') or '')), reverse=True)
         blocks = blocks[:limit]
 
-        grid_file = ROOT_PATH / 'grid_live.json'
+        grid_file = DATA_ROOT / 'grid_live.json'
         grid_live = []
         if grid_file.exists():
             try:
@@ -7808,7 +7821,7 @@ def get_grid_live():
         # [V20260204_2120] Periodically ensure buckets are promoted / frequency cleared
         _reconcile_active_buckets(mode=mode)
         
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         
         if grid_live_file.exists():
             with open(grid_live_file, "r") as f:
@@ -7852,7 +7865,7 @@ def update_grid_live():
         if not group:
             return jsonify({'success': False, 'message': 'Group name is required'}), 400
 
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         
         # [V20260205_2100] Handle automated_trade_source for Frequency
         if source_str == 'rank_alert_ui' or source_str == 'frequency_ui':
@@ -8048,7 +8061,7 @@ def switch_rule_activate():
         if not product or not strategy:
             return jsonify({'success': False, 'message': 'product and strategy are required'}), 400
 
-        grid_live_file = ROOT_PATH / "grid_live.json"
+        grid_live_file = DATA_ROOT / "grid_live.json"
         # Build group name: freq_{product}_{strategy} with dots replaced by underscores
         safe_strategy = strategy.replace('.', '_')
         group = f"freq_{product}_{safe_strategy}"
@@ -8217,7 +8230,7 @@ def _sync_grid_to_activations(grid_data: list, mode: str = 'live'):
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # [V20260209_1010] Bias-Flip Notification System
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-NOTIFICATION_LOG_FILE = ROOT_PATH / "notification_log.json"
+NOTIFICATION_LOG_FILE = DATA_ROOT / "notification_log.json"
 
 @app.route('/api/notification_action', methods=['POST'])
 def log_notification_action():
@@ -8306,7 +8319,7 @@ def get_notification_log():
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 # [V20260209_1335] Bias History Tracking
 # â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-BIAS_HISTORY_SESSION_FILE = ROOT_PATH / "bias_history_session.json"
+BIAS_HISTORY_SESSION_FILE = DATA_ROOT / "bias_history_session.json"
 
 def _get_bias_history_file(mode: str, date_str: str) -> Path:
     day_dir = _ensure_day_dir(str(mode or 'live').lower(), str(date_str or datetime.now().strftime('%Y-%m-%d')))
@@ -10155,7 +10168,7 @@ def get_weekly_performance():
     week_start_str = week_start.strftime("%Y-%m-%d")
     week_end_str = week_end.strftime("%Y-%m-%d")
 
-    stats_dir = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live") / product_type / "stats" / "weekly"
+    stats_dir = BREAKOUT_JSON_ROOT / "live" / product_type / "stats" / "weekly"
     stats_dir.mkdir(parents=True, exist_ok=True)
     # Cache weekly aggregates by aligned week-start date so all requests
     # inside the same week resolve to the same artifact.
@@ -10217,7 +10230,7 @@ def get_weekly_summary_net_30min():
     week_start_str = week_start.strftime("%Y-%m-%d")
     week_end_str = week_end.strftime("%Y-%m-%d")
 
-    stats_dir = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json\live") / product_type / "stats" / "weekly"
+    stats_dir = BREAKOUT_JSON_ROOT / "live" / product_type / "stats" / "weekly"
     stats_dir.mkdir(parents=True, exist_ok=True)
     stats_file = stats_dir / f"{week_start_str}_summary_net_30m.json"
 

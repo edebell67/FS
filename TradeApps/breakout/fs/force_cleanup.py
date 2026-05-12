@@ -2,10 +2,11 @@
 import os
 import json
 from pathlib import Path
+from paths import BREAKOUT_JSON_ROOT
 
 def force_cleanup():
-    base_dir = Path(r'c:\Users\edebe\eds\TradeApps\breakout')
-    json_dir = base_dir / 'json' / 'live' / '2025-12-31'
+    base_dir = Path(__file__).resolve().parent
+    json_dir = BREAKOUT_JSON_ROOT / 'live' / '2025-12-31'
     activations_file = base_dir / 'activations.json'
     
     with open(activations_file, 'r') as f:

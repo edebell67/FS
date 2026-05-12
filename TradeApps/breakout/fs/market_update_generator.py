@@ -5,12 +5,13 @@ import requests
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 import threading
+from paths import BREAKOUT_API_BASE_URL, BREAKOUT_JSON_ROOT
 
-BASE_PATH = Path(r"C:\Users\edebe\eds\TradeApps\breakout\fs\json")
+BASE_PATH = BREAKOUT_JSON_ROOT
 
 def get_trades_from_api(mode, date_str):
     try:
-        url = f"http://127.0.0.1:5000/api/trades?mode={mode}&date={date_str}"
+        url = f"{BREAKOUT_API_BASE_URL}/api/trades?mode={mode}&date={date_str}"
         resp = requests.get(url, timeout=10)
         if resp.status_code == 200:
             return resp.json().get("trades", [])
@@ -42,7 +43,7 @@ def get_product_from_app(app_name):
 
 def get_latest_date(mode="live"):
     try:
-        url = f"http://127.0.0.1:5000/api/dates?mode={mode}"
+        url = f"{BREAKOUT_API_BASE_URL}/api/dates?mode={mode}"
         resp = requests.get(url, timeout=5)
         if resp.status_code == 200:
             dates = resp.json().get("dates", [])

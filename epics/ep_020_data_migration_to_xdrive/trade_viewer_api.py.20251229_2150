@@ -1,0 +1,449 @@
+"""
+Breakout Trade Viewer API Server
+Serves JSON trade files for the trade viewer dashboard
+"""
+
+from flask import Flask, jsonify, request
+from flask_cors import CORS
+import os
+import json
+from datetime import datetime
+from typing import Any, Dict, Set
+from pathlib import Path
+from constants import VERSION
+
+app = Flask(__name__)
+CORS(app)
+
+# Base path for trade JSON files
+BASE_PATH = Path(r'C:\Users\edebe\eds\TradeApps\breakout\json')
+CONFIG_FILE = BASE_PATH.parent / 'config.json'
+
+ACTIVATION_SUFFIXES = ('_buy_net', '_sell_net', '_buy_alt', '_sell_alt')
+
+def _strip_product_suffix(name: str, product: str | None) -> str:
+    if not name or not product:
+        return name or ''
+    suffix = f'_{product.upper()}'
+    upper_name = name.upper()
+    upper_suffix = suffix.upper()
+    if upper_name.endswith(upper_suffix):
+        return name[:-len(suffix)]
+    return name
+
+
+
+def _load_trade_products() -> Set[str]:
+    """Return configured trade products in uppercase for consistent comparisons."""
+    try:
+        with open(CONFIG_FILE, 'r') as handle:
+            data = json.load(handle)
+        return {str(prod).upper() for prod in data.get('trade_products', []) if isinstance(prod, str)}
+    except Exception:
+        return set()
+
+
+def _coerce_activation_entry(value: Any) -> Dict[str, Any]:
+    """Ensure activation entries always have a consistent schema."""
+    if isinstance(value, dict):
+        return {
+            'active': bool(value.get('active')),
+            'activated_at': value.get('activated_at'),
+            'manual': bool(value.get('manual')),
+        }
+    return {
+        'active': bool(value),
+        'activated_at': None,
+        'manual': False,
+    }
+
+
+def _extract_product(core_key: str, trade_products: Set[str]) -> (str, str | None):
+    """Split product suffix (if present) from the provided activation prefix."""
+    core_upper = core_key.upper()
+    for prod in sorted(trade_products, key=len, reverse=True):
+        token = f"_{prod}"
+        if core_upper.endswith(token):
+            return core_key[: len(core_key) - len(token)], prod
+    # Fallback: try using last token if it looks like a product code
+    parts = core_key.split('_')
+    if len(parts) > 1:
+        candidate = '_'.join(parts[-2:]) if len(parts[-1]) == 1 else parts[-1]
+        candidate_upper = candidate.upper()
+        if candidate_upper.isalpha() and 2 <= len(candidate_upper) <= 8:
+            base = core_key[: len(core_key) - len(candidate) - 1]
+            return base, candidate_upper
+    return core_key, None
+
+
+def _normalize_activation_key(raw_key: str, trade_products: Set[str]) -> tuple[str, str | None]:
+    """Return normalized activation key plus extracted product (if any)."""
+    suffix = next((suf for suf in ACTIVATION_SUFFIXES if raw_key.endswith(suf)), None)
+    if not suffix:
+        return raw_key, None
+    core = raw_key[:-len(suffix)]
+    base_core, product = _extract_product(core, trade_products)
+    normalized_key = f"{base_core}{suffix}"
+    return normalized_key, product
+
+
+def _merge_activation_entries(target: Dict[str, Any], incoming: Dict[str, Any]) -> Dict[str, Any]:
+    target['active'] = target.get('active', False) or incoming.get('active', False)
+    inc_ts = incoming.get('activated_at')
+    if inc_ts and (not target.get('activated_at') or inc_ts > target.get('activated_at')):
+        target['activated_at'] = inc_ts
+    target['manual'] = target.get('manual', False) or incoming.get('manual', False)
+    return target
+
+
+def _normalize_activation_entries(raw: Dict[str, Any], trade_products: Set[str]) -> tuple[Dict[str, Any], bool]:
+    """Normalize activation keys and ensure schema consistency."""
+    normalized: Dict[str, Any] = {}
+    dirty = False
+    for raw_key, value in raw.items():
+        base_key, _ = _normalize_activation_key(str(raw_key), trade_products)
+        entry = _coerce_activation_entry(value)
+        if raw_key != base_key:
+            dirty = True
+        if base_key in normalized:
+            normalized[base_key] = _merge_activation_entries(normalized[base_key], entry)
+        else:
+            normalized[base_key] = entry
+    return normalized, dirty
+
+@app.route('/api/trades', methods=['GET'])
+def get_trades():
+    """Load all trade JSON files for a given mode and date"""
+    try:
+        run_mode = request.args.get('mode', 'live')
+        date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+        strategy_filter = request.args.get('strategy', 'all')
+        
+        trade_dir = BASE_PATH / run_mode / date
+        
+        if not trade_dir.exists():
+            return jsonify({
+                'success': False,
+                'message': f'Directory not found: {trade_dir}',
+                'trades': []
+            })
+        
+        trades = []
+        
+        # Scan all JSON files in the directory
+        for json_file in trade_dir.glob('*.json'):
+            try:
+                with open(json_file, 'r') as f:
+                    trade_data = json.load(f)
+                    
+                    # Extract app name and strategy params from filename
+                    filename = json_file.stem
+                    parts = filename.split('_')
+                    
+                    # Parse filename: {app}_{product}_{timestamp}_{time}_{window}_{buffer}_{tp}_{sl}
+                    # Or old: {app}_{timestamp}_{time}_{window}_{buffer}_{tp}_{sl}
+                    # Updated parsing to handle optional product field [2025-12-19 V20251219_0934]
+                    if len(parts) >= 6:
+                        timestamp_idx = None
+                        for i, part in enumerate(parts):
+                            # Look for 8-digit date part (YYYYMMDD)
+                            if len(part) == 8 and part.isdigit():
+                                timestamp_idx = i
+                                break
+                        
+                        if timestamp_idx is not None:
+                            # App name is everything before product/timestamp
+                            # If product exists (it's often 3-6 chars uppercase)
+                            # it's usually parts[timestamp_idx-1]
+                            product_idx = timestamp_idx - 1
+                            product_code = None
+                            
+                            if product_idx > 0:
+                                potential_product = parts[product_idx]
+                                # Validate it's a 3-letter currency code (not a number like window size)
+                                if len(potential_product) == 3 and potential_product.isalpha() and potential_product.isupper():
+                                    app_name = '_'.join(parts[:product_idx])
+                                    product_code = potential_product
+                                else:
+                                    # No product in filename, it's part of app name
+                                    app_name = '_'.join(parts[:timestamp_idx])
+                            else:
+                                app_name = '_'.join(parts[:timestamp_idx])
+                                
+                            window = parts[timestamp_idx + 2] if timestamp_idx + 2 < len(parts) else '5'
+                            buffer = parts[timestamp_idx + 3] if timestamp_idx + 3 < len(parts) else '0.0001'
+                            tp = parts[timestamp_idx + 4].replace('.json', '') if timestamp_idx + 4 < len(parts) else '10.0'
+                            sl = parts[timestamp_idx + 5].replace('.json', '') if timestamp_idx + 5 < len(parts) else '6.0'
+                            
+                            strategy_params = f"{window}_{buffer}_{tp}_{sl}"
+                            
+                            # Apply strategy filter
+                            if strategy_filter != 'all' and app_name != strategy_filter:
+                                continue
+                            
+                            # Enrich trade data [2025-12-19 V20251219_1135]
+                            trade_data['app_name'] = app_name
+                            # Only set product from filename if it's valid AND not already in JSON
+                            if 'product' not in trade_data and product_code:
+                                trade_data['product'] = product_code
+                            # Ensure product field exists (fallback to 'UNKNOWN' if missing)
+                            if 'product' not in trade_data:
+                                trade_data['product'] = 'UNKNOWN'
+                            trade_data['strategy'] = strategy_params
+                            trade_data['filename'] = json_file.name
+                            
+                            trades.append(trade_data)
+                            
+            except json.JSONDecodeError as e:
+                print(f"Error parsing {json_file}: {e}")
+                continue
+            except Exception as e:
+                print(f"Error loading {json_file}: {e}")
+                continue
+        
+        return jsonify({
+            'success': True,
+            'count': len(trades),
+            'trades': trades,
+            'mode': run_mode,
+            'date': date,
+            'version': VERSION
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'trades': []
+        }), 500
+
+@app.route('/api/virtual_trades', methods=['GET'])
+def get_virtual_trades():
+    """Load virtual trade JSON files for the given run mode/date."""
+    try:
+        run_mode = request.args.get('mode', 'live')
+        date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+        virtual_dir = BASE_PATH / run_mode / date / 'virtual'
+        trades = []
+        if virtual_dir.exists():
+            for json_file in virtual_dir.glob('vt_*.json'):
+                try:
+                    with open(json_file, 'r') as handle:
+                        trade_data = json.load(handle)
+                        trade_data['filename'] = json_file.name
+                        trades.append(trade_data)
+                except Exception as exc:  # pylint: disable=broad-except
+                    print(f"[WARN] Failed to read {json_file}: {exc}")
+                    continue
+        trades.sort(key=lambda entry: entry.get('entry_time') or entry.get('exit_time') or '', reverse=True)
+        return jsonify({
+            'success': True,
+            'trades': trades
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'trades': []
+        }), 500
+
+
+@app.route('/api/dates', methods=['GET'])
+def get_available_dates():
+    """Get list of available dates for a run mode"""
+    try:
+        run_mode = request.args.get('mode', 'live')
+        mode_dir = BASE_PATH / run_mode
+        
+        if not mode_dir.exists():
+            return jsonify({'dates': []})
+        
+        dates = []
+        for item in mode_dir.iterdir():
+            if item.is_dir():
+                # Validate date format (YYYY-MM-DD)
+                try:
+                    datetime.strptime(item.name, '%Y-%m-%d')
+                    dates.append(item.name)
+                except ValueError:
+                    continue
+        
+        dates.sort(reverse=True)
+        
+        return jsonify({
+            'success': True,
+            'dates': dates
+        })
+        
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'dates': []
+        }), 500
+
+# Path to activations file
+ACTIVATIONS_FILE = BASE_PATH.parent / 'activations.json'
+
+@app.route('/api/activations', methods=['GET'])
+def get_activations():
+    """Get current strategy activation status"""
+    try:
+        if not ACTIVATIONS_FILE.exists():
+            return jsonify({'activations': {}})
+            
+        with open(ACTIVATIONS_FILE, 'r') as f:
+            try:
+                raw = json.load(f)
+            except json.JSONDecodeError:
+                print('[WARN] activations.json is invalid JSON. Returning empty activations.')
+                raw = {}
+
+        trade_products = _load_trade_products()
+        activations, dirty = _normalize_activation_entries(raw, trade_products)
+        if dirty:
+            with open(ACTIVATIONS_FILE, 'w') as handle:
+                json.dump(activations, handle, indent=4)
+
+        return jsonify({
+            'success': True,
+            'activations': activations
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'activations': {}
+        }), 500
+
+@app.route('/api/activations', methods=['POST'])
+def update_activations():
+    """Update strategy activation status"""
+    try:
+        new_data = request.json
+        
+        trade_products = _load_trade_products()
+        activations: Dict[str, Any] = {}
+        if ACTIVATIONS_FILE.exists():
+            with open(ACTIVATIONS_FILE, 'r') as f:
+                try:
+                    raw = json.load(f)
+                except json.JSONDecodeError:
+                    raw = {}
+            activations, _ = _normalize_activation_entries(raw, trade_products)
+
+        now_ts = datetime.utcnow().isoformat()
+        for raw_key, value in (new_data or {}).items():
+            base_key, _ = _normalize_activation_key(str(raw_key), trade_products)
+
+            if isinstance(value, dict):
+                requested_active = bool(value.get('active'))
+                manual_flag = bool(value.get('manual'))
+                activated_at = value.get('activated_at') or (now_ts if requested_active else None)
+            else:
+                requested_active = bool(value)
+                manual_flag = False
+                activated_at = now_ts if requested_active else None
+
+            activations[base_key] = {
+                'active': requested_active,
+                'activated_at': activated_at if requested_active else None,
+                'manual': manual_flag
+            }
+
+        activations, _ = _normalize_activation_entries(activations, trade_products)
+
+        with open(ACTIVATIONS_FILE, 'w') as f:
+            json.dump(activations, f, indent=4)
+
+            
+        return jsonify({
+            'success': True,
+            'activations': activations
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/config', methods=['GET'])
+def get_config():
+    """Get current strategy configuration [2025-12-19 V20251219_0942]"""
+    try:
+        if not CONFIG_FILE.exists():
+            return jsonify({'config': {}})
+            
+        with open(CONFIG_FILE, 'r') as f:
+            config_data = json.load(f)
+            
+        return jsonify({
+            'success': True,
+            'config': config_data
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e),
+            'config': {}
+        }), 500
+
+@app.route('/api/config', methods=['POST'])
+def update_config():
+    """Update strategy configuration [2025-12-19 V20251219_0942]"""
+    try:
+        new_config = request.json
+        
+        # Basic validation
+        if not isinstance(new_config, dict):
+            return jsonify({'success': False, 'message': 'Invalid config format'}), 400
+            
+        # Write directly to config.json
+        with open(CONFIG_FILE, 'w') as f:
+            json.dump(new_config, f, indent=4)
+            
+        return jsonify({
+            'success': True,
+            'config': new_config
+        })
+    except Exception as e:
+        return jsonify({
+            'success': False,
+            'message': str(e)
+        }), 500
+
+@app.route('/api/health', methods=['GET'])
+def health_check():
+    """Health check endpoint"""
+    return jsonify({
+        'status': 'healthy',
+        'service': 'Breakout Trade Viewer API',
+        'timestamp': datetime.now().isoformat()
+    })
+
+@app.route('/')
+@app.route('/trade_viewer.html')
+def serve_viewer():
+    """Serve the trade viewer HTML page"""
+    from flask import send_from_directory
+    return send_from_directory(BASE_PATH.parent, 'trade_viewer.html')
+
+@app.route('/strategy_performance.html')
+def serve_performance():
+    """Serve the strategy performance HTML page"""
+    from flask import send_from_directory
+    return send_from_directory(BASE_PATH.parent, 'strategy_performance.html')
+
+if __name__ == '__main__':
+    print("🚀 Starting Breakout Trade Viewer API Server...")
+    print(f"📁 Trade data path: {BASE_PATH}")
+    print("🌐 Server running at: http://localhost:5000")
+    print("\nAvailable endpoints:")
+    print("  GET /api/trades?mode={live|sim}&date={YYYY-MM-DD}&strategy={all|breakout|...}")
+    print("  GET /api/dates?mode={live|sim}")
+    print("  GET /api/health")
+    print("\n✨ Ready to serve trade data!")
+    
+    app.run(host='0.0.0.0', port=5000, debug=True)
+
+
