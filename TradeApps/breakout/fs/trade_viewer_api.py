@@ -386,10 +386,26 @@ def _ensure_day_dir(mode: str, date_str: str, product: str | None = None, produc
 
 
 def _iter_day_dirs_for(mode: str, date_str: str, product_type: str | None = None) -> list[Path]:
+    cfg = _load_layout_runtime_config()
     if product_type:
+        preferred: list[Path] = []
+        seen: set[str] = set()
+        explicit = day_dir(BASE_PATH, mode, date_str, product_type)
+        if explicit.exists():
+            preferred.append(explicit)
+            seen.add(str(explicit))
+        for candidate in iter_day_dirs(BASE_PATH, mode, date_str, config=cfg):
+            candidate_key = str(candidate)
+            if candidate_key in seen:
+                continue
+            if str(candidate.parent.name).strip().lower() == str(product_type).strip().lower():
+                preferred.append(candidate)
+                seen.add(candidate_key)
+        if preferred:
+            return preferred
         resolved = _resolve_day_dir(mode, date_str, product_type=product_type)
         return [resolved] if resolved.exists() else []
-    return iter_day_dirs(BASE_PATH, mode, date_str, config=_load_layout_runtime_config())
+    return iter_day_dirs(BASE_PATH, mode, date_str, config=cfg)
 
 
 def _iter_trade_json_files(day_dir: Path, include_archived_closed: bool = False, product_hint: str | None = None):
@@ -4706,6 +4722,24 @@ def update_config():
 @app.route("/api/health", methods=["GET"])
 def health():
     return jsonify({"status": "ok", "ts": datetime.utcnow().isoformat()})
+
+
+@app.route("/api/debug_paths", methods=["GET"])
+def debug_paths():
+    """Debug endpoint to show current path configuration."""
+    from paths import BREAKOUT_JSON_ROOT, JSON_DATA_EDS_ROOT, DATA_EDS_ROOT
+    test_date = request.args.get('date', datetime.now().strftime('%Y-%m-%d'))
+    test_dir = BASE_PATH / "live" / "forex" / test_date
+    return jsonify({
+        "BASE_PATH": str(BASE_PATH),
+        "JSON_STATIC_ROOT": str(JSON_STATIC_ROOT),
+        "BREAKOUT_JSON_ROOT": str(BREAKOUT_JSON_ROOT),
+        "JSON_DATA_EDS_ROOT": str(JSON_DATA_EDS_ROOT),
+        "DATA_EDS_ROOT": str(DATA_EDS_ROOT),
+        "test_dir": str(test_dir),
+        "test_dir_exists": test_dir.exists(),
+        "top20_exists": (test_dir / "_top20.json").exists() if test_dir.exists() else False,
+    })
 
 
 @app.route("/multi_chart.html")
