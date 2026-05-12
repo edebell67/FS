@@ -275,12 +275,12 @@ What this proves:
 - Browser form submits to the live Render backend.
 - The expected page IDs are being recorded by `/api/stats`.
 
-### 2026-05-12 — Local Git commit created; push blocked by missing GitHub auth
+### 2026-05-12 — GitHub SSH authentication restored and launch audit pushed
 
-Created local commit:
+Created and pushed commit:
 
 ```text
-2ad06359793e6016e275f01f9a2bdbc889e3ea6f docs(ep017): record launch readiness audit
+953df432fbcee15188ca80c48264574e44dfc6c3 docs(ep017): record launch readiness audit
 ```
 
 Commit includes:
@@ -289,37 +289,22 @@ Commit includes:
 - `epics/ep_017_trader_pain_points/workstream/200_inprogress/20260512_110751_ep017_999_launch_readiness_audit_and_action_log.md`
 - `epics/ep_017_trader_pain_points/workstream/EP017_MAIN_CHANGE_LIBRARY.md`
 
-Push attempt result:
+Auth/push verification:
 
 ```text
-fatal: could not read Username for 'https://github.com': No such device or address
-```
-
-Auth state observed:
-
-```text
-gh: not installed
-GITHUB_TOKEN: not set
-~/.hermes/.env GITHUB_TOKEN: not set
-~/.git-credentials: no GitHub credential
-SSH: Permission denied (publickey)
-```
-
-Remote remains at previous commit until GitHub authentication is restored:
-
-```text
-remote master: 59508107c1024242fa3cf35ff40daf39d43f86f2
-local HEAD:    2ad06359793e6016e275f01f9a2bdbc889e3ea6f
+SSH auth: Hi edebell67! You've successfully authenticated, but GitHub does not provide shell access.
+Push: 59508107..953df432 master -> master
+Remote master: 953df432fbcee15188ca80c48264574e44dfc6c3
+Local HEAD:    953df432fbcee15188ca80c48264574e44dfc6c3
 ```
 
 ---
 
 ## Current Open Launch Actions
 
-1. Restore GitHub push authentication and push local commit `2ad06359793e6016e275f01f9a2bdbc889e3ea6f`.
-2. Prepare first controlled outreach batch from `marketing/copy_matrix.md`.
-3. Record the outreach run in a dated `ep017` task file before posting.
-4. Track conversions by page_id/pain_point_key after first traffic.
+1. Prepare first controlled outreach batch from `marketing/copy_matrix.md`.
+2. Record the outreach run in a dated `ep017` task file before posting.
+3. Track conversions by page_id/pain_point_key after first traffic.
 
 ---
 

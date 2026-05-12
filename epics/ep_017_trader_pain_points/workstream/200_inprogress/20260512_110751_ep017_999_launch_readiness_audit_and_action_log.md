@@ -187,11 +187,11 @@ GitHub push attempt
 
 ## Risks/Notes
 
-- GitHub push is currently blocked by missing authentication in this environment. Local commit exists and is ready to push once credentials are restored.
+- GitHub SSH authentication was restored and commit `953df432fbcee15188ca80c48264574e44dfc6c3` pushed to remote `master`.
 - Test lead submissions created probe entries in the live backend stats (`launch_readiness_probe`, `verification_script`, `cors_probe`) plus browser-test page counts (`strongest_models`, `early_momentum`, `verifiable_data`, `ranked_opportunity`).
 - Marketing copy exists and points to live aliases, but external posting still requires explicit approval.
 
 ## Completion Status
 
-Status: In progress — launch-readiness audit record and central change/action library created; all four public aliases browser/form-submit tested successfully. Local Git commit created but GitHub push is blocked pending authentication restoration. Remaining launch work is controlled outreach-run execution.
-Timestamp: 2026-05-12 11:12:00 BST
+Status: In progress — launch-readiness audit record and central change/action library created; all four public aliases browser/form-submit tested successfully; GitHub SSH auth restored and commit `953df432fbcee15188ca80c48264574e44dfc6c3` pushed to remote `master`. Remaining launch work is controlled outreach-run execution.
+Timestamp: 2026-05-12 12:20:00 BST
