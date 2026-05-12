@@ -302,9 +302,9 @@ Local HEAD:    953df432fbcee15188ca80c48264574e44dfc6c3
 
 ## Current Open Launch Actions
 
-1. Resolve X/Twitter posting capability (`xurl` is not installed in this environment) or manually post the prepared copy.
-2. Capture the resulting post URL/ID in `workstream/200_inprogress/20260512_134923_ep017_997_controlled_outreach_run_001.md`.
-3. Track conversions by page_id/pain_point_key after first traffic.
+1. Track conversions by page_id/pain_point_key after first traffic.
+2. Plan Reddit outreach before posting; backlog task created: `workstream/100_backlog/20260512_192105_ep017_999_reddit_outreach_planning.md`.
+3. Extract the completed X outreach into a reusable marketing runbook/template; backlog task created: `workstream/100_backlog/20260512_192105_ep017_999_reusable_marketing_outreach_runbook.md`.
 
 ### 2026-05-12 — Controlled outreach run task created
 
@@ -334,6 +334,43 @@ Posting capability check:
 ```text
 xurl not installed
 ```
+
+---
+
+### 2026-05-12 — Remaining X controlled outreach completed
+
+Completed lifecycle task:
+
+```text
+workstream/300_complete/20260512_172614_ep017_997_remaining_landing_page_outreach.md
+```
+
+Published X posts:
+
+```text
+Strongest Models:      https://x.com/i/status/2054220737007726827
+Early Momentum:        https://x.com/i/status/2054237178658423239
+Verifiable Data:       https://x.com/i/status/2054239840711872882
+Ranked Opportunity:    https://x.com/i/status/2054242462319726943
+```
+
+Evidence artifact:
+
+```text
+ep017_remaining_posts_result.json
+```
+
+Follow-up process tasks created:
+
+```text
+workstream/100_backlog/20260512_192105_ep017_999_reddit_outreach_planning.md
+workstream/100_backlog/20260512_192105_ep017_999_reusable_marketing_outreach_runbook.md
+```
+
+Important user feedback captured for future posts:
+
+- Preserve preferred/user-provided `https://t.co/...` short URLs in X post text instead of replacing with expanded URLs unless explicitly instructed otherwise.
+- Future message changes should be adaptive variants based on response data, changing one variable at a time.
 
 ---
 
