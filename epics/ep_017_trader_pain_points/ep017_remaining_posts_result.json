@@ -1,0 +1,93 @@
+{
+  "started_at": "2026-05-12T17:29:14.544315",
+  "results": [
+    {
+      "label": "verifiable_data",
+      "trigger": "ep017_controlled_outreach_remaining_verifiable_data",
+      "chars": 254,
+      "text": "Trading claims are easy. Verification is harder.\n\nI’m testing a data feed where the signal promise is backed by live performance tracking — not screenshots or vague claims.\n\nAudit the idea: https://edebell67.github.io/epics/verify/\n\n#Trading #AlgoTrading",
+      "response": {
+        "http_status": 200,
+        "body": {
+          "message": "Tweet posted successfully",
+          "reply_to_tweet_id": null,
+          "success": true,
+          "tweet_id": "2054239840711872882"
+        }
+      },
+      "tweet_url": "https://x.com/i/status/2054239840711872882"
+    },
+    {
+      "label": "ranked_opportunity",
+      "trigger": "ep017_controlled_outreach_remaining_ranked_opportunity",
+      "chars": 242,
+      "text": "Too many setups can be as bad as no setup.\n\nI’m testing a ranked opportunity feed that cuts through the noise and surfaces the strongest live candidates first.\n\nSee the ranked feed: https://edebell67.github.io/epics/ranked/\n\n#Trading #FinTwit",
+      "response": {
+        "http_status": 200,
+        "body": {
+          "message": "Tweet posted successfully",
+          "reply_to_tweet_id": null,
+          "success": true,
+          "tweet_id": "2054242462319726943"
+        }
+      },
+      "tweet_url": "https://x.com/i/status/2054242462319726943"
+    }
+  ],
+  "status": "complete",
+  "updated_at": "2026-05-12T17:49:02.423799",
+  "finished_at": "2026-05-12T17:49:04.476464",
+  "final_status": {
+    "http_status": 200,
+    "body": {
+      "api_enabled": true,
+      "can_post": false,
+      "last_post_time": "2026-05-12T17:49:02.420799",
+      "reason": "Rate limit: wait 10 more minutes",
+      "recent_posts": [
+        {
+          "date": "2026-05-12T17:49:02.420799",
+          "dry_run": false,
+          "success": true,
+          "text": "Too many setups can be as bad as no setup.\n\nI’m testing a ranked opportunity feed that cuts through ...",
+          "trigger": "ep017_controlled_outreach_remaining_ranked_opportunity"
+        },
+        {
+          "date": "2026-05-12T17:38:37.374610",
+          "dry_run": false,
+          "success": true,
+          "text": "Trading claims are easy. Verification is harder.\n\nI’m testing a data feed where the signal promise i...",
+          "trigger": "ep017_controlled_outreach_remaining_verifiable_data"
+        },
+        {
+          "date": "2026-05-12T17:28:02.717434",
+          "dry_run": false,
+          "success": true,
+          "text": "Most traders enter when the move is already over. I’m testing a feed that looks for early momentum s...",
+          "trigger": "ep017_controlled_outreach_remaining_early_momentum"
+        },
+        {
+          "date": "2026-05-12T16:22:42.743752",
+          "dry_run": false,
+          "success": true,
+          "text": "Stop guessing which trading model is working today. I’m testing a live leaderboard that tracks 100+ ...",
+          "trigger": "ep017_controlled_outreach_run_001"
+        },
+        {
+          "date": "2026-05-12T16:21:21.994306",
+          "dry_run": false,
+          "success": false,
+          "text": "Stop guessing which trading model is working today. I’m testing a live leaderboard that tracks 100+ ...",
+          "trigger": "ep017_controlled_outreach_run_001"
+        },
+        {
+          "date": "2026-05-12T16:19:58.827737",
+          "dry_run": false,
+          "success": false,
+          "text": "Stop guessing which trading model is working today. I’m testing a live leaderboard that tracks 100+ ...",
+          "trigger": "ep017_controlled_outreach_run_001"
+        }
+      ]
+    }
+  }
+}
