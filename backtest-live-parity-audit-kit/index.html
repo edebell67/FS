@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Backtest-to-Live Parity Audit Kit</title>
+  <meta name="description" content="A technical QA kit for finding why a live or paper trading bot does not match its backtest." />
+  <style>
+    :root { --bg:#07111f; --panel:#0d1b2f; --text:#eaf2ff; --muted:#a7b4c9; --accent:#65d6ad; --warn:#ffd166; --line:#20324d; }
+    *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at top left,#132a46,#07111f 45%);color:var(--text);line-height:1.55}
+    .wrap{max-width:1080px;margin:0 auto;padding:34px 20px}.hero{padding:58px 0 42px}.eyebrow{color:var(--accent);font-weight:700;text-transform:uppercase;letter-spacing:.08em;font-size:13px}h1{font-size:clamp(38px,7vw,72px);line-height:.98;margin:16px 0 18px;max-width:900px}h2{font-size:30px;margin:0 0 14px}p{color:var(--muted);font-size:18px}.lead{font-size:22px;max-width:780px}.buttons{display:flex;flex-wrap:wrap;gap:14px;margin-top:28px}.btn{display:inline-block;padding:14px 18px;border-radius:12px;text-decoration:none;font-weight:800}.primary{background:var(--accent);color:#03120d}.secondary{border:1px solid var(--line);color:var(--text);background:#0b1728}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:24px 0}.card{background:rgba(13,27,47,.86);border:1px solid var(--line);border-radius:18px;padding:22px}.price{font-size:42px;font-weight:900;color:var(--text);margin:4px 0}.small{font-size:14px;color:var(--muted)}ul{padding-left:22px;color:var(--muted);font-size:17px}li{margin:8px 0}.bar{border-top:1px solid var(--line);margin:38px 0}.tag{display:inline-block;border:1px solid var(--line);background:#0a1626;border-radius:999px;padding:8px 12px;margin:4px;color:var(--muted)}.warning{border-left:4px solid var(--warn);padding-left:16px}.footer{padding:30px 0;color:var(--muted);font-size:14px}
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <section class="hero">
+      <div class="eyebrow">Technical QA for trading bots</div>
+      <h1>Your backtest is not enough. Prove your live bot matches it.</h1>
+      <p class="lead">A practical audit kit for algo traders and bot developers who need to find why live or paper execution drifts from backtest results.</p>
+      <div class="buttons">
+        <a class="btn primary" href="#stripe-link-pending" data-stripe-placeholder="STRIPE_KIT_LINK">Buy the Audit Kit — £79</a>
+        <a class="btn secondary" href="#stripe-link-pending" data-stripe-placeholder="STRIPE_AUDIT_LINK">Get Kit + Audit Review — £199</a>
+      </div>
+      <p class="small">Stripe checkout links pending Ed account setup. Not signals. Not investment advice. Technical execution QA only.</p>
+    </section>
+
+    <section class="grid">
+      <div class="card"><h2>The problem</h2><p>Your strategy can look fine in a backtest and still fail live because the engine behaves differently.</p></div>
+      <div class="card"><h2>The audit</h2><p>Compare live logs against replay/backtest output and identify timing, price-basis, TP/SL, state, and duplicate-order drift.</p></div>
+      <div class="card"><h2>The outcome</h2><p>A green/amber/red readiness score showing whether your evidence is strong enough for further testing.</p></div>
+    </section>
+
+    <div class="bar"></div>
+
+    <section>
+      <h2>Common live/backtest mismatch causes</h2>
+      <div>
+        <span class="tag">Signal changes inside candle</span><span class="tag">TP/SL checked differently</span><span class="tag">Bid/ask vs mid-price mismatch</span><span class="tag">Duplicate state files</span><span class="tag">Polling interval drift</span><span class="tag">Missed orders</span><span class="tag">Timezone mismatch</span><span class="tag">Weak logs</span>
+      </div>
+    </section>
+
+    <div class="bar"></div>
+
+    <section>
+      <h2>What you get</h2>
+      <div class="grid">
+        <div class="card"><ul><li>1-day parity audit guide</li><li>Live/backtest mismatch checklist</li><li>Deployment readiness scorecard</li></ul></div>
+        <div class="card"><ul><li>CSV comparison template</li><li>Python comparison scripts</li><li>Example technical audit report</li></ul></div>
+        <div class="card"><ul><li>Async audit intake form</li><li>Safe-use disclaimer</li><li>Launch-ready audit workflow</li></ul></div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>Self-serve kit</h2>
+        <div class="price">£79</div>
+        <p>For traders who want the workflow, templates, and scripts.</p>
+        <a class="btn primary" href="#stripe-link-pending" data-stripe-placeholder="STRIPE_KIT_LINK">Buy the Audit Kit</a>
+      </div>
+      <div class="card">
+        <h2>Kit + async audit</h2>
+        <div class="price">£199</div>
+        <p>Send logs/config. Receive a written technical discrepancy report.</p>
+        <a class="btn primary" href="#stripe-link-pending" data-stripe-placeholder="STRIPE_AUDIT_LINK">Get Audit Review</a>
+      </div>
+      <div class="card">
+        <h2>Founder audit slot</h2>
+        <div class="price">£299</div>
+        <p>Limited deeper review for early customers with more complex logs.</p>
+        <a class="btn secondary" href="#stripe-link-pending" data-stripe-placeholder="STRIPE_FOUNDER_LINK">Book Founder Slot</a>
+      </div>
+    </section>
+
+    <div class="bar"></div>
+
+    <section class="warning">
+      <h2>Important disclaimer</h2>
+      <p>This product is a technical QA resource. It does not provide investment advice, trading signals, portfolio recommendations, or profit guarantees.</p>
+    </section>
+
+    <footer class="footer">© Backtest-to-Live Parity Audit Kit. Technical trading-system QA only.</footer>
+  </main>
+</body>
+</html>
