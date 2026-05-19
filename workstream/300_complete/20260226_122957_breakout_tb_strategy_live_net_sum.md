@@ -1,0 +1,28 @@
+# Task: Add Live Net Sum for L-Trades in Trade Bucket UI
+
+- **Source**: User request
+- **Task Summary**: Update the Trade Bucket UI to calculate and display the sum of the net returns for trades marked as "L-Trade" for each strategy instead of just showing `--` or using an empty static property. If a strategy has no L-trades, the value displayed should be unconditionally formatted to `0.00`.
+- **Context**: 
+  - UI Page: `trade_bucket.html`.
+  - Target: The "Live Net" column in the strategy list within the bucket card.
+- **Implementation Log**:
+  - [x] Identify the exact HTML/JS file responsible for rendering the Trade Bucket cards and the strategy rows. (`trade_bucket.html`)
+  - [x] Locate the data source providing the trade lists for each bucket. (`bucketLTrades` derived just prior to block).
+  - [x] Implement calculation logic in JavaScript to sum the `net_return` of trades matching the exact strategy context using `reduce`.
+  - [x] Update the UI rendering to display this calculated sum statically bound to 2 decimal places (e.g., `0.00`) instead of fallback `--`.
+- **Changes Made**:
+  - `c:\Users\edebe\eds\TradeApps\breakout\fs\constants.py`: Updated VERSION string to `V20260226_1253`
+  - `c:\Users\edebe\eds\TradeApps\breakout\fs\trade_bucket.html`:
+    - Augmented `renderBuckets` so inside the strategy iteration (`bucket.strategies.map`), the string key is parsed to extract the unique strategy/product ID.
+    - Used `tradeMatchesBucketStrategy` with `bucketLTrades.filter` to isolate applicable L-Trades.
+    - Summed `t.net_return` and re-assigned it to `stratLiveNet`.
+    - Removed `!== 0` ternary on `liveNetDisplay` to unconditionally hit `.toFixed(2)` and display `0.00`.
+- **Validation**:
+  - [x] Verify the "Live Net" column displays correctly formatted numbers.
+  - [x] Verify that strategies with L-trades show the correct sum.
+  - [x] Verify that strategies without L-trades display `0.00` correctly.
+  - [x] [V20260226_1320] Fixed mismatch by ensuring Leader Strategy trades are counted intrinsically as L-Trades within both the root bucket Live Net and individual strategy row Live Net (mimicking the Drill-Down UI exact logic).
+  - [x] [V20260226_1420] Resolved massive O(N^2) browser freeze bug. Refactored `.map` inner loop to sum over the pre-compiled `bucketLTrades` array (usually 1-20 elements) instead of continuously sorting through the `allTrades` cache (28,000+ elements).
+- **Risks/Notes**:
+  - None identified. `bucketLTrades` was already being parsed securely on line 694 checking for exact time boundaries and L-trade validation criteria, making this sum extremely accurate.
+- **Completion Status**: Fix deployed, load times optimized. Verified completely by user. (Moved to `300_complete`).

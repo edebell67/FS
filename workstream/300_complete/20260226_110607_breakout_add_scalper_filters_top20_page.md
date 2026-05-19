@@ -1,0 +1,24 @@
+# Task: Add Scalper and Rev_Scalper Filters to Top 20 Strategies Page
+
+- **Source**: User request
+- **Task Summary**: Add `scalper` and `rev_scalper` check boxes to the "Top 20 Profitable Strategies" page UI to allow users to filter the displayed strategies based on these characteristics.
+- **Context**: 
+  - UI Page: `strategy_performance.html`
+  - Target: The filtering mechanism should handle showing/hiding strategies that include `scalper` or `rev_scalper` attributes/names.
+- **Implementation Log**:
+  - [x] Identify the correct HTML file serving the "Top 20 Profitable Strategies" view. (`c:\Users\edebe\eds\TradeApps\breakout\fs\strategy_performance.html`)
+  - [x] Add the frontend UI elements (checkboxes) for `scalper` and `rev_scalper`.
+  - [x] Implement the JavaScript filtering logic to apply these filters to the displayed Top 20 list using the existing `scalperRatio` and `revScalperRatio` globals and mathematical comparisons.
+  - [x] Ensure `Constants.py` version is updated to mark the change.
+- **Changes Made**:
+  - `c:\Users\edebe\eds\TradeApps\breakout\fs\constants.py`: Updated version to `V20260226_1200`.
+  - `c:\Users\edebe\eds\TradeApps\breakout\fs\strategy_performance.html`:
+    - Injected `<label><input type="checkbox" id="top20ScalperOnlyToggle"></label>` and `top20RevScalperOnlyToggle` within `#top20FilterGroup`.
+    - Modified `renderTop20Table()` to get these toggle values and filter `top20FullData` checking for `< scalperRatio` and `< revScalperRatio` on tp/sl limits respectively.
+- **Validation**:
+  - [x] Verify checkboxes appear correctly on the page within the Top 20 Modal.
+  - [x] Verify toggling checkboxes correctly filters the Top 20 list based on strategy types.
+  - User explicitly verified UI and logic: "perfect!"
+- **Risks/Notes**:
+  - None identified. Tested using mathematical filter derived from parameter names matching `tp({val})` and `sl({val})`, the standard method utilized everywhere else in this script.
+- **Completion Status**: Complete. Verified by user on 2026-02-26.

@@ -12,11 +12,11 @@ from mutagen.mp3 import MP3
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
 ROOT = Path(__file__).resolve().parent
-AUDIO = ROOT / "narration.mp3"
-FRAMES_MP4 = ROOT / "signal_overload_visuals.mp4"
-FINAL_MP4 = ROOT / "ep017_signal_overload_youtube_v1.mp4"
-THUMBNAIL = ROOT / "thumbnail.png"
-CONTACT = ROOT / "contact_sheet.png"
+AUDIO = ROOT / "narration_persuasive_v2.mp3"
+FRAMES_MP4 = ROOT / "signal_overload_visuals_v2.mp4"
+FINAL_MP4 = ROOT / "ep017_signal_overload_youtube_v2_persuasive.mp4"
+THUMBNAIL = ROOT / "thumbnail_v2.png"
+CONTACT = ROOT / "contact_sheet_v2.png"
 
 W, H = 1280, 720
 FPS = 30
@@ -31,40 +31,35 @@ WHITE = (238, 242, 255)
 MUTED = (148, 163, 184)
 PURPLE = (168, 85, 247)
 
-SCRIPT = """Most active traders are not short of trade ideas anymore.
+SCRIPT = """Most active traders don't need another feed screaming for attention.
 
-You have scanners, watchlists, alerts, Twitter threads, Discord calls, indicators, news feeds, and market dashboards.
+They already have scanners, alerts, watchlists, news, social threads, Discord calls, indicators, and dashboards.
 
-The harder problem is knowing which opportunity actually deserves attention right now.
+The real cost is the hesitation in between them.
 
-Is the signal early enough?
-Is the data behind it trustworthy?
-Is it stronger than the other ten setups you are watching?
-Or is it just noise dressed up as an opportunity?
+You see ten possible trades. One is early. One has cleaner evidence. One is just noise. But while you compare everything manually, the best window can disappear.
 
-That is the trading pain point I am trying to validate.
+That's the pain we are testing with EP017.
 
-Would a ranked opportunity feed be useful? Something that helps sort and prioritise possible trades.
+What if the missing layer is not more signals, but a ranked opportunity feed: early moves, cleaner data, and the strongest setups surfaced first?
 
-Or do most traders prefer raw data and making the ranking decision themselves?
+Not a black box. Not a promise of easy profits. A faster way to decide what deserves your attention before the market moves on.
 
-If you actively trade, I would like to know where the real pain is.
+Or maybe traders don't want ranking at all. Maybe you would rather get raw evidence and make the call yourself.
 
-Finding ideas?
-Trusting the data?
-Acting early enough?
-Or ranking too many possible setups?
+If this problem is familiar, vote with your email. Join the EP017 test list and tell us which pain matters most: finding ideas, trusting data, acting early, or ranking too many setups.
 
-Drop a comment with the one that costs you the most attention."""
+The goal is simple: find out which trader problem is real enough to build for."""
 
 SCENES = [
-    (0.00, 7.0, "Most traders aren't short\nof trade ideas anymore.", "SIGNAL OVERLOAD", "hook"),
-    (7.0, 18.0, "Scanners. Watchlists. Alerts.\nThreads. Discord. News. Dashboards.", "TOO MANY INPUTS", "inputs"),
-    (18.0, 30.0, "The hard part is deciding\nwhat deserves attention now.", "ATTENTION IS THE BOTTLENECK", "funnel"),
-    (30.0, 44.0, "Early enough?\nTrustworthy data?\nStronger than the other ten setups?", "WHAT ACTUALLY MATTERS?", "checks"),
-    (44.0, 58.0, "A ranked opportunity feed\nmay be the missing layer.", "RANK, DON'T DROWN", "ranked"),
-    (58.0, 72.0, "Or do traders prefer raw data\nand ranking it themselves?", "VALIDATION QUESTION", "split"),
-    (72.0, 86.0, "What costs you the most attention?\nFinding ideas, trusting data, timing, or ranking?", "DROP A COMMENT", "cta"),
+    (0.00, 7.0, "You don't need another feed\nscreaming for attention.", "THE REAL PROBLEM", "hook"),
+    (7.0, 17.0, "Scanners. Alerts. Watchlists.\nNews. Social. Discord. Dashboards.", "INPUTS EVERYWHERE", "inputs"),
+    (17.0, 27.0, "The cost is the hesitation\nin between them.", "HESITATION COSTS", "funnel"),
+    (27.0, 39.0, "Ten possible trades.\nOne is early. One is clean.\nOne is noise.", "WHICH ONE DESERVES FOCUS?", "checks"),
+    (39.0, 51.0, "Not more signals —\na ranked opportunity feed.", "SORT BEFORE YOU ACT", "ranked"),
+    (51.0, 62.0, "Early moves. Cleaner data.\nStrongest setups surfaced first.", "A FASTER DECISION LAYER", "ranked"),
+    (62.0, 72.0, "Or do you prefer raw evidence\nand making the call yourself?", "VALIDATION QUESTION", "split"),
+    (72.0, 86.0, "If this problem is familiar,\nvote with your email.", "JOIN THE EP017 TEST LIST", "cta"),
 ]
 
 
@@ -223,12 +218,15 @@ def draw_scene_specific(draw: ImageDraw.ImageDraw, kind: str, t: float, local: f
         draw.text((742, 340), "sorted\nprioritised\nattention-first", font=FONT_SMALL, fill=WHITE)
         draw.text((1008, 340), "flexible\nunfiltered\nmanual ranking", font=FONT_SMALL, fill=WHITE)
     else:
-        rounded(draw, (720, 140, 1190, 520), 26, PANEL, YELLOW, 2)
-        opts = ["1. Finding ideas", "2. Trusting the data", "3. Acting early", "4. Ranking setups"]
+        rounded(draw, (720, 120, 1190, 548), 26, PANEL, YELLOW, 2)
+        draw.text((758, 160), "VOTE WITH YOUR EMAIL", font=FONT_HEAD, fill=YELLOW)
+        draw.text((758, 218), "Join the EP017 test list", font=FONT_SMALL, fill=WHITE)
+        opts = ["Finding ideas", "Trusting data", "Acting early", "Ranking setups"]
         for i, opt in enumerate(opts):
-            y = 190 + i * 72
-            rounded(draw, (758, y, 1152, y + 48), 14, PANEL_2, (61, 92, 120), 1)
-            draw.text((780, y + 12), opt, font=FONT_SMALL, fill=WHITE if i != 3 else YELLOW)
+            y = 280 + i * 52
+            rounded(draw, (758, y, 1152, y + 38), 12, PANEL_2, (61, 92, 120), 1)
+            draw.text((780, y + 9), opt, font=FONT_TINY, fill=WHITE if i != 3 else YELLOW)
+        draw.text((758, 506), "Build only what traders actually want", font=FONT_TINY, fill=MUTED)
 
 
 def current_scene(t: float):

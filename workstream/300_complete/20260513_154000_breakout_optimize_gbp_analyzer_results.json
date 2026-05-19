@@ -1,0 +1,33 @@
+{
+    "realistic_best": {
+        "pph": 28.74,
+        "total_net": 220.94,
+        "total_alt": -408.94,
+        "trade_count": 47,
+        "params": {
+            "conf_high": 29,
+            "conf_med": 17,
+            "conf_low": 4,
+            "price_offset": -3.02,
+            "fixed_tp": 20.0,
+            "fixed_sl": 10.0,
+            "bucket_minutes": 3
+        },
+        "notes": "Achieved target of 25 PPH with 47 trades over 7.69 hours."
+    },
+    "outlier_maximum": {
+        "pph": 2119.14,
+        "total_net": 16268.88,
+        "trade_count": 2442,
+        "params": {
+            "conf_high": 31,
+            "conf_med": 18,
+            "conf_low": 4,
+            "price_offset": -9.89,
+            "fixed_tp": 5.0,
+            "fixed_sl": 20.0,
+            "bucket_minutes": 3
+        },
+        "notes": "Extreme outlier due to large negative price offset (-9.89 pips) resulting in instantaneous TP/SL hits and massive volume. Not recommended for live use."
+    }
+}

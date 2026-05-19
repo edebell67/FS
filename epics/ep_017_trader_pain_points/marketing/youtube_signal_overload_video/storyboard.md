@@ -8,18 +8,18 @@ Validate the same EP017 pain-point proposition used for Reddit: active traders a
 
 - Landscape YouTube explainer: 1280x720 MP4
 - Voiceover-led, motion-graphic style
-- No landing-page CTA in this first version
-- CTA asks for comments only
+- V2 adds a stronger email-list CTA aligned with EP017's primary objective
+- CTA asks traders to vote with their email and identify the pain point that matters most
 
 ## Narrative arc
 
-1. Hook: most traders are not short of ideas.
-2. Overload: scanners, watchlists, feeds, alerts, Discord, news.
-3. Bottleneck: attention, not idea generation.
-4. Decision criteria: early, trusted, stronger than other setups, not noise.
-5. Proposition: ranked opportunity feed as a possible missing layer.
-6. Validation: ranked feed vs raw data preference.
-7. CTA: ask which pain costs the most attention.
+1. Hook: traders do not need another attention-grabbing feed.
+2. Overload: scanners, alerts, watchlists, feeds, Discord, news.
+3. Cost: hesitation while comparing competing inputs.
+4. Decision criteria: early, clean evidence, strongest setup, not noise.
+5. Proposition: ranked opportunity feed as a faster decision layer.
+6. Validation: ranked feed vs raw evidence preference.
+7. CTA: join the EP017 test list and vote for the pain point that matters most.
 
 ## Visual language
 
