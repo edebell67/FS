@@ -1,0 +1,4 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: GBPAUD_C - Date: 2026-05-14 - Target: efficiency
+Gate Rule: Pips-Per-Trade >= 6.0 AND Trades >= 25
+Hard Cap: 50000 attempts.
+------------------------------------------------------------------------

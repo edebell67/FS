@@ -1,0 +1,6 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: GBP - Date: 2026-05-15 - Target: growth
+Gate Rule: PPH >= 10.0 AND Duration >= 15h
+Hard Cap: 100000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 75): PPH=10.89   | PPT=4.24 | Trades=53  | Dur=20.63 | H=44 M=41 L=17 Off=0.11 Min=5 TP=30.0 SL=30.0
+Improvement 002 (Attempt 126): PPH=11.58   | PPT=4.19 | Trades=57  | Dur=20.63 | H=23 M=14 L=11 Off=0.01 Min=1 TP=100.0 SL=50.0

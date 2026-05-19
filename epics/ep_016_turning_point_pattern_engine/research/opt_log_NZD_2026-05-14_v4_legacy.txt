@@ -1,0 +1,12 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: NZD - Date: 2026-05-14 - Target: legacy
+Gate Rule: PPH > best_pph AND Trades >= 5 (Legacy V3)
+Hard Cap: 10000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 7): PPH=-4.2    | PPT=-2.10 | Trades=14  | Dur=6.99  | H=62 M=38 L=20 Off=1.31 Min=1 TP=30.0 SL=50.0
+Improvement 002 (Attempt 9): PPH=-1.54   | PPT=-1.54 | Trades=7   | Dur=6.99  | H=80 M=23 L=7 Off=0.25 Min=2 TP=10.0 SL=10.0
+Improvement 003 (Attempt 117): PPH=-1.5    | PPT=-2.09 | Trades=5   | Dur=6.99  | H=73 M=28 L=24 Off=0.19 Min=15 TP=20.0 SL=20.0
+Improvement 004 (Attempt 337): PPH=-1.47   | PPT=-1.71 | Trades=6   | Dur=6.99  | H=54 M=30 L=20 Off=0.04 Min=15 TP=100.0 SL=30.0
+Improvement 005 (Attempt 345): PPH=-0.56   | PPT=-0.65 | Trades=6   | Dur=6.99  | H=34 M=29 L=13 Off=-0.1 Min=5 TP=20.0 SL=50.0
+Improvement 006 (Attempt 681): PPH=-0.27   | PPT=-0.38 | Trades=5   | Dur=6.99  | H=57 M=42 L=17 Off=-0.12 Min=5 TP=10.0 SL=None
+Improvement 007 (Attempt 759): PPH=-0.18   | PPT=-0.25 | Trades=5   | Dur=6.99  | H=30 M=29 L=18 Off=-0.25 Min=5 TP=100.0 SL=50.0
+Improvement 008 (Attempt 1500): PPH=-0.11   | PPT=-0.16 | Trades=5   | Dur=6.99  | H=56 M=33 L=17 Off=-0.34 Min=5 TP=None SL=None

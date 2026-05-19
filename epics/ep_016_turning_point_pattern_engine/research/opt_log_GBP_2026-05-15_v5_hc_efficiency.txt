@@ -1,0 +1,5 @@
+V5 HILL CLIMBING Optimization Log - Symbol: GBP - Date: 2026-05-15 - Target: efficiency
+Seed PPH: 8.73
+------------------------------------------------------------------------
+Climb 001 (Attempt 24): PPH=8.75    | PPT=6.68 | Trades=27  | H=80 M=45 L=4 Off=-0.48 Min=10
+Climb 002 (Attempt 25): PPH=8.76    | PPT=6.69 | Trades=27  | H=80 M=45 L=4 Off=-0.49 Min=10

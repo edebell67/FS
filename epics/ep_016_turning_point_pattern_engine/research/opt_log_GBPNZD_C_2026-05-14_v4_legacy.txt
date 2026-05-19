@@ -1,0 +1,9 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: GBPNZD_C - Date: 2026-05-14 - Target: legacy
+Gate Rule: PPH > best_pph AND Trades >= 5 (Legacy V3)
+Hard Cap: 10000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 2): PPH=-4.08   | PPT=-2.59 | Trades=11  | Dur=6.99  | H=51 M=12 L=9 Off=2.0 Min=10 TP=30.0 SL=30.0
+Improvement 002 (Attempt 3): PPH=-1.55   | PPT=-1.81 | Trades=6   | Dur=6.99  | H=34 M=29 L=20 Off=-0.69 Min=15 TP=100.0 SL=20.0
+Improvement 003 (Attempt 40): PPH=-0.65   | PPT=-0.57 | Trades=8   | Dur=6.99  | H=41 M=39 L=24 Off=-0.37 Min=10 TP=20.0 SL=10.0
+Improvement 004 (Attempt 41): PPH=0.48    | PPT=0.55 | Trades=6   | Dur=6.99  | H=28 M=15 L=7 Off=-0.72 Min=1 TP=30.0 SL=50.0
+Improvement 005 (Attempt 581): PPH=1.38    | PPT=1.37 | Trades=7   | Dur=6.99  | H=38 M=33 L=21 Off=-0.23 Min=1 TP=100.0 SL=10.0

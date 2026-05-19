@@ -1,3 +1,1 @@
-# datetime stamp: 2026-04-28 02:00
-VERSION = "V20260428_0200"
-
+# datetime stamp: 2026-05-18 17:45`nVERSION = "V20260518_1745"

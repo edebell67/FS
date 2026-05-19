@@ -1,0 +1,39 @@
+{
+  "params": {
+    "h": 72,
+    "m": 30,
+    "l": 18,
+    "bucket": 8,
+    "offset": 0.0,
+    "tp": null,
+    "sl": null,
+    "live_floor": 0.0
+  },
+  "cumulative_net_pips": 0.0,
+  "validated_net_pips": 0.0,
+  "active_position": null,
+  "bucket_times": [
+    "23:48"
+  ],
+  "first_prices": {
+    "bid": {
+      "23:48": 1.332
+    },
+    "ask": {
+      "23:48": 1.3322
+    }
+  },
+  "price_data": {
+    "bid": {
+      "1.332": {
+        "23:48": 5
+      }
+    },
+    "ask": {
+      "1.3322": {
+        "23:48": 5
+      }
+    }
+  },
+  "recent_trade_events": []
+}

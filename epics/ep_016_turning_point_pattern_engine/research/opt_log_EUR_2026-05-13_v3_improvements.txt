@@ -1,0 +1,12 @@
+V3 IMPROVEMENT-ONLY Optimization Log - Symbol: EUR - Date: 2026-05-13
+Note: Cycle count only increments when PPH > best_pph and Trades >= 5.
+Hard Cap: 5000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 6): PPH=-0.58   | Trades=11  | H=30 M=25 L=11 Off=-0.25 Min=5 TP=30.0 SL=30.0
+Improvement 002 (Attempt 7): PPH=0.79    | Trades=22  | H=42 M=33 L=15 Off=0.6 Min=8 TP=50.0 SL=20.0
+Improvement 003 (Attempt 29): PPH=1.97    | Trades=23  | H=28 M=23 L=2 Off=0.01 Min=10 TP=50.0 SL=20.0
+Improvement 004 (Attempt 63): PPH=2.25    | Trades=12  | H=27 M=13 L=5 Off=0.19 Min=15 TP=30.0 SL=20.0
+Improvement 005 (Attempt 273): PPH=2.4     | Trades=28  | H=33 M=29 L=16 Off=0.02 Min=5 TP=30.0 SL=50.0
+Improvement 006 (Attempt 793): PPH=2.44    | Trades=26  | H=47 M=32 L=20 Off=0.31 Min=5 TP=None SL=10.0
+Improvement 007 (Attempt 1222): PPH=2.62    | Trades=26  | H=26 M=21 L=17 Off=0.23 Min=5 TP=50.0 SL=20.0
+Improvement 008 (Attempt 1451): PPH=2.87    | Trades=27  | H=66 M=24 L=20 Off=0.01 Min=5 TP=10.0 SL=10.0

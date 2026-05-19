@@ -1,0 +1,11 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: GBPAUD_C - Date: 2026-05-14 - Target: legacy
+Gate Rule: PPH > best_pph AND Trades >= 5 (Legacy V3)
+Hard Cap: 10000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 1): PPH=1.94    | PPT=4.23 | Trades=11  | Dur=24.0  | H=76 M=21 L=18 Off=-1.41 Min=5 TP=20.0 SL=10.0
+Improvement 002 (Attempt 5): PPH=4.82    | PPT=3.85 | Trades=30  | Dur=24.0  | H=69 M=41 L=6 Off=2.38 Min=10 TP=100.0 SL=50.0
+Improvement 003 (Attempt 9): PPH=6.81    | PPT=4.30 | Trades=38  | Dur=24.0  | H=18 M=13 L=4 Off=-0.09 Min=8 TP=50.0 SL=50.0
+Improvement 004 (Attempt 22): PPH=7.79    | PPT=4.35 | Trades=43  | Dur=24.0  | H=70 M=20 L=6 Off=0.13 Min=8 TP=100.0 SL=None
+Improvement 005 (Attempt 78): PPH=7.97    | PPT=4.45 | Trades=43  | Dur=24.0  | H=27 M=22 L=19 Off=0.04 Min=8 TP=30.0 SL=30.0
+Improvement 006 (Attempt 205): PPH=8.28    | PPT=7.10 | Trades=28  | Dur=24.0  | H=61 M=25 L=18 Off=0.01 Min=10 TP=100.0 SL=10.0
+Improvement 007 (Attempt 931): PPH=8.36    | PPT=7.43 | Trades=27  | Dur=24.0  | H=29 M=24 L=19 Off=0.01 Min=10 TP=100.0 SL=30.0

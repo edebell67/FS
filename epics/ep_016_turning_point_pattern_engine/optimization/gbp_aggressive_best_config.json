@@ -1,0 +1,13 @@
+{
+    "pph": 2120.41,
+    "params": {
+        "conf_high": 31,
+        "conf_med": 18,
+        "conf_low": 4,
+        "price_offset": -9.89,
+        "fixed_tp": 5,
+        "fixed_sl": 20,
+        "bucket_minutes": 3
+    },
+    "cycle": 98
+}

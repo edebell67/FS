@@ -1,0 +1,14 @@
+V4 HIGH-SPEED AGGRESSIVE GATE Optimization Log - Symbol: AUD - Date: 2026-05-14 - Target: legacy
+Gate Rule: PPH > best_pph AND Trades >= 5 (Legacy V3)
+Hard Cap: 10000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 1): PPH=-2.04   | PPT=-2.04 | Trades=7   | Dur=6.99  | H=26 M=25 L=2 Off=0.11 Min=15 TP=None SL=50.0
+Improvement 002 (Attempt 4): PPH=-0.58   | PPT=-0.45 | Trades=9   | Dur=6.99  | H=23 M=18 L=15 Off=-0.05 Min=1 TP=20.0 SL=None
+Improvement 003 (Attempt 21): PPH=-0.4    | PPT=-0.47 | Trades=6   | Dur=6.99  | H=66 M=35 L=11 Off=1.8 Min=2 TP=100.0 SL=30.0
+Improvement 004 (Attempt 37): PPH=0.81    | PPT=0.81 | Trades=7   | Dur=6.99  | H=76 M=35 L=3 Off=0.19 Min=10 TP=50.0 SL=30.0
+Improvement 005 (Attempt 57): PPH=1.01    | PPT=1.41 | Trades=5   | Dur=6.99  | H=67 M=21 L=4 Off=-0.01 Min=2 TP=10.0 SL=20.0
+Improvement 006 (Attempt 179): PPH=1.12    | PPT=1.30 | Trades=6   | Dur=6.99  | H=34 M=18 L=9 Off=0.03 Min=2 TP=50.0 SL=50.0
+Improvement 007 (Attempt 253): PPH=1.2     | PPT=1.40 | Trades=6   | Dur=6.99  | H=58 M=13 L=10 Off=0.52 Min=10 TP=50.0 SL=None
+Improvement 008 (Attempt 400): PPH=1.24    | PPT=1.73 | Trades=5   | Dur=6.99  | H=54 M=17 L=3 Off=-0.33 Min=2 TP=10.0 SL=30.0
+Improvement 009 (Attempt 679): PPH=1.51    | PPT=1.76 | Trades=6   | Dur=6.99  | H=47 M=12 L=10 Off=0.16 Min=10 TP=10.0 SL=50.0
+Improvement 010 (Attempt 1058): PPH=1.57    | PPT=1.83 | Trades=6   | Dur=6.99  | H=39 M=12 L=9 Off=0.09 Min=10 TP=30.0 SL=30.0

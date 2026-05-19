@@ -1,0 +1,9 @@
+V3 IMPROVEMENT-ONLY Optimization Log - Symbol: AUD - Date: 2026-05-13
+Note: Cycle count only increments when PPH > best_pph and Trades >= 5.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 1): PPH=-0.35   | Trades=32  | H=21 M=18 L=8 Off=0.83 Min=5 TP=None SL=50.0
+Improvement 002 (Attempt 2): PPH=1.5     | Trades=28  | H=63 M=21 L=18 Off=0.09 Min=5 TP=None SL=None
+Improvement 003 (Attempt 126): PPH=2.0     | Trades=24  | H=25 M=20 L=8 Off=0.18 Min=8 TP=30.0 SL=10.0
+Improvement 004 (Attempt 751): PPH=2.26    | Trades=32  | H=29 M=22 L=2 Off=0.02 Min=5 TP=30.0 SL=50.0
+Improvement 005 (Attempt 2181): PPH=2.28    | Trades=24  | H=32 M=27 L=7 Off=0.01 Min=8 TP=30.0 SL=30.0
+Improvement 006 (Attempt 2610): PPH=2.31    | Trades=42  | H=16 M=11 L=8 Off=0.02 Min=2 TP=None SL=30.0

@@ -1,0 +1,27 @@
+{
+    "strategy_name": "GBP Turning Point Pattern Engine - Optimized",
+    "version": "V20260513_1320",
+    "last_optimized": "2026-05-13 17:15",
+    "target_symbol": "GBPAUD_C",
+    "parameters": {
+        "conf_high": 20,
+        "conf_med": 8,
+        "conf_low": 3,
+        "bucket_minutes": 5,
+        "price_offset_pips": 0.0,
+        "fixed_tp_pips": null,
+        "fixed_sl_pips": null,
+        "round_turn_cost_pips": -2.0
+    },
+    "backtest_results": {
+        "data_date": "2026-05-13",
+        "data_start": "09:39:13",
+        "duration_hours": 7.5,
+        "total_net_pips": 128.7,
+        "total_alt_pips": -212.0,
+        "pips_per_hour": 17.16,
+        "trade_count": 28,
+        "winning_trades": 18,
+        "losing_trades": 10
+    }
+}

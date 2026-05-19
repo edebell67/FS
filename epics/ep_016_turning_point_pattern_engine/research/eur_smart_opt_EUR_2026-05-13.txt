@@ -1,0 +1,19 @@
+EUR Smart Optimizer Log - Symbol: EUR - Date: 2026-05-13
+Validation: PPH > 0 AND PPH > previous best
+Termination: 100 cycles OR 5 cycles above 10.0 PPH
+======================================================================
+Cycle 001: PPH=0.24    | +0.24  | Trades=3   | H=18 M=13 L=12 Off=-0.99 Min=15 TP=30.0 SL=None
+Cycle 002: PPH=0.51    | +0.27  | Trades=8   | H=52 M=18 L=15 Off=-0.04 Min=3 TP=20.0 SL=None
+Cycle 003: PPH=1.22    | +0.71  | Trades=23  | H=17 M=15 L=9 Off=0.48 Min=10 TP=20.0 SL=None
+Cycle 004: PPH=1.49    | +0.27  | Trades=28  | H=56 M=32 L=14 Off=0.54 Min=5 TP=10.0 SL=30.0
+Cycle 005: PPH=1.55    | +0.06  | Trades=23  | H=25 M=15 L=7 Off=0.27 Min=10 TP=30.0 SL=30.0
+Cycle 006: PPH=1.86    | +0.31  | Trades=29  | H=24 M=19 L=10 Off=0.22 Min=5 TP=20.0 SL=10.0
+Cycle 007: PPH=1.98    | +0.12  | Trades=12  | H=30 M=22 L=13 Off=0.51 Min=15 TP=50.0 SL=30.0
+Cycle 008: PPH=2.21    | +0.23  | Trades=21  | H=51 M=31 L=11 Off=0.16 Min=10 TP=None SL=10.0
+Cycle 009: PPH=2.25    | +0.04  | Trades=12  | H=34 M=17 L=7 Off=0.19 Min=15 TP=None SL=20.0
+Cycle 010: PPH=2.30    | +0.05  | Trades=21  | H=32 M=31 L=15 Off=-0.0 Min=10 TP=10.0 SL=None
+Cycle 011: PPH=2.42    | +0.12  | Trades=20  | H=37 M=17 L=13 Off=0.09 Min=10 TP=30.0 SL=30.0
+Cycle 007: PPH=2.54    | +0.04  | Trades=20  | H=27 M=18 L=12 Off=0.0 Min=10 TP=20.0 SL=30.0
+Cycle 012: PPH=2.44    | +0.02  | Trades=28  | H=36 M=25 L=15 Off=-0.0 Min=5 TP=20.0 SL=10.0
+Cycle 013: PPH=2.45    | +0.01  | Trades=20  | H=59 M=31 L=13 Off=0.07 Min=10 TP=30.0 SL=10.0
+Cycle 014: PPH=2.53    | +0.08  | Trades=20  | H=46 M=29 L=14 Off=0.01 Min=10 TP=50.0 SL=20.0

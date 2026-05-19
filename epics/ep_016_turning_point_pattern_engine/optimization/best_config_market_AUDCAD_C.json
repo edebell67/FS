@@ -1,0 +1,26 @@
+{
+    "symbol": "AUDCAD_C",
+    "pph": 0.0,
+    "results": {
+        "total_net": 0,
+        "total_alt": 0,
+        "trade_count": 0,
+        "pips_per_hour": 0.0,
+        "duration_hours": 14.35,
+        "params": {
+            "conf_high": 14,
+            "conf_med": 13,
+            "conf_low": 12,
+            "mild_threshold": 5,
+            "price_offset": 0.0,
+            "fixed_tp": 5.0,
+            "fixed_sl": 20.0,
+            "bucket_minutes": 1,
+            "round_turn_cost": -3.0,
+            "accumulation": 1
+        },
+        "symbol": "AUDCAD_C",
+        "trades": []
+    },
+    "cycle": 30
+}

@@ -1,0 +1,10 @@
+V3 IMPROVEMENT-ONLY Optimization Log - Symbol: NZD - Date: 2026-05-13
+Note: Cycle count only increments when PPH > best_pph and Trades >= 5.
+Hard Cap: 1000 attempts.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 2): PPH=-2.58   | Trades=26  | H=49 M=38 L=19 Off=0.98 Min=3 TP=50.0 SL=20.0
+Improvement 002 (Attempt 4): PPH=-0.18   | Trades=23  | H=51 M=37 L=11 Off=0.33 Min=8 TP=None SL=None
+Improvement 003 (Attempt 35): PPH=0.2     | Trades=13  | H=39 M=11 L=8 Off=-0.37 Min=10 TP=30.0 SL=30.0
+Improvement 004 (Attempt 49): PPH=0.29    | Trades=8   | H=66 M=40 L=3 Off=-0.89 Min=15 TP=None SL=50.0
+Improvement 005 (Attempt 127): PPH=0.61    | Trades=20  | H=60 M=28 L=19 Off=0.11 Min=8 TP=50.0 SL=30.0
+Improvement 006 (Attempt 783): PPH=0.83    | Trades=14  | H=45 M=35 L=2 Off=-0.46 Min=10 TP=20.0 SL=30.0

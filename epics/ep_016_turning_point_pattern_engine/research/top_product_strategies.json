@@ -1,0 +1,91 @@
+{
+  "AUD": {
+    "best_pph": 1.64,
+    "params": {
+      "conf_high": 41,
+      "conf_med": 34,
+      "conf_low": 12,
+      "price_offset": 0.33,
+      "fixed_tp": null,
+      "fixed_sl": 30.0,
+      "bucket_minutes": 8,
+      "round_turn_cost": -2.0
+    },
+    "date_optimized": "2026-05-13",
+    "last_updated": "2026-05-14T18:31:08.299137"
+  },
+  "NZD": {
+    "best_pph": 0.83,
+    "params": {
+      "conf_high": 45,
+      "conf_med": 35,
+      "conf_low": 2,
+      "price_offset": -0.46,
+      "fixed_tp": 20.0,
+      "fixed_sl": 30.0,
+      "bucket_minutes": 10,
+      "round_turn_cost": -2.0
+    },
+    "date_optimized": "2026-05-13",
+    "search_type": "improvement_only",
+    "total_attempts": 1000,
+    "last_updated": "2026-05-15T12:32:10.656720"
+  },
+  "EUR": {
+    "best_pph": 2.87,
+    "params": {
+      "conf_high": 66,
+      "conf_med": 24,
+      "conf_low": 20,
+      "price_offset": 0.01,
+      "fixed_tp": 10.0,
+      "fixed_sl": 10.0,
+      "bucket_minutes": 5,
+      "round_turn_cost": -2.0
+    },
+    "date_optimized": "2026-05-13",
+    "search_type": "improvement_only",
+    "total_attempts": 5000,
+    "last_updated": "2026-05-15T12:01:28.567632"
+  },
+  "GBP": {
+    "best_pph": 2.56,
+    "params": {
+      "conf_high": 53,
+      "conf_med": 20,
+      "conf_low": 7,
+      "price_offset": -0.35,
+      "fixed_tp": 10.0,
+      "fixed_sl": 20.0,
+      "bucket_minutes": 15,
+      "round_turn_cost": -2.0,
+      "mild_threshold": 5,
+      "accumulation": 1
+    },
+    "date_optimized": "2026-05-16",
+    "search_type": "v6_multi_day_stability",
+    "total_attempts": 1432,
+    "win_rate": "100%",
+    "drawdown": "0.00",
+    "last_updated": "2026-05-16T21:20:00.000000"
+  },
+  "GBPAUD_C": {
+    "best_pph": 8.36,
+    "params": {
+      "conf_high": 29,
+      "conf_med": 24,
+      "conf_low": 19,
+      "price_offset": 0.01,
+      "fixed_tp": 100.0,
+      "fixed_sl": 30.0,
+      "bucket_minutes": 10,
+      "round_turn_cost": -2.0,
+      "mild_threshold": 5,
+      "accumulation": 1
+    },
+    "date_optimized": "2026-05-14",
+    "search_type": "legacy_v4_discovery",
+    "total_attempts": 10000,
+    "last_updated": "2026-05-16T19:45:00.000000"
+  }
+}

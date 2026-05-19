@@ -1,0 +1,4 @@
+EUR Smart Optimizer Log - Symbol: EURAUD_C - Date: 2026-05-13
+Validation: PPH > 0 AND PPH >= best + 1.0
+Termination: 100 cycles OR 5 cycles above 10.0 PPH
+======================================================================

@@ -1,0 +1,9 @@
+V3 IMPROVEMENT-ONLY Optimization Log - Symbol: GBP - Date: 2026-05-13
+Note: Cycle count only increments when PPH > best_pph and Trades >= 5.
+------------------------------------------------------------------------
+Improvement 001 (Attempt 2): PPH=0.3     | Trades=6   | H=45 M=12 L=9 Off=-1.54 Min=15 TP=30.0 SL=None
+Improvement 002 (Attempt 3): PPH=4.52    | Trades=20  | H=40 M=35 L=6 Off=0.18 Min=10 TP=30.0 SL=30.0
+Improvement 003 (Attempt 61): PPH=4.75    | Trades=20  | H=47 M=15 L=9 Off=0.04 Min=10 TP=30.0 SL=50.0
+Improvement 004 (Attempt 79): PPH=6.07    | Trades=26  | H=30 M=29 L=19 Off=0.21 Min=8 TP=20.0 SL=30.0
+Improvement 005 (Attempt 194): PPH=6.34    | Trades=26  | H=59 M=39 L=17 Off=0.06 Min=8 TP=20.0 SL=20.0
+Improvement 006 (Attempt 2077): PPH=6.64    | Trades=25  | H=70 M=40 L=15 Off=0.01 Min=8 TP=50.0 SL=None

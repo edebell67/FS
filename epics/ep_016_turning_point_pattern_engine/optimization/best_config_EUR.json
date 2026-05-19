@@ -1,0 +1,276 @@
+{
+    "symbol": "EUR",
+    "pph": 1.08,
+    "results": {
+        "total_net": 15.5,
+        "total_alt": -115.5,
+        "trade_count": 25,
+        "pips_per_hour": 1.08,
+        "duration_hours": 14.35,
+        "params": {
+            "conf_high": 36,
+            "conf_med": 15,
+            "conf_low": 8,
+            "mild_threshold": 5,
+            "price_offset": 0.02,
+            "fixed_tp": null,
+            "fixed_sl": 15.0,
+            "bucket_minutes": 10,
+            "accumulation": 1
+        },
+        "symbol": "EUR",
+        "trades": [
+            {
+                "entry_ts": "2026-05-13T09:40:02.949147",
+                "exit_ts": "2026-05-13T09:50:01.170755",
+                "direction": "short",
+                "entry_price": 1.170748,
+                "exit_price": 1.17015,
+                "exit_reason": "signal",
+                "pips": 3.98,
+                "alt_pips": -7.98
+            },
+            {
+                "entry_ts": "2026-05-13T10:10:04.823788",
+                "exit_ts": "2026-05-13T10:30:03.289457",
+                "direction": "short",
+                "entry_price": 1.1701979999999998,
+                "exit_price": 1.1696,
+                "exit_reason": "signal",
+                "pips": 3.98,
+                "alt_pips": -7.98
+            },
+            {
+                "entry_ts": "2026-05-13T10:50:04.550685",
+                "exit_ts": "2026-05-13T11:00:02.076653",
+                "direction": "long",
+                "entry_price": 1.170202,
+                "exit_price": 1.1706,
+                "exit_reason": "signal",
+                "pips": 1.98,
+                "alt_pips": -5.98
+            },
+            {
+                "entry_ts": "2026-05-13T11:10:02.868868",
+                "exit_ts": "2026-05-13T11:20:04.427743",
+                "direction": "short",
+                "entry_price": 1.170598,
+                "exit_price": 1.17045,
+                "exit_reason": "signal",
+                "pips": -0.52,
+                "alt_pips": -3.48
+            },
+            {
+                "entry_ts": "2026-05-13T11:40:01.791323",
+                "exit_ts": "2026-05-13T11:50:02.589163",
+                "direction": "long",
+                "entry_price": 1.1707020000000001,
+                "exit_price": 1.17135,
+                "exit_reason": "signal",
+                "pips": 4.48,
+                "alt_pips": -8.48
+            },
+            {
+                "entry_ts": "2026-05-13T12:10:04.244719",
+                "exit_ts": "2026-05-13T12:40:05.130139",
+                "direction": "long",
+                "entry_price": 1.171302,
+                "exit_price": 1.17165,
+                "exit_reason": "signal",
+                "pips": 1.48,
+                "alt_pips": -5.48
+            },
+            {
+                "entry_ts": "2026-05-13T12:50:02.083438",
+                "exit_ts": "2026-05-13T13:00:02.706153",
+                "direction": "short",
+                "entry_price": 1.171448,
+                "exit_price": 1.17125,
+                "exit_reason": "signal",
+                "pips": -0.02,
+                "alt_pips": -3.98
+            },
+            {
+                "entry_ts": "2026-05-13T13:20:03.028867",
+                "exit_ts": "2026-05-13T13:30:03.616448",
+                "direction": "short",
+                "entry_price": 1.1708479999999999,
+                "exit_price": 1.17035,
+                "exit_reason": "signal",
+                "pips": 2.98,
+                "alt_pips": -6.98
+            },
+            {
+                "entry_ts": "2026-05-13T13:50:01.244689",
+                "exit_ts": "2026-05-13T14:00:00.277212",
+                "direction": "short",
+                "entry_price": 1.1701979999999998,
+                "exit_price": 1.1702,
+                "exit_reason": "signal",
+                "pips": -2.02,
+                "alt_pips": -1.98
+            },
+            {
+                "entry_ts": "2026-05-13T14:00:00.277212",
+                "exit_ts": "2026-05-13T14:10:03.074033",
+                "direction": "long",
+                "entry_price": 1.170202,
+                "exit_price": 1.1703,
+                "exit_reason": "signal",
+                "pips": -1.02,
+                "alt_pips": -2.98
+            },
+            {
+                "entry_ts": "2026-05-13T14:30:01.707772",
+                "exit_ts": "2026-05-13T15:10:03.760417",
+                "direction": "long",
+                "entry_price": 1.170352,
+                "exit_price": 1.17105,
+                "exit_reason": "signal",
+                "pips": 4.98,
+                "alt_pips": -8.98
+            },
+            {
+                "entry_ts": "2026-05-13T15:10:03.760417",
+                "exit_ts": "2026-05-13T15:20:03.367574",
+                "direction": "short",
+                "entry_price": 1.1710479999999999,
+                "exit_price": 1.17065,
+                "exit_reason": "signal",
+                "pips": 1.98,
+                "alt_pips": -5.98
+            },
+            {
+                "entry_ts": "2026-05-13T15:40:04.073088",
+                "exit_ts": "2026-05-13T15:50:03.574487",
+                "direction": "short",
+                "entry_price": 1.1708479999999999,
+                "exit_price": 1.1705,
+                "exit_reason": "signal",
+                "pips": 1.48,
+                "alt_pips": -5.48
+            },
+            {
+                "entry_ts": "2026-05-13T16:00:00.659505",
+                "exit_ts": "2026-05-13T16:10:04.974619",
+                "direction": "long",
+                "entry_price": 1.1708020000000001,
+                "exit_price": 1.1711,
+                "exit_reason": "signal",
+                "pips": 0.98,
+                "alt_pips": -4.98
+            },
+            {
+                "entry_ts": "2026-05-13T16:30:00.652827",
+                "exit_ts": "2026-05-13T16:40:01.438773",
+                "direction": "long",
+                "entry_price": 1.171152,
+                "exit_price": 1.17155,
+                "exit_reason": "signal",
+                "pips": 1.98,
+                "alt_pips": -5.98
+            },
+            {
+                "entry_ts": "2026-05-13T16:50:01.423576",
+                "exit_ts": "2026-05-13T17:10:04.211008",
+                "direction": "short",
+                "entry_price": 1.171298,
+                "exit_price": 1.17135,
+                "exit_reason": "signal",
+                "pips": -2.52,
+                "alt_pips": -1.48
+            },
+            {
+                "entry_ts": "2026-05-13T17:40:05.405540",
+                "exit_ts": "2026-05-13T18:00:00.884860",
+                "direction": "short",
+                "entry_price": 1.1712479999999998,
+                "exit_price": 1.1709,
+                "exit_reason": "signal",
+                "pips": 1.48,
+                "alt_pips": -5.48
+            },
+            {
+                "entry_ts": "2026-05-13T18:10:03.356227",
+                "exit_ts": "2026-05-13T18:20:04.123793",
+                "direction": "long",
+                "entry_price": 1.171002,
+                "exit_price": 1.17105,
+                "exit_reason": "signal",
+                "pips": -1.52,
+                "alt_pips": -2.48
+            },
+            {
+                "entry_ts": "2026-05-13T18:30:03.377643",
+                "exit_ts": "2026-05-13T18:50:00.974047",
+                "direction": "short",
+                "entry_price": 1.1709479999999999,
+                "exit_price": 1.1706,
+                "exit_reason": "signal",
+                "pips": 1.48,
+                "alt_pips": -5.48
+            },
+            {
+                "entry_ts": "2026-05-13T19:20:05.154217",
+                "exit_ts": "2026-05-13T19:50:04.843006",
+                "direction": "long",
+                "entry_price": 1.170652,
+                "exit_price": 1.1706,
+                "exit_reason": "signal",
+                "pips": -2.52,
+                "alt_pips": -1.48
+            },
+            {
+                "entry_ts": "2026-05-13T20:00:01.181276",
+                "exit_ts": "2026-05-13T20:40:03.092536",
+                "direction": "long",
+                "entry_price": 1.1708020000000001,
+                "exit_price": 1.171,
+                "exit_reason": "signal",
+                "pips": -0.02,
+                "alt_pips": -3.98
+            },
+            {
+                "entry_ts": "2026-05-13T20:50:51.990462",
+                "exit_ts": "2026-05-13T21:00:05.219148",
+                "direction": "short",
+                "entry_price": 1.170998,
+                "exit_price": 1.171,
+                "exit_reason": "signal",
+                "pips": -2.02,
+                "alt_pips": -1.98
+            },
+            {
+                "entry_ts": "2026-05-13T21:20:04.342965",
+                "exit_ts": "2026-05-13T23:00:05.187255",
+                "direction": "long",
+                "entry_price": 1.171252,
+                "exit_price": 1.17135,
+                "exit_reason": "signal",
+                "pips": -1.02,
+                "alt_pips": -2.98
+            },
+            {
+                "entry_ts": "2026-05-13T23:20:00.957775",
+                "exit_ts": "2026-05-13T23:40:03.622500",
+                "direction": "long",
+                "entry_price": 1.171802,
+                "exit_price": 1.17175,
+                "exit_reason": "signal",
+                "pips": -2.52,
+                "alt_pips": -1.48
+            },
+            {
+                "entry_ts": "2026-05-13T23:40:03.622500",
+                "exit_ts": "2026-05-13T23:50:01.127884",
+                "direction": "short",
+                "entry_price": 1.171748,
+                "exit_price": 1.17175,
+                "exit_reason": "signal",
+                "pips": -2.02,
+                "alt_pips": -1.98
+            }
+        ]
+    },
+    "cycle": 80
+}

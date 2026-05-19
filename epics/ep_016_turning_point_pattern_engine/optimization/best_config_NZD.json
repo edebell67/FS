@@ -1,0 +1,25 @@
+{
+    "symbol": "NZD",
+    "pph": 0.0,
+    "results": {
+        "total_net": 0,
+        "total_alt": 0,
+        "trade_count": 0,
+        "pips_per_hour": 0.0,
+        "duration_hours": 14.35,
+        "params": {
+            "conf_high": 45,
+            "conf_med": 16,
+            "conf_low": 12,
+            "mild_threshold": 5,
+            "price_offset": -4.97,
+            "fixed_tp": null,
+            "fixed_sl": null,
+            "bucket_minutes": 1,
+            "accumulation": 1
+        },
+        "symbol": "NZD",
+        "trades": []
+    },
+    "cycle": 6
+}

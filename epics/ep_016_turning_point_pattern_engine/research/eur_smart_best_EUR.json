@@ -1,0 +1,3422 @@
+{
+  "symbol": "EUR",
+  "date": "2026-05-13",
+  "best_pph": 2.47,
+  "best_params": {
+    "conf_high": 33,
+    "conf_med": 29,
+    "conf_low": 13,
+    "price_offset": 0.05,
+    "fixed_tp": 20.0,
+    "fixed_sl": 20.0,
+    "bucket_minutes": 10,
+    "round_turn_cost": -2.0
+  },
+  "total_attempts": 1086,
+  "valid_cycles": 200,
+  "high_pph_cycles": 0,
+  "high_pph_details": [],
+  "all_valid_cycles": [
+    {
+      "cycle": 1,
+      "pph": 0.2,
+      "trades": 8,
+      "improvement": 0.2,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 15,
+        "conf_low": 7,
+        "price_offset": -0.11,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 10
+    },
+    {
+      "cycle": 2,
+      "pph": 1.86,
+      "trades": 23,
+      "improvement": 1.66,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 16,
+        "conf_low": 8,
+        "price_offset": 0.08,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 11
+    },
+    {
+      "cycle": 3,
+      "pph": 1.3,
+      "trades": 20,
+      "improvement": -0.56,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 26,
+        "conf_low": 13,
+        "price_offset": 0.89,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 12
+    },
+    {
+      "cycle": 4,
+      "pph": 0.21,
+      "trades": 11,
+      "improvement": -1.65,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 8,
+        "conf_low": 5,
+        "price_offset": -0.09,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 14
+    },
+    {
+      "cycle": 5,
+      "pph": 2.18,
+      "trades": 12,
+      "improvement": 0.32,
+      "params": {
+        "conf_high": 60,
+        "conf_med": 10,
+        "conf_low": 6,
+        "price_offset": 0.27,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 21
+    },
+    {
+      "cycle": 6,
+      "pph": 0.82,
+      "trades": 21,
+      "improvement": -1.36,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 28,
+        "conf_low": 14,
+        "price_offset": 1.08,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 24
+    },
+    {
+      "cycle": 7,
+      "pph": 2.47,
+      "trades": 20,
+      "improvement": 0.29,
+      "params": {
+        "conf_high": 33,
+        "conf_med": 29,
+        "conf_low": 13,
+        "price_offset": 0.05,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 25
+    },
+    {
+      "cycle": 8,
+      "pph": 1.51,
+      "trades": 12,
+      "improvement": -0.96,
+      "params": {
+        "conf_high": 40,
+        "conf_med": 30,
+        "conf_low": 2,
+        "price_offset": 1.07,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 33
+    },
+    {
+      "cycle": 9,
+      "pph": 0.04,
+      "trades": 30,
+      "improvement": -2.43,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 29,
+        "conf_low": 6,
+        "price_offset": 0.38,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 34
+    },
+    {
+      "cycle": 10,
+      "pph": 2.4,
+      "trades": 12,
+      "improvement": -0.07,
+      "params": {
+        "conf_high": 47,
+        "conf_med": 16,
+        "conf_low": 7,
+        "price_offset": 0.01,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 37
+    },
+    {
+      "cycle": 11,
+      "pph": 0.38,
+      "trades": 10,
+      "improvement": -2.09,
+      "params": {
+        "conf_high": 30,
+        "conf_med": 22,
+        "conf_low": 13,
+        "price_offset": -0.19,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 38
+    },
+    {
+      "cycle": 12,
+      "pph": 1.78,
+      "trades": 23,
+      "improvement": -0.69,
+      "params": {
+        "conf_high": 42,
+        "conf_med": 8,
+        "conf_low": 5,
+        "price_offset": 0.13,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 47
+    },
+    {
+      "cycle": 13,
+      "pph": 0.2,
+      "trades": 4,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 8,
+        "conf_low": 5,
+        "price_offset": -0.83,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 51
+    },
+    {
+      "cycle": 14,
+      "pph": 0.79,
+      "trades": 9,
+      "improvement": -1.68,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 15,
+        "conf_low": 11,
+        "price_offset": -0.32,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 58
+    },
+    {
+      "cycle": 15,
+      "pph": 0.39,
+      "trades": 11,
+      "improvement": -2.08,
+      "params": {
+        "conf_high": 31,
+        "conf_med": 10,
+        "conf_low": 5,
+        "price_offset": -0.33,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 61
+    },
+    {
+      "cycle": 16,
+      "pph": 2.09,
+      "trades": 13,
+      "improvement": -0.38,
+      "params": {
+        "conf_high": 33,
+        "conf_med": 12,
+        "conf_low": 5,
+        "price_offset": 0.15,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 70
+    },
+    {
+      "cycle": 17,
+      "pph": 0.46,
+      "trades": 11,
+      "improvement": -2.01,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 13,
+        "conf_low": 8,
+        "price_offset": -0.42,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 71
+    },
+    {
+      "cycle": 18,
+      "pph": 1.31,
+      "trades": 12,
+      "improvement": -1.16,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 18,
+        "conf_low": 11,
+        "price_offset": 1.31,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 77
+    },
+    {
+      "cycle": 19,
+      "pph": 1.64,
+      "trades": 12,
+      "improvement": -0.83,
+      "params": {
+        "conf_high": 51,
+        "conf_med": 13,
+        "conf_low": 7,
+        "price_offset": 0.92,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 82
+    },
+    {
+      "cycle": 20,
+      "pph": 0.65,
+      "trades": 21,
+      "improvement": -1.82,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 26,
+        "conf_low": 11,
+        "price_offset": 1.22,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 85
+    },
+    {
+      "cycle": 21,
+      "pph": 0.69,
+      "trades": 3,
+      "improvement": -1.78,
+      "params": {
+        "conf_high": 36,
+        "conf_med": 17,
+        "conf_low": 14,
+        "price_offset": -0.61,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 86
+    },
+    {
+      "cycle": 22,
+      "pph": 0.16,
+      "trades": 46,
+      "improvement": -2.31,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 14,
+        "conf_low": 10,
+        "price_offset": 0.09,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 91
+    },
+    {
+      "cycle": 23,
+      "pph": 0.16,
+      "trades": 3,
+      "improvement": -2.31,
+      "params": {
+        "conf_high": 60,
+        "conf_med": 15,
+        "conf_low": 9,
+        "price_offset": -0.61,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 96
+    },
+    {
+      "cycle": 24,
+      "pph": 1.19,
+      "trades": 23,
+      "improvement": -1.28,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 21,
+        "conf_low": 12,
+        "price_offset": 0.32,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 106
+    },
+    {
+      "cycle": 25,
+      "pph": 2.3,
+      "trades": 12,
+      "improvement": -0.17,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 17,
+        "conf_low": 4,
+        "price_offset": 0.12,
+        "fixed_tp": 50.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 108
+    },
+    {
+      "cycle": 26,
+      "pph": 0.2,
+      "trades": 29,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 21,
+        "conf_low": 12,
+        "price_offset": 1.02,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 112
+    },
+    {
+      "cycle": 27,
+      "pph": 1.23,
+      "trades": 23,
+      "improvement": -1.24,
+      "params": {
+        "conf_high": 35,
+        "conf_med": 19,
+        "conf_low": 4,
+        "price_offset": 0.47,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 119
+    },
+    {
+      "cycle": 28,
+      "pph": 0.2,
+      "trades": 4,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 35,
+        "conf_med": 16,
+        "conf_low": 5,
+        "price_offset": -0.85,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 120
+    },
+    {
+      "cycle": 29,
+      "pph": 1.37,
+      "trades": 27,
+      "improvement": -1.1,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 12,
+        "conf_low": 7,
+        "price_offset": 0.07,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 122
+    },
+    {
+      "cycle": 30,
+      "pph": 2.21,
+      "trades": 13,
+      "improvement": -0.26,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 17,
+        "conf_low": 6,
+        "price_offset": 0.02,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 126
+    },
+    {
+      "cycle": 31,
+      "pph": 1.62,
+      "trades": 28,
+      "improvement": -0.85,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 13,
+        "conf_low": 12,
+        "price_offset": 0.42,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 127
+    },
+    {
+      "cycle": 32,
+      "pph": 0.27,
+      "trades": 7,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 43,
+        "conf_med": 28,
+        "conf_low": 10,
+        "price_offset": -0.41,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 132
+    },
+    {
+      "cycle": 33,
+      "pph": 1.35,
+      "trades": 21,
+      "improvement": -1.12,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 34,
+        "conf_low": 15,
+        "price_offset": 0.7,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 134
+    },
+    {
+      "cycle": 34,
+      "pph": 1.91,
+      "trades": 21,
+      "improvement": -0.56,
+      "params": {
+        "conf_high": 56,
+        "conf_med": 18,
+        "conf_low": 14,
+        "price_offset": 0.29,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 138
+    },
+    {
+      "cycle": 35,
+      "pph": 0.27,
+      "trades": 37,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 14,
+        "conf_low": 11,
+        "price_offset": 0.18,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 143
+    },
+    {
+      "cycle": 36,
+      "pph": 0.15,
+      "trades": 11,
+      "improvement": -2.32,
+      "params": {
+        "conf_high": 47,
+        "conf_med": 26,
+        "conf_low": 8,
+        "price_offset": -0.02,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 145
+    },
+    {
+      "cycle": 37,
+      "pph": 0.81,
+      "trades": 12,
+      "improvement": -1.66,
+      "params": {
+        "conf_high": 35,
+        "conf_med": 8,
+        "conf_low": 6,
+        "price_offset": 1.91,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 151
+    },
+    {
+      "cycle": 38,
+      "pph": 0.45,
+      "trades": 11,
+      "improvement": -2.02,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 14,
+        "conf_low": 3,
+        "price_offset": -0.41,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 166
+    },
+    {
+      "cycle": 39,
+      "pph": 0.2,
+      "trades": 7,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 25,
+        "conf_low": 8,
+        "price_offset": -0.26,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 169
+    },
+    {
+      "cycle": 40,
+      "pph": 1.07,
+      "trades": 12,
+      "improvement": -1.4,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": 1.6,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 172
+    },
+    {
+      "cycle": 41,
+      "pph": 1.01,
+      "trades": 29,
+      "improvement": -1.46,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 15,
+        "conf_low": 8,
+        "price_offset": 0.62,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 194
+    },
+    {
+      "cycle": 42,
+      "pph": 0.33,
+      "trades": 3,
+      "improvement": -2.14,
+      "params": {
+        "conf_high": 60,
+        "conf_med": 24,
+        "conf_low": 2,
+        "price_offset": -1.41,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 195
+    },
+    {
+      "cycle": 43,
+      "pph": 0.29,
+      "trades": 12,
+      "improvement": -2.18,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 8,
+        "conf_low": 5,
+        "price_offset": -0.14,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 196
+    },
+    {
+      "cycle": 44,
+      "pph": 0.87,
+      "trades": 8,
+      "improvement": -1.6,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 23,
+        "conf_low": 14,
+        "price_offset": -0.31,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 198
+    },
+    {
+      "cycle": 45,
+      "pph": 1.37,
+      "trades": 32,
+      "improvement": -1.1,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 29,
+        "conf_low": 15,
+        "price_offset": 0.04,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 204
+    },
+    {
+      "cycle": 46,
+      "pph": 0.27,
+      "trades": 7,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 13,
+        "conf_low": 10,
+        "price_offset": -0.42,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 208
+    },
+    {
+      "cycle": 47,
+      "pph": 1.24,
+      "trades": 28,
+      "improvement": -1.23,
+      "params": {
+        "conf_high": 60,
+        "conf_med": 22,
+        "conf_low": 14,
+        "price_offset": 0.67,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 224
+    },
+    {
+      "cycle": 48,
+      "pph": 0.34,
+      "trades": 3,
+      "improvement": -2.13,
+      "params": {
+        "conf_high": 39,
+        "conf_med": 12,
+        "conf_low": 9,
+        "price_offset": -1.47,
+        "fixed_tp": 20.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 232
+    },
+    {
+      "cycle": 49,
+      "pph": 0.78,
+      "trades": 23,
+      "improvement": -1.69,
+      "params": {
+        "conf_high": 25,
+        "conf_med": 20,
+        "conf_low": 11,
+        "price_offset": 0.58,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 240
+    },
+    {
+      "cycle": 50,
+      "pph": 1.23,
+      "trades": 12,
+      "improvement": -1.24,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 29,
+        "conf_low": 2,
+        "price_offset": 1.41,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 260
+    },
+    {
+      "cycle": 51,
+      "pph": 0.27,
+      "trades": 34,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 34,
+        "conf_med": 19,
+        "conf_low": 14,
+        "price_offset": 0.4,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 261
+    },
+    {
+      "cycle": 52,
+      "pph": 0.14,
+      "trades": 13,
+      "improvement": -2.33,
+      "params": {
+        "conf_high": 33,
+        "conf_med": 29,
+        "conf_low": 9,
+        "price_offset": -0.19,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 263
+    },
+    {
+      "cycle": 53,
+      "pph": 0.24,
+      "trades": 3,
+      "improvement": -2.23,
+      "params": {
+        "conf_high": 17,
+        "conf_med": 12,
+        "conf_low": 9,
+        "price_offset": -0.97,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 269
+    },
+    {
+      "cycle": 54,
+      "pph": 0.73,
+      "trades": 33,
+      "improvement": -1.74,
+      "params": {
+        "conf_high": 19,
+        "conf_med": 14,
+        "conf_low": 4,
+        "price_offset": 0.44,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 279
+    },
+    {
+      "cycle": 55,
+      "pph": 1.66,
+      "trades": 24,
+      "improvement": -0.81,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 16,
+        "conf_low": 8,
+        "price_offset": 0.11,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 280
+    },
+    {
+      "cycle": 56,
+      "pph": 1.42,
+      "trades": 23,
+      "improvement": -1.05,
+      "params": {
+        "conf_high": 19,
+        "conf_med": 14,
+        "conf_low": 13,
+        "price_offset": 0.18,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 289
+    },
+    {
+      "cycle": 57,
+      "pph": 2.0,
+      "trades": 12,
+      "improvement": -0.47,
+      "params": {
+        "conf_high": 49,
+        "conf_med": 17,
+        "conf_low": 15,
+        "price_offset": 0.48,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 298
+    },
+    {
+      "cycle": 58,
+      "pph": 0.17,
+      "trades": 28,
+      "improvement": -2.3,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 17,
+        "conf_low": 3,
+        "price_offset": 0.52,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 307
+    },
+    {
+      "cycle": 59,
+      "pph": 0.24,
+      "trades": 3,
+      "improvement": -2.23,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": -0.97,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 309
+    },
+    {
+      "cycle": 60,
+      "pph": 0.32,
+      "trades": 11,
+      "improvement": -2.15,
+      "params": {
+        "conf_high": 39,
+        "conf_med": 11,
+        "conf_low": 4,
+        "price_offset": -0.23,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 311
+    },
+    {
+      "cycle": 61,
+      "pph": 1.47,
+      "trades": 13,
+      "improvement": -1.0,
+      "params": {
+        "conf_high": 49,
+        "conf_med": 20,
+        "conf_low": 8,
+        "price_offset": 0.84,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 312
+    },
+    {
+      "cycle": 62,
+      "pph": 0.04,
+      "trades": 37,
+      "improvement": -2.43,
+      "params": {
+        "conf_high": 28,
+        "conf_med": 21,
+        "conf_low": 12,
+        "price_offset": 0.27,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 313
+    },
+    {
+      "cycle": 63,
+      "pph": 0.59,
+      "trades": 28,
+      "improvement": -1.88,
+      "params": {
+        "conf_high": 23,
+        "conf_med": 16,
+        "conf_low": 15,
+        "price_offset": 1.02,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 314
+    },
+    {
+      "cycle": 64,
+      "pph": 1.9,
+      "trades": 12,
+      "improvement": -0.57,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.6,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 315
+    },
+    {
+      "cycle": 65,
+      "pph": 0.27,
+      "trades": 8,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 17,
+        "conf_med": 11,
+        "conf_low": 8,
+        "price_offset": -0.24,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 317
+    },
+    {
+      "cycle": 66,
+      "pph": 0.77,
+      "trades": 31,
+      "improvement": -1.7,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.5,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 320
+    },
+    {
+      "cycle": 67,
+      "pph": 0.66,
+      "trades": 20,
+      "improvement": -1.81,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 15,
+        "conf_low": 12,
+        "price_offset": 1.35,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 324
+    },
+    {
+      "cycle": 68,
+      "pph": 1.08,
+      "trades": 27,
+      "improvement": -1.39,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.22,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 325
+    },
+    {
+      "cycle": 69,
+      "pph": 1.17,
+      "trades": 12,
+      "improvement": -1.3,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 18,
+        "conf_low": 7,
+        "price_offset": 1.48,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 328
+    },
+    {
+      "cycle": 70,
+      "pph": 0.16,
+      "trades": 3,
+      "improvement": -2.31,
+      "params": {
+        "conf_high": 17,
+        "conf_med": 12,
+        "conf_low": 2,
+        "price_offset": -0.62,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 334
+    },
+    {
+      "cycle": 71,
+      "pph": 0.64,
+      "trades": 29,
+      "improvement": -1.83,
+      "params": {
+        "conf_high": 42,
+        "conf_med": 29,
+        "conf_low": 9,
+        "price_offset": 0.82,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 335
+    },
+    {
+      "cycle": 72,
+      "pph": 0.99,
+      "trades": 13,
+      "improvement": -1.48,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 11,
+        "conf_low": 8,
+        "price_offset": 1.37,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 342
+    },
+    {
+      "cycle": 73,
+      "pph": 0.3,
+      "trades": 3,
+      "improvement": -2.17,
+      "params": {
+        "conf_high": 26,
+        "conf_med": 17,
+        "conf_low": 15,
+        "price_offset": -1.25,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 352
+    },
+    {
+      "cycle": 74,
+      "pph": 0.92,
+      "trades": 33,
+      "improvement": -1.55,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.22,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 355
+    },
+    {
+      "cycle": 75,
+      "pph": 1.33,
+      "trades": 23,
+      "improvement": -1.14,
+      "params": {
+        "conf_high": 22,
+        "conf_med": 17,
+        "conf_low": 10,
+        "price_offset": 0.41,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 357
+    },
+    {
+      "cycle": 76,
+      "pph": 0.7,
+      "trades": 3,
+      "improvement": -1.77,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 32,
+        "conf_low": 11,
+        "price_offset": -0.7,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 362
+    },
+    {
+      "cycle": 77,
+      "pph": 0.26,
+      "trades": 7,
+      "improvement": -2.21,
+      "params": {
+        "conf_high": 48,
+        "conf_med": 30,
+        "conf_low": 7,
+        "price_offset": -0.39,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 366
+    },
+    {
+      "cycle": 78,
+      "pph": 2.15,
+      "trades": 12,
+      "improvement": -0.32,
+      "params": {
+        "conf_high": 41,
+        "conf_med": 29,
+        "conf_low": 6,
+        "price_offset": 0.3,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 367
+    },
+    {
+      "cycle": 79,
+      "pph": 0.76,
+      "trades": 3,
+      "improvement": -1.71,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 31,
+        "conf_low": 12,
+        "price_offset": -0.98,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 369
+    },
+    {
+      "cycle": 80,
+      "pph": 0.45,
+      "trades": 23,
+      "improvement": -2.02,
+      "params": {
+        "conf_high": 25,
+        "conf_med": 11,
+        "conf_low": 3,
+        "price_offset": 0.96,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 375
+    },
+    {
+      "cycle": 81,
+      "pph": 0.74,
+      "trades": 3,
+      "improvement": -1.73,
+      "params": {
+        "conf_high": 30,
+        "conf_med": 26,
+        "conf_low": 11,
+        "price_offset": -0.87,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 383
+    },
+    {
+      "cycle": 82,
+      "pph": 0.17,
+      "trades": 3,
+      "improvement": -2.3,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 12,
+        "conf_low": 8,
+        "price_offset": -0.63,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 387
+    },
+    {
+      "cycle": 83,
+      "pph": 1.16,
+      "trades": 12,
+      "improvement": -1.31,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 27,
+        "conf_low": 4,
+        "price_offset": 1.49,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 404
+    },
+    {
+      "cycle": 84,
+      "pph": 0.35,
+      "trades": 23,
+      "improvement": -2.12,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 15,
+        "conf_low": 9,
+        "price_offset": 1.02,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 411
+    },
+    {
+      "cycle": 85,
+      "pph": 0.19,
+      "trades": 3,
+      "improvement": -2.28,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 19,
+        "conf_low": 10,
+        "price_offset": -0.75,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 413
+    },
+    {
+      "cycle": 86,
+      "pph": 2.05,
+      "trades": 12,
+      "improvement": -0.42,
+      "params": {
+        "conf_high": 19,
+        "conf_med": 14,
+        "conf_low": 6,
+        "price_offset": 0.43,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 419
+    },
+    {
+      "cycle": 87,
+      "pph": 0.01,
+      "trades": 46,
+      "improvement": -2.46,
+      "params": {
+        "conf_high": 18,
+        "conf_med": 13,
+        "conf_low": 6,
+        "price_offset": 0.15,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 1,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 420
+    },
+    {
+      "cycle": 88,
+      "pph": 0.23,
+      "trades": 28,
+      "improvement": -2.24,
+      "params": {
+        "conf_high": 47,
+        "conf_med": 13,
+        "conf_low": 4,
+        "price_offset": 0.49,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 425
+    },
+    {
+      "cycle": 89,
+      "pph": 1.84,
+      "trades": 12,
+      "improvement": -0.63,
+      "params": {
+        "conf_high": 31,
+        "conf_med": 17,
+        "conf_low": 11,
+        "price_offset": 0.67,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 426
+    },
+    {
+      "cycle": 90,
+      "pph": 1.26,
+      "trades": 12,
+      "improvement": -1.21,
+      "params": {
+        "conf_high": 56,
+        "conf_med": 31,
+        "conf_low": 2,
+        "price_offset": 1.37,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 430
+    },
+    {
+      "cycle": 91,
+      "pph": 0.46,
+      "trades": 29,
+      "improvement": -2.01,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 24,
+        "conf_low": 9,
+        "price_offset": 0.91,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 431
+    },
+    {
+      "cycle": 92,
+      "pph": 0.53,
+      "trades": 32,
+      "improvement": -1.94,
+      "params": {
+        "conf_high": 25,
+        "conf_med": 20,
+        "conf_low": 15,
+        "price_offset": 0.42,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 441
+    },
+    {
+      "cycle": 93,
+      "pph": 0.01,
+      "trades": 15,
+      "improvement": -2.46,
+      "params": {
+        "conf_high": 35,
+        "conf_med": 20,
+        "conf_low": 8,
+        "price_offset": -0.41,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 446
+    },
+    {
+      "cycle": 94,
+      "pph": 0.93,
+      "trades": 23,
+      "improvement": -1.54,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 20,
+        "conf_low": 5,
+        "price_offset": 0.66,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 449
+    },
+    {
+      "cycle": 95,
+      "pph": 0.5,
+      "trades": 3,
+      "improvement": -1.97,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 33,
+        "conf_low": 11,
+        "price_offset": -0.24,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 452
+    },
+    {
+      "cycle": 96,
+      "pph": 0.19,
+      "trades": 4,
+      "improvement": -2.28,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 24,
+        "conf_low": 3,
+        "price_offset": -0.82,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 453
+    },
+    {
+      "cycle": 97,
+      "pph": 0.42,
+      "trades": 23,
+      "improvement": -2.05,
+      "params": {
+        "conf_high": 51,
+        "conf_med": 26,
+        "conf_low": 5,
+        "price_offset": 0.98,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 459
+    },
+    {
+      "cycle": 98,
+      "pph": 0.86,
+      "trades": 12,
+      "improvement": -1.61,
+      "params": {
+        "conf_high": 30,
+        "conf_med": 13,
+        "conf_low": 10,
+        "price_offset": 1.85,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 473
+    },
+    {
+      "cycle": 99,
+      "pph": 0.79,
+      "trades": 28,
+      "improvement": -1.68,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 16,
+        "conf_low": 5,
+        "price_offset": 0.2,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 480
+    },
+    {
+      "cycle": 100,
+      "pph": 1.29,
+      "trades": 29,
+      "improvement": -1.18,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 19,
+        "conf_low": 11,
+        "price_offset": 0.5,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 483
+    },
+    {
+      "cycle": 101,
+      "pph": 0.41,
+      "trades": 28,
+      "improvement": -2.06,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 15,
+        "conf_low": 12,
+        "price_offset": 1.04,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 484
+    },
+    {
+      "cycle": 102,
+      "pph": 0.52,
+      "trades": 10,
+      "improvement": -1.95,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 15,
+        "conf_low": 11,
+        "price_offset": -0.4,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 495
+    },
+    {
+      "cycle": 103,
+      "pph": 0.45,
+      "trades": 11,
+      "improvement": -2.02,
+      "params": {
+        "conf_high": 36,
+        "conf_med": 10,
+        "conf_low": 6,
+        "price_offset": -0.41,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 496
+    },
+    {
+      "cycle": 104,
+      "pph": 1.6,
+      "trades": 33,
+      "improvement": -0.87,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 26,
+        "conf_low": 4,
+        "price_offset": 0.06,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 500
+    },
+    {
+      "cycle": 105,
+      "pph": 1.3,
+      "trades": 12,
+      "improvement": -1.17,
+      "params": {
+        "conf_high": 30,
+        "conf_med": 20,
+        "conf_low": 15,
+        "price_offset": 1.32,
+        "fixed_tp": 20.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 510
+    },
+    {
+      "cycle": 106,
+      "pph": 1.89,
+      "trades": 12,
+      "improvement": -0.58,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 27,
+        "conf_low": 9,
+        "price_offset": 0.61,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 511
+    },
+    {
+      "cycle": 107,
+      "pph": 0.24,
+      "trades": 3,
+      "improvement": -2.23,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 18,
+        "conf_low": 6,
+        "price_offset": -0.99,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 519
+    },
+    {
+      "cycle": 108,
+      "pph": 1.93,
+      "trades": 13,
+      "improvement": -0.54,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 21,
+        "conf_low": 6,
+        "price_offset": 0.33,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 538
+    },
+    {
+      "cycle": 109,
+      "pph": 0.27,
+      "trades": 7,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 11,
+        "conf_low": 8,
+        "price_offset": -0.41,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 542
+    },
+    {
+      "cycle": 110,
+      "pph": 0.34,
+      "trades": 3,
+      "improvement": -2.13,
+      "params": {
+        "conf_high": 47,
+        "conf_med": 9,
+        "conf_low": 7,
+        "price_offset": -1.44,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 565
+    },
+    {
+      "cycle": 111,
+      "pph": 1.46,
+      "trades": 23,
+      "improvement": -1.01,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 19,
+        "conf_low": 8,
+        "price_offset": 0.33,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 566
+    },
+    {
+      "cycle": 112,
+      "pph": 0.48,
+      "trades": 23,
+      "improvement": -1.99,
+      "params": {
+        "conf_high": 45,
+        "conf_med": 30,
+        "conf_low": 2,
+        "price_offset": 0.94,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 571
+    },
+    {
+      "cycle": 113,
+      "pph": 1.59,
+      "trades": 29,
+      "improvement": -0.88,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 14,
+        "conf_low": 9,
+        "price_offset": 0.35,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 572
+    },
+    {
+      "cycle": 114,
+      "pph": 0.39,
+      "trades": 6,
+      "improvement": -2.08,
+      "params": {
+        "conf_high": 54,
+        "conf_med": 15,
+        "conf_low": 4,
+        "price_offset": -0.02,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 581
+    },
+    {
+      "cycle": 115,
+      "pph": 0.42,
+      "trades": 11,
+      "improvement": -2.05,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 35,
+        "conf_low": 2,
+        "price_offset": -0.36,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 586
+    },
+    {
+      "cycle": 116,
+      "pph": 1.17,
+      "trades": 12,
+      "improvement": -1.3,
+      "params": {
+        "conf_high": 28,
+        "conf_med": 23,
+        "conf_low": 15,
+        "price_offset": 1.48,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 597
+    },
+    {
+      "cycle": 117,
+      "pph": 0.13,
+      "trades": 23,
+      "improvement": -2.34,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 15,
+        "conf_low": 5,
+        "price_offset": 1.16,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 610
+    },
+    {
+      "cycle": 118,
+      "pph": 0.79,
+      "trades": 12,
+      "improvement": -1.68,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 19,
+        "conf_low": 9,
+        "price_offset": 1.93,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 622
+    },
+    {
+      "cycle": 119,
+      "pph": 1.47,
+      "trades": 23,
+      "improvement": -1.0,
+      "params": {
+        "conf_high": 42,
+        "conf_med": 26,
+        "conf_low": 10,
+        "price_offset": 0.32,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 630
+    },
+    {
+      "cycle": 120,
+      "pph": 1.03,
+      "trades": 13,
+      "improvement": -1.44,
+      "params": {
+        "conf_high": 53,
+        "conf_med": 18,
+        "conf_low": 9,
+        "price_offset": 1.32,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 635
+    },
+    {
+      "cycle": 121,
+      "pph": 0.27,
+      "trades": 11,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 9,
+        "price_offset": -0.17,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 637
+    },
+    {
+      "cycle": 122,
+      "pph": 0.21,
+      "trades": 23,
+      "improvement": -2.26,
+      "params": {
+        "conf_high": 58,
+        "conf_med": 33,
+        "conf_low": 5,
+        "price_offset": 1.11,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 646
+    },
+    {
+      "cycle": 123,
+      "pph": 0.24,
+      "trades": 3,
+      "improvement": -2.23,
+      "params": {
+        "conf_high": 44,
+        "conf_med": 32,
+        "conf_low": 3,
+        "price_offset": -0.98,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 653
+    },
+    {
+      "cycle": 124,
+      "pph": 0.21,
+      "trades": 4,
+      "improvement": -2.26,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 20,
+        "conf_low": 2,
+        "price_offset": -0.89,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 663
+    },
+    {
+      "cycle": 125,
+      "pph": 1.54,
+      "trades": 12,
+      "improvement": -0.93,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 35,
+        "conf_low": 14,
+        "price_offset": 1.03,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 665
+    },
+    {
+      "cycle": 126,
+      "pph": 0.5,
+      "trades": 11,
+      "improvement": -1.97,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 19,
+        "conf_low": 6,
+        "price_offset": -0.47,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 667
+    },
+    {
+      "cycle": 127,
+      "pph": 0.1,
+      "trades": 7,
+      "improvement": -2.37,
+      "params": {
+        "conf_high": 42,
+        "conf_med": 32,
+        "conf_low": 15,
+        "price_offset": -0.06,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 668
+    },
+    {
+      "cycle": 128,
+      "pph": 0.49,
+      "trades": 10,
+      "improvement": -1.98,
+      "params": {
+        "conf_high": 53,
+        "conf_med": 25,
+        "conf_low": 11,
+        "price_offset": -0.36,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 677
+    },
+    {
+      "cycle": 129,
+      "pph": 0.28,
+      "trades": 29,
+      "improvement": -2.19,
+      "params": {
+        "conf_high": 19,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.43,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 686
+    },
+    {
+      "cycle": 130,
+      "pph": 0.01,
+      "trades": 43,
+      "improvement": -2.46,
+      "params": {
+        "conf_high": 25,
+        "conf_med": 13,
+        "conf_low": 11,
+        "price_offset": 0.23,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 691
+    },
+    {
+      "cycle": 131,
+      "pph": 0.2,
+      "trades": 4,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 31,
+        "conf_med": 17,
+        "conf_low": 10,
+        "price_offset": -0.85,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 695
+    },
+    {
+      "cycle": 132,
+      "pph": 0.16,
+      "trades": 3,
+      "improvement": -2.31,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 25,
+        "conf_low": 9,
+        "price_offset": -0.59,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 699
+    },
+    {
+      "cycle": 133,
+      "pph": 0.18,
+      "trades": 3,
+      "improvement": -2.29,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 26,
+        "conf_low": 15,
+        "price_offset": -0.69,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 702
+    },
+    {
+      "cycle": 134,
+      "pph": 0.05,
+      "trades": 27,
+      "improvement": -2.42,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.77,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 703
+    },
+    {
+      "cycle": 135,
+      "pph": 1.58,
+      "trades": 12,
+      "improvement": -0.89,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 19,
+        "conf_low": 7,
+        "price_offset": 0.99,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 709
+    },
+    {
+      "cycle": 136,
+      "pph": 1.75,
+      "trades": 29,
+      "improvement": -0.72,
+      "params": {
+        "conf_high": 50,
+        "conf_med": 34,
+        "conf_low": 9,
+        "price_offset": 0.27,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 738
+    },
+    {
+      "cycle": 137,
+      "pph": 0.81,
+      "trades": 12,
+      "improvement": -1.66,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 28,
+        "conf_low": 7,
+        "price_offset": 1.91,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 749
+    },
+    {
+      "cycle": 138,
+      "pph": 0.2,
+      "trades": 3,
+      "improvement": -2.27,
+      "params": {
+        "conf_high": 43,
+        "conf_med": 15,
+        "conf_low": 4,
+        "price_offset": -0.78,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 758
+    },
+    {
+      "cycle": 139,
+      "pph": 0.61,
+      "trades": 23,
+      "improvement": -1.86,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 20,
+        "conf_low": 7,
+        "price_offset": 0.86,
+        "fixed_tp": 50.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 764
+    },
+    {
+      "cycle": 140,
+      "pph": 2.13,
+      "trades": 13,
+      "improvement": -0.34,
+      "params": {
+        "conf_high": 26,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": 0.11,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 787
+    },
+    {
+      "cycle": 141,
+      "pph": 1.43,
+      "trades": 12,
+      "improvement": -1.04,
+      "params": {
+        "conf_high": 58,
+        "conf_med": 14,
+        "conf_low": 6,
+        "price_offset": 1.16,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 789
+    },
+    {
+      "cycle": 142,
+      "pph": 0.29,
+      "trades": 11,
+      "improvement": -2.18,
+      "params": {
+        "conf_high": 33,
+        "conf_med": 14,
+        "conf_low": 7,
+        "price_offset": -0.19,
+        "fixed_tp": 20.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 802
+    },
+    {
+      "cycle": 143,
+      "pph": 1.05,
+      "trades": 29,
+      "improvement": -1.42,
+      "params": {
+        "conf_high": 16,
+        "conf_med": 11,
+        "conf_low": 8,
+        "price_offset": 0.6,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 804
+    },
+    {
+      "cycle": 144,
+      "pph": 1.5,
+      "trades": 23,
+      "improvement": -0.97,
+      "params": {
+        "conf_high": 20,
+        "conf_med": 13,
+        "conf_low": 10,
+        "price_offset": 0.13,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 817
+    },
+    {
+      "cycle": 145,
+      "pph": 0.54,
+      "trades": 10,
+      "improvement": -1.93,
+      "params": {
+        "conf_high": 28,
+        "conf_med": 22,
+        "conf_low": 13,
+        "price_offset": -0.43,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 818
+    },
+    {
+      "cycle": 146,
+      "pph": 1.53,
+      "trades": 24,
+      "improvement": -0.94,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 13,
+        "conf_low": 8,
+        "price_offset": 0.19,
+        "fixed_tp": 20.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 819
+    },
+    {
+      "cycle": 147,
+      "pph": 1.26,
+      "trades": 12,
+      "improvement": -1.21,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 2,
+        "price_offset": 1.37,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 820
+    },
+    {
+      "cycle": 148,
+      "pph": 0.5,
+      "trades": 12,
+      "improvement": -1.97,
+      "params": {
+        "conf_high": 15,
+        "conf_med": 10,
+        "conf_low": 4,
+        "price_offset": -0.39,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 2,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 822
+    },
+    {
+      "cycle": 149,
+      "pph": 0.1,
+      "trades": 7,
+      "improvement": -2.37,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 22,
+        "conf_low": 11,
+        "price_offset": -0.07,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 824
+    },
+    {
+      "cycle": 150,
+      "pph": 0.96,
+      "trades": 8,
+      "improvement": -1.51,
+      "params": {
+        "conf_high": 57,
+        "conf_med": 28,
+        "conf_low": 15,
+        "price_offset": -0.48,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 832
+    },
+    {
+      "cycle": 151,
+      "pph": 0.03,
+      "trades": 25,
+      "improvement": -2.44,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 33,
+        "conf_low": 12,
+        "price_offset": 0.76,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 833
+    },
+    {
+      "cycle": 152,
+      "pph": 1.22,
+      "trades": 23,
+      "improvement": -1.25,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 21,
+        "conf_low": 2,
+        "price_offset": 0.48,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 843
+    },
+    {
+      "cycle": 153,
+      "pph": 0.68,
+      "trades": 13,
+      "improvement": -1.79,
+      "params": {
+        "conf_high": 40,
+        "conf_med": 33,
+        "conf_low": 15,
+        "price_offset": 1.71,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 847
+    },
+    {
+      "cycle": 154,
+      "pph": 0.21,
+      "trades": 24,
+      "improvement": -2.26,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 23,
+        "conf_low": 8,
+        "price_offset": 0.23,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 1,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 848
+    },
+    {
+      "cycle": 155,
+      "pph": 0.13,
+      "trades": 4,
+      "improvement": -2.34,
+      "params": {
+        "conf_high": 26,
+        "conf_med": 16,
+        "conf_low": 2,
+        "price_offset": -0.58,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 853
+    },
+    {
+      "cycle": 156,
+      "pph": 0.32,
+      "trades": 35,
+      "improvement": -2.15,
+      "params": {
+        "conf_high": 39,
+        "conf_med": 27,
+        "conf_low": 3,
+        "price_offset": 0.34,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 863
+    },
+    {
+      "cycle": 157,
+      "pph": 0.91,
+      "trades": 12,
+      "improvement": -1.56,
+      "params": {
+        "conf_high": 58,
+        "conf_med": 25,
+        "conf_low": 2,
+        "price_offset": 1.79,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 869
+    },
+    {
+      "cycle": 158,
+      "pph": 1.31,
+      "trades": 23,
+      "improvement": -1.16,
+      "params": {
+        "conf_high": 18,
+        "conf_med": 16,
+        "conf_low": 3,
+        "price_offset": 0.42,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 871
+    },
+    {
+      "cycle": 159,
+      "pph": 0.19,
+      "trades": 3,
+      "improvement": -2.28,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 22,
+        "conf_low": 12,
+        "price_offset": -0.72,
+        "fixed_tp": 10.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 873
+    },
+    {
+      "cycle": 160,
+      "pph": 1.82,
+      "trades": 12,
+      "improvement": -0.65,
+      "params": {
+        "conf_high": 34,
+        "conf_med": 10,
+        "conf_low": 6,
+        "price_offset": 0.7,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 882
+    },
+    {
+      "cycle": 161,
+      "pph": 1.39,
+      "trades": 29,
+      "improvement": -1.08,
+      "params": {
+        "conf_high": 60,
+        "conf_med": 20,
+        "conf_low": 9,
+        "price_offset": 0.45,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 884
+    },
+    {
+      "cycle": 162,
+      "pph": 0.36,
+      "trades": 31,
+      "improvement": -2.11,
+      "params": {
+        "conf_high": 36,
+        "conf_med": 34,
+        "conf_low": 7,
+        "price_offset": 0.69,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 890
+    },
+    {
+      "cycle": 163,
+      "pph": 0.18,
+      "trades": 3,
+      "improvement": -2.29,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 25,
+        "conf_low": 5,
+        "price_offset": -0.71,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 896
+    },
+    {
+      "cycle": 164,
+      "pph": 1.35,
+      "trades": 12,
+      "improvement": -1.12,
+      "params": {
+        "conf_high": 40,
+        "conf_med": 31,
+        "conf_low": 12,
+        "price_offset": 1.26,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 905
+    },
+    {
+      "cycle": 165,
+      "pph": 0.4,
+      "trades": 24,
+      "improvement": -2.07,
+      "params": {
+        "conf_high": 40,
+        "conf_med": 31,
+        "conf_low": 9,
+        "price_offset": 0.72,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 910
+    },
+    {
+      "cycle": 166,
+      "pph": 1.92,
+      "trades": 12,
+      "improvement": -0.55,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 27,
+        "conf_low": 4,
+        "price_offset": 0.58,
+        "fixed_tp": 20.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 914
+    },
+    {
+      "cycle": 167,
+      "pph": 2.13,
+      "trades": 12,
+      "improvement": -0.34,
+      "params": {
+        "conf_high": 41,
+        "conf_med": 32,
+        "conf_low": 15,
+        "price_offset": 0.33,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 923
+    },
+    {
+      "cycle": 168,
+      "pph": 0.27,
+      "trades": 7,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 29,
+        "conf_med": 24,
+        "conf_low": 7,
+        "price_offset": -0.42,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 925
+    },
+    {
+      "cycle": 169,
+      "pph": 0.47,
+      "trades": 13,
+      "improvement": -2.0,
+      "params": {
+        "conf_high": 44,
+        "conf_med": 15,
+        "conf_low": 2,
+        "price_offset": 1.94,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 927
+    },
+    {
+      "cycle": 170,
+      "pph": 0.89,
+      "trades": 12,
+      "improvement": -1.58,
+      "params": {
+        "conf_high": 40,
+        "conf_med": 31,
+        "conf_low": 15,
+        "price_offset": 1.81,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 941
+    },
+    {
+      "cycle": 171,
+      "pph": 0.18,
+      "trades": 3,
+      "improvement": -2.29,
+      "params": {
+        "conf_high": 44,
+        "conf_med": 25,
+        "conf_low": 5,
+        "price_offset": -0.7,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 944
+    },
+    {
+      "cycle": 172,
+      "pph": 0.45,
+      "trades": 10,
+      "improvement": -2.02,
+      "params": {
+        "conf_high": 48,
+        "conf_med": 30,
+        "conf_low": 11,
+        "price_offset": -0.29,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 948
+    },
+    {
+      "cycle": 173,
+      "pph": 1.71,
+      "trades": 12,
+      "improvement": -0.76,
+      "params": {
+        "conf_high": 36,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.83,
+        "fixed_tp": 20.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 962
+    },
+    {
+      "cycle": 174,
+      "pph": 2.22,
+      "trades": 12,
+      "improvement": -0.25,
+      "params": {
+        "conf_high": 24,
+        "conf_med": 19,
+        "conf_low": 6,
+        "price_offset": 0.22,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 964
+    },
+    {
+      "cycle": 175,
+      "pph": 0.94,
+      "trades": 12,
+      "improvement": -1.53,
+      "params": {
+        "conf_high": 55,
+        "conf_med": 24,
+        "conf_low": 9,
+        "price_offset": 1.75,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 966
+    },
+    {
+      "cycle": 176,
+      "pph": 0.32,
+      "trades": 3,
+      "improvement": -2.15,
+      "params": {
+        "conf_high": 23,
+        "conf_med": 18,
+        "conf_low": 13,
+        "price_offset": -1.35,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 970
+    },
+    {
+      "cycle": 177,
+      "pph": 0.65,
+      "trades": 29,
+      "improvement": -1.82,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 25,
+        "conf_low": 8,
+        "price_offset": 0.8,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 971
+    },
+    {
+      "cycle": 178,
+      "pph": 1.25,
+      "trades": 12,
+      "improvement": -1.22,
+      "params": {
+        "conf_high": 23,
+        "conf_med": 18,
+        "conf_low": 10,
+        "price_offset": 1.38,
+        "fixed_tp": 50.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 974
+    },
+    {
+      "cycle": 179,
+      "pph": 0.29,
+      "trades": 33,
+      "improvement": -2.18,
+      "params": {
+        "conf_high": 52,
+        "conf_med": 34,
+        "conf_low": 4,
+        "price_offset": 0.63,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 975
+    },
+    {
+      "cycle": 180,
+      "pph": 0.68,
+      "trades": 28,
+      "improvement": -1.79,
+      "params": {
+        "conf_high": 32,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": 0.26,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 981
+    },
+    {
+      "cycle": 181,
+      "pph": 0.97,
+      "trades": 12,
+      "improvement": -1.5,
+      "params": {
+        "conf_high": 22,
+        "conf_med": 15,
+        "conf_low": 12,
+        "price_offset": 1.72,
+        "fixed_tp": 50.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 985
+    },
+    {
+      "cycle": 182,
+      "pph": 1.33,
+      "trades": 23,
+      "improvement": -1.14,
+      "params": {
+        "conf_high": 54,
+        "conf_med": 12,
+        "conf_low": 10,
+        "price_offset": 0.41,
+        "fixed_tp": 30.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 987
+    },
+    {
+      "cycle": 183,
+      "pph": 0.27,
+      "trades": 35,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 10,
+        "conf_low": 7,
+        "price_offset": 0.29,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 1,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 989
+    },
+    {
+      "cycle": 184,
+      "pph": 1.56,
+      "trades": 33,
+      "improvement": -0.91,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 16,
+        "conf_low": 4,
+        "price_offset": 0.08,
+        "fixed_tp": 30.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 994
+    },
+    {
+      "cycle": 185,
+      "pph": 0.06,
+      "trades": 24,
+      "improvement": -2.41,
+      "params": {
+        "conf_high": 21,
+        "conf_med": 16,
+        "conf_low": 8,
+        "price_offset": 0.32,
+        "fixed_tp": null,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 1,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 996
+    },
+    {
+      "cycle": 186,
+      "pph": 1.62,
+      "trades": 12,
+      "improvement": -0.85,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 18,
+        "conf_low": 11,
+        "price_offset": 0.94,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 997
+    },
+    {
+      "cycle": 187,
+      "pph": 0.22,
+      "trades": 4,
+      "improvement": -2.25,
+      "params": {
+        "conf_high": 33,
+        "conf_med": 21,
+        "conf_low": 10,
+        "price_offset": -0.93,
+        "fixed_tp": 30.0,
+        "fixed_sl": null,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1004
+    },
+    {
+      "cycle": 188,
+      "pph": 1.92,
+      "trades": 12,
+      "improvement": -0.55,
+      "params": {
+        "conf_high": 46,
+        "conf_med": 23,
+        "conf_low": 7,
+        "price_offset": 0.58,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1007
+    },
+    {
+      "cycle": 189,
+      "pph": 0.57,
+      "trades": 32,
+      "improvement": -1.9,
+      "params": {
+        "conf_high": 28,
+        "conf_med": 26,
+        "conf_low": 15,
+        "price_offset": 0.4,
+        "fixed_tp": 30.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1009
+    },
+    {
+      "cycle": 190,
+      "pph": 1.52,
+      "trades": 12,
+      "improvement": -0.95,
+      "params": {
+        "conf_high": 23,
+        "conf_med": 21,
+        "conf_low": 12,
+        "price_offset": 1.06,
+        "fixed_tp": null,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1010
+    },
+    {
+      "cycle": 191,
+      "pph": 0.55,
+      "trades": 37,
+      "improvement": -1.92,
+      "params": {
+        "conf_high": 27,
+        "conf_med": 22,
+        "conf_low": 11,
+        "price_offset": 0.07,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1032
+    },
+    {
+      "cycle": 192,
+      "pph": 0.48,
+      "trades": 13,
+      "improvement": -1.99,
+      "params": {
+        "conf_high": 34,
+        "conf_med": 33,
+        "conf_low": 11,
+        "price_offset": 1.93,
+        "fixed_tp": 10.0,
+        "fixed_sl": null,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1034
+    },
+    {
+      "cycle": 193,
+      "pph": 2.07,
+      "trades": 12,
+      "improvement": -0.4,
+      "params": {
+        "conf_high": 31,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": 0.4,
+        "fixed_tp": null,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1036
+    },
+    {
+      "cycle": 194,
+      "pph": 0.27,
+      "trades": 11,
+      "improvement": -2.2,
+      "params": {
+        "conf_high": 59,
+        "conf_med": 9,
+        "conf_low": 6,
+        "price_offset": -0.17,
+        "fixed_tp": 20.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1051
+    },
+    {
+      "cycle": 195,
+      "pph": 1.19,
+      "trades": 23,
+      "improvement": -1.28,
+      "params": {
+        "conf_high": 18,
+        "conf_med": 13,
+        "conf_low": 6,
+        "price_offset": 0.5,
+        "fixed_tp": 50.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 10,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1055
+    },
+    {
+      "cycle": 196,
+      "pph": 0.16,
+      "trades": 37,
+      "improvement": -2.31,
+      "params": {
+        "conf_high": 47,
+        "conf_med": 33,
+        "conf_low": 12,
+        "price_offset": 0.22,
+        "fixed_tp": null,
+        "fixed_sl": null,
+        "bucket_minutes": 3,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1061
+    },
+    {
+      "cycle": 197,
+      "pph": 2.32,
+      "trades": 12,
+      "improvement": -0.15,
+      "params": {
+        "conf_high": 38,
+        "conf_med": 9,
+        "conf_low": 7,
+        "price_offset": 0.1,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1073
+    },
+    {
+      "cycle": 198,
+      "pph": 0.8,
+      "trades": 28,
+      "improvement": -1.67,
+      "params": {
+        "conf_high": 37,
+        "conf_med": 34,
+        "conf_low": 12,
+        "price_offset": 0.84,
+        "fixed_tp": 50.0,
+        "fixed_sl": 30.0,
+        "bucket_minutes": 5,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1080
+    },
+    {
+      "cycle": 199,
+      "pph": 0.96,
+      "trades": 24,
+      "improvement": -1.51,
+      "params": {
+        "conf_high": 42,
+        "conf_med": 25,
+        "conf_low": 14,
+        "price_offset": 0.3,
+        "fixed_tp": 10.0,
+        "fixed_sl": 10.0,
+        "bucket_minutes": 8,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1084
+    },
+    {
+      "cycle": 200,
+      "pph": 0.28,
+      "trades": 3,
+      "improvement": -2.19,
+      "params": {
+        "conf_high": 19,
+        "conf_med": 14,
+        "conf_low": 7,
+        "price_offset": -1.19,
+        "fixed_tp": 10.0,
+        "fixed_sl": 20.0,
+        "bucket_minutes": 15,
+        "round_turn_cost": -2.0
+      },
+      "attempt": 1086
+    }
+  ],
+  "completed_at": "2026-05-15T02:48:17.483285"
+}
