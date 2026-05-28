@@ -4800,12 +4800,40 @@ def serve_multi_chart_js():
     return send_from_directory(SOURCE_ROOT, "multi_chart.js")
 
 
+@app.route("/api/live_fx_quotes", methods=["GET"])
+def get_live_fx_quotes():
+    """Proxy current FX quotes for the canary dashboard live mode."""
+    product = str(request.args.get("product") or "").strip().lower()
+    if not product:
+        return jsonify({"success": False, "message": "product is required"}), 400
+    url = "http://127.0.0.1:8002/api/vw_000_fx_quotes"
+    try:
+        with urllib.request.urlopen(url, timeout=5) as response:
+            raw_data = response.read().decode("utf-8")
+            payload = json.loads(raw_data) or {}
+        rows = payload.get("data") if isinstance(payload, dict) else payload
+        if not isinstance(rows, list):
+            return jsonify({"success": False, "message": "Unexpected quote payload", "quote": None}), 502
+        quote = next((row for row in rows if str(row.get("code") or "").lower() == product), None)
+        if not quote:
+            return jsonify({"success": False, "message": f"No quote found for {product.upper()}", "quote": None}), 404
+        return jsonify({"success": True, "quote": quote})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e), "quote": None}), 502
+
+
 @app.route('/', defaults={'path': 'trade_viewer.html'})
 @app.route('/<path:path>')
 def serve_static(path):
     """Serve any static file from SOURCE_ROOT, fallback to trade_viewer.html"""
     try:
         request_path = Path(path)
+        if request_path.name == "canary_tripwire_dashboard.html":
+            response = send_from_directory(SOURCE_ROOT, "canary_tripwire_dashboard.html", max_age=0)
+            response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+            response.headers["Pragma"] = "no-cache"
+            response.headers["Expires"] = "0"
+            return response
         if request_path.parts and request_path.parts[0] == "json":
             json_relative = Path(*request_path.parts[1:]) if len(request_path.parts) > 1 else Path()
             json_candidate = JSON_STATIC_ROOT / json_relative

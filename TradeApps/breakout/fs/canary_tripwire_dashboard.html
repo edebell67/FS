@@ -1,0 +1,1382 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Canary & Tripwire Simulator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #121212;
+            --text-main: #e0e0e0;
+            --bg-header: #1e1e1e;
+            --border-color: #333;
+            --bg-panel-header: #1a1a1a;
+            --bg-input: #2a2a2a;
+            --border-input: #444;
+            --table-border: #222;
+            --spacer-1: #181818;
+            --spacer-2: #1a1a1a;
+            --text-muted: #aaa;
+            --win-color: #4caf50;
+            --loss-color: #f44336;
+        }
+        body.light-mode {
+            --bg-body: #f8f9fa;
+            --text-main: #212529;
+            --bg-header: #e9ecef;
+            --border-color: #dee2e6;
+            --bg-panel-header: #f1f3f5;
+            --bg-input: #ffffff;
+            --border-input: #ced4da;
+            --table-border: #dee2e6;
+            --spacer-1: #e9ecef;
+            --spacer-2: #f1f3f5;
+            --text-muted: #495057;
+            --win-color: #2e7d32;
+            --loss-color: #c62828;
+        }
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .header-bar {
+            background: var(--bg-header);
+            padding: 15px 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            transition: background 0.3s, border-color 0.3s;
+        }
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--text-main);
+            margin-right: auto;
+        }
+        .panel-container {
+            display: flex;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+        }
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+            overflow: hidden;
+        }
+        .panel:last-child {
+            border-right: none;
+        }
+        .panel-header {
+            background: var(--bg-panel-header);
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            transition: background 0.3s;
+        }
+        .panel-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .config-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 5px;
+        }
+        .config-item {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-width: 80px;
+        }
+        .config-item label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+        .config-item input, .config-item select {
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
+            padding: 4px 8px;
+            font-size: 0.85rem;
+            border-radius: 4px;
+        }
+        .table-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            background: var(--bg-body);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.78rem;
+            table-layout: auto;
+            min-width: 1040px;
+        }
+        th, td {
+            padding: 6px 8px;
+            text-align: right;
+            border-bottom: 1px solid var(--table-border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        th {
+            background: var(--bg-header);
+            position: sticky;
+            top: 0;
+            color: var(--text-muted);
+            font-weight: normal;
+        }
+        th:first-child, td:first-child { text-align: left; }
+        th:nth-child(2), td:nth-child(2) { text-align: left; }
+        .win { color: var(--win-color); }
+        .loss { color: var(--loss-color); }
+        .neutral { color: var(--text-muted); }
+        .spacer-row { height: 32px; background: repeating-linear-gradient(45deg, var(--spacer-1), var(--spacer-1) 10px, var(--spacer-2) 10px, var(--spacer-2) 20px); }
+        .summary-stats {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            font-size: 0.85rem;
+            padding-top: 10px;
+            border-top: 1px solid var(--border-color);
+        }
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .stat-value {
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.4);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+        .loading-spinner {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px #000;
+        }
+        .theme-btn {
+            background: var(--bg-input);
+            border: 1px solid var(--border-input);
+            color: var(--text-main);
+            border-radius: 4px;
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            cursor: pointer;
+        }
+        th.sortable {
+            cursor: pointer;
+            user-select: none;
+        }
+        th.sortable::after {
+            content: " ↕";
+            color: var(--text-muted);
+            font-size: 0.72rem;
+        }
+        th.sortable.sort-asc::after { content: " ↑"; color: var(--text-main); }
+        th.sortable.sort-desc::after { content: " ↓"; color: var(--text-main); }
+        .live-split-board {
+            display: none;
+            height: calc(100vh - 65px);
+            overflow: hidden;
+            background: var(--bg-body);
+        }
+        body.live-mode-active .panel-container {
+            height: auto;
+            min-height: 0;
+            overflow: visible;
+            border-bottom: 1px solid var(--border-color);
+        }
+        body.live-mode-active .panel {
+            overflow: visible;
+        }
+        body.live-mode-active .table-container {
+            display: none;
+        }
+        body.live-mode-active .panel-header {
+            padding: 10px 14px;
+        }
+        body.live-mode-active .live-split-board {
+            display: flex;
+            flex-direction: column;
+            height: calc(100vh - 245px);
+            min-height: 360px;
+        }
+        .live-direction-block {
+            min-height: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .live-direction-title {
+            padding: 8px 14px;
+            background: var(--bg-panel-header);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+        .live-direction-title.sell { color: var(--loss-color); }
+        .live-direction-title.buy { color: var(--win-color); }
+        .live-direction-panels {
+            display: flex;
+            min-height: 0;
+            flex: 1;
+        }
+        .live-direction-pane {
+            min-width: 0;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border-color);
+        }
+        .live-direction-pane:last-child { border-right: none; }
+        .live-pane-title {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 7px 10px;
+            background: var(--bg-header);
+            border-bottom: 1px solid var(--table-border);
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+        .live-pane-title span:last-child {
+            color: var(--text-muted);
+            font-size: 0.76rem;
+            font-weight: 500;
+        }
+        .live-table-container {
+            min-height: 0;
+            flex: 1;
+            overflow: auto;
+            padding: 6px;
+        }
+        .live-table-container table {
+            min-width: 1040px;
+        }
+        .column-menu-wrap {
+            position: relative;
+        }
+        .column-menu {
+            display: none;
+            position: absolute;
+            top: calc(100% + 6px);
+            right: 0;
+            z-index: 30;
+            min-width: 210px;
+            max-height: 360px;
+            overflow: auto;
+            padding: 8px;
+            background: var(--bg-header);
+            border: 1px solid var(--border-input);
+            border-radius: 6px;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+        }
+        .column-menu.open {
+            display: block;
+        }
+        .column-menu label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 4px;
+            font-size: 0.82rem;
+            color: var(--text-main);
+            white-space: nowrap;
+        }
+        .column-menu input {
+            accent-color: #0d6efd;
+        }
+    </style>
+</head>
+<body>
+
+<div class="header-bar">
+    <div class="header-title">Canary & Tripwire Simulator</div>
+    <button class="theme-btn" id="btn-theme" onclick="toggleTheme()">☀️ Light Mode</button>
+    <div>
+        <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 5px;">Date:</label>
+        <input type="date" id="global-date" style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 4px 8px; border-radius: 4px;">
+    </div>
+    <div>
+        <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 5px;">Product:</label>
+        <select id="global-product" style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 4px 8px; border-radius: 4px;">
+            <option value="GBP">GBP</option>
+            <option value="EUR">EUR</option>
+            <option value="AUD">AUD</option>
+            <option value="NZD">NZD</option>
+        </select>
+    </div>
+    <div class="form-check form-switch ms-3">
+        <input class="form-check-input" type="checkbox" id="align-timestamps-toggle">
+        <label class="form-check-label" for="align-timestamps-toggle" style="font-size: 0.85rem; color: var(--text-muted);">Align Timestamps</label>
+    </div>
+    <div class="form-check form-switch ms-3">
+        <input class="form-check-input" type="checkbox" id="live-toggle">
+        <label class="form-check-label" for="live-toggle" style="font-size: 0.85rem; color: var(--text-muted);">Live</label>
+    </div>
+    <div>
+        <label style="font-size: 0.8rem; color: var(--text-muted); margin-right: 5px;">Show First:</label>
+        <select id="live-show-first" style="background: var(--bg-input); border: 1px solid var(--border-input); color: var(--text-main); padding: 4px 8px; border-radius: 4px;">
+            <option value="SELL" selected>SELL</option>
+            <option value="BUY">BUY</option>
+        </select>
+    </div>
+    <div class="column-menu-wrap">
+        <button class="theme-btn" id="btn-columns" type="button">Columns</button>
+        <div class="column-menu" id="column-menu"></div>
+    </div>
+    <span id="live-status" style="font-size: 0.8rem; color: var(--text-muted); min-width: 150px;">Live off</span>
+    <button class="btn btn-primary btn-sm ms-3" id="btn-run" onclick="runSimulation()">Run Simulation</button>
+</div>
+
+<div class="panel-container">
+    <!-- LEFT PANEL: MACRO -->
+    <div class="panel" style="position:relative;">
+        <div class="loading-overlay" id="loading-left">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+        <div class="panel-header">
+            <div class="panel-title">Side A (Macro) <span id="title-tp-sl-left" style="font-size: 0.8rem; color: var(--text-muted);"></span></div>
+            <div class="config-row">
+                <div class="config-item">
+                    <label>TP (USD)</label>
+                    <input type="number" id="left-tp" value="50">
+                </div>
+                <div class="config-item">
+                    <label>SL (USD)</label>
+                    <input type="number" id="left-sl" value="500">
+                </div>
+                <div class="config-item">
+                    <label>Entry Pips</label>
+                    <input type="number" id="left-ep" value="3" step="0.1">
+                </div>
+                <div class="config-item">
+                    <label>Direction</label>
+                    <select id="left-dir">
+                        <option value="both">Both</option>
+                        <option value="b">Buy Only</option>
+                        <option value="s" selected>Sell Only</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Script Ver</label>
+                    <select id="left-script">
+                        <option value="standard">Standard</option>
+                        <option value="x" selected>X-Inverted</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>PP Count</label>
+                    <input type="number" id="left-pp" value="5">
+                </div>
+                <div class="config-item">
+                    <label>Min Pos Pct</label>
+                    <input type="number" id="left-minpos" value="60" step="5">
+                </div>
+            </div>
+            <div class="summary-stats" id="stats-left">
+                <div class="stat-item"><span style="color: var(--text-muted);">Total Net</span><span class="stat-value" id="left-cum-net">$0.00</span></div>
+                <div class="stat-item"><span style="color: var(--text-muted);">Win Rate</span><span class="stat-value" id="left-win-rate">0%</span></div>
+                <div class="stat-item"><span style="color: var(--text-muted);">Trades</span><span class="stat-value" id="left-total-trades">0</span></div>
+            </div>
+        </div>
+        <div class="table-container" id="container-left" onscroll="syncScroll('container-left', 'container-right')">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entry Time</th>
+                        <th>Type</th>
+                        <th>Entry Price</th>
+                        <th>Exit Time</th>
+                        <th>Exit Price</th>
+                        <th>Net Pips</th>
+                        <th>Pos Pct</th>
+                        <th>Alt Net</th>
+                        <th>USD Net</th>
+                        <th>USD Alt Net</th>
+                        <th>Cum Net</th>
+                        <th>Cum Alt Net</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-left">
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: CANARY -->
+    <div class="panel" style="position:relative;">
+        <div class="loading-overlay" id="loading-right">
+            <div class="loading-spinner">Loading...</div>
+        </div>
+        <div class="panel-header">
+            <div class="panel-title">Side B (Canary) <span id="title-tp-sl-right" style="font-size: 0.8rem; color: var(--text-muted);"></span></div>
+            <div class="config-row">
+                <div class="config-item">
+                    <label>TP (USD)</label>
+                    <input type="number" id="right-tp" value="5">
+                </div>
+                <div class="config-item">
+                    <label>SL (USD)</label>
+                    <input type="number" id="right-sl" value="50">
+                </div>
+                <div class="config-item">
+                    <label>Entry Pips</label>
+                    <input type="number" id="right-ep" value="3" step="0.1">
+                </div>
+                <div class="config-item">
+                    <label>Direction</label>
+                    <select id="right-dir">
+                        <option value="both">Both</option>
+                        <option value="b">Buy Only</option>
+                        <option value="s" selected>Sell Only</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Script Ver</label>
+                    <select id="right-script">
+                        <option value="standard">Standard</option>
+                        <option value="x" selected>X-Inverted</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>PP Count</label>
+                    <input type="number" id="right-pp" value="5">
+                </div>
+                <div class="config-item">
+                    <label>Min Pos Pct</label>
+                    <input type="number" id="right-minpos" value="60" step="5">
+                </div>
+            </div>
+            <div class="summary-stats" id="stats-right">
+                <div class="stat-item"><span style="color: var(--text-muted);">Total Net</span><span class="stat-value" id="right-cum-net">$0.00</span></div>
+                <div class="stat-item"><span style="color: var(--text-muted);">Win Rate</span><span class="stat-value" id="right-win-rate">0%</span></div>
+                <div class="stat-item"><span style="color: var(--text-muted);">Trades</span><span class="stat-value" id="right-total-trades">0</span></div>
+            </div>
+        </div>
+        <div class="table-container" id="container-right" onscroll="syncScroll('container-right', 'container-left')">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Entry Time</th>
+                        <th>Type</th>
+                        <th>Entry Price</th>
+                        <th>Exit Time</th>
+                        <th>Exit Price</th>
+                        <th>Net Pips</th>
+                        <th>Pos Pct</th>
+                        <th>Alt Net</th>
+                        <th>USD Net</th>
+                        <th>USD Alt Net</th>
+                        <th>Cum Net</th>
+                        <th>Cum Alt Net</th>
+                    </tr>
+                </thead>
+                <tbody id="tbody-right">
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="live-split-board" id="live-split-board"></div>
+
+<script>
+    // Theme logic
+    function toggleTheme() {
+        const body = document.body;
+        const btn = document.getElementById('btn-theme');
+        if (body.classList.contains('light-mode')) {
+            body.classList.remove('light-mode');
+            btn.innerHTML = '☀️ Light Mode';
+        } else {
+            body.classList.add('light-mode');
+            btn.innerHTML = '🌙 Dark Mode';
+        }
+    }
+
+    // Initialize date to today
+    document.getElementById('global-date').valueAsDate = new Date();
+
+    let leftTradesData = [];
+    let rightTradesData = [];
+    let isSyncingScroll = false;
+    let liveTimer = null;
+    let liveStates = {};
+    let liveLastQuoteId = null;
+    let liveDirectionalTrades = {
+        left: { SELL: [], BUY: [] },
+        right: { SELL: [], BUY: [] }
+    };
+    const LIVE_STORAGE_KEY = 'canaryTripwireLiveState.v1';
+    const COLUMN_STORAGE_KEY = 'canaryTripwireHiddenColumns.v1';
+    const apiOrigin = window.location.protocol === 'file:' ? 'http://localhost:5000' : '';
+    const tableColumns = [
+        { key: 'entry_time', label: 'Entry Time', type: 'time' },
+        { key: 'type', label: 'Type', type: 'text' },
+        { key: 'entry_price', label: 'Entry Price', type: 'number' },
+        { key: 'exit_time', label: 'Exit Time', type: 'time' },
+        { key: 'exit_price', label: 'Exit Price', type: 'number' },
+        { key: 'net_pips', label: 'Net Pips', type: 'number' },
+        { key: 'pos_pct_display', label: 'Pos Pct', type: 'percent' },
+        { key: 'alt_net', label: 'Alt Net', type: 'number' },
+        { key: 'usd_net', label: 'USD Net', type: 'number' },
+        { key: 'usd_alt_net', label: 'USD Alt Net', type: 'number' },
+        { key: 'cum_net', label: 'Cum Net', type: 'number' },
+        { key: 'cum_alt_net', label: 'Cum Alt Net', type: 'number' }
+    ];
+    let sortStates = {};
+    let activeSortTableId = null;
+    let hiddenColumns = new Set(JSON.parse(localStorage.getItem(COLUMN_STORAGE_KEY) || '[]'));
+
+    function visibleColumns() {
+        return tableColumns.filter(col => !hiddenColumns.has(col.key));
+    }
+
+    function renderColumnControls() {
+        const menu = document.getElementById('column-menu');
+        menu.innerHTML = tableColumns.map(col => `
+            <label>
+                <input type="checkbox" data-column-key="${col.key}" ${hiddenColumns.has(col.key) ? '' : 'checked'}>
+                <span>${col.label}</span>
+            </label>
+        `).join('');
+        menu.querySelectorAll('input[data-column-key]').forEach(input => {
+            input.addEventListener('change', () => {
+                if (input.checked) hiddenColumns.delete(input.dataset.columnKey);
+                else hiddenColumns.add(input.dataset.columnKey);
+                localStorage.setItem(COLUMN_STORAGE_KEY, JSON.stringify([...hiddenColumns]));
+                renderTables();
+                renderColumnControls();
+            });
+        });
+    }
+
+    function tableColspan() {
+        return Math.max(1, visibleColumns().length);
+    }
+
+    function syncScroll(sourceId, targetId) {
+        if (!document.getElementById('align-timestamps-toggle').checked) return;
+        if (isSyncingScroll) {
+            isSyncingScroll = false;
+            return;
+        }
+        isSyncingScroll = true;
+        const source = document.getElementById(sourceId);
+        const target = document.getElementById(targetId);
+        target.scrollTop = source.scrollTop;
+    }
+
+    function sortValue(trade, column) {
+        if (!trade) return null;
+        const value = trade[column.key];
+        if (column.type === 'number') return Number(value || 0);
+        if (column.type === 'percent') return value === '-' ? -1 : Number(String(value || '').replace('%', ''));
+        if (column.type === 'time') return parseTimeMinutes(value) ?? -1;
+        return String(value || '').toUpperCase();
+    }
+
+    function sortedTrades(tableId, trades, fallbackKey = 'entry_time') {
+        const state = sortStates[tableId] || { key: fallbackKey, dir: 'asc' };
+        const column = tableColumns.find(col => col.key === state.key) || tableColumns[0];
+        const dir = state.dir === 'desc' ? -1 : 1;
+        return [...trades].sort((a, b) => {
+            const av = sortValue(a, column);
+            const bv = sortValue(b, column);
+            if (av < bv) return -1 * dir;
+            if (av > bv) return 1 * dir;
+            return 0;
+        });
+    }
+
+    function sortStateForTable(tableId, fallbackKey = 'entry_time') {
+        const state = sortStates[tableId] || { key: fallbackKey, dir: 'asc' };
+        const column = tableColumns.find(col => col.key === state.key) || tableColumns[0];
+        const dir = state.dir === 'desc' ? -1 : 1;
+        return { state, column, dir };
+    }
+
+    function toggleSort(tableId, key) {
+        const current = sortStates[tableId];
+        sortStates[tableId] = current && current.key === key
+            ? { key, dir: current.dir === 'asc' ? 'desc' : 'asc' }
+            : { key, dir: 'asc' };
+        activeSortTableId = tableId;
+        renderTables();
+    }
+
+    function renderHeader(tableId) {
+        const state = sortStates[tableId] || {};
+        return visibleColumns().map(col => {
+            const activeClass = state.key === col.key ? ` sort-${state.dir}` : '';
+            return `<th class="sortable${activeClass}" data-table-id="${tableId}" data-sort-key="${col.key}">${col.label}</th>`;
+        }).join('');
+    }
+
+    function attachSortHandlers(root = document) {
+        root.querySelectorAll('th.sortable').forEach(th => {
+            th.onclick = () => toggleSort(th.dataset.tableId, th.dataset.sortKey);
+        });
+    }
+
+    function decorateStaticHeaders() {
+        [['left-main', 'container-left'], ['right-main', 'container-right']].forEach(([tableId, containerId]) => {
+            const headerRow = document.querySelector(`#${containerId} thead tr`);
+            if (headerRow) headerRow.innerHTML = renderHeader(tableId);
+        });
+        attachSortHandlers();
+    }
+
+    async function fetchSide(side, options = {}) {
+        const date = document.getElementById('global-date').value;
+        const product = document.getElementById('global-product').value;
+        const tp = document.getElementById(`${side}-tp`).value;
+        const sl = document.getElementById(`${side}-sl`).value;
+        const ep = document.getElementById(`${side}-ep`).value;
+        const dir = options.direction || document.getElementById(`${side}-dir`).value;
+        const script = document.getElementById(`${side}-script`).value;
+        const pp = document.getElementById(`${side}-pp`).value;
+        const minpos = document.getElementById(`${side}-minpos`).value;
+
+        if (options.updateTitle !== false) {
+            document.getElementById(`title-tp-sl-${side}`).textContent = `TP ${tp} / SL ${sl}`;
+        }
+        if (options.showLoading !== false) {
+            document.getElementById(`loading-${side}`).style.display = 'flex';
+        }
+
+        const payload = {
+            date: date,
+            product: product,
+            tp: parseFloat(tp),
+            sl: parseFloat(sl),
+            ep: parseFloat(ep),
+            direction: dir,
+            script_version: script,
+            pp_count_chk: parseInt(pp),
+            min_pospct: parseFloat(minpos)
+        };
+
+        try {
+            const response = await fetch(`${apiOrigin}/api/execution_experiments/run`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            
+            if (data.error) {
+                if (!options.suppressAlert) alert(`Error on ${side} side: ` + data.error);
+                return null;
+            }
+            return data;
+        } catch (e) {
+            if (!options.suppressAlert) alert(`Network error on ${side} side: ` + e.message);
+            return null;
+        } finally {
+            if (options.showLoading !== false) {
+                document.getElementById(`loading-${side}`).style.display = 'none';
+            }
+        }
+    }
+
+    function directionToCode(direction) {
+        return direction === 'BUY' ? 'b' : direction === 'SELL' ? 's' : direction;
+    }
+
+    function liveStateKey(side, direction) {
+        return direction ? `${side}:${direction}` : side;
+    }
+
+    function getSideParams(side, directionOverride = null) {
+        return {
+            date: document.getElementById('global-date').value,
+            product: document.getElementById('global-product').value,
+            tp: parseFloat(document.getElementById(`${side}-tp`).value),
+            sl: parseFloat(document.getElementById(`${side}-sl`).value),
+            ep: parseFloat(document.getElementById(`${side}-ep`).value),
+            direction: directionOverride ? directionToCode(directionOverride) : document.getElementById(`${side}-dir`).value,
+            script: document.getElementById(`${side}-script`).value,
+            pp: parseInt(document.getElementById(`${side}-pp`).value),
+            minpos: parseFloat(document.getElementById(`${side}-minpos`).value),
+            comm: document.getElementById(`${side}-script`).value === 'x' ? 10.0 : 5.0
+        };
+    }
+
+    function todayISODate() {
+        return new Date().toISOString().slice(0, 10);
+    }
+
+    function isCurrentDateSelected() {
+        return document.getElementById('global-date').value === todayISODate();
+    }
+
+    function setLiveStatus(text, isError = false) {
+        const el = document.getElementById('live-status');
+        el.textContent = text;
+        el.style.color = isError ? 'var(--loss-color)' : 'var(--text-muted)';
+    }
+
+    function liveParamSignature() {
+        return {
+            date: document.getElementById('global-date').value,
+            product: document.getElementById('global-product').value,
+            left: getSideParams('left'),
+            right: getSideParams('right')
+        };
+    }
+
+    function sameLiveContext(saved) {
+        return saved && JSON.stringify(saved.context) === JSON.stringify(liveParamSignature());
+    }
+
+    function loadLiveSnapshot() {
+        try {
+            const saved = JSON.parse(localStorage.getItem(LIVE_STORAGE_KEY) || 'null');
+            return sameLiveContext(saved) ? saved : null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function saveLiveSnapshot() {
+        if (!document.getElementById('live-toggle')?.checked) return;
+        const snapshot = {
+            context: liveParamSignature(),
+            savedAt: new Date().toISOString(),
+            liveDirectionalTrades,
+            liveStates,
+            liveLastQuoteId
+        };
+        localStorage.setItem(LIVE_STORAGE_KEY, JSON.stringify(snapshot));
+    }
+
+    function clearLiveSnapshot() {
+        localStorage.removeItem(LIVE_STORAGE_KEY);
+    }
+
+    function calculatePips(price1, price2, isBuy) {
+        return (isBuy ? (price2 - price1) : (price1 - price2)) * 10000;
+    }
+
+    function formatLiveTime(ts) {
+        try {
+            const dt = new Date(ts);
+            const dd = String(dt.getDate()).padStart(2, '0');
+            const mm = String(dt.getMonth() + 1).padStart(2, '0');
+            const hh = String(dt.getHours()).padStart(2, '0');
+            const mi = String(dt.getMinutes()).padStart(2, '0');
+            return `${dd}/${mm} ${hh}:${mi}`;
+        } catch (e) {
+            return ts || '';
+        }
+    }
+
+    function makeLiveState(side, direction = null) {
+        const data = sideTrades(side, direction);
+        const last = data.length ? data[data.length - 1] : null;
+        return {
+            side,
+            direction,
+            initialized: false,
+            openBid: null,
+            openAsk: null,
+            inTrade: false,
+            tradeType: null,
+            entryPrice: 0,
+            entryTime: '',
+            altEntryPrice: 0,
+            liveOpenRow: null,
+            lastQuoteId: null,
+            cumNet: last ? Number(last.cum_net || 0) : 0,
+            cumAltNet: last ? Number(last.cum_alt_net || 0) : 0
+        };
+    }
+
+    function resetLiveStates() {
+        liveStates = {
+            [liveStateKey('left', 'SELL')]: makeLiveState('left', 'SELL'),
+            [liveStateKey('left', 'BUY')]: makeLiveState('left', 'BUY'),
+            [liveStateKey('right', 'SELL')]: makeLiveState('right', 'SELL'),
+            [liveStateKey('right', 'BUY')]: makeLiveState('right', 'BUY')
+        };
+        liveLastQuoteId = null;
+    }
+
+    function resetLiveStatesFromSnapshot(snapshot = null) {
+        resetLiveStates();
+        if (!snapshot || !snapshot.liveStates) return;
+        Object.entries(snapshot.liveStates).forEach(([key, savedState]) => {
+            if (!liveStates[key] || !savedState) return;
+            liveStates[key] = {
+                ...liveStates[key],
+                ...savedState,
+                initialized: true
+            };
+        });
+        liveLastQuoteId = snapshot.liveLastQuoteId || null;
+    }
+
+    function sideTrades(side, direction = null) {
+        if (direction) return liveDirectionalTrades[side][direction] || [];
+        return side === 'left' ? leftTradesData : rightTradesData;
+    }
+
+    function setSideTrades(side, trades, direction = null) {
+        if (direction) {
+            liveDirectionalTrades[side][direction] = trades;
+            saveLiveSnapshot();
+            return;
+        }
+        if (side === 'left') {
+            leftTradesData = trades;
+        } else {
+            rightTradesData = trades;
+        }
+    }
+
+    function makeLiveRow(state, params, quote, isOpen, closePrice, altClosePrice, currentPips) {
+        const pipValue = 10.0;
+        const commissionPips = params.comm / pipValue;
+        const netPips = currentPips - commissionPips;
+        const usdNet = netPips * pipValue;
+        let altGrossPips;
+        if (state.tradeType === 'BUY') {
+            altGrossPips = calculatePips(state.altEntryPrice, altClosePrice, false);
+        } else {
+            altGrossPips = calculatePips(state.altEntryPrice, altClosePrice, true);
+        }
+        const altNetPips = altGrossPips - commissionPips;
+        const altUsdNet = altNetPips * pipValue;
+        const trades = sideTrades(state.side, state.direction).filter(t => !t.live_open);
+        const recentHistory = params.pp > 1 ? trades.slice(-(params.pp - 1)).map(t => Number(t.net_pips || 0)) : [];
+        recentHistory.push(netPips);
+        const posPct = recentHistory.length ? (recentHistory.filter(p => p > 0).length / recentHistory.length) * 100 : 0;
+        return {
+            entry_time: formatLiveTime(state.entryTime),
+            type: state.tradeType,
+            entry_price: state.entryPrice,
+            exit_time: isOpen ? 'LIVE' : formatLiveTime(quote.timestamp),
+            exit_price: closePrice,
+            net_pips: netPips,
+            pos_pct_display: posPct >= params.minpos ? `${posPct.toFixed(0)}%` : '-',
+            alt_net: altNetPips,
+            usd_net: usdNet,
+            usd_alt_net: altUsdNet,
+            cum_net: isOpen ? state.cumNet + usdNet : state.cumNet + usdNet,
+            cum_alt_net: isOpen ? state.cumAltNet + altUsdNet : state.cumAltNet + altUsdNet,
+            live_open: isOpen,
+            live: true
+        };
+    }
+
+    function processLiveSide(side, quote, directionOverride = null) {
+        const params = getSideParams(side, directionOverride);
+        const key = liveStateKey(side, directionOverride);
+        const state = liveStates[key] || makeLiveState(side, directionOverride);
+        liveStates[key] = state;
+        const bid = Number(quote.bid);
+        const ask = Number(quote.ask);
+        if (!bid || !ask || bid <= 0 || ask <= 0) return;
+        if (!state.initialized) {
+            state.initialized = true;
+            state.openBid = bid;
+            state.openAsk = ask;
+            state.lastQuoteId = quote.id;
+            return;
+        }
+        if (state.lastQuoteId === quote.id) {
+            if (state.inTrade) updateLiveOpenRow(side, quote, directionOverride);
+            return;
+        }
+        state.lastQuoteId = quote.id;
+
+        let allowBuy = true;
+        let allowSell = true;
+        if (params.direction === 'b') allowSell = false;
+        if (params.direction === 's') allowBuy = false;
+
+        if (!state.inTrade) {
+            if (params.script === 'x') {
+                if (!allowSell && ask > state.openAsk) {
+                    state.openBid = bid;
+                    state.openAsk = ask;
+                } else if (!allowBuy && bid < state.openBid) {
+                    state.openBid = bid;
+                    state.openAsk = ask;
+                }
+            } else {
+                if (!allowSell && bid < state.openBid) {
+                    state.openBid = bid;
+                    state.openAsk = ask;
+                } else if (!allowBuy && ask > state.openAsk) {
+                    state.openBid = bid;
+                    state.openAsk = ask;
+                }
+            }
+        }
+
+        const epDiff = params.ep / 10000.0;
+        const buySignal = ask >= state.openAsk + epDiff;
+        const sellSignal = bid <= state.openBid - epDiff;
+
+        if (!state.inTrade) {
+            if (params.script === 'x') {
+                if (buySignal && allowSell) openLiveTrade(state, 'SELL', bid, quote.timestamp, ask);
+                else if (sellSignal && allowBuy) openLiveTrade(state, 'BUY', ask, quote.timestamp, bid);
+            } else {
+                if (buySignal && allowBuy) openLiveTrade(state, 'BUY', ask, quote.timestamp, bid);
+                else if (sellSignal && allowSell) openLiveTrade(state, 'SELL', bid, quote.timestamp, ask);
+            }
+        } else {
+            updateLiveOpenRow(side, quote, directionOverride);
+            closeLiveIfNeeded(side, quote, params, directionOverride);
+        }
+    }
+
+    function openLiveTrade(state, tradeType, entryPrice, entryTime, altEntryPrice) {
+        state.inTrade = true;
+        state.tradeType = tradeType;
+        state.entryPrice = entryPrice;
+        state.entryTime = entryTime;
+        state.altEntryPrice = altEntryPrice;
+        state.liveOpenRow = null;
+        saveLiveSnapshot();
+    }
+
+    function updateLiveOpenRow(side, quote, directionOverride = null) {
+        const key = liveStateKey(side, directionOverride);
+        const state = liveStates[key];
+        if (!state || !state.inTrade) return;
+        const params = getSideParams(side, directionOverride);
+        const closePrice = state.tradeType === 'BUY' ? Number(quote.bid) : Number(quote.ask);
+        const altClosePrice = state.tradeType === 'BUY' ? Number(quote.ask) : Number(quote.bid);
+        const currentPips = calculatePips(state.entryPrice, closePrice, state.tradeType === 'BUY');
+        const row = makeLiveRow(state, params, quote, true, closePrice, altClosePrice, currentPips);
+        const trades = sideTrades(side, directionOverride).filter(t => !t.live_open);
+        trades.push(row);
+        setSideTrades(side, trades, directionOverride);
+        renderTables();
+    }
+
+    function closeLiveIfNeeded(side, quote, params, directionOverride = null) {
+        const key = liveStateKey(side, directionOverride);
+        const state = liveStates[key];
+        const pipValue = 10.0;
+        const commissionPips = params.comm / pipValue;
+        const tpPips = (params.tp / pipValue) + commissionPips;
+        const slPips = (params.sl / pipValue) - commissionPips;
+        const closePrice = state.tradeType === 'BUY' ? Number(quote.bid) : Number(quote.ask);
+        const altClosePrice = state.tradeType === 'BUY' ? Number(quote.ask) : Number(quote.bid);
+        const currentPips = calculatePips(state.entryPrice, closePrice, state.tradeType === 'BUY');
+        if (currentPips < tpPips && currentPips > -slPips) return;
+        const row = makeLiveRow(state, params, quote, false, closePrice, altClosePrice, currentPips);
+        state.cumNet = row.cum_net;
+        state.cumAltNet = row.cum_alt_net;
+        state.inTrade = false;
+        state.liveOpenRow = null;
+        state.openBid = Number(quote.bid);
+        state.openAsk = Number(quote.ask);
+        const trades = sideTrades(side, directionOverride).filter(t => !t.live_open);
+        trades.push(row);
+        setSideTrades(side, trades, directionOverride);
+        if (!directionOverride) updateStatsFromTrades(side);
+        renderTables();
+    }
+
+    function updateStatsFromTrades(side) {
+        const closed = sideTrades(side).filter(t => !t.live_open);
+        const wins = closed.filter(t => Number(t.net_pips || 0) > 0).length;
+        const total = closed.length;
+        const last = closed.length ? closed[closed.length - 1] : null;
+        document.getElementById(`${side}-cum-net`).innerHTML = formatVal(last ? last.cum_net : 0, true);
+        document.getElementById(`${side}-win-rate`).textContent = total ? ((wins / total) * 100).toFixed(1) + '%' : '0.0%';
+        document.getElementById(`${side}-total-trades`).textContent = String(total);
+    }
+
+    async function pollLiveQuote() {
+        if (!document.getElementById('live-toggle').checked) return;
+        if (!isCurrentDateSelected()) {
+            setLiveStatus('Live only runs on current date', true);
+            stopLiveMode(false);
+            return;
+        }
+        const product = document.getElementById('global-product').value;
+        try {
+            const response = await fetch(`${apiOrigin}/api/live_fx_quotes?product=${encodeURIComponent(product)}`);
+            const data = await response.json();
+            if (!data.success || !data.quote) throw new Error(data.message || 'No quote');
+            const quote = data.quote;
+            liveLastQuoteId = quote.id;
+            ['SELL', 'BUY'].forEach(direction => {
+                processLiveSide('left', quote, direction);
+                processLiveSide('right', quote, direction);
+            });
+            setLiveStatus(`Live ${product} ${formatLiveTime(quote.timestamp)} ${Number(quote.bid).toFixed(5)}/${Number(quote.ask).toFixed(5)}${quote.stale ? ' stale' : ''}`, Boolean(quote.stale));
+        } catch (e) {
+            setLiveStatus(`Live error: ${e.message}`, true);
+        }
+    }
+
+    function mergeLiveOpenRows(historyRows, snapshot, side, direction) {
+        const savedRows = snapshot?.liveDirectionalTrades?.[side]?.[direction] || [];
+        const openRows = savedRows.filter(row => row && row.live_open);
+        if (!openRows.length) return historyRows;
+        const existingKeys = new Set(historyRows.map(row => `${row.entry_time}|${row.type}|${row.entry_price}|${row.exit_time}`));
+        const merged = [...historyRows];
+        openRows.forEach(row => {
+            const key = `${row.entry_time}|${row.type}|${row.entry_price}|${row.exit_time}`;
+            if (!existingKeys.has(key)) merged.push(row);
+        });
+        return merged;
+    }
+
+    async function loadLiveDirectionalHistory(snapshot = null) {
+        const requests = [
+            ['left', 'SELL'], ['left', 'BUY'], ['right', 'SELL'], ['right', 'BUY']
+        ].map(async ([side, direction]) => {
+            const data = await fetchSide(side, {
+                direction: directionToCode(direction),
+                showLoading: false,
+                updateTitle: false,
+                suppressAlert: true
+            });
+            const historyRows = data && data.trades ? data.trades : [];
+            liveDirectionalTrades[side][direction] = mergeLiveOpenRows(historyRows, snapshot, side, direction);
+        });
+        await Promise.all(requests);
+    }
+
+    async function startLiveMode() {
+        if (!isCurrentDateSelected()) {
+            document.getElementById('live-toggle').checked = false;
+            setLiveStatus('Select current date for live', true);
+            return;
+        }
+        document.body.classList.add('live-mode-active');
+        setLiveStatus('Live loading BUY/SELL history...');
+        const snapshot = loadLiveSnapshot();
+        await loadLiveDirectionalHistory(snapshot);
+        resetLiveStatesFromSnapshot(snapshot);
+        setLiveStatus('Live starting...');
+        renderTables();
+        saveLiveSnapshot();
+        pollLiveQuote();
+        liveTimer = setInterval(pollLiveQuote, 5000);
+    }
+
+    function stopLiveMode(updateToggle = true) {
+        if (liveTimer) clearInterval(liveTimer);
+        liveTimer = null;
+        document.body.classList.remove('live-mode-active');
+        if (updateToggle) document.getElementById('live-toggle').checked = false;
+        setLiveStatus('Live off');
+        clearLiveSnapshot();
+    }
+
+    function formatVal(val, isMoney) {
+        if (val === undefined || val === null) return '-';
+        const num = parseFloat(val);
+        const sign = num > 0 ? '+' : '';
+        const cls = num > 0 ? 'win' : (num < 0 ? 'loss' : 'neutral');
+        const text = isMoney ? `$${Math.abs(num).toFixed(2)}` : `${Math.abs(num).toFixed(1)}`;
+        return `<span class="${cls}">${num < 0 ? '-' : sign}${text}</span>`;
+    }
+
+    function renderRow(t) {
+        if (!t) {
+            return `<tr class="spacer-row"><td colspan="${tableColspan()}"></td></tr>`;
+        }
+        const typeCls = t.type === 'BUY' ? 'win' : 'loss';
+        const posColor = t.pos_pct_display !== '-' ? 'var(--win-color)' : 'var(--text-muted)';
+        const cells = {
+            entry_time: `<td>${t.entry_time}</td>`,
+            type: `<td class="${typeCls}" style="font-weight:bold;">${t.type}</td>`,
+            entry_price: `<td>${Number(t.entry_price).toFixed(5)}</td>`,
+            exit_time: `<td>${t.exit_time || '-'}</td>`,
+            exit_price: `<td>${Number.isFinite(Number(t.exit_price)) ? Number(t.exit_price).toFixed(5) : '-'}</td>`,
+            net_pips: `<td>${formatVal(t.net_pips, false)}</td>`,
+            pos_pct_display: `<td style="color: ${posColor}; font-weight:bold;">${t.pos_pct_display}</td>`,
+            alt_net: `<td>${formatVal(t.alt_net, false)}</td>`,
+            usd_net: `<td>${formatVal(t.usd_net, true)}</td>`,
+            usd_alt_net: `<td>${formatVal(t.usd_alt_net, true)}</td>`,
+            cum_net: `<td>${formatVal(t.cum_net, true)}</td>`,
+            cum_alt_net: `<td>${formatVal(t.cum_alt_net, true)}</td>`
+        };
+        return `<tr>${visibleColumns().map(col => cells[col.key]).join('')}</tr>`;
+    }
+
+    function renderRowsForTable(tableId, trades) {
+        return sortedTrades(tableId, trades).map(t => renderRow(t)).join('');
+    }
+
+    function renderLiveDirectionTable(tableId, trades, rowsHtml = null) {
+        return `
+            <table>
+                <thead><tr>${renderHeader(tableId)}</tr></thead>
+                <tbody>${rowsHtml ?? renderRowsForTable(tableId, trades)}</tbody>
+            </table>
+        `;
+    }
+
+    function tradeAlignmentKey(trade) {
+        const minutes = parseTimeMinutes(trade?.entry_time);
+        return minutes === null ? `raw:${trade?.entry_time || ''}` : `min:${minutes}`;
+    }
+
+    function pushAlignedTrade(group, side, trade) {
+        group[side].push(trade);
+        const minutes = parseTimeMinutes(trade.entry_time);
+        if (minutes !== null && (group.minutes === null || minutes < group.minutes)) {
+            group.minutes = minutes;
+        }
+    }
+
+    function buildAlignedGroups(leftTrades, rightTrades) {
+        const groupsByKey = new Map();
+        const orderedGroups = [];
+        const ensureGroup = key => {
+            if (!groupsByKey.has(key)) {
+                const group = { key, minutes: null, left: [], right: [], order: orderedGroups.length };
+                groupsByKey.set(key, group);
+                orderedGroups.push(group);
+            }
+            return groupsByKey.get(key);
+        };
+
+        leftTrades.forEach(trade => pushAlignedTrade(ensureGroup(tradeAlignmentKey(trade)), 'left', trade));
+        rightTrades.forEach(trade => pushAlignedTrade(ensureGroup(tradeAlignmentKey(trade)), 'right', trade));
+        return orderedGroups;
+    }
+
+    function compareAlignedGroups(a, b, primarySide, secondarySide, sortInfo) {
+        const primaryA = a[primarySide][0];
+        const primaryB = b[primarySide][0];
+        const secondaryA = a[secondarySide][0];
+        const secondaryB = b[secondarySide][0];
+        const rowA = primaryA || secondaryA;
+        const rowB = primaryB || secondaryB;
+        const av = sortValue(rowA, sortInfo.column);
+        const bv = sortValue(rowB, sortInfo.column);
+
+        if (av < bv) return -1 * sortInfo.dir;
+        if (av > bv) return 1 * sortInfo.dir;
+
+        const timeA = a.minutes ?? Number.MAX_SAFE_INTEGER;
+        const timeB = b.minutes ?? Number.MAX_SAFE_INTEGER;
+        if (timeA < timeB) return -1;
+        if (timeA > timeB) return 1;
+        return a.order - b.order;
+    }
+
+    function alignedRowsHtml(leftTableId, leftTrades, rightTableId, rightTrades) {
+        const leftSort = sortStateForTable(leftTableId);
+        const rightSort = sortStateForTable(rightTableId);
+        const leftHasExplicitSort = Boolean(sortStates[leftTableId]);
+        const rightHasExplicitSort = Boolean(sortStates[rightTableId]);
+        let primarySide = 'left';
+        if (activeSortTableId === rightTableId) primarySide = 'right';
+        else if (activeSortTableId === leftTableId) primarySide = 'left';
+        else if (rightHasExplicitSort && !leftHasExplicitSort) primarySide = 'right';
+        const secondarySide = primarySide === 'left' ? 'right' : 'left';
+        const sortInfo = primarySide === 'left' ? leftSort : rightSort;
+        const groups = buildAlignedGroups(leftTrades, rightTrades)
+            .sort((a, b) => compareAlignedGroups(a, b, primarySide, secondarySide, sortInfo));
+
+        let leftHtml = '';
+        let rightHtml = '';
+        groups.forEach(group => {
+            const rowCount = Math.max(group.left.length, group.right.length);
+            for (let index = 0; index < rowCount; index++) {
+                leftHtml += renderRow(group.left[index] || null);
+                rightHtml += renderRow(group.right[index] || null);
+            }
+        });
+        return { leftHtml, rightHtml };
+    }
+
+    function renderAlignedTableBodies(leftTableId, leftTrades, rightTableId, rightTrades) {
+        const align = document.getElementById('align-timestamps-toggle').checked;
+        const leftSource = sortedTrades(leftTableId, leftTrades);
+        const rightSource = sortedTrades(rightTableId, rightTrades);
+
+        if (!align) {
+            return {
+                leftHtml: leftSource.map(t => renderRow(t)).join(''),
+                rightHtml: rightSource.map(t => renderRow(t)).join('')
+            };
+        }
+
+        return alignedRowsHtml(leftTableId, leftSource, rightTableId, rightSource);
+    }
+
+    function renderLiveSplitBoard() {
+        const board = document.getElementById('live-split-board');
+        if (!board) return;
+        const first = document.getElementById('live-show-first').value === 'BUY' ? 'BUY' : 'SELL';
+        const directions = first === 'SELL' ? ['SELL', 'BUY'] : ['BUY', 'SELL'];
+        board.innerHTML = directions.map(direction => {
+            const leftRows = sideTrades('left', direction).filter(t => t && t.type === direction);
+            const rightRows = sideTrades('right', direction).filter(t => t && t.type === direction);
+            const leftTableId = `live-left-${direction}`;
+            const rightTableId = `live-right-${direction}`;
+            const pairedRows = renderAlignedTableBodies(leftTableId, leftRows, rightTableId, rightRows);
+            const directionClass = direction === 'SELL' ? 'sell' : 'buy';
+            return `
+                <section class="live-direction-block" data-direction="${direction}">
+                    <div class="live-direction-title ${directionClass}">${direction} trades</div>
+                    <div class="live-direction-panels">
+                        <div class="live-direction-pane">
+                            <div class="live-pane-title">
+                                <span>Side A (Macro)</span>
+                                <span>${leftRows.length} ${direction}</span>
+                            </div>
+                            <div class="live-table-container">
+                                ${renderLiveDirectionTable(leftTableId, leftRows, pairedRows.leftHtml)}
+                            </div>
+                        </div>
+                        <div class="live-direction-pane">
+                            <div class="live-pane-title">
+                                <span>Side B (Canary)</span>
+                                <span>${rightRows.length} ${direction}</span>
+                            </div>
+                            <div class="live-table-container">
+                                ${renderLiveDirectionTable(rightTableId, rightRows, pairedRows.rightHtml)}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            `;
+        }).join('');
+        attachSortHandlers(board);
+    }
+
+    function parseTimeMinutes(tStr) {
+        if (!tStr) return null;
+        // format is "DD/MM HH:mm"; month is enough for relative ordering in this day view.
+        const parts = tStr.split(" ");
+        if (parts.length !== 2) return null;
+        const dateParts = parts[0].split("/");
+        const timeParts = parts[1].split(":");
+        if (dateParts.length !== 2 || timeParts.length !== 2) return null;
+        const day = parseInt(dateParts[0], 10);
+        const month = parseInt(dateParts[1], 10);
+        const hour = parseInt(timeParts[0], 10);
+        const minute = parseInt(timeParts[1], 10);
+        if ([day, month, hour, minute].some(Number.isNaN)) return null;
+        return (((month * 31) + day) * 24 + hour) * 60 + minute;
+    }
+
+    function renderTables() {
+        const tbodyLeft = document.getElementById('tbody-left');
+        const tbodyRight = document.getElementById('tbody-right');
+        const align = document.getElementById('align-timestamps-toggle').checked;
+
+        let htmlLeft = '';
+        let htmlRight = '';
+        const leftSource = sortedTrades('left-main', leftTradesData);
+        const rightSource = sortedTrades('right-main', rightTradesData);
+
+        if (!align) {
+            leftSource.forEach(t => htmlLeft += renderRow(t));
+            rightSource.forEach(t => htmlRight += renderRow(t));
+        } else {
+            const pairedRows = alignedRowsHtml('left-main', leftSource, 'right-main', rightSource);
+            htmlLeft = pairedRows.leftHtml;
+            htmlRight = pairedRows.rightHtml;
+        }
+
+        tbodyLeft.innerHTML = htmlLeft;
+        tbodyRight.innerHTML = htmlRight;
+        decorateStaticHeaders();
+        renderLiveSplitBoard();
+    }
+
+    function updateStats(side, data) {
+        if (!data) return;
+        const netEl = document.getElementById(`${side}-cum-net`);
+        const netVal = data.cum_net_usd;
+        netEl.innerHTML = formatVal(netVal, true);
+        
+        document.getElementById(`${side}-win-rate`).textContent = data.win_rate.toFixed(1) + '%';
+        document.getElementById(`${side}-total-trades`).textContent = data.total_trades;
+    }
+
+    async function runSimulation() {
+        stopLiveMode();
+        document.getElementById('tbody-left').innerHTML = '';
+        document.getElementById('tbody-right').innerHTML = '';
+
+        const [leftData, rightData] = await Promise.all([
+            fetchSide('left'),
+            fetchSide('right')
+        ]);
+
+        if (leftData) {
+            leftTradesData = leftData.trades || [];
+            updateStats('left', leftData);
+        }
+        if (rightData) {
+            rightTradesData = rightData.trades || [];
+            updateStats('right', rightData);
+        }
+
+        renderTables();
+    }
+
+    document.getElementById('align-timestamps-toggle').addEventListener('change', renderTables);
+    document.getElementById('live-show-first').addEventListener('change', renderTables);
+    document.getElementById('btn-columns').addEventListener('click', () => {
+        document.getElementById('column-menu').classList.toggle('open');
+    });
+    document.addEventListener('click', (event) => {
+        const wrap = document.querySelector('.column-menu-wrap');
+        if (wrap && !wrap.contains(event.target)) {
+            document.getElementById('column-menu').classList.remove('open');
+        }
+    });
+    document.getElementById('live-toggle').addEventListener('change', (event) => {
+        if (event.target.checked) startLiveMode();
+        else stopLiveMode(false);
+    });
+    document.getElementById('global-date').addEventListener('change', () => {
+        if (document.getElementById('live-toggle').checked && !isCurrentDateSelected()) {
+            stopLiveMode();
+        }
+    });
+    renderColumnControls();
+    renderTables();
+    if (loadLiveSnapshot() && isCurrentDateSelected()) {
+        document.getElementById('live-toggle').checked = true;
+        startLiveMode();
+    }
+</script>
+</body>
+</html>
