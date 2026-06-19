@@ -6,11 +6,11 @@
     "archive": false,
     "auto_alt_net_check": false,
     "auto_alt_threshold": 0,
-    "auto_archive_threshold": 1000,
+    "auto_archive_threshold": 2000,
     "auto_net_check": true,
     "auto_net_threshold": 0,
     "auto_trade_count_mode": "max_count",
-    "automated_trade_source": "Frequency",
+    "automated_trade_source": "Trade Bucket",
     "automated_trade_sources": [
         "Frequency",
         "Trade Bucket"
@@ -21,17 +21,28 @@
     "crypto_trade_qty_percent": 50,
     "daily_target": 500,
     "default_min_value": 10,
+    "path_settings": {
+        "generated_data_root": "X:\\eds",
+        "json_data_root": "x:\\eds"
+    },
+    "service_urls": {
+        "breakout_api_base": "http://127.0.0.1:5000",
+        "quote_api_base": "http://127.0.0.1:8002"
+    },
     "endpoints": {
         "live": [
+            "http://127.0.0.1:8001/api/vw_000_fx_quotes",
             "http://127.0.0.1:8002/api/vw_000_fx_quotes",
             "http://127.0.0.1:8002/api/vw_000_crypto_quotes",
             "http://127.0.0.1:8002/api/vw_000_index_quotes",
-            "http://127.0.0.1:8002/api/vw_000_futures_quotes"
+            "http://127.0.0.1:8002/api/vw_000_futures_quotes",
+            "http://127.0.0.1:8001/api/vw_000_fx_quotes"
         ],
         "sim": [
             "http://127.0.0.1:8002/api/vw_000_fx_quotes_sim",
             "http://127.0.0.1:8002/api/vw_000_crypto_quotes",
-            "http://127.0.0.1:8002/api/vw_000_futures_quotes"
+            "http://127.0.0.1:8002/api/vw_000_futures_quotes",
+            "http://127.0.0.1:8001/api/vw_000_fx_quotes"
         ]
     },
     "enforce_market_bias": false,

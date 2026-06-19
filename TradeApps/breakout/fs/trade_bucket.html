@@ -579,21 +579,6 @@
             const dateInput = document.getElementById('bucketDate');
             const today = new Date().toISOString().split('T')[0];
             dateInput.value = today;
-            // Fetch config to get default run_mode
-            try {
-                const configResponse = await fetch('config.json');
-                if (configResponse.ok) {
-                    const configData = await configResponse.json();
-                    const defaultMode = (configData.run_mode || 'live').toLowerCase();
-                    document.getElementById('runMode').value = defaultMode;
-                    populateProductTypeSelect(configData);
-                } else {
-                    throw new Error('Config response not OK');
-                }
-            } catch (error) {
-                console.warn('Could not load config, defaulting to live mode:', error);
-                populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
-            }
 
             // URL params override defaults/config when present.
             const qMode = (getQueryParam('mode') || '').toLowerCase();
@@ -604,8 +589,25 @@
             if (/^\d{4}-\d{2}-\d{2}$/.test(qDate)) {
                 document.getElementById('bucketDate').value = qDate;
             }
+
+            // [V20260512_0500] Parallelize config and buckets fetch for faster loading
             configLoaded = true;
-            loadBuckets();
+            const configPromise = fetch('config.json').then(r => r.ok ? r.json() : null).catch(() => null);
+            const bucketsPromise = loadBuckets();
+
+            // Apply config when ready (non-blocking)
+            configPromise.then(configData => {
+                if (configData) {
+                    const defaultMode = (configData.run_mode || 'live').toLowerCase();
+                    // Only update if no URL override was applied
+                    if (!qMode) document.getElementById('runMode').value = defaultMode;
+                    populateProductTypeSelect(configData);
+                } else {
+                    populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
+                }
+            });
+
+            await bucketsPromise;
             // 2026-01-19 10:43 - V20260119_1043: Auto-refresh every 30 seconds
             setInterval(() => {
                 loadBuckets();
@@ -617,12 +619,28 @@
             const runMode = document.getElementById('runMode').value;
             const selectedDate = document.getElementById('bucketDate').value;
             const dateToUse = selectedDate || new Date().toISOString().split('T')[0];
-            const bucketPath = `${API_BASE}?mode=${runMode}&date=${dateToUse}&${buildProductTypeQuery()}&_=${Date.now()}`;
+            const cacheBuster = Date.now();
+            const prioritizedBucket = String(getQueryParam('bucket') || '').trim();
+            const directBucketQuery = prioritizedBucket
+                ? `&bucket=${encodeURIComponent(prioritizedBucket)}&light=true`
+                : '';
+            const bucketPath = `${API_BASE}?mode=${runMode}&date=${dateToUse}&${buildProductTypeQuery()}${directBucketQuery}&_=${cacheBuster}`;
+
             try {
-                const response = await fetch(bucketPath);
-                const text = await response.text();
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status} (${bucketPath})`);
+                // [V20260513_1325] Do not block the bucket page on a full-day trades payload.
+                // The old startup fetched /api/trades for the entire day (~MBs) before first render,
+                // then separately refreshed each bucket with targeted L-trade calls. Render buckets
+                // from bucket/leadership/grid data first; live-net drilldowns refresh asynchronously.
+                const [bucketResponse, leadershipResp, gridLiveRows] = await Promise.all([
+                    fetch(bucketPath),
+                    fetch(`/api/tb_leadership?mode=${encodeURIComponent(runMode)}&date=${encodeURIComponent(dateToUse)}&${buildProductTypeQuery()}&_=${cacheBuster}`).catch(() => null),
+                    getGridLiveEntries(runMode).catch(() => [])
+                ]);
+
+                // Process bucket response
+                const text = await bucketResponse.text();
+                if (!bucketResponse.ok) {
+                    throw new Error(`HTTP ${bucketResponse.status} (${bucketPath})`);
                 }
                 let data = null;
                 try {
@@ -632,34 +650,38 @@
                 }
                 const buckets = data.buckets || [];
                 lastBuckets = buckets;
+
+                // Process leadership response
                 try {
-                    const leadershipResp = await fetch(`/api/tb_leadership?mode=${encodeURIComponent(runMode)}&date=${encodeURIComponent(dateToUse)}&${buildProductTypeQuery()}&_=${Date.now()}`);
-                    const leadershipData = await leadershipResp.json();
-                    const leadershipRows = (leadershipResp.ok && leadershipData && Array.isArray(leadershipData.leadership))
-                        ? leadershipData.leadership
-                        : [];
-                    lastLeadershipWindowsMap = buildPersistedLeadershipMap(leadershipRows);
+                    if (leadershipResp && leadershipResp.ok) {
+                        const leadershipData = await leadershipResp.json();
+                        const leadershipRows = Array.isArray(leadershipData?.leadership) ? leadershipData.leadership : [];
+                        lastLeadershipWindowsMap = buildPersistedLeadershipMap(leadershipRows);
+                    } else {
+                        lastLeadershipWindowsMap = {};
+                    }
                 } catch (e) {
-                    console.warn('[trade_bucket] failed loading persistent leadership windows:', e);
+                    console.warn('[trade_bucket] failed parsing leadership:', e);
                     lastLeadershipWindowsMap = {};
                 }
-                try {
-                    lastGridLiveRows = await getGridLiveEntries(runMode);
-                } catch (e) {
-                    lastGridLiveRows = [];
-                }
-                // Fetch same-day trades once so card-level L-Trade Net is calculated from real trade rows.
-                try {
-                    const tradesResp = await fetch(`/api/trades?mode=${encodeURIComponent(runMode)}&date=${encodeURIComponent(dateToUse)}&${buildProductTypeQuery()}&live_only=false&_=${Date.now()}`);
-                    const tradesData = await tradesResp.json();
-                    lastTradeRows = (tradesResp.ok && tradesData && Array.isArray(tradesData.trades)) ? tradesData.trades : [];
-                } catch (e) {
-                    console.warn('[trade_bucket] failed loading trades for live-net aggregation:', e);
-                    lastTradeRows = [];
-                }
-                await preloadBucketLiveNetStats(buckets);
-                console.log(`? Loaded ${buckets.length} buckets from ${bucketPath}`);
-                renderBuckets(buckets, lastTradeRows, lastLeadershipWindowsMap);
+
+                // Store grid live rows
+                lastGridLiveRows = gridLiveRows || [];
+                bucketLiveNetContextMap = {};
+
+                // Initial render no longer waits on full-day trades. Targeted live-net calls below
+                // replace this placeholder data asynchronously.
+                lastTradeRows = [];
+
+                console.log(`Loaded ${buckets.length} buckets from ${bucketPath}`);
+                const bucketsToRender = prioritizedBucket
+                    ? buckets.filter(bucket => String(bucket?.name || '').trim() === prioritizedBucket)
+                    : buckets;
+                const displayBuckets = bucketsToRender.length ? bucketsToRender : buckets;
+                renderBuckets(displayBuckets, lastTradeRows, lastLeadershipWindowsMap);
+                setTimeout(() => {
+                    void refreshBucketLiveNetStats(displayBuckets, prioritizedBucket);
+                }, 0);
             } catch (error) {
                 // Keep existing view if we already have valid buckets (avoid false red screen on transient 404s).
                 if (Array.isArray(lastBuckets) && lastBuckets.length > 0) {
@@ -715,7 +737,7 @@
                     : `<span class="badge live">LIVE</span>`;
 
                 return `
-                <div class="bucket-card">
+                <div class="bucket-card" data-bucket-name="${encodeURIComponent(bucket.name)}">
                     <div class="bucket-header">
                         <div class="bucket-info">
                             <div class="bucket-title">${bucket.name}</div>
@@ -833,7 +855,7 @@
                                 <div class="strategy-col-num neutral">${Number(baselineDisplay || 0).toFixed(2)}</div>
                                 <div class="strategy-col-num neutral">${(s.current_total_net || 0).toFixed(2)}</div>
                                 <div class="strategy-col-num ${netDelta >= 0 ? 'positive' : 'negative'}" style="font-weight: 800;">${netDelta.toFixed(2)}</div>
-                                <div class="strategy-col-num" style="font-weight:700; color:${sLiveNet >= 0 ? '#10b981' : '#f43f5e'};">
+                                <div class="strategy-col-num" id="stratLiveNet_${encodeURIComponent(bucket.name)}_${encodeURIComponent(parsed.key)}" style="font-weight:700; color:${sLiveNet >= 0 ? '#10b981' : '#f43f5e'};">
                                     ${sLiveNet.toFixed(1)} <span style="font-size: 0.8em; opacity: 0.7;">(${sLTrades.length})</span>
                                 </div>
                             </div>
@@ -1124,43 +1146,104 @@
             return { trades, sum };
         }
 
-        async function refreshBucketLiveNetStats(buckets) {
+        let bucketObserver = null;
+
+        function refreshBucketLiveNetStats(buckets, prioritizedBucketName = '') {
             if (!Array.isArray(buckets) || buckets.length === 0) return;
-            await Promise.all(buckets.map(async (bucket) => {
-                const bucketName = String(bucket?.name || '').trim();
-                if (!bucketName) return;
-                try {
-                    const context = await fetchBucketLiveNetContext(bucket);
-                    bucketLiveNetContextMap[bucketName] = context;
-                    const valueEl = document.getElementById(`liveNetValue_${encodeURIComponent(bucketName)}`);
-                    const hintEl = document.getElementById(`liveNetHint_${encodeURIComponent(bucketName)}`);
-                    if (valueEl) {
-                        valueEl.textContent = context.sum.toFixed(2);
-                        valueEl.classList.remove('positive', 'negative');
-                        valueEl.classList.add(context.sum >= 0 ? 'positive' : 'negative');
+            
+            if (bucketObserver) {
+                bucketObserver.disconnect();
+            }
+
+            const observerOptions = {
+                root: null,
+                rootMargin: '200px',
+                threshold: 0.05
+            };
+
+            bucketObserver = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const bucketName = decodeURIComponent(entry.target.dataset.bucketName);
+                        const bucket = bucketLookup[bucketName];
+                        if (bucket && !bucketLiveNetContextMap[bucketName]?.fetched) {
+                            fetchAndUpdateBucketLiveNet(bucket);
+                        }
+                        observer.unobserve(entry.target);
                     }
-                    if (hintEl) {
-                        hintEl.textContent = `View L-Trades (${context.trades.length})`;
+                });
+            }, observerOptions);
+
+            document.querySelectorAll('.bucket-card').forEach(card => {
+                if (card.dataset.bucketName) {
+                    const bName = decodeURIComponent(card.dataset.bucketName);
+                    if (prioritizedBucketName && bName === prioritizedBucketName) {
+                        const bucket = bucketLookup[bName];
+                        if (bucket && !bucketLiveNetContextMap[bName]?.fetched) {
+                            fetchAndUpdateBucketLiveNet(bucket);
+                        }
+                    } else {
+                        bucketObserver.observe(card);
                     }
-                } catch (e) {
-                    console.warn('[trade_bucket] failed refreshing live net stat for bucket:', bucketName, e);
                 }
-            }));
+            });
         }
 
-        async function preloadBucketLiveNetStats(buckets) {
-            bucketLiveNetContextMap = {};
-            if (!Array.isArray(buckets) || buckets.length === 0) return;
-            await Promise.all(buckets.map(async (bucket) => {
-                const bucketName = String(bucket?.name || '').trim();
-                if (!bucketName) return;
-                try {
-                    bucketLiveNetContextMap[bucketName] = await fetchBucketLiveNetContext(bucket);
-                } catch (e) {
-                    console.warn('[trade_bucket] failed preloading live net stat for bucket:', bucketName, e);
-                    bucketLiveNetContextMap[bucketName] = { trades: [], sum: 0 };
+        async function fetchAndUpdateBucketLiveNet(bucket) {
+            const bucketName = String(bucket?.name || '').trim();
+            if (!bucketName) return;
+            try {
+                bucketLiveNetContextMap[bucketName] = bucketLiveNetContextMap[bucketName] || {};
+                bucketLiveNetContextMap[bucketName].fetched = true;
+
+                const context = await fetchBucketLiveNetContext(bucket);
+                bucketLiveNetContextMap[bucketName] = { ...context, fetched: true };
+                
+                const valueEl = document.getElementById(`liveNetValue_${encodeURIComponent(bucketName)}`);
+                const hintEl = document.getElementById(`liveNetHint_${encodeURIComponent(bucketName)}`);
+                if (valueEl) {
+                    valueEl.textContent = context.sum.toFixed(2);
+                    valueEl.classList.remove('positive', 'negative');
+                    valueEl.classList.add(context.sum >= 0 ? 'positive' : 'negative');
                 }
-            }));
+                if (hintEl) {
+                    hintEl.textContent = `View L-Trades (${context.trades.length})`;
+                }
+
+                const bucketWindows = lastLeadershipWindowsMap[bucketName] || {};
+                const altKeyObj = getCurrentAltNetKey(bucket);
+                
+                (bucket.strategies || []).forEach(s => {
+                    const parsed = parseBucketStrategy(s);
+                    if (!parsed.key) return;
+                    
+                    const parsedWindowKey = parsed.parsedKey ? buildStrategyKey(parsed.parsedKey.model, parsed.parsedKey.product) : '';
+                    const sWindows = bucketWindows[parsedWindowKey] || [];
+                    const isAltCandidate = !!(
+                        bucket.trade_alt_net && altKeyObj && parsed.parsedKey &&
+                        parsed.parsedKey.model === altKeyObj.model && parsed.parsedKey.product === altKeyObj.product
+                    );
+                    const drilldownMetric = isAltCandidate ? 'alt_net' : (parsed.metric || 'net');
+                    
+                    const sLTrades = context.trades.filter(t => {
+                        if (!tradeMatchesBucketStrategy(t, [parsed.parsedKey])) return false;
+                        if (!isTradeInLeaderWindow(t, { [parsedWindowKey]: sWindows })) return false;
+                        return isTradeLTrade({ ...t, tb_leader: 'Y' }, drilldownMetric);
+                    });
+                    const sLiveNet = sLTrades.reduce((acc, t) => acc + getTradePnlValue(t, drilldownMetric), 0);
+                    
+                    const stratEl = document.getElementById(`stratLiveNet_${encodeURIComponent(bucketName)}_${encodeURIComponent(parsed.key)}`);
+                    if (stratEl) {
+                        stratEl.style.color = sLiveNet >= 0 ? '#10b981' : '#f43f5e';
+                        stratEl.innerHTML = `${sLiveNet.toFixed(1)} <span style="font-size: 0.8em; opacity: 0.7;">(${sLTrades.length})</span>`;
+                    }
+                });
+            } catch (e) {
+                console.warn('[trade_bucket] failed refreshing live net stat for bucket:', bucketName, e);
+                if (bucketLiveNetContextMap[bucketName]) {
+                    bucketLiveNetContextMap[bucketName].fetched = false;
+                }
+            }
         }
 
         function renderDrilldownRows(trades, leaderWindowsMap = null) {

@@ -57,6 +57,7 @@ folder_path = os.path.dirname(__file__)  # Get the directory where the script is
 file_names = [f for f in os.listdir(folder_path) if (f.endswith('.py') and 'open_link' in f) or f in [
     #'momentum.py',
     #'momentum_r.py',
+    'price_capture_daemon.py'
     'breakout.py',
     'breakout_R.py',
     'breakout_Rev.py',

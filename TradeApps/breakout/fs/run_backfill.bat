@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\Users\edebe\eds\TradeApps\breakout\fs"
+cd /d "%~dp0"
 C:\Python313\python.exe backfill_trades.py
 pause

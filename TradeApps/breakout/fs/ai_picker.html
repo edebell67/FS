@@ -945,8 +945,10 @@
         }
 
         async function init() {
-            await fetchConfig();
-            await updateData();
+            // [V20260512_0530] Parallelize config and initial data fetch for faster loading
+            const configPromise = fetchConfig();
+            const dataPromise = updateData();
+            await Promise.all([configPromise, dataPromise]);
             setInterval(updateData, 60000);
         }
 

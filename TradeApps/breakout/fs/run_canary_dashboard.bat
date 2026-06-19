@@ -4,6 +4,7 @@ echo Starting Canary Tripwire Dashboard Server...
 echo ==============================================
 
 cd /d "%~dp0"
+set TRADE_VIEWER_DISABLE_WORKERS=1
 start "Trade Viewer API" python trade_viewer_api.py
 
 echo Server is spinning up in the background...

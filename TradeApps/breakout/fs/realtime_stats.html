@@ -604,6 +604,49 @@
             gap: 8px;
         }
 
+        /* [V20260520_2245] Smaller win rate ring for metric rows */
+        .metric-ring {
+            width: 52px;
+            height: 52px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            position: relative;
+            flex-shrink: 0;
+            background: conic-gradient(
+                var(--ring-color, var(--green)) calc(var(--ring-value, 0) * 1%),
+                rgba(148, 163, 184, 0.12) 0
+            );
+        }
+
+        .metric-ring::before {
+            content: "";
+            position: absolute;
+            inset: 6px;
+            border-radius: 999px;
+            background: #111f34;
+        }
+
+        .metric-ring-content {
+            position: relative;
+            text-align: center;
+            z-index: 1;
+        }
+
+        .metric-ring-content strong {
+            display: block;
+            font-size: 0.82rem;
+            line-height: 1;
+        }
+
+        .metric-ring-content span {
+            display: block;
+            font-size: 0.48rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
         .summary-total .headline {
             font-size: 0.72rem;
             color: #d2deef;
@@ -1155,6 +1198,16 @@
                             <option value="">All Products</option>
                         </select>
                     </div>
+                    <!-- [V20260520_2130] Scalper Type filter — mirrors isScalperEntry/isRevScalperEntry logic from strategy_performance.html -->
+                    <div class="filter-box">
+                        <label for="scalperTypeFilter"><i class="fas fa-crosshairs"></i> Scalper Type</label>
+                        <select id="scalperTypeFilter">
+                            <option value="all">All Types</option>
+                            <option value="scalper">Scalper</option>
+                            <option value="rev_scalper">Rev Scalper</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
                     <button id="refreshBtn" class="refresh-btn" title="Refresh now">
                         <i class="fas fa-rotate-right"></i>
                     </button>
@@ -1220,6 +1273,25 @@
         let snapshotCursor = 'latest';
         let availableSnapshots = [];
         let executionMode = 'semi_automatic';
+
+        // [V20260605] Snapshot cache to avoid re-fetching previously loaded snapshots
+        const SNAPSHOT_CACHE_MAX = 50;
+        const snapshotCache = new Map();
+
+        function getCachedSnapshot(key) {
+            if (!key || key === 'latest') return null;
+            return snapshotCache.get(key) || null;
+        }
+
+        function setCachedSnapshot(key, data) {
+            if (!key || key === 'latest') return;
+            // LRU eviction: remove oldest if at capacity
+            if (snapshotCache.size >= SNAPSHOT_CACHE_MAX) {
+                const oldestKey = snapshotCache.keys().next().value;
+                snapshotCache.delete(oldestKey);
+            }
+            snapshotCache.set(key, data);
+        }
         let tradeLogFilter = 'all';
         let manualTradeOpen = false;
         let panelFlashMessage = '';
@@ -1228,6 +1300,9 @@
             profitThresholdPct: 100,
             lossThresholdPct: 100
         };
+        // [V20260520_2130] Scalper ratio thresholds — defaults mirror strategy_performance.html; overridden from /api/config
+        let scalperRatio = 5;    // Scalper: SL >= TP × scalperRatio
+        let revScalperRatio = 2; // Rev Scalper: TP >= SL × revScalperRatio
 
         function escapeHtml(value) {
             return String(value ?? '')
@@ -1338,6 +1413,9 @@
                     lossThresholdPct: normalizeThresholdPct(cfg.realtime_stats_loss_check_threshold_pct, 100)
                 };
                 closePolicyConfig = normalizeClosePolicyConfig(cfg.realtime_trade_close_config);
+                // [V20260520_2130] Load scalper ratio thresholds — keeps parity with strategy_performance.html
+                if (cfg.scalper_ratio) scalperRatio = parseFloat(cfg.scalper_ratio);
+                if (cfg.rev_scalper_ratio) revScalperRatio = parseFloat(cfg.rev_scalper_ratio);
             } catch (err) {
                 console.warn('Realtime stats highlight config load failed; using defaults.', err);
                 closePolicyConfig = defaultClosePolicyConfig();
@@ -1417,8 +1495,12 @@
                                 <span class="metric-count">${card.count || 0}</span>
                                 ${threshold.badge}
                             </div>
-                            <div class="spark-bars">
-                                ${renderBars(card.spark || [], window.accent)}
+                            <!-- [V20260520_2245] Win rate ring replaces spark bars in metric rows -->
+                            <div class="metric-ring" style="--ring-color:${window.accent}; --ring-value:${Math.max(0, Math.min(100, Number(card.win_rate || 0)))};">
+                                <div class="metric-ring-content">
+                                    <strong>${card.win_rate || 0}%</strong>
+                                    <span>Win Rate</span>
+                                </div>
                             </div>
                         </div>
                         <div class="metric-grid">
@@ -2082,7 +2164,7 @@
             board.innerHTML = `
                 ${renderTimeHeader(windows, summary)}
                 ${rows.map(row => renderMetricRow(row, windows)).join('')}
-                ${renderSummaryRow(summary, windows)}
+                <!-- [V20260520_2245] Removed renderSummaryRow call from dashboard -->
                 <div class="footer-note">
                     <span class="dot"></span>
                     <span>${escapeHtml(titleizeStrategyGroup(payload.selected_group))} dashboard view · auto-updates every 15 seconds · values shown in USD net return</span>
@@ -2179,14 +2261,30 @@
         function syncProductFilter(products, selectedValue) {
             const select = document.getElementById('productFilter');
             const current = selectedValue ?? select.value;
+            
+            // [V20260521_0240] Ensure the currently selected product is always in the options list,
+            // even if it has no trades in the current API response.
+            let productList = products || [];
+            if (current && current.trim() !== '') {
+                const upperCurrent = current.toUpperCase();
+                const exists = productList.some(p => p.toUpperCase() === upperCurrent);
+                if (!exists) {
+                    productList = [...productList, upperCurrent].sort();
+                }
+            }
+
             const options = ['<option value="">All Products</option>']
-                .concat((products || []).map(product => {
+                .concat(productList.map(product => {
                     const safe = escapeHtml(product);
-                    const selected = current === product ? ' selected' : '';
+                    const isSelected = current && current.toUpperCase() === product.toUpperCase();
+                    const selected = isSelected ? ' selected' : '';
                     return `<option value="${safe}"${selected}>${safe}</option>`;
                 }));
             select.innerHTML = options.join('');
-            select.value = current || '';
+            
+            // Re-select the correct case-matched value
+            const matchedProduct = productList.find(p => current && p.toUpperCase() === current.toUpperCase());
+            select.value = matchedProduct || '';
         }
 
         function setRefreshButtonState(state) {
@@ -2201,15 +2299,38 @@
 
         async function fetchDashboard(options = {}) {
             if (isRefreshInFlight) return;
-            isRefreshInFlight = true;
-            setRefreshButtonState({ loading: true, pressed: false });
             const forceRefresh = !!options.forceRefresh;
             const product = document.getElementById('productFilter').value || '';
             const strategyGroup = document.getElementById('strategyGroupFilter').value || 'momentum';
+            // [V20260520_2130] Read scalper type filter; forwarded to API as scalper_type param
+            const scalperType = document.getElementById('scalperTypeFilter')?.value || 'all';
+
+            // [V20260605] Check cache for historical snapshots (not 'latest')
+            const isHistorical = snapshotCursor && snapshotCursor !== 'latest';
+            const cacheKey = isHistorical ? `${snapshotCursor}|${strategyGroup}|${product}|${scalperType}` : null;
+
+            if (isHistorical && !forceRefresh) {
+                const cached = getCachedSnapshot(cacheKey);
+                if (cached) {
+                    // Cache hit - render immediately without API call
+                    lastPayload = cached;
+                    syncStrategyGroupFilter(cached.strategy_groups || [], strategyGroup);
+                    syncProductFilter(cached.products || [], product);
+                    updateSnapshotControls(cached);
+                    renderDashboard(cached);
+                    const ts = cached.last_update ? new Date(cached.last_update) : new Date();
+                    document.getElementById('lastUpdated').textContent = `Last update: ${isNaN(ts.getTime()) ? 'unknown' : ts.toLocaleString()} (cached)`;
+                    return;
+                }
+            }
+
+            isRefreshInFlight = true;
+            setRefreshButtonState({ loading: true, pressed: false });
             const url = new URL('/api/realtime_stats', API_ORIGIN);
             url.searchParams.set('strategy_group', strategyGroup);
             url.searchParams.set('product', product);
-            if (snapshotCursor && snapshotCursor !== 'latest') {
+            url.searchParams.set('scalper_type', scalperType); // [V20260520_2130]
+            if (isHistorical) {
                 url.searchParams.set('snapshot', snapshotCursor);
             } else if (forceRefresh) {
                 url.searchParams.set('force_refresh', '1');
@@ -2222,8 +2343,15 @@
                 }
                 const data = await response.json();
                 lastPayload = data;
-                syncStrategyGroupFilter(data.strategy_groups || [], data.selected_group || strategyGroup);
-                syncProductFilter(data.products || [], data.selected_product || product);
+
+                // [V20260605] Cache historical snapshots for instant navigation
+                if (isHistorical && cacheKey) {
+                    setCachedSnapshot(cacheKey, data);
+                }
+
+                // [V20260521_0015] Use local filter state instead of API's selected_group/selected_product to prevent reset to "All"
+                syncStrategyGroupFilter(data.strategy_groups || [], strategyGroup);
+                syncProductFilter(data.products || [], product);
                 updateSnapshotControls(data);
                 renderDashboard(data);
 
@@ -2270,6 +2398,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('strategyGroupFilter').addEventListener('change', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
             document.getElementById('productFilter').addEventListener('change', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
+            // [V20260520_2130] Scalper type filter change triggers dashboard refresh
+            document.getElementById('scalperTypeFilter').addEventListener('change', () => fetchDashboard({ forceRefresh: snapshotCursor === 'latest' }));
             const refreshBtn = document.getElementById('refreshBtn');
             refreshBtn.addEventListener('pointerdown', () => {
                 if (!isRefreshInFlight) setRefreshButtonState({ loading: false, pressed: true });

@@ -102,6 +102,10 @@
         }
         .chart-btn:hover { filter: brightness(1.05); }
         .chart-btn:active { transform: translateY(1px) scale(0.98); }
+        .chart-btn.is-pressed-feedback {
+            transform: translateY(1px) scale(0.98);
+            filter: brightness(1.1);
+        }
         .chart-btn.is-busy {
             background: linear-gradient(135deg, #06b6d4, #2563eb);
             color: #eff6ff;
@@ -121,6 +125,20 @@
         button.secondary {
             background: rgba(148, 163, 184, 0.12);
             border: 1px solid var(--line);
+            box-shadow: none;
+        }
+        button.secondary:hover {
+            background: rgba(148, 163, 184, 0.22);
+            border-color: rgba(148, 163, 184, 0.4);
+            filter: brightness(1.08);
+        }
+        button.secondary:active {
+            transform: translateY(1px) scale(0.985);
+        }
+        button.secondary.is-pressed-feedback {
+            transform: translateY(1px) scale(0.985);
+            background: rgba(148, 163, 184, 0.28);
+            filter: brightness(1.12);
         }
         .snapshot-strip {
             display: flex;
@@ -180,6 +198,19 @@
             border-radius: 14px;
             padding: 10px 12px;
             cursor: pointer;
+            transition: transform 120ms ease, filter 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+        .rank-item:hover {
+            background: rgba(15, 23, 42, 0.88);
+            border-color: rgba(148, 163, 184, 0.25);
+            filter: brightness(1.04);
+        }
+        .rank-item:active {
+            transform: translateY(1px) scale(0.995);
+        }
+        .rank-item.is-pressed-feedback {
+            transform: translateY(1px) scale(0.995);
+            filter: brightness(1.08);
         }
         .rank-item.active {
             border-color: rgba(6, 182, 212, 0.62);
@@ -241,24 +272,62 @@
             border-radius: 999px;
             background: rgba(148, 163, 184, 0.12);
             border: 1px solid var(--line);
+            box-shadow: none;
+            transition: transform 120ms ease, filter 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+        .pair-quality-close:hover {
+            background: rgba(148, 163, 184, 0.22);
+            border-color: rgba(148, 163, 184, 0.4);
+            filter: brightness(1.08);
+        }
+        .pair-quality-close:active {
+            transform: translateY(1px) scale(0.985);
+        }
+        .pair-quality-close.is-pressed-feedback {
+            transform: translateY(1px) scale(0.985);
+            background: rgba(148, 163, 184, 0.28);
+            filter: brightness(1.12);
         }
         .inspect-btn-preview {
             border: 1px solid rgba(148, 163, 184, 0.18);
+            transition: transform 120ms ease, filter 180ms ease, background 180ms ease, border-color 180ms ease;
+        }
+        .inspect-btn-preview:hover {
+            filter: brightness(1.1);
+        }
+        .inspect-btn-preview:active {
+            transform: translateY(1px) scale(0.985);
+        }
+        .inspect-btn-preview.is-pressed-feedback {
+            transform: translateY(1px) scale(0.985);
+            filter: brightness(1.15);
         }
         .inspect-btn-preview.pos {
             background: rgba(34, 197, 94, 0.16);
             border-color: rgba(34, 197, 94, 0.35);
             color: #dcfce7;
         }
+        .inspect-btn-preview.pos:hover {
+            background: rgba(34, 197, 94, 0.26);
+            border-color: rgba(34, 197, 94, 0.5);
+        }
         .inspect-btn-preview.warn {
             background: rgba(245, 158, 11, 0.16);
             border-color: rgba(245, 158, 11, 0.35);
             color: #fef3c7;
         }
+        .inspect-btn-preview.warn:hover {
+            background: rgba(245, 158, 11, 0.26);
+            border-color: rgba(245, 158, 11, 0.5);
+        }
         .inspect-btn-preview.neg {
             background: rgba(239, 68, 68, 0.16);
             border-color: rgba(239, 68, 68, 0.35);
             color: #fee2e2;
+        }
+        .inspect-btn-preview.neg:hover {
+            background: rgba(239, 68, 68, 0.26);
+            border-color: rgba(239, 68, 68, 0.5);
         }
         .pair-quality-head {
             display: flex;
@@ -391,10 +460,16 @@
         }
         tr.pair-row {
             cursor: pointer;
-            transition: background 120ms ease;
+            transition: background 120ms ease, transform 100ms ease;
         }
         tr.pair-row:hover td {
             background: rgba(15, 23, 42, 0.28);
+        }
+        tr.pair-row:active td {
+            background: rgba(15, 23, 42, 0.42);
+        }
+        tr.pair-row.is-pressed-feedback td {
+            background: rgba(6, 182, 212, 0.08);
         }
         tr.pair-row.active td {
             background: rgba(6, 182, 212, 0.12);
@@ -853,9 +928,51 @@
             return document.getElementById('cardFilter').value === 'highlighted_only';
         }
 
+        function normalizeStrategySnapshotsPayload(payload, targetDate) {
+            const normalized = {
+                generated_at: payload?.generated_at || new Date().toISOString(),
+                date: payload?.date || targetDate || todayStr(),
+                run_mode: payload?.run_mode || '',
+                product_type: payload?.product_type || '',
+                snapshots: Array.isArray(payload?.snapshots) ? payload.snapshots : [],
+                strategies: {},
+            };
+
+            normalized.snapshots.forEach(snapshot => {
+                const snapshotTime = String(snapshot?.time || '').trim();
+                if (!snapshotTime) return;
+                const rows = Array.isArray(snapshot?.product_rows) && snapshot.product_rows.length
+                    ? snapshot.product_rows
+                    : Array.isArray(snapshot?.strategy_rows) && snapshot.strategy_rows.length
+                        ? snapshot.strategy_rows
+                        : Array.isArray(snapshot?.rows) ? snapshot.rows : [];
+                rows.forEach(row => {
+                    const strategy = String(row?.strategy || '').trim();
+                    const product = String(row?.product || '').trim();
+                    if (!strategy || !product || strategy === '__ALL__') return;
+                    if (!normalized.strategies[strategy]) normalized.strategies[strategy] = {};
+                    if (!normalized.strategies[strategy][product]) normalized.strategies[strategy][product] = [];
+                    normalized.strategies[strategy][product].push({
+                        t: snapshotTime,
+                        net: Number(row?.net || 0),
+                    });
+                });
+            });
+
+            return normalized;
+        }
+
         function buildSnapshotTimesFromSummary(summaryData, targetDate) {
-            const events = [];
             const targetKey = targetDate;
+            if (Array.isArray(summaryData?.snapshots) && summaryData.snapshots.length) {
+                const snapshotTimes = summaryData.snapshots
+                    .map(snapshot => parseIsoDate(snapshot?.time))
+                    .filter(dt => dt && dateKey(dt) === targetKey)
+                    .sort((a, b) => a - b);
+                if (snapshotTimes.length) return snapshotTimes;
+            }
+
+            const events = [];
             const strategies = (summaryData && summaryData.strategies) || {};
             Object.values(strategies).forEach(products => {
                 Object.values(products || {}).forEach(series => {
@@ -874,6 +991,41 @@
                 times.push(new Date(current.getTime()));
             }
             return times;
+        }
+
+        async function loadLeadLagSource(mode, type, date) {
+            const basePath = `json/${mode}/${type}/${date}`;
+            const cacheKey = Date.now();
+            const attempts = [
+                { path: `${basePath}/_strategy_snapshots_15m.json?t=${cacheKey}`, kind: 'strategy_snapshots' },
+                { path: `${basePath}/_summary_net.json?t=${cacheKey}`, kind: 'summary_net' },
+            ];
+
+            for (const attempt of attempts) {
+                try {
+                    const response = await fetch(attempt.path);
+                    if (!response.ok) continue;
+                    const text = await response.text();
+                    if (text.trim().startsWith('<')) continue;
+                    const data = JSON.parse(text);
+                    if (attempt.kind === 'strategy_snapshots') {
+                        return {
+                            source: attempt.path,
+                            kind: attempt.kind,
+                            data: normalizeStrategySnapshotsPayload(data, date),
+                        };
+                    }
+                    return {
+                        source: attempt.path,
+                        kind: attempt.kind,
+                        data,
+                    };
+                } catch (error) {
+                    console.warn('[lead_lag_snapshots] source load failed:', attempt.path, error);
+                }
+            }
+
+            throw new Error(`No supported lead/lag source found for ${type} ${date}.`);
         }
 
         function latestNetAtOrBefore(rawPoints, targetTime) {
@@ -1645,14 +1797,10 @@
             const mode = document.getElementById('runMode').value;
             const type = document.getElementById('productType').value;
             const date = document.getElementById('dateInput').value || todayStr();
-            const path = `json/${mode}/${type}/${date}/_summary_net.json?t=${Date.now()}`;
-            setStatus(`Loading ${path}`);
+            setStatus(`Loading lead/lag source for ${type} ${date}...`);
             try {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const text = await response.text();
-                if (text.trim().startsWith('<')) throw new Error(`No summary_net source found for ${type} ${date}.`);
-                rawSummary = JSON.parse(text);
+                const loaded = await loadLeadLagSource(mode, type, date);
+                rawSummary = loaded.data;
                 snapshotTimes = buildSnapshotTimesFromSummary(rawSummary, date);
                 if (!snapshotTimes.length) throw new Error(`No intraday events found for ${date}.`);
                 const built = buildSeriesMaps(rawSummary, snapshotTimes);
@@ -1707,6 +1855,10 @@
         document.addEventListener('click', (event) => {
             const buttonEl = event.target.closest('button');
             if (buttonEl) triggerButtonFeedback(buttonEl);
+            const rankItem = event.target.closest('.rank-item');
+            if (rankItem) triggerButtonFeedback(rankItem);
+            const pairRow = event.target.closest('tr.pair-row');
+            if (pairRow) triggerButtonFeedback(pairRow);
         });
 
         loadDay();

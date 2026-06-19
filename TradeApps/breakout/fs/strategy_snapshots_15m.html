@@ -107,6 +107,42 @@
             font-weight: 700;
             background: linear-gradient(135deg, #0891b2, #2563eb);
             border: 0;
+            transition:
+                transform 140ms ease,
+                filter 140ms ease,
+                box-shadow 140ms ease,
+                opacity 140ms ease,
+                background 140ms ease,
+                color 140ms ease;
+        }
+
+        button:hover {
+            filter: brightness(1.06);
+            box-shadow: 0 10px 22px rgba(37, 99, 235, 0.16);
+        }
+
+        button:active,
+        button.is-pressed {
+            transform: translateY(1px) scale(0.985);
+            filter: brightness(0.94);
+        }
+
+        button.is-busy {
+            cursor: progress;
+            opacity: 0.92;
+            box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.45), 0 0 0 6px rgba(6, 182, 212, 0.12);
+        }
+
+        button.is-success {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+            color: #f8fafc;
+            box-shadow: 0 0 0 1px rgba(34, 197, 94, 0.4), 0 0 0 6px rgba(34, 197, 94, 0.12);
+        }
+
+        button.is-error {
+            background: linear-gradient(135deg, #dc2626, #ef4444);
+            color: #fff7f7;
+            box-shadow: 0 0 0 1px rgba(239, 68, 68, 0.42), 0 0 0 6px rgba(239, 68, 68, 0.12);
         }
 
         button.secondary {
@@ -139,6 +175,12 @@
             border-color: rgba(6, 182, 212, 0.55);
         }
 
+        .snap-chip.is-success {
+            background: rgba(34, 197, 94, 0.18);
+            border-color: rgba(34, 197, 94, 0.5);
+            color: var(--text);
+        }
+
         .summary-grid {
             display: grid;
             grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -156,6 +198,15 @@
 
         .summary-card.active { border-color: rgba(6, 182, 212, 0.7); }
         .summary-card h3 { margin: 0 0 10px; font-size: 0.95rem; text-transform: uppercase; letter-spacing: 0.08em; }
+
+        .highlight-yellow {
+            background-color: rgba(255, 255, 0, 0.25) !important;
+            color: #fff !important;
+            font-weight: 700 !important;
+        }
+        th.highlight-yellow {
+            background-color: rgba(255, 255, 0, 0.4) !important;
+        }
         .summary-card .net { font-size: 1.8rem; font-weight: 800; }
         .summary-stats { color: var(--muted); display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 10px; font-size: 0.82rem; }      
         
@@ -196,6 +247,14 @@
             font-size: 0.8rem;
             text-transform: uppercase;
             letter-spacing: 0.06em;
+        }
+
+        .empty-state-row td {
+            text-align: left;
+            color: var(--muted);
+            white-space: normal;
+            line-height: 1.5;
+            padding: 16px 12px;
         }
 
         th.left, td.left { text-align: left; }
@@ -300,9 +359,9 @@
                     <option value="product">product detail</option>
                 </select>
             </div>
-            <button type="button" onclick="loadSnapshots()">Load</button>
-            <button type="button" class="secondary" onclick="selectAdjacent(-1)">Prev</button>
-            <button type="button" class="secondary" onclick="selectAdjacent(1)">Next</button>
+            <button type="button" onclick="loadSnapshots(this)">Load</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(-1, this)">Prev</button>
+            <button type="button" class="secondary" onclick="selectAdjacent(1, this)">Next</button>
         </section>
 
         <div class="snapshot-strip" id="snapshotStrip"></div>
@@ -318,7 +377,7 @@
             </div>
             <div class="load-more-footer">
                 <span id="snapshotRenderStatus" style="color: var(--muted); font-size: 0.85em;"></span>
-                <button id="btnLoadMoreSnaps" class="btn" style="display: none; padding: 8px 16px; font-size: 0.85em; background: var(--amber); color: #020617; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="loadMoreSnapshots()">Load More</button>
+                <button id="btnLoadMoreSnaps" class="btn" style="display: none; padding: 8px 16px; font-size: 0.85em; background: var(--amber); color: #020617; border: none; border-radius: 6px; cursor: pointer; font-weight: 600;" onclick="loadMoreSnapshots(this)">Load More</button>
             </div>
         </div>
     </main>
@@ -349,6 +408,49 @@
         let lastSnapPage = 1;
         const SNAP_PAGE_SIZE = 50;
         let filteredSnapRows = [];
+        const buttonResetTimers = new WeakMap();
+
+        function clearButtonReset(buttonEl) {
+            const timerId = buttonResetTimers.get(buttonEl);
+            if (timerId) {
+                clearTimeout(timerId);
+                buttonResetTimers.delete(buttonEl);
+            }
+        }
+
+        function setButtonState(buttonEl, state = '', text = null) {
+            if (!buttonEl) return;
+            if (!buttonEl.dataset.baseLabel) buttonEl.dataset.baseLabel = buttonEl.textContent.trim();
+            clearButtonReset(buttonEl);
+            buttonEl.classList.remove('is-pressed', 'is-busy', 'is-success', 'is-error');
+            if (state) buttonEl.classList.add(`is-${state}`);
+            if (text !== null) buttonEl.textContent = text;
+            buttonEl.disabled = state === 'busy';
+        }
+
+        function resetButtonState(buttonEl) {
+            if (!buttonEl) return;
+            clearButtonReset(buttonEl);
+            buttonEl.classList.remove('is-pressed', 'is-busy', 'is-success', 'is-error');
+            if (buttonEl.dataset.baseLabel) buttonEl.textContent = buttonEl.dataset.baseLabel;
+            buttonEl.disabled = false;
+        }
+
+        function scheduleButtonReset(buttonEl, delayMs = 900) {
+            if (!buttonEl) return;
+            clearButtonReset(buttonEl);
+            const timerId = setTimeout(() => resetButtonState(buttonEl), delayMs);
+            buttonResetTimers.set(buttonEl, timerId);
+        }
+
+        function flashButton(buttonEl, state = 'success', delayMs = 720) {
+            if (!buttonEl) return;
+            setButtonState(buttonEl, 'pressed');
+            setTimeout(() => {
+                setButtonState(buttonEl, state);
+                scheduleButtonReset(buttonEl, delayMs);
+            }, 120);
+        }
         
         function rowKey(row, viewMode) {
             if (viewMode === 'product') {
@@ -480,25 +582,54 @@
             document.getElementById('status').textContent = text || '';
         }
 
-        async function loadSnapshots() {
+        function getSourceCounts() {
+            return payload?.source_counts || {};
+        }
+
+        function buildEmptyStateMessage(snap, viewMode, group) {
+            const counts = getSourceCounts();
+            const closedTotal = Number(counts.closed_records_total || 0);
+            const closedWithExit = Number(counts.closed_records_with_exit_time || 0);
+            const openTotal = Number(counts.open_records || 0);
+            const groupLabel = group && group !== 'all' ? `${group} ` : '';
+            const viewLabel = viewMode === 'product' ? 'product-detail' : 'strategy-rollup';
+            const snapshotLabel = snap?.time ? fmtTime(snap.time) : 'the selected snapshot';
+
+            if (closedTotal === 0 && openTotal === 0) {
+                return `No ${groupLabel}${viewLabel} rows are available for ${snapshotLabel}. The loaded artifact contains 0 closed trades and 0 open trades in its source counts.`;
+            }
+            if (closedWithExit === 0) {
+                return `No ${groupLabel}${viewLabel} rows are available for ${snapshotLabel}. The artifact loaded source trades, but none have exit times yet, so cumulative closed-trade snapshots cannot be built.`;
+            }
+            return `No ${groupLabel}${viewLabel} rows matched ${snapshotLabel}. Try switching the group filter or view mode.`;
+        }
+
+        async function loadSnapshots(buttonEl = null) {
             const mode = document.getElementById('runMode').value;
             const type = document.getElementById('productType').value;
             const date = document.getElementById('dateInput').value || todayStr();
-            const path = `json/${mode}/${type}/${date}/_strategy_snapshots_15m.json?t=${Date.now()}`;
-            setStatus(`Loading ${path}`);
+            const url = `/api/trade_file?mode=${encodeURIComponent(mode)}&date=${encodeURIComponent(date)}&filename=${encodeURIComponent('_strategy_snapshots_15m.json')}&product_type=${encodeURIComponent(type)}&_=${Date.now()}`;
+            setStatus(`Loading ${mode}/${type}/${date}/_strategy_snapshots_15m.json`);
+            if (buttonEl) setButtonState(buttonEl, 'busy', 'Loading...');
             try {
-                const response = await fetch(path);
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const text = await response.text();
-                if (text.trim().startsWith('<')) {
-                    throw new Error(`No JSON snapshot artifact found for ${type} ${date}.`);
+                const response = await fetch(url, { cache: 'no-store' });
+                const data = await response.json();
+                if (!response.ok || !data?.success) {
+                    throw new Error(data?.message || `Snapshot artifact not available for ${type} ${date}.`);
                 }
-                payload = JSON.parse(text);
+                payload = data.content;
+                if (!payload || typeof payload !== 'object') {
+                    throw new Error(`Snapshot artifact payload is empty for ${type} ${date}.`);
+                }
                 const defaultView = payload.default_view || 'strategy';
                 document.getElementById('viewMode').value = defaultView === 'product' ? 'product' : 'strategy';
                 selectedIndex = Math.max(0, (payload.snapshots || []).length - 1);
                 render();
                 setStatus('');
+                if (buttonEl) {
+                    setButtonState(buttonEl, 'success', 'Loaded');
+                    scheduleButtonReset(buttonEl, 1100);
+                }
             } catch (err) {
                 payload = null;
                 document.getElementById('snapshotStrip').innerHTML = '';
@@ -508,16 +639,22 @@
                 document.getElementById('btnLoadMoreSnaps').style.display = 'none';
                 document.getElementById('snapshotRenderStatus').innerText = '';
                 setStatus(`Unable to load snapshot artifact. ${err.message}`);
+                if (buttonEl) {
+                    setButtonState(buttonEl, 'error', 'Failed');
+                    scheduleButtonReset(buttonEl, 1400);
+                }
             }
         }
 
-        function selectSnapshot(index) {
+        function selectSnapshot(index, buttonEl = null) {
             if (!payload) return;
+            if (buttonEl) flashButton(buttonEl);
             selectedIndex = Math.max(0, Math.min(index, payload.snapshots.length - 1));
             render();
         }
 
-        function selectAdjacent(delta) {
+        function selectAdjacent(delta, buttonEl = null) {
+            if (buttonEl) flashButton(buttonEl);
             selectSnapshot(selectedIndex + delta);
         }
 
@@ -533,7 +670,16 @@
         }
 
         function render() {
-            if (!payload || !payload.snapshots || payload.snapshots.length === 0) return;
+            if (!payload || !payload.snapshots || payload.snapshots.length === 0) {
+                document.getElementById('snapshotStrip').innerHTML = '';
+                document.getElementById('summaryGrid').innerHTML = '';
+                document.getElementById('tableHead').innerHTML = '';
+                document.getElementById('tableBody').innerHTML = '';
+                document.getElementById('snapshotRenderStatus').innerText = 'No snapshots available';
+                document.getElementById('btnLoadMoreSnaps').style.display = 'none';
+                setStatus('Loaded snapshot artifact contains no snapshots.');
+                return;
+            }
             const snap = payload.snapshots[selectedIndex];
             const strategyCount = (snap.strategy_rows || snap.rows || []).length;
             const productCount = (snap.product_rows || []).length;
@@ -551,7 +697,7 @@
         function renderSnapshotStrip() {
             const strip = document.getElementById('snapshotStrip');
             strip.innerHTML = payload.snapshots.map((snap, idx) => `
-                <button class="snap-chip ${idx === selectedIndex ? 'active' : ''}" onclick="selectSnapshot(${idx})">
+                <button class="snap-chip ${idx === selectedIndex ? 'active' : ''}" onclick="selectSnapshot(${idx}, this)">
                     ${fmtTime(snap.time)}
                 </button>
             `).join('');
@@ -587,6 +733,7 @@
             const footerStats = document.getElementById('snapshotRenderStatus');
             const btnLoadMore = document.getElementById('btnLoadMoreSnaps');
             const viewMode = document.getElementById('viewMode').value;
+            const groupFilterValue = document.getElementById('groupFilter').value;
 
             if (!append) {
                 lastSnapPage = 1;
@@ -594,22 +741,36 @@
             }
 
             const activeColumns = viewMode === 'product'
-                ? [columns[0], columns[1], productColumn, ...columns.slice(2)]
+                ? [productColumn, columns[0], columns[1], ...columns.slice(2)]
                 : columns;
 
+            // --- Highlight Comparison Logic ---
+            let winningCol = null; // 'buy_profit' or 'sell_profit'
+            if (groupFilterValue !== 'all' && payload?.snapshots?.length > 0) {
+                const snap = payload.snapshots[selectedIndex];
+                const rows = getViewRows(snap, viewMode, groupFilterValue);
+                if (rows.length > 0) {
+                    const avgBuyP = rows.reduce((s, r) => s + (r.buy_profit || 0), 0) / rows.length;
+                    const avgSellP = rows.reduce((s, r) => s + (r.sell_profit || 0), 0) / rows.length;
+                    if (avgBuyP > avgSellP) winningCol = 'buy_profit';
+                    else if (avgSellP > avgBuyP) winningCol = 'sell_profit';
+                }
+            }
+
             if (!append) {
-                head.innerHTML = `<tr>${activeColumns.map(([key, label, align]) => `
-                    <th class="${align || ''}" onclick="changeSort('${key}')">${label}${sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>
-                `).join('')}</tr>`;
+                head.innerHTML = `<tr>${activeColumns.map(([key, label, align]) => {
+                    let thCls = align || '';
+                    if (key === winningCol) thCls += ' highlight-yellow';
+                    return `<th class="${thCls}" onclick="changeSort('${key}')">${label}${sortKey === key ? (sortAsc ? ' ▲' : ' ▼') : ''}</th>`;
+                }).join('')}</tr>`;
             }
 
             const snap = payload.snapshots[selectedIndex];
             if (!snap) return;
 
             if (!append) {
-                const group = document.getElementById('groupFilter').value;
-                let rows = getViewRows(snap, viewMode, group);
-                rows = decorateRowsWithRankDelta(rows, viewMode, group);
+                let rows = getViewRows(snap, viewMode, groupFilterValue);
+                rows = decorateRowsWithRankDelta(rows, viewMode, groupFilterValue);
                 rows.sort((a, b) => {
                     const av = a[sortKey];
                     const bv = b[sortKey];
@@ -625,11 +786,25 @@
             const endIndex = startIndex + SNAP_PAGE_SIZE;
             const pageRows = filteredSnapRows.slice(startIndex, endIndex);
 
+            if (!filteredSnapRows.length) {
+                tbody.innerHTML = `
+                    <tr class="empty-state-row">
+                        <td colspan="${activeColumns.length}">${buildEmptyStateMessage(snap, viewMode, groupFilterValue)}</td>        
+                    </tr>
+                `;
+                if (footerStats) footerStats.innerText = 'Showing 0 of 0 rows';
+                if (btnLoadMore) btnLoadMore.style.display = 'none';
+                setStatus(buildEmptyStateMessage(snap, viewMode, groupFilterValue));
+                return;
+            }
+
             const rowsHtml = pageRows.map(row => `
                 <tr class="${row._rankHighlight || ''}" title="${row._rankDeltaTitle || ''}">
                     ${activeColumns.map(([key, , align]) => {
                         let value = row[key];
                         let cls = align || '';
+                        if (key === winningCol) cls += ' highlight-yellow';
+
                         if (key === 'snapshot_time') value = fmtTime(value);
                         if (key === 'strategy_group') value = `<span class="group-pill">${value}</span>`;
                         if (key === 'strategy') value = row._displayStrategy || value;
@@ -641,7 +816,6 @@
                     }).join('')}
                 </tr>
             `).join('');
-
             if (append) {
                 tbody.insertAdjacentHTML('beforeend', rowsHtml);
             } else {
@@ -656,7 +830,8 @@
             }
         }
 
-        function loadMoreSnapshots() {
+        function loadMoreSnapshots(buttonEl = null) {
+            if (buttonEl) flashButton(buttonEl);
             lastSnapPage++;
             renderTable(true);
         }

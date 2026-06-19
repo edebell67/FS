@@ -33,6 +33,115 @@
             z-index: 100;
             border-radius: 24px;
         }
+        /* Playback Panel Styles */
+        .playback-panel {
+            background: rgba(10, 15, 30, 0.4);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            padding: 14px 20px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .playback-header {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .playback-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #7a9ab8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .playback-clock {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 17px;
+            font-weight: 900;
+            color: var(--accent-primary);
+            letter-spacing: 2px;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .playback-speed-badge {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            font-weight: 700;
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 4px;
+            padding: 2px 8px;
+            min-width: 52px;
+            text-align: center;
+        }
+
+        .playback-mode-badge {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 2px 8px;
+            min-width: 64px;
+            text-align: center;
+            color: #22c55e;
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            transition: color 0.2s, background 0.2s, border-color 0.2s;
+        }
+
+        .playback-mode-badge.playback {
+            color: #f59e0b;
+            background: rgba(245, 158, 11, 0.1);
+            border-color: rgba(245, 158, 11, 0.3);
+        }
+
+        .playback-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .playback-slider-row input[type="range"] {
+            flex: 1;
+            height: 4px;
+            cursor: pointer;
+            accent-color: var(--accent-primary);
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            padding: 0;
+            border-radius: 2px;
+        }
+
+        .playback-range-label {
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 11px;
+            color: #98b5d2;
+            min-width: 38px;
+            text-align: center;
+        }
+
+        .playback-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn.live-active {
+            border-color: var(--accent-primary);
+            background: rgba(45, 212, 191, 0.12);
+            color: var(--accent-primary);
+        }
     </style>
 </head>
 <body class="with-sidebar">
@@ -50,6 +159,29 @@
                 </button>
             </div>
         </header>
+
+        <!-- Time Playback Panel -->
+        <div class="playback-panel" id="playbackPanel" style="display: none;">
+            <div class="playback-header">
+                <span class="playback-title"><i class="fas fa-history"></i> Time Playback</span>
+                <span class="playback-clock" id="playbackClock">--:--:--</span>
+                <span class="playback-speed-badge" id="playbackSpeedBadge">1x</span>
+                <span class="playback-mode-badge" id="playbackModeBadge">LIVE</span>
+            </div>
+            <div class="playback-slider-row">
+                <span class="playback-range-label" id="pbStartLabel">--:--</span>
+                <input type="range" id="playbackSlider" min="0" max="86400" value="86400" step="1">
+                <span class="playback-range-label" id="pbEndLabel">--:--</span>
+            </div>
+            <div class="playback-actions">
+                <button class="btn btn-icon" id="pbReset" type="button" title="Jump to data start"><i class="fas fa-step-backward"></i></button>
+                <button class="btn btn-icon" id="pbSlower" type="button" title="Slower"><i class="fas fa-minus"></i></button>
+                <button class="btn btn-outline" id="pbPlayPause" type="button" style="min-width:100px"><i class="fas fa-play"></i><span> Play</span></button>
+                <button class="btn btn-icon" id="pbFaster" type="button" title="Faster"><i class="fas fa-plus"></i></button>
+                <button class="btn btn-icon" id="pbEnd" type="button" title="Jump to latest"><i class="fas fa-step-forward"></i></button>
+                <button class="btn btn-outline live-active" id="pbLive" type="button" title="Return to live mode"><i class="fas fa-circle"></i><span> Live</span></button>
+            </div>
+        </div>
 
         <section class="glass-card" style="margin-bottom: 20px;">
             <div class="card-title"><i class="fas fa-filter"></i> Performance Filters</div>
@@ -108,6 +240,180 @@
         let filteredData = [];
         let isFirstLoad = true;
 
+        const PLAYBACK_SPEEDS = [1, 10, 60, 300, 1800, 3600];
+        const state = {
+            playbackTime: null,
+            isPlaying: false,
+            playbackSpeed: 1,
+            playbackInterval: null,
+            lastTickTime: null
+        };
+
+        function getPlaybackDataBounds() {
+            let minMs = Infinity;
+            let maxMs = -Infinity;
+            rawData.forEach(d => {
+                if (d.history && d.history.length > 0) {
+                    const firstMs = new Date(d.history[0].t).getTime();
+                    const lastMs = new Date(d.history[d.history.length - 1].t).getTime();
+                    if (firstMs < minMs) minMs = firstMs;
+                    if (lastMs > maxMs) maxMs = lastMs;
+                }
+            });
+            if (minMs === Infinity) {
+                const now = Date.now();
+                return { minMs: now - 3600000, maxMs: now };
+            }
+            return { minMs, maxMs };
+        }
+
+        function fmtPlaybackTime(ms) {
+            return new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function updatePlaybackUI() {
+            const { minMs, maxMs } = getPlaybackDataBounds();
+            const slider = document.getElementById('playbackSlider');
+            const clock = document.getElementById('playbackClock');
+            const speedBadge = document.getElementById('playbackSpeedBadge');
+            const modeBadge = document.getElementById('playbackModeBadge');
+
+            const inPlayback = state.playbackTime !== null;
+            const cursorMs = inPlayback ? state.playbackTime.getTime() : maxMs;
+
+            slider.min = minMs;
+            slider.max = maxMs;
+            slider.value = cursorMs;
+
+            document.getElementById('pbStartLabel').textContent = new Date(minMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            document.getElementById('pbEndLabel').textContent = new Date(maxMs).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            clock.textContent = fmtPlaybackTime(cursorMs);
+            speedBadge.textContent = state.playbackSpeed + 'x';
+            
+            if (inPlayback) {
+                modeBadge.textContent = 'PLAYBACK';
+                modeBadge.classList.add('playback');
+                document.getElementById('pbLive').classList.remove('live-active');
+            } else {
+                modeBadge.textContent = 'LIVE';
+                modeBadge.classList.remove('playback');
+                document.getElementById('pbLive').classList.add('live-active');
+                if (state.isPlaying) togglePlayback(); // auto stop if we went live
+            }
+
+            const playBtnSpan = document.querySelector('#pbPlayPause span');
+            const playBtnIcon = document.querySelector('#pbPlayPause i');
+            if (state.isPlaying) {
+                playBtnSpan.textContent = ' Pause';
+                playBtnIcon.className = 'fas fa-pause';
+            } else {
+                playBtnSpan.textContent = ' Play';
+                playBtnIcon.className = 'fas fa-play';
+            }
+        }
+        
+        function getNetAtTime(history, timeMs) {
+            if (!history || history.length === 0) return 0;
+            if (!timeMs) return history[history.length - 1].net || 0;
+            
+            let lastNet = 0;
+            for (let i = 0; i < history.length; i++) {
+                const ptMs = new Date(history[i].t).getTime();
+                if (ptMs <= timeMs) {
+                    lastNet = history[i].net || 0;
+                } else {
+                    break;
+                }
+            }
+            return lastNet;
+        }
+
+        function togglePlayback() {
+            if (state.isPlaying) {
+                state.isPlaying = false;
+                clearInterval(state.playbackInterval);
+                state.playbackInterval = null;
+            } else {
+                if (state.playbackTime === null) {
+                    const { minMs, maxMs } = getPlaybackDataBounds();
+                    state.playbackTime = new Date(minMs);
+                } else {
+                    const { maxMs } = getPlaybackDataBounds();
+                    if (state.playbackTime.getTime() >= maxMs) {
+                        const { minMs } = getPlaybackDataBounds();
+                        state.playbackTime = new Date(minMs);
+                    }
+                }
+                state.isPlaying = true;
+                state.lastTickTime = Date.now();
+                state.playbackInterval = setInterval(playbackTick, 50);
+            }
+            updatePlaybackUI();
+        }
+
+        function playbackTick() {
+            const now = Date.now();
+            const deltaMs = now - state.lastTickTime;
+            state.lastTickTime = now;
+
+            const { maxMs } = getPlaybackDataBounds();
+            const newTimeMs = state.playbackTime.getTime() + (deltaMs * state.playbackSpeed);
+
+            if (newTimeMs >= maxMs) {
+                state.playbackTime = new Date(maxMs);
+                togglePlayback(); // pause
+            } else {
+                state.playbackTime = new Date(newTimeMs);
+            }
+            updatePlaybackUI();
+            applyFilters();
+        }
+
+        function setupPlaybackListeners() {
+            document.getElementById('pbPlayPause').addEventListener('click', togglePlayback);
+            
+            document.getElementById('pbLive').addEventListener('click', () => {
+                state.playbackTime = null;
+                if (state.isPlaying) togglePlayback();
+                updatePlaybackUI();
+                applyFilters();
+            });
+
+            document.getElementById('pbReset').addEventListener('click', () => {
+                const { minMs } = getPlaybackDataBounds();
+                state.playbackTime = new Date(minMs);
+                updatePlaybackUI();
+                applyFilters();
+            });
+
+            document.getElementById('pbEnd').addEventListener('click', () => {
+                const { maxMs } = getPlaybackDataBounds();
+                state.playbackTime = new Date(maxMs);
+                updatePlaybackUI();
+                applyFilters();
+            });
+
+            document.getElementById('playbackSlider').addEventListener('input', (e) => {
+                if (state.isPlaying) togglePlayback();
+                state.playbackTime = new Date(parseInt(e.target.value, 10));
+                updatePlaybackUI();
+                applyFilters();
+            });
+
+            document.getElementById('pbSlower').addEventListener('click', () => {
+                const idx = PLAYBACK_SPEEDS.indexOf(state.playbackSpeed);
+                if (idx > 0) state.playbackSpeed = PLAYBACK_SPEEDS[idx - 1];
+                updatePlaybackUI();
+            });
+
+            document.getElementById('pbFaster').addEventListener('click', () => {
+                const idx = PLAYBACK_SPEEDS.indexOf(state.playbackSpeed);
+                if (idx < PLAYBACK_SPEEDS.length - 1) state.playbackSpeed = PLAYBACK_SPEEDS[idx + 1];
+                updatePlaybackUI();
+            });
+        }
+
         // Initialize defaults
         document.getElementById('tradeDate').value = new Date().toISOString().split('T')[0];
 
@@ -140,6 +446,9 @@
                         }
                         isFirstLoad = false;
                     }
+
+                    document.getElementById('playbackPanel').style.display = 'flex';
+                    updatePlaybackUI();
 
                     populateFilterOptions();
                     applyFilters();
@@ -252,19 +561,20 @@
                 if (!nodes.has(nameId)) nodes.set(nameId, { id: nameId, parent: prodId, value: 0, net: 0, label: d.strategy_name });
                 if (!nodes.has(winId)) nodes.set(winId, { id: winId, parent: nameId, value: 0, net: 0, label: `W:${d.strategy_window}` });
 
-                const weight = Math.abs(d.net) || 1;
+                const pointNet = getNetAtTime(d.history, state.playbackTime ? state.playbackTime.getTime() : null);
+                const weight = Math.abs(pointNet) || 1;
                 nodes.set(stratId, { 
                     id: stratId, 
                     parent: winId, 
                     value: weight, 
-                    net: d.net, 
+                    net: pointNet, 
                     label: d.strategy_params 
                 });
 
                 [rootId, typeId, prodId, nameId, winId].forEach(pid => {
                     const node = nodes.get(pid);
                     node.value += weight;
-                    node.net += d.net;
+                    node.net += pointNet;
                 });
             });
 
@@ -272,7 +582,7 @@
             
             // Calculate dynamic range for maximum color contrast
             // We only look at leaf nodes (strategies) for the range calculation
-            const leafNets = filteredData.map(d => d.net);
+            const leafNets = filteredData.map(d => getNetAtTime(d.history, state.playbackTime ? state.playbackTime.getTime() : null));
             const maxVal = Math.max(...leafNets.map(Math.abs));
             const colorRange = Math.max(maxVal, 1.0); // Floor of 1.0 to avoid flat scale
 
@@ -314,6 +624,7 @@
             Plotly.newPlot('treemapChart', data, layout, { responsive: true });
         }
 
+        setupPlaybackListeners();
         window.addEventListener('load', loadData);
     </script>
 </body>

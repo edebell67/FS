@@ -3559,8 +3559,11 @@
 
         // Initial loading [2025-12-30 V20251230_0120]
         window.addEventListener('DOMContentLoaded', async () => {
-            await loadConfig(); // Sets runMode from config before first data fetch
-            await loadTrades();
+            // [V20260512_0500] Parallelize config and trades fetch for faster loading
+            // Config updates UI but trades uses default dropdown value immediately
+            const configPromise = loadConfig();
+            const tradesPromise = loadTrades();
+            await Promise.all([configPromise, tradesPromise]);
         });
     </script>
 

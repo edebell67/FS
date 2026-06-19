@@ -75,7 +75,14 @@
                     return;
                 }
 
-                const response = await fetch('/api/system_health');
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 4000);
+                let response;
+                try {
+                    response = await fetch('/api/system_health', { signal: controller.signal, cache: 'no-store' });
+                } finally {
+                    clearTimeout(timeoutId);
+                }
                 const text = await response.text();
                 let data = null;
                 try {
@@ -115,9 +122,17 @@
             }
         }
 
-        // Initial check and set interval
-        checkHealth();
-        setInterval(checkHealth, 30000); // Poll every 30s
+        function startPolling() {
+            checkHealth();
+            setInterval(checkHealth, 60000); // Poll every 60s
+        }
+
+        // Defer the first probe so page boot is not competing with the shared health check.
+        if (document.readyState === 'complete') {
+            setTimeout(startPolling, 5000);
+        } else {
+            window.addEventListener('load', () => setTimeout(startPolling, 5000), { once: true });
+        }
     }
 
     initHealthMonitor();

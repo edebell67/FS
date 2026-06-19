@@ -1,1 +1,2 @@
-# datetime stamp: 2026-05-18 17:45`nVERSION = "V20260518_1745"
+# datetime stamp: 2026-05-31 23:05 — [V20260531_2305] Fix reversal pip calculation
+VERSION = "V20260611_0930"

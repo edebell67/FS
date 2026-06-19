@@ -134,6 +134,9 @@ def iter_day_dirs(
         for child in mode_root.iterdir():
             if not child.is_dir():
                 continue
+            # Skip legacy date directories to prevent massive network crawl latency
+            if len(child.name) == 10 and child.name.count('-') == 2:
+                continue
             try:
                 candidate = child / date_str
             except TypeError:

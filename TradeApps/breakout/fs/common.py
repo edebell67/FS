@@ -5078,30 +5078,38 @@ def _update_open_trade_json_prices(
     latest_prices: Dict[str, Dict[str, Optional[float]]],
     config: Dict[str, Any],
 ) -> None:
-    """Updates current_price and PnL for persisted OPEN trade JSONs each poll cycle."""
+    """Updates current_price and PnL for persisted OPEN trade JSONs each poll cycle. [V20260513_1320]"""
     if not json_base_dir:
         return
 
     run_mode = Path(json_base_dir).name
     today_str = _LATEST_TRADING_DATE or datetime.now().strftime('%Y-%m-%d')
+    
+    # [V20260513_1320] Filter products that have actual price data available
     target_products = [str(prod).upper() for prod in config.get('trade_products', []) if prod]
+    active_products = [p for p in target_products if _get_latest_price_snap(latest_prices, p)]
 
-    for product in target_products:
-        p_snap = _get_latest_price_snap(latest_prices, product)
-        if not p_snap or p_snap.get('price') is None:
-            continue
+    if not active_products:
+        return
 
-        current_price = _safe_float(p_snap.get('price'))
-        if current_price is None:
-            continue
-
+    # [V20260513_1320] Group products by their day directory to avoid redundant disk scanning
+    dir_to_products = defaultdict(list)
+    for product in active_products:
         day_dir = _resolve_day_directory(run_mode, today_str, product)
+        dir_to_products[day_dir].append(product)
+
+    for day_dir, products in dir_to_products.items():
         if not day_dir.exists():
             continue
 
-        for trade_file in day_dir.glob('*.json'):
+        # [V20260513_1320] Specifically target only open trades (*_op.json) to ignore closed/archived ones
+        for trade_file in day_dir.glob(f'*{TRADE_OPEN_SUFFIX}{_TRADE_JSON_EXT}'):
             try:
                 if trade_file.name.startswith('_'):
+                    continue
+
+                # [V20260513_1320] Explicit check to handle files moved/archived between glob and load
+                if not trade_file.exists():
                     continue
 
                 data = _load_json_resilient(trade_file, repair=True)
@@ -5110,15 +5118,20 @@ def _update_open_trade_json_prices(
                     continue
 
                 file_product = str(data.get('product', '')).upper()
-                if file_product != product:
+                if file_product not in products:
                     continue
 
+                p_snap = _get_latest_price_snap(latest_prices, file_product)
+                if not p_snap or p_snap.get('price') is None:
+                    continue
+
+                current_price = _safe_float(p_snap.get('price'))
                 entry_price = _safe_float(data.get('entry_price'))
-                if entry_price is None:
+                if entry_price is None or current_price is None:
                     continue
 
                 direction = str(data.get('direction') or '')
-                pnl = _calculate_open_trade_pnl(entry_price, current_price, direction, product, config)
+                pnl = _calculate_open_trade_pnl(entry_price, current_price, direction, file_product, config)
                 last_updated = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
                 data = _with_last_updated_after_current_price(data, current_price, last_updated, pnl)
 
@@ -5127,6 +5140,9 @@ def _update_open_trade_json_prices(
 
                 _write_json_atomic(trade_file, data, indent=2)
             except Exception as exc:
+                # [V20260513_1320] Suppress FileNotFoundError which indicates a file was just archived
+                if isinstance(exc, (FileNotFoundError, OSError)) and "No such file" in str(exc):
+                    continue
                 print(f"[WARN] Failed to refresh open trade file {trade_file.name}: {exc}")
                 continue
 

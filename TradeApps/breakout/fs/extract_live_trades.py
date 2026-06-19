@@ -4,10 +4,11 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Tuple
 from json_layout import configured_product_types, default_product_type, ensure_day_dir, load_layout_config
+from paths import BREAKOUT_JSON_ROOT
 
 
 CONFIG_PATH = Path(__file__).parent / "config.json"
-JSON_ROOT = Path(__file__).parent / "json"
+JSON_ROOT = BREAKOUT_JSON_ROOT
 
 
 def load_run_mode(config_path: Path) -> str:

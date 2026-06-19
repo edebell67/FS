@@ -13,9 +13,17 @@ REM  Data: current-date consolidated leaderboard payload
 REM ============================================================
 SETLOCAL
 
-set "FS_DIR=C:\Users\edebe\eds\TradeApps\breakout\fs"
+set "FS_DIR=%~dp0"
+for %%I in ("%FS_DIR%\.") do set "FS_DIR=%%~fI"
+for %%I in ("%FS_DIR%\..\..\..") do set "SOURCE_EDS_ROOT=%%~fI"
+for /f "usebackq delims=" %%I in (`python -c "import json, pathlib; p=pathlib.Path(r'%FS_DIR%')/'config.json'; d=json.load(open(p, encoding='utf-8')); print(d.get('path_settings', {}).get('generated_data_root', ''))"`) do set "CFG_DATA_ROOT=%%I"
+if defined CFG_DATA_ROOT (
+    set "EDS_DATA_ROOT=%CFG_DATA_ROOT%"
+) else if not defined EDS_DATA_ROOT (
+    set "EDS_DATA_ROOT=%SOURCE_EDS_ROOT%"
+)
 set "PYTHON=C:\Python313\python.exe"
-set "LOG_DIR=%FS_DIR%\logs"
+set "LOG_DIR=%EDS_DATA_ROOT%\TradeApps\breakout\fs\logs"
 set "LOG_FILE=%LOG_DIR%\twitter_consolidated_leaderboard_4h.log"
 for /f %%I in ('powershell -NoProfile -Command "Get-Date -Format yyyy-MM-dd"') do set "RUN_DATE=%%I"
 

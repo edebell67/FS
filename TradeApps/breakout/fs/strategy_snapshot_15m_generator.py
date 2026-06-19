@@ -14,11 +14,12 @@ from pathlib import Path
 from typing import Any
 
 from json_layout import day_dir, load_layout_config
+from paths import BREAKOUT_JSON_ROOT
 
 
 ROOT_PATH = Path(__file__).resolve().parent
 CONFIG_PATH = ROOT_PATH / "config.json"
-JSON_ROOT = ROOT_PATH / "json"
+JSON_ROOT = BREAKOUT_JSON_ROOT
 OUTPUT_NAME = "_strategy_snapshots_15m.json"
 SNAPSHOT_MINUTES = 15
 

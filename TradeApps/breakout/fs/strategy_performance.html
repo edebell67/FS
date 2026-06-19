@@ -1562,6 +1562,7 @@
 <body class="with-sidebar">
     <div id="sidebar-container"></div>
     <script src="sidebar-loader.js"></script>
+    <script src="dashboard_bootstrap.js"></script>
 
     <!-- [V20260209_1010] Bias-Flip Notification Modal -->
     <div id="biasNotificationOverlay" class="bias-notification-overlay">
@@ -1679,6 +1680,13 @@
                 <label>Product Type</label>
                 <select id="productTypeSelect" onchange="handleProductTypeChange()">
                     <option value="forex">forex</option>
+                </select>
+            </div>
+            <!-- [V20260527_1230] Product Filter -->
+            <div class="control-group">
+                <label>Product</label>
+                <select id="productFilterSelect" onchange="filterTable()" style="min-width: 120px;">
+                    <option value="all">All</option>
                 </select>
             </div>
             <div class="control-group" style="min-width: 280px;">
@@ -2528,32 +2536,34 @@
                 // Initialize from saved preference or default to today
                 initializeDateRangeFilter();
             }
-            // [V20260512_0430] Parallelize config, activations and stats fetch for faster loading
-            const configPromise = fetch('/api/config').then(r => r.json()).catch(() => null);
+            // [V20260513_1145] Prevent recurring empty-table startup races via shared
+            // dashboard bootstrap: config/product_type first, page data second.
             const activationsPromise = loadActivations();
-
-            // [V20260315] Ensure date range is valid
-            if (!currentDateRange.start || !currentDateRange.end) {
-                const today = toLocalDateIso();
-                currentDateRange = { start: today, end: today, preset: 'today' };
-                updateDateRangeDisplay();
-            }
-
-            // Start stats load in parallel while config processes
-            const statsPromise = loadStats();
-
-            // Apply config when it arrives
+            let statsPromise = null;
             try {
-                const cfgData = await configPromise;
-                if (cfgData && cfgData.success && cfgData.config) {
-                    if (cfgData.config.scalper_ratio) scalperRatio = parseFloat(cfgData.config.scalper_ratio);
-                    if (cfgData.config.rev_scalper_ratio) revScalperRatio = parseFloat(cfgData.config.rev_scalper_ratio);
-                    populateProductTypeSelect(cfgData.config);
-                }
+                await DashboardBootstrap.bootstrapDashboardPage({
+                    productTypeSelect: { selectId: 'productTypeSelect', includeAll: true },
+                    modeSelect: { selectId: 'runMode' },
+                    date: { dateInputId: 'statsDate' },
+                    onConfigReady: async ({ config }) => {
+                        if (config.scalper_ratio) scalperRatio = parseFloat(config.scalper_ratio);
+                        if (config.rev_scalper_ratio) revScalperRatio = parseFloat(config.rev_scalper_ratio);
+                    },
+                    onReady: async () => {
+                        statsPromise = loadStats();
+                        await statsPromise;
+                    },
+                    onError: async () => {
+                        // Fallback keeps the page usable if /api/config is temporarily unavailable.
+                        populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
+                        statsPromise = loadStats();
+                        await statsPromise;
+                    }
+                });
             } catch (ce) { }
 
             // Wait for all to complete
-            await Promise.all([activationsPromise, statsPromise]);
+            await Promise.all([activationsPromise, statsPromise].filter(Boolean));
 
             // [V20260315] Reset bias on date range change (handled in applyDatePreset/applyCustomDateRange)
             document.getElementById('autoRefreshCheck').addEventListener('change', startAutoRefresh);
@@ -2808,6 +2818,25 @@
                 const data = await response.json();
 
                 if (data.success) {
+                    // [V20260527_1230] Populate Product filter dynamically
+                    const productFilter = document.getElementById('productFilterSelect');
+                    if (productFilter) {
+                        const currentValue = productFilter.value;
+                        const uniqueProducts = [...new Set(data.data.map(d => d.product).filter(Boolean))].sort();
+                        productFilter.innerHTML = '<option value="all">All</option>';
+                        uniqueProducts.forEach(prod => {
+                            const opt = document.createElement('option');
+                            opt.value = prod;
+                            opt.textContent = prod;
+                            productFilter.appendChild(opt);
+                        });
+                        if (uniqueProducts.includes(currentValue)) {
+                            productFilter.value = currentValue;
+                        } else {
+                            productFilter.value = 'all';
+                        }
+                    }
+
                     // [V20260121_1633] Map database keys to UI expectations
                     // [V20260121_2015] Fixed parm mapping - ensure parm_raw and parm are safe
                     currentData = data.data.map(d => ({
@@ -3141,8 +3170,14 @@
             const minNetVal = parseFloat(minNetStr);
             const minBuyVal = parseInt(minBuyStr);
             const minSellVal = parseInt(minSellStr);
+            const selectedProduct = document.getElementById('productFilterSelect') ? document.getElementById('productFilterSelect').value : 'all'; // [V20260527_1230]
 
             const filtered = currentData.filter(d => {
+                // [V20260527_1230] Product Filter
+                if (selectedProduct !== 'all' && d.product !== selectedProduct) {
+                    return false;
+                }
+
                 if (scalperOnly && revScalperOnly) {
                     if (!isScalperEntry(d) && !isRevScalperEntry(d)) return false;
                 } else if (scalperOnly && !isScalperEntry(d)) {

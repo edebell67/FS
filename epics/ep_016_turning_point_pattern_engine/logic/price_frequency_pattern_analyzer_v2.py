@@ -260,8 +260,9 @@ def generate_order_json(event):
         
     status = "open" if event["event"] == "OPEN" else "close"
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-    # Using COMMENT as the {STRATEGY} placeholder in the filename
-    filename = f"breakout_{SESSION_GUID}_{SYMBOL}_{COMMENT}_{action}_{timestamp}_{status}_tradeable.json"
+    # Using sanitized COMMENT as the filename prefix instead of 'breakout'
+    prefix = str(COMMENT).replace(" ", "_")
+    filename = f"{prefix}_{SESSION_GUID}_{SYMBOL}_{action}_{timestamp}_{status}_tradeable.json"
     filepath = ORDER_DIR / filename
     
     order_data = {
@@ -393,7 +394,10 @@ def run_analyzer():
                                 cumulative_net_pips = round(cumulative_net_pips + net_pips, 1)
                                 alt_net_pips = round(alt_net_pips + alt_pips, 1)
                                 
-                                if active.get("is_live"): validated_net_pips = round(validated_net_pips + net_pips, 1)
+                                if active.get("is_live"):
+                                    # Validated P&L follows the real-world execution (Flipped if FLIP_MODE)
+                                    real_pips = alt_pips if FLIP_MODE else net_pips
+                                    validated_net_pips = round(validated_net_pips + real_pips, 1)
                                 
                                 ev = {"ts": ts_str, "symbol": SYMBOL, "event": "CLOSE", "state": f"EXIT_{exit_reason}", "price": exit_p, "net_pips": net_pips, "cum_pips": cumulative_net_pips}
                                 recent_trade_events.append(ev); append_trade_signal_log(ev)
@@ -401,15 +405,24 @@ def run_analyzer():
                                 active_position_by_symbol.pop(SYMBOL); active = None
 
                         if pending:
-                            # Check for Offset Fill
+                            # Check for Offset Fill (Strict Crossing)
                             is_hit = False
-                            if pending["dir"] == "long" and current_ask <= pending["target_p"]: is_hit = True
-                            elif pending["dir"] == "short" and current_bid >= pending["target_p"]: is_hit = True
+                            off = pending.get("offset", 0.0)
+                            if pending["dir"] == "long":
+                                # If positive offset, wait for price to rise above target. If negative, wait for dip.
+                                if (off >= 0 and current_ask >= pending["target_p"]) or \
+                                   (off < 0 and current_ask <= pending["target_p"]):
+                                    is_hit = True; fill_p = current_ask
+                            else: # Short
+                                # If positive offset, wait for price to fall below target. If negative, wait for rise.
+                                if (off >= 0 and current_bid <= pending["target_p"]) or \
+                                   (off < 0 and current_bid >= pending["target_p"]):
+                                    is_hit = True; fill_p = current_bid
                             
                             if is_hit:
-                                # Convert Pending to Active
-                                active_position_by_symbol[SYMBOL] = {"dir": pending["dir"], "entry_p": pending["target_p"], "ts": ts_str, "is_live": pending["is_live"]}
-                                ev = {"ts": ts_str, "symbol": SYMBOL, "event": "OPEN", "state": pending["state"], "price": pending["target_p"]}
+                                # Convert Pending to Active using ACTUAL market price
+                                active_position_by_symbol[SYMBOL] = {"dir": pending["dir"], "entry_p": fill_p, "ts": ts_str, "is_live": pending["is_live"]}
+                                ev = {"ts": ts_str, "symbol": SYMBOL, "event": "OPEN", "state": pending["state"], "price": fill_p}
                                 recent_trade_events.append(ev); append_trade_signal_log(ev)
                                 if pending["is_live"]: generate_order_json(ev)
                                 pending_position_by_symbol.pop(SYMBOL); pending = None
@@ -471,7 +484,10 @@ def run_analyzer():
                                                 cumulative_net_pips = round(cumulative_net_pips + net_pips, 1)
                                                 alt_net_pips = round(alt_net_pips + alt_pips, 1)
                                                 
-                                                if active.get("is_live"): validated_net_pips = round(validated_net_pips + net_pips, 1)
+                                                if active.get("is_live"):
+                                                    # Validated P&L follows the real-world execution (Flipped if FLIP_MODE)
+                                                    real_pips = alt_pips if FLIP_MODE else net_pips
+                                                    validated_net_pips = round(validated_net_pips + real_pips, 1)
                                                 
                                                 ev = {"ts": ts_str, "symbol": SYMBOL, "event": "CLOSE", "state": new_state, "price": exit_p, "net_pips": net_pips, "cum_pips": cumulative_net_pips}
                                                 recent_trade_events.append(ev); append_trade_signal_log(ev)

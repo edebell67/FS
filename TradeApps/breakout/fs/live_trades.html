@@ -248,6 +248,7 @@
 <body class="with-sidebar">
     <div id="sidebar-container"></div>
     <script src="sidebar-loader.js"></script>
+    <script src="dashboard_bootstrap.js"></script>
 
     <div class="container">
         <div class="header">
@@ -885,18 +886,31 @@
                 console.error('Config load error', e);
                 populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
             }
-
-            loadLiveTrades();
         }
 
         let refreshTimer = null;
 
-        // [V20260202_1235] Duplicate toggleAutoRefresh removed.
-
-
-        loadConfig().then(() => {
+        // [V20260513_1145] Shared dashboard bootstrap prevents config/product_type
+        // startup races before the first live-trades fetch.
+        (async () => {
+            await DashboardBootstrap.bootstrapDashboardPage({
+                productTypeSelect: { selectId: 'productTypeSelect' },
+                modeSelect: { selectId: 'runModeSelect' },
+                date: { dateInputId: 'tradeDate' },
+                onConfigReady: async ({ config }) => {
+                    if (config.daily_target) dailyTarget = parseFloat(config.daily_target);
+                    if (config.max_live_trades) maxLiveTrades = parseInt(config.max_live_trades, 10) || 1;
+                },
+                onReady: async () => {
+                    await loadLiveTrades();
+                },
+                onError: async () => {
+                    populateProductTypeSelect({ product_type: 'forex', product_types: ['forex'] });
+                    await loadLiveTrades();
+                }
+            });
             toggleAutoRefresh();
-        });
+        })();
     </script>
 </body>
 
