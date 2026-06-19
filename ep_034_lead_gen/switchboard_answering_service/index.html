@@ -421,8 +421,30 @@
   </div>
 </footer>
 
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
   document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // ===========================================================================
+  // EMAILJS CREDENTIALS — fill these in from your EmailJS dashboard.
+  //   1. Sign up free at https://www.emailjs.com
+  //   2. Add an Email Service (Gmail works) → copy the Service ID
+  //   3. Create a Template (see variable list below) → copy the Template ID
+  //   4. Go to Account → copy your Public Key
+  //
+  // Template variables to add in EmailJS dashboard:
+  //   {{business_name}}  {{full_name}}  {{phone}}  {{business_type}}
+  //   {{email}}  {{consent_to_call}}  {{consent_to_email}}
+  //   {{consent_text}}  {{consent_version}}  {{captured_at}}  {{page_url}}
+  //   {{lead_json}}  — full JSON blob for your records
+  // ===========================================================================
+  var EMAILJS_PUBLIC_KEY  = "PASTE-YOUR-PUBLIC-KEY";
+  var EMAILJS_SERVICE_ID  = "PASTE-YOUR-SERVICE-ID";
+  var EMAILJS_TEMPLATE_ID = "PASTE-YOUR-TEMPLATE-ID";
+  var RECIPIENT_EMAIL     = "ed.ebell@gmail.com";
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
 
   // reveal the optional email field only when its box is ticked
   var consentEmail = document.getElementById('consentEmail');
@@ -431,31 +453,15 @@
     emailField.style.display = this.checked ? 'block' : 'none';
   });
 
-  // The exact consent wording the user agreed to — VERSION THIS.
-  // If you change the checkbox text above, bump the version string so your
-  // stored records always tie back to the precise wording shown.
   var CONSENT = {
     version: "call-consent-v1-2026-06",
     text: "Yes, call this number to show me how it works. I'm happy for that to include an automated or AI voice call from Switchboard about my demo and setting up the service."
   };
 
-  // ===========================================================================
-  // PASTE YOUR CRM / WEBHOOK URL HERE.
-  //   Works with Zapier / Make / n8n catch hooks, or your own endpoint.
-  //   • Your endpoint must accept a POST and allow CORS from this site's origin
-  //     (most hosted webhooks do; a custom backend may need an
-  //     Access-Control-Allow-Origin header).
-  //   • We send JSON. If your endpoint wants form-encoded data instead, see the
-  //     commented alternative in the fetch below.
-  //   Leave it as-is and the form still works in preview (logs to console).
-  // ===========================================================================
-  var WEBHOOK_URL = "https://PASTE-YOUR-WEBHOOK-URL-HERE";
-
   var form = document.getElementById('demoForm');
   var submitBtn = form.querySelector('.submit');
   var btnLabel = submitBtn.textContent;
 
-  // inline error line, shown only if the send fails
   var errLine = document.createElement('p');
   errLine.setAttribute('role', 'alert');
   errLine.style.cssText = 'display:none;color:#DB5247;font-size:14px;font-weight:600;margin:12px 0 0;text-align:center';
@@ -465,25 +471,23 @@
     e.preventDefault();
     if(!form.checkValidity()){ form.reportValidity(); return; }
 
-    // ---- This payload is your consent trail. Your CRM must STORE it. ----
     var payload = {
-      businessName: form.businessName.value.trim(),
-      fullName:     form.fullName.value.trim(),
-      phone:        form.phone.value.trim(),
-      businessType: form.businessType.value,
-      email:        form.consentEmail.checked ? form.email.value.trim() : null,
-      consentToCall:    form.consentCall.checked,   // must be true to submit
-      consentToEmail:   form.consentEmail.checked,
-      consentText:      CONSENT.text,               // the exact wording shown
-      consentVersion:   CONSENT.version,            // which version they saw
-      capturedAt:       new Date().toISOString(),   // when they consented
-      pageUrl:          window.location.href        // where they consented
+      businessName:    form.businessName.value.trim(),
+      fullName:        form.fullName.value.trim(),
+      phone:           form.phone.value.trim(),
+      businessType:    form.businessType.value,
+      email:           form.consentEmail.checked ? form.email.value.trim() : null,
+      consentToCall:   form.consentCall.checked,
+      consentToEmail:  form.consentEmail.checked,
+      consentText:     CONSENT.text,
+      consentVersion:  CONSENT.version,
+      capturedAt:      new Date().toISOString(),
+      pageUrl:         window.location.href
     };
 
-    // If the webhook hasn't been set yet, don't lose the lead silently —
-    // log it and show success so the page is testable in preview.
-    if(WEBHOOK_URL.indexOf('PASTE-YOUR-WEBHOOK-URL') !== -1){
-      console.warn('No WEBHOOK_URL set — showing success without sending. Lead:', payload);
+    // Preview mode — credentials not yet set
+    if(EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== -1){
+      console.warn('EmailJS not configured — lead (not sent):', payload);
       return showSuccess(payload);
     }
 
@@ -492,18 +496,24 @@
     submitBtn.textContent = 'Sending…';
 
     try{
-      var res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify(payload)
-        // Form-encoded alternative (if your endpoint needs it):
-        //   headers: {'Content-Type':'application/x-www-form-urlencoded'},
-        //   body: new URLSearchParams(payload).toString()
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:        RECIPIENT_EMAIL,
+        business_name:   payload.businessName,
+        full_name:       payload.fullName,
+        phone:           payload.phone,
+        business_type:   payload.businessType,
+        email:           payload.email || '(not provided)',
+        consent_to_call: payload.consentToCall,
+        consent_to_email:payload.consentToEmail,
+        consent_text:    payload.consentText,
+        consent_version: payload.consentVersion,
+        captured_at:     payload.capturedAt,
+        page_url:        payload.pageUrl,
+        lead_json:       JSON.stringify(payload, null, 2)
       });
-      if(!res.ok) throw new Error('HTTP ' + res.status);
       showSuccess(payload);
     }catch(err){
-      console.error('Lead send failed:', err, payload);
+      console.error('EmailJS send failed:', err, payload);
       submitBtn.disabled = false;
       submitBtn.textContent = btnLabel;
       errLine.textContent = "That didn't send — check your connection and try again, or call us and we'll set it up over the phone.";
