@@ -1,0 +1,519 @@
+<!--
+  ============================================================================
+  SWITCHBOARD — answering-service landing page
+  ----------------------------------------------------------------------------
+  "Switchboard" is a PLACEHOLDER brand name. Find/replace it with yours.
+
+  COMPLIANCE NOTES (read before going live):
+  • The consent checkbox below is the legally load-bearing element. It is
+    explicit (names automated/AI voice calls), unbundled (separate from the
+    optional email box), and NOT pre-ticked. Do not "tidy" it into a single
+    generic "I agree" box — that breaks the whole point.
+  • On submit, the JS builds a payload that includes consentText,
+    consentVersion, the page URL and an ISO timestamp. POST that to your
+    backend and STORE IT. That stored record is your consent trail.
+  • This page does not screen TPS/CTPS — that happens on YOUR side before any
+    human warm-up call. The demo-call consent captured here is what lets the
+    AI agent dial later.
+  • Replace the FORM_ENDPOINT below with your real handler (Formspree, your
+    CRM webhook, etc.). Right now submit just shows a success state.
+  • Swap the Privacy Notice / Terms hrefs for your real pages.
+  • This is a practical build, not legal advice — have a solicitor confirm the
+    final consent wording before you scale.
+  ============================================================================
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Switchboard — never miss a call again</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#16242E;
+    --ink-soft:#4A5963;
+    --paper:#F7F6F2;
+    --panel:#0F1D26;        /* dark phone-screen panel for the hero signature */
+    --panel-soft:#1B2E3A;
+    --answered:#1B8A5F;
+    --answered-bright:#2BB37C;
+    --missed:#DB5247;
+    --line:rgba(22,36,46,.12);
+    --line-dark:rgba(255,255,255,.10);
+    --radius:14px;
+    --maxw:1120px;
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--ink);
+    font-family:"Hanken Grotesk",system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;line-height:1.02;letter-spacing:-.02em;margin:0}
+  p{margin:0}
+  a{color:inherit}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  .mono{font-family:"JetBrains Mono",monospace}
+
+  /* ---------- buttons ---------- */
+  .btn{
+    display:inline-flex;align-items:center;gap:.5em;
+    font-family:"Hanken Grotesk",sans-serif;font-weight:600;font-size:16px;
+    padding:14px 22px;border-radius:999px;border:1.5px solid transparent;
+    cursor:pointer;text-decoration:none;transition:transform .12s ease,background .15s ease,box-shadow .15s ease;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-primary{background:var(--answered);color:#fff;box-shadow:0 6px 18px rgba(27,138,95,.28)}
+  .btn-primary:hover{background:var(--answered-bright)}
+  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+  .btn-ghost:hover{border-color:var(--ink)}
+  :focus-visible{outline:3px solid var(--answered-bright);outline-offset:2px;border-radius:6px}
+
+  /* ---------- nav ---------- */
+  nav{position:sticky;top:0;z-index:40;background:rgba(247,246,242,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque";font-weight:800;font-size:20px;letter-spacing:-.02em}
+  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--answered);box-shadow:0 0 0 4px rgba(27,138,95,.18);animation:pulse 2.4s infinite}
+  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(27,138,95,.18)}50%{box-shadow:0 0 0 8px rgba(27,138,95,0)}}
+  .nav-cta{display:flex;align-items:center;gap:18px}
+  .nav-cta a.text{font-weight:600;font-size:15px;text-decoration:none;color:var(--ink-soft)}
+  .nav-cta a.text:hover{color:var(--ink)}
+
+  /* ---------- hero ---------- */
+  .hero{padding:72px 0 40px}
+  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+  .eyebrow{font-weight:600;font-size:13.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:20px}
+  h1.title{font-size:clamp(40px,6.2vw,68px)}
+  h1.title .miss{color:var(--missed)}
+  .lede{margin-top:24px;font-size:19px;color:var(--ink-soft);max-width:30em}
+  .hero-cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
+  .reassure{margin-top:18px;font-size:14px;color:var(--ink-soft)}
+  .reassure b{color:var(--answered);font-weight:600}
+
+  /* ---------- call-log signature ---------- */
+  .phone{background:var(--panel);border-radius:24px;padding:22px 20px 24px;box-shadow:0 30px 60px -24px rgba(15,29,38,.55);border:1px solid var(--line-dark)}
+  .phone-top{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 16px;border-bottom:1px solid var(--line-dark)}
+  .phone-top .label{color:#fff;font-family:"Bricolage Grotesque";font-weight:700;font-size:15px}
+  .phone-top .when{color:rgba(255,255,255,.45);font-size:12px}
+  .log{list-style:none;margin:0;padding:8px 0 0}
+  .row{display:flex;align-items:center;gap:13px;padding:13px 6px;border-bottom:1px solid var(--line-dark);opacity:0;transform:translateY(8px);animation:rise .5s forwards}
+  .row:last-child{border-bottom:0}
+  @keyframes rise{to{opacity:1;transform:none}}
+  .icn{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px}
+  .icn.miss{background:rgba(219,82,71,.16);color:var(--missed)}
+  .icn.ans{background:rgba(43,179,124,.16);color:var(--answered-bright)}
+  .row .who{flex:1;min-width:0}
+  .row .who .n{color:#fff;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .who .s{font-size:12.5px;margin-top:1px}
+  .row.miss .s{color:var(--missed)}
+  .row.ans .s{color:rgba(255,255,255,.55)}
+  .row .meta{flex:none;text-align:right}
+  .row .meta .t{color:rgba(255,255,255,.5);font-size:12px}
+  .row .meta .d{font-size:11px;color:var(--answered-bright);margin-top:2px}
+  .phone-foot{margin-top:14px;text-align:center;font-size:12.5px;color:rgba(255,255,255,.5)}
+  .phone-foot b{color:var(--answered-bright)}
+
+  /* ---------- cost strip ---------- */
+  .cost{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
+  .cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
+  .cost-cell{padding:38px 28px;border-left:1px solid var(--line)}
+  .cost-cell:first-child{border-left:0}
+  .cost-cell h3{font-size:21px;margin-bottom:8px}
+  .cost-cell p{color:var(--ink-soft);font-size:16px}
+
+  /* ---------- section heading ---------- */
+  .sec{padding:76px 0}
+  .sec-head{max-width:34ch;margin-bottom:44px}
+  .sec-head .eyebrow{margin-bottom:14px}
+  .sec-head h2{font-size:clamp(30px,4.2vw,44px)}
+
+  /* ---------- steps ---------- */
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+  .step{padding-top:22px;border-top:2px solid var(--ink)}
+  .step .num{font-family:"JetBrains Mono";font-size:13px;color:var(--answered);font-weight:500;letter-spacing:.05em}
+  .step h3{font-size:21px;margin:14px 0 8px}
+  .step p{color:var(--ink-soft);font-size:15.5px}
+
+  /* ---------- who-for chips ---------- */
+  .forwho{background:#fff;border-top:1px solid var(--line)}
+  .chips{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px}
+  .chip{border:1.5px solid var(--line);border-radius:999px;padding:9px 16px;font-weight:500;font-size:15px}
+
+  /* ---------- form ---------- */
+  .signup{padding:78px 0 92px}
+  .signup-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
+  .signup-copy h2{font-size:clamp(30px,4.4vw,46px)}
+  .signup-copy p{color:var(--ink-soft);margin-top:18px;font-size:17.5px;max-width:30em}
+  .trust{margin-top:26px;display:flex;flex-direction:column;gap:11px}
+  .trust li{list-style:none;display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--ink-soft)}
+  .trust .tick{color:var(--answered);font-weight:700;flex:none}
+
+  form.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;box-shadow:0 24px 50px -30px rgba(15,29,38,.4)}
+  .field{margin-bottom:16px}
+  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
+  .field .hint{font-weight:400;color:var(--ink-soft);font-size:12.5px}
+  input,select{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;transition:border .15s}
+  input:focus,select:focus{border-color:var(--answered);outline:none}
+  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+
+  .consent{margin-top:8px;border-top:1px solid var(--line);padding-top:18px}
+  .check{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
+  .check input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--answered)}
+  .check label{font-size:14px;line-height:1.5;color:var(--ink)}
+  .check.optional label{color:var(--ink-soft)}
+  .consent .req{color:var(--missed);font-weight:600}
+  .smallprint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:6px 0 18px}
+  .smallprint a{color:var(--answered);font-weight:600}
+  .submit{width:100%;justify-content:center;font-size:17px;padding:16px}
+  .formfoot{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:14px}
+
+  .success{display:none;text-align:center;padding:28px 10px}
+  .success .big{width:60px;height:60px;border-radius:50%;background:rgba(43,179,124,.15);color:var(--answered);display:grid;place-items:center;font-size:30px;margin:0 auto 18px}
+  .success h3{font-size:24px;margin-bottom:10px}
+  .success p{color:var(--ink-soft)}
+  form.sent .form-body{display:none}
+  form.sent .success{display:block}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line);padding:40px 0;background:#fff}
+  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:14px;color:var(--ink-soft)}
+  .foot-in a{color:var(--ink-soft);text-decoration:none;margin-left:20px}
+  .foot-in a:hover{color:var(--ink)}
+
+  /* ---------- responsive ---------- */
+  @media (max-width:880px){
+    .hero-grid,.signup-grid{grid-template-columns:1fr;gap:40px}
+    .cost-grid{grid-template-columns:1fr}
+    .cost-cell{border-left:0;border-top:1px solid var(--line)}
+    .cost-cell:first-child{border-top:0}
+    .steps{grid-template-columns:1fr}
+    .hero{padding:48px 0 20px}
+    .sec,.signup{padding:56px 0}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;scroll-behavior:auto!important}
+    .row{opacity:1;transform:none}
+  }
+</style>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><span class="dot"></span>Switchboard</div>
+    <div class="nav-cta">
+      <a class="text" href="#how">How it works</a>
+      <a class="btn btn-primary" href="#demo">Get a demo call</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">When you're too busy to pick up, we do</div>
+      <h1 class="title">Every <span class="miss">missed call</span> is a customer who rang someone else.</h1>
+      <p class="lede">We answer your phone when you can't — a warm, professional voice that books jobs, takes messages and never drops anyone into voicemail. The details land on your phone by text before you've finished what you were doing.</p>
+      <div class="hero-cta">
+        <a class="btn btn-primary" href="#demo">Hear it answer your calls</a>
+        <a class="btn btn-ghost" href="#how">See how it works</a>
+      </div>
+      <p class="reassure">No contract · no card · <b>set up in a day</b></p>
+    </div>
+
+    <!-- SIGNATURE: live call log, red "missed" world flipping to green "answered" -->
+    <div class="phone" aria-hidden="true">
+      <div class="phone-top">
+        <span class="label">Today's calls</span>
+        <span class="when mono">live</span>
+      </div>
+      <ul class="log">
+        <li class="row miss" style="animation-delay:.05s">
+          <span class="icn miss">✕</span>
+          <span class="who"><span class="n">07733 ••• 412</span><span class="s">Missed — no voicemail left</span></span>
+          <span class="meta"><span class="t mono">08:02</span></span>
+        </li>
+        <li class="row ans" style="animation-delay:.20s">
+          <span class="icn ans">✓</span>
+          <span class="who"><span class="n">Booking — cut &amp; beard trim</span><span class="s">Answered &amp; added to your diary</span></span>
+          <span class="meta"><span class="t mono">09:14</span><span class="d mono">2m 06s</span></span>
+        </li>
+        <li class="row ans" style="animation-delay:.35s">
+          <span class="icn ans">✓</span>
+          <span class="who"><span class="n">Quote — bathroom re-fit</span><span class="s">Message + number texted to you</span></span>
+          <span class="meta"><span class="t mono">10:48</span><span class="d mono">1m 39s</span></span>
+        </li>
+        <li class="row ans" style="animation-delay:.50s">
+          <span class="icn ans">✓</span>
+          <span class="who"><span class="n">Booking — Saturday, 2pm</span><span class="s">Answered &amp; confirmed</span></span>
+          <span class="meta"><span class="t mono">11:21</span><span class="d mono">1m 12s</span></span>
+        </li>
+      </ul>
+      <p class="phone-foot">3 calls answered · <b>0 lost</b> while you were busy</p>
+    </div>
+  </div>
+</header>
+
+<section class="cost">
+  <div class="wrap cost-grid">
+    <div class="cost-cell">
+      <h3>They don't call back.</h3>
+      <p>A missed call rarely tries again. They just ring the next name on the list — and that name answers.</p>
+    </div>
+    <div class="cost-cell">
+      <h3>The phone rings at the worst time.</h3>
+      <p>Mid-haircut, under a sink, hands full with a customer. That's exactly when the good calls come in.</p>
+    </div>
+    <div class="cost-cell">
+      <h3>Voicemail loses the job.</h3>
+      <p>Every booking that hits voicemail is money walking out the door. We make sure a real voice picks up instead.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="how">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">How it works</div>
+      <h2>Three steps. You barely lift a finger.</h2>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <div class="num">STEP 01</div>
+        <h3>Forward your calls</h3>
+        <p>Send your number to us whenever you're busy, closed or on the tools. One tap on your phone — switch it on and off as you like.</p>
+      </div>
+      <div class="step">
+        <div class="num">STEP 02</div>
+        <h3>We answer as your business</h3>
+        <p>We pick up in your name, sound like part of the team, help the caller, and either book them in or take a clear message.</p>
+      </div>
+      <div class="step">
+        <div class="num">STEP 03</div>
+        <h3>You get it by text</h3>
+        <p>The booking or message lands on your phone straight away — name, number and what they wanted — ready for when you're free.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec forwho">
+  <div class="wrap">
+    <div class="sec-head">
+      <div class="eyebrow">Built for</div>
+      <h2>Small businesses that can't stop to answer.</h2>
+    </div>
+    <div class="chips">
+      <span class="chip">Barbers</span>
+      <span class="chip">Hairdressers</span>
+      <span class="chip">Plumbers</span>
+      <span class="chip">Electricians</span>
+      <span class="chip">Mobile mechanics</span>
+      <span class="chip">Cleaners</span>
+      <span class="chip">Dog groomers</span>
+      <span class="chip">Tradespeople</span>
+      <span class="chip">Beauty &amp; nails</span>
+      <span class="chip">Solo consultants</span>
+    </div>
+  </div>
+</section>
+
+<section class="signup" id="demo">
+  <div class="wrap signup-grid">
+    <div class="signup-copy">
+      <h2>Hear it answer your calls.</h2>
+      <p>Pop your details in and we'll give you a quick demo call so you can hear exactly how it sounds picking up for your business.</p>
+      <ul class="trust">
+        <li><span class="tick">✓</span><span>One call to show you how it works — no pressure, no contract.</span></li>
+        <li><span class="tick">✓</span><span>We never sell or share your number. Ask us to stop and we stop.</span></li>
+        <li><span class="tick">✓</span><span>We screen every number against the TPS/CTPS registers.</span></li>
+      </ul>
+    </div>
+
+    <!-- FORM_ENDPOINT: replace the no-op submit handler in <script> with a POST to your CRM / Formspree -->
+    <form class="card" id="demoForm" novalidate>
+      <div class="form-body">
+        <div class="two">
+          <div class="field">
+            <label for="biz">Business name</label>
+            <input id="biz" name="businessName" type="text" autocomplete="organization" placeholder="e.g. Tony's Barbers" required>
+          </div>
+          <div class="field">
+            <label for="name">Your name</label>
+            <input id="name" name="fullName" type="text" autocomplete="name" placeholder="First name" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="phone">Phone number <span class="hint">— the number we'll demo on</span></label>
+          <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="07…" required>
+        </div>
+
+        <div class="field">
+          <label for="type">What's your line of work?</label>
+          <select id="type" name="businessType">
+            <option value="" selected>Choose one…</option>
+            <option>Barber / hairdresser</option>
+            <option>Beauty / nails</option>
+            <option>Plumber / heating</option>
+            <option>Electrician</option>
+            <option>Mechanic / motor</option>
+            <option>Cleaner</option>
+            <option>Other trade</option>
+            <option>Something else</option>
+          </select>
+        </div>
+
+        <div class="consent">
+          <!-- PRIMARY CONSENT — explicit, specific to automated/AI voice calls, NOT pre-ticked, required -->
+          <div class="check">
+            <input id="consentCall" name="consentCall" type="checkbox" required>
+            <label for="consentCall">
+              <span class="req">Yes, call this number</span> to show me how it works. I'm happy for that to include an
+              <strong>automated or AI voice call</strong> from Switchboard about my demo and setting up the service.
+            </label>
+          </div>
+          <p class="smallprint">
+            We'll only call about your demo and getting you set up — nothing else. You can tell us to stop at any time and we'll
+            remove your number. We never pass it to anyone else. See how we handle your details in our
+            <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a>.
+          </p>
+
+          <!-- SECONDARY CONSENT — separate, optional, unbundled from the call consent above -->
+          <div class="check optional">
+            <input id="consentEmail" name="consentEmail" type="checkbox">
+            <label for="consentEmail">
+              Optional: email me occasional tips on getting more bookings. (Leave unticked — you'll still get your demo call.)
+            </label>
+          </div>
+          <div class="field" id="emailField" style="display:none">
+            <label for="email">Email <span class="hint">— only if you ticked the box above</span></label>
+            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@business.co.uk">
+          </div>
+        </div>
+
+        <button class="btn btn-primary submit" type="submit">Get my demo call</button>
+        <p class="formfoot">Takes 20 seconds · we'll usually call within one working day</p>
+      </div>
+
+      <div class="success" role="status" aria-live="polite">
+        <div class="big">✓</div>
+        <h3>You're booked in.</h3>
+        <p>Keep your phone handy — we'll ring <span id="echoPhone">that number</span> shortly to show you how Switchboard sounds answering for your business.</p>
+      </div>
+    </form>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>© <span id="yr"></span> Switchboard — never miss a call again.</div>
+    <div>
+      <a href="/privacy">Privacy Notice</a>
+      <a href="/terms">Terms</a>
+      <a href="#demo">Get a demo</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('yr').textContent = new Date().getFullYear();
+
+  // reveal the optional email field only when its box is ticked
+  var consentEmail = document.getElementById('consentEmail');
+  var emailField = document.getElementById('emailField');
+  consentEmail.addEventListener('change', function(){
+    emailField.style.display = this.checked ? 'block' : 'none';
+  });
+
+  // The exact consent wording the user agreed to — VERSION THIS.
+  // If you change the checkbox text above, bump the version string so your
+  // stored records always tie back to the precise wording shown.
+  var CONSENT = {
+    version: "call-consent-v1-2026-06",
+    text: "Yes, call this number to show me how it works. I'm happy for that to include an automated or AI voice call from Switchboard about my demo and setting up the service."
+  };
+
+  // ===========================================================================
+  // PASTE YOUR CRM / WEBHOOK URL HERE.
+  //   Works with Zapier / Make / n8n catch hooks, or your own endpoint.
+  //   • Your endpoint must accept a POST and allow CORS from this site's origin
+  //     (most hosted webhooks do; a custom backend may need an
+  //     Access-Control-Allow-Origin header).
+  //   • We send JSON. If your endpoint wants form-encoded data instead, see the
+  //     commented alternative in the fetch below.
+  //   Leave it as-is and the form still works in preview (logs to console).
+  // ===========================================================================
+  var WEBHOOK_URL = "https://PASTE-YOUR-WEBHOOK-URL-HERE";
+
+  var form = document.getElementById('demoForm');
+  var submitBtn = form.querySelector('.submit');
+  var btnLabel = submitBtn.textContent;
+
+  // inline error line, shown only if the send fails
+  var errLine = document.createElement('p');
+  errLine.setAttribute('role', 'alert');
+  errLine.style.cssText = 'display:none;color:#DB5247;font-size:14px;font-weight:600;margin:12px 0 0;text-align:center';
+  submitBtn.insertAdjacentElement('afterend', errLine);
+
+  form.addEventListener('submit', async function(e){
+    e.preventDefault();
+    if(!form.checkValidity()){ form.reportValidity(); return; }
+
+    // ---- This payload is your consent trail. Your CRM must STORE it. ----
+    var payload = {
+      businessName: form.businessName.value.trim(),
+      fullName:     form.fullName.value.trim(),
+      phone:        form.phone.value.trim(),
+      businessType: form.businessType.value,
+      email:        form.consentEmail.checked ? form.email.value.trim() : null,
+      consentToCall:    form.consentCall.checked,   // must be true to submit
+      consentToEmail:   form.consentEmail.checked,
+      consentText:      CONSENT.text,               // the exact wording shown
+      consentVersion:   CONSENT.version,            // which version they saw
+      capturedAt:       new Date().toISOString(),   // when they consented
+      pageUrl:          window.location.href        // where they consented
+    };
+
+    // If the webhook hasn't been set yet, don't lose the lead silently —
+    // log it and show success so the page is testable in preview.
+    if(WEBHOOK_URL.indexOf('PASTE-YOUR-WEBHOOK-URL') !== -1){
+      console.warn('No WEBHOOK_URL set — showing success without sending. Lead:', payload);
+      return showSuccess(payload);
+    }
+
+    errLine.style.display = 'none';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    try{
+      var res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+        // Form-encoded alternative (if your endpoint needs it):
+        //   headers: {'Content-Type':'application/x-www-form-urlencoded'},
+        //   body: new URLSearchParams(payload).toString()
+      });
+      if(!res.ok) throw new Error('HTTP ' + res.status);
+      showSuccess(payload);
+    }catch(err){
+      console.error('Lead send failed:', err, payload);
+      submitBtn.disabled = false;
+      submitBtn.textContent = btnLabel;
+      errLine.textContent = "That didn't send — check your connection and try again, or call us and we'll set it up over the phone.";
+      errLine.style.display = 'block';
+    }
+  });
+
+  function showSuccess(payload){
+    document.getElementById('echoPhone').textContent = payload.phone || 'that number';
+    form.classList.add('sent');
+    form.scrollIntoView({behavior:'smooth', block:'center'});
+  }
+</script>
