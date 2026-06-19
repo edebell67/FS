@@ -1,0 +1,204 @@
+<!--
+  ============================================================================
+  SWITCHBOARD — Privacy Notice (UK GDPR / PECR)
+  ----------------------------------------------------------------------------
+  THIS IS A TEMPLATE, NOT LEGAL ADVICE. It is written to match the landing
+  page and to cover the UK GDPR Article 13 transparency points and the PECR
+  consent position for the demo-call opt-in. Have a UK data-protection
+  solicitor review it before you publish — especially the international
+  transfers section if your voice platform is US-based (Vapi/Retell/Bland etc).
+
+  FILL IN every [SQUARE-BRACKET] placeholder. Do not publish with them in.
+  Key ones:
+    [COMPANY]            – your legal entity, e.g. "Switchboard Ltd" or your
+                           trading name + "(a sole trader)"
+    [REG NO]             – Companies House number, if a limited company
+    [ADDRESS]            – your registered / business address
+    [EMAIL] / [PHONE]    – your contact details
+    [ICO REG NO]         – your ICO registration (you almost certainly need
+                           to register with the ICO as a data controller)
+    [PLATFORM]           – your answering-service / voice provider
+    [HOSTING]            – where the website + form data are hosted
+    [TRANSFER MECHANISM] – e.g. "the UK International Data Transfer Agreement"
+    [RETENTION]          – how long you keep enquiry data, e.g. "12 months"
+  ============================================================================
+-->
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Notice — Switchboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:#16242E;--ink-soft:#4A5963;--paper:#F7F6F2;
+    --answered:#1B8A5F;--line:rgba(22,36,46,.12);--maxw:760px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);
+    font-family:"Hanken Grotesk",system-ui,sans-serif;font-size:17px;line-height:1.62;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
+  h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;letter-spacing:-.02em;line-height:1.1;margin:0}
+  a{color:var(--answered);font-weight:600}
+
+  nav{border-bottom:1px solid var(--line);background:rgba(247,246,242,.85);backdrop-filter:blur(10px)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;height:64px}
+  .brand{display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque";font-weight:800;font-size:19px}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:var(--answered)}
+  .nav-in a.back{font-weight:600;font-size:15px;text-decoration:none;color:var(--ink-soft)}
+  .nav-in a.back:hover{color:var(--ink)}
+
+  header.doc{padding:56px 0 8px}
+  .eyebrow{font-weight:600;font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:14px}
+  h1{font-size:clamp(34px,6vw,48px);font-weight:800}
+  .meta{margin-top:16px;color:var(--ink-soft);font-size:14.5px}
+
+  main{padding:28px 0 80px}
+  .lead{font-size:18.5px;color:var(--ink-soft);margin:0 0 8px}
+  section{padding:26px 0;border-top:1px solid var(--line)}
+  h2{font-size:22px;font-weight:700;margin-bottom:12px}
+  h2 .n{font-family:"Hanken Grotesk";font-weight:600;color:var(--answered);font-size:15px;margin-right:10px;vertical-align:1px}
+  p{margin:0 0 14px}
+  ul{margin:0 0 14px;padding-left:22px}
+  li{margin-bottom:8px}
+  .ph{background:rgba(219,82,71,.10);border-radius:5px;padding:1px 6px;font-weight:600;white-space:nowrap}
+  table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:15.5px}
+  th,td{text-align:left;vertical-align:top;padding:11px 12px;border:1px solid var(--line)}
+  th{background:#fff;font-weight:600;width:42%}
+  .callout{background:#fff;border:1px solid var(--line);border-left:3px solid var(--answered);border-radius:8px;padding:16px 18px;margin:6px 0 14px;font-size:15.5px}
+  footer{border-top:1px solid var(--line);padding:30px 0;background:#fff;font-size:14px;color:var(--ink-soft)}
+  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+  .foot-in a{text-decoration:none;margin-left:18px}
+  @media(max-width:560px){th{width:auto;display:block}td{display:block}}
+</style>
+
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand"><span class="dot"></span>Switchboard</div>
+    <a class="back" href="/">← Back to site</a>
+  </div>
+</nav>
+
+<header class="doc">
+  <div class="wrap">
+    <div class="eyebrow">Privacy</div>
+    <h1>Privacy Notice</h1>
+    <p class="meta">Last updated: <span id="today"></span> · Version 1.0</p>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <p class="lead">This notice explains what we do with the details you give us — mainly when you ask for a demo call — and the rights you have over that information. We keep it short and plain on purpose.</p>
+
+    <section>
+      <h2><span class="n">01</span>Who we are</h2>
+      <p>This site and service are run by <span class="ph">[COMPANY]</span><span class="ph">[REG NO — if a limited company]</span>, whose address is <span class="ph">[ADDRESS]</span>. We are the “data controller” for the information described here.</p>
+      <p>You can reach us about anything in this notice at <span class="ph">[EMAIL]</span> or <span class="ph">[PHONE]</span>. We are registered with the UK’s Information Commissioner’s Office (ICO), registration number <span class="ph">[ICO REG NO]</span>.</p>
+    </section>
+
+    <section>
+      <h2><span class="n">02</span>What we collect</h2>
+      <p>When you fill in the demo form, we collect:</p>
+      <ul>
+        <li>your business name and your name;</li>
+        <li>the phone number you give us to call;</li>
+        <li>your line of work (from the dropdown);</li>
+        <li>your email address — only if you tick the optional updates box;</li>
+        <li>a record of the consent you gave: the exact wording you agreed to, the version, and the date and time you submitted the form.</li>
+      </ul>
+      <p>If we call you, we may also keep a record of the call and any notes from it (for example, that you asked us not to call again).</p>
+    </section>
+
+    <section>
+      <h2><span class="n">03</span>Why we use it, and our legal basis</h2>
+      <p>Under data-protection law we need a “lawful basis” for using your information. Here’s ours, purpose by purpose:</p>
+      <table>
+        <tr><th>What we do</th><th>Our legal basis</th></tr>
+        <tr><td>Call you (including by automated or AI voice call) about your demo and setting up the service</td><td>Your <strong>consent</strong> — the box you ticked. Automated and AI voice calls require your prior consent under PECR, and you can withdraw it at any time.</td></tr>
+        <tr><td>Respond to your enquiry and set up your account if you go ahead</td><td>Taking steps to enter into, and performing, a contract with you.</td></tr>
+        <tr><td>Send you occasional booking tips by email</td><td>Your <strong>consent</strong> — only if you ticked the separate optional box. You can unsubscribe any time.</td></tr>
+        <tr><td>Keep a record of your consent and our contact with you</td><td>Our legitimate interest in being able to show we acted lawfully, and our legal obligation to honour your choices.</td></tr>
+      </table>
+    </section>
+
+    <section>
+      <h2><span class="n">04</span>The demo call, and your right to stop it</h2>
+      <p>The demo call may be made using an automated or AI voice. You agreed to this on the form, and you can change your mind at any moment — there’s no penalty, and it won’t affect anything else.</p>
+      <p>To stop us calling, just tell the caller, reply to any message from us, or email <span class="ph">[EMAIL]</span>. We’ll remove your number from our calling list straight away and add it to our own do-not-call record so it isn’t used again.</p>
+      <div class="callout">Before making live marketing calls we also screen numbers against the Telephone Preference Service (TPS) and Corporate Telephone Preference Service (CTPS). Asking us to stop always takes priority over anything else.</div>
+    </section>
+
+    <section>
+      <h2><span class="n">05</span>Who we share it with</h2>
+      <p><strong>We never sell your details, and we don’t share them for anyone else’s marketing.</strong> We do use a small number of trusted suppliers who handle data on our behalf, under contract and only on our instructions:</p>
+      <ul>
+        <li><span class="ph">[PLATFORM]</span> — the service we use to make and handle calls;</li>
+        <li><span class="ph">[HOSTING]</span> — hosting for this website and the form submissions;</li>
+        <li>our email and CRM tools, used to manage your enquiry.</li>
+      </ul>
+      <p>We may also disclose information if the law requires us to.</p>
+    </section>
+
+    <section>
+      <h2><span class="n">06</span>Sending data outside the UK</h2>
+      <p>Some of the suppliers above may store or process your information outside the UK (for example, in the United States). Where that happens, we make sure it’s protected by an approved safeguard — <span class="ph">[TRANSFER MECHANISM]</span> — so your information has a similar level of protection to that it would have in the UK.</p>
+      <div class="callout">If your call platform is based outside the UK, this section is not optional — name the safeguard you actually rely on (commonly the UK International Data Transfer Agreement, or the EU Standard Contractual Clauses with the UK Addendum), and confirm it with that provider.</div>
+    </section>
+
+    <section>
+      <h2><span class="n">07</span>How long we keep it</h2>
+      <p>If you don’t become a customer, we keep your enquiry and consent record for <span class="ph">[RETENTION — e.g. 12 months]</span>, then delete it — except the minimum we need to remember that you asked not to be contacted, which we keep so we can honour that. If you become a customer, we keep your details for as long as you’re with us and for a reasonable period afterwards.</p>
+    </section>
+
+    <section>
+      <h2><span class="n">08</span>Your rights</h2>
+      <p>Under UK data-protection law you can ask us to:</p>
+      <ul>
+        <li>show you the information we hold about you;</li>
+        <li>correct it if it’s wrong;</li>
+        <li>delete it;</li>
+        <li>stop or limit how we use it;</li>
+        <li>hand it over in a portable format;</li>
+        <li>stop using it where we rely on legitimate interests; and</li>
+        <li>withdraw any consent you’ve given — at any time, without affecting what we did before you withdrew it.</li>
+      </ul>
+      <p>To use any of these, email <span class="ph">[EMAIL]</span>. It’s free, and we’ll reply within one month.</p>
+    </section>
+
+    <section>
+      <h2><span class="n">09</span>Cookies</h2>
+      <p>This page uses Google Fonts to load its typefaces, which involves a request to Google’s servers. We don’t set advertising or tracking cookies. <span class="ph">[If you later add analytics or tracking, update this section and add a cookie banner.]</span></p>
+    </section>
+
+    <section>
+      <h2><span class="n">10</span>Complaints</h2>
+      <p>We’d always like the chance to put things right first, so please get in touch. You also have the right to complain to the ICO, the UK’s data-protection regulator, at <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a> or on 0303 123 1113.</p>
+    </section>
+
+    <section>
+      <h2><span class="n">11</span>Changes to this notice</h2>
+      <p>If we change how we use your information, we’ll update this page and the “last updated” date at the top. If the change is significant, we’ll tell you directly where we can.</p>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-in">
+    <div>© <span id="yr"></span> Switchboard</div>
+    <div>
+      <a href="/">Home</a>
+      <a href="/terms">Terms</a>
+      <a href="/#demo">Get a demo</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var d = new Date();
+  document.getElementById('today').textContent =
+    d.toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+  document.getElementById('yr').textContent = d.getFullYear();
+</script>
