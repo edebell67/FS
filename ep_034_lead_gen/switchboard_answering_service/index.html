@@ -1,528 +1,478 @@
-<!--
-  ============================================================================
-  SWITCHBOARD — answering-service landing page
-  ----------------------------------------------------------------------------
-  "Switchboard" is a PLACEHOLDER brand name. Find/replace it with yours.
-
-  COMPLIANCE NOTES (read before going live):
-  • The consent checkbox below is the legally load-bearing element. It is
-    explicit (names automated/AI voice calls), unbundled (separate from the
-    optional email box), and NOT pre-ticked. Do not "tidy" it into a single
-    generic "I agree" box — that breaks the whole point.
-  • On submit, the JS builds a payload that includes consentText,
-    consentVersion, the page URL and an ISO timestamp. POST that to your
-    backend and STORE IT. That stored record is your consent trail.
-  • This page does not screen TPS/CTPS — that happens on YOUR side before any
-    human warm-up call. The demo-call consent captured here is what lets the
-    AI agent dial later.
-  • EmailJS is wired below. Keep the consent payload intact and verify the EmailJS service/template before launch.
-  • Privacy Notice / Terms links are relative for GitHub Pages subdirectory deployment.
-  • This is a practical build, not legal advice — have a solicitor confirm the
-    final consent wording before you scale.
-  ============================================================================
--->
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Switchboard — never miss a call again</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Switchboard — we answer the calls you can't (build 4)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Hanken+Grotesk:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#16242E;
-    --ink-soft:#4A5963;
-    --paper:#F7F6F2;
-    --panel:#0F1D26;        /* dark phone-screen panel for the hero signature */
-    --panel-soft:#1B2E3A;
-    --answered:#1B8A5F;
-    --answered-bright:#2BB37C;
-    --missed:#DB5247;
-    --line:rgba(22,36,46,.12);
-    --line-dark:rgba(255,255,255,.10);
-    --radius:14px;
-    --maxw:1120px;
+    --ink:#0c111d; --ink-2:#0e1422;
+    --brass:#f0bb63; --brass-deep:#d99a3e;
+    --teal:#3ad1a6; --miss:#e5614a;
+    --paper:#f3eee2; --muted:#8b94a8;
+    --line:rgba(243,238,226,.12);
+    --display:"Bricolage Grotesque", system-ui, sans-serif;
+    --body:"Inter", system-ui, sans-serif;
+    --mono:"Space Mono", ui-monospace, monospace;
   }
-
-  *{box-sizing:border-box}
+  *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{
-    margin:0;
-    background:var(--paper);
-    color:var(--ink);
-    font-family:"Hanken Grotesk",system-ui,sans-serif;
-    font-size:17px;
-    line-height:1.55;
-    -webkit-font-smoothing:antialiased;
-  }
-  h1,h2,h3{font-family:"Bricolage Grotesque",system-ui,sans-serif;font-weight:800;line-height:1.02;letter-spacing:-.02em;margin:0}
-  p{margin:0}
-  a{color:inherit}
-  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 24px}
-  .mono{font-family:"JetBrains Mono",monospace}
+  body{background:var(--ink);color:var(--paper);font-family:var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.5}
+  ::selection{background:var(--brass);color:#1a1205}
 
-  /* ---------- buttons ---------- */
-  .btn{
-    display:inline-flex;align-items:center;gap:.5em;
-    font-family:"Hanken Grotesk",sans-serif;font-weight:600;font-size:16px;
-    padding:14px 22px;border-radius:999px;border:1.5px solid transparent;
-    cursor:pointer;text-decoration:none;transition:transform .12s ease,background .15s ease,box-shadow .15s ease;
-  }
-  .btn:active{transform:translateY(1px)}
-  .btn-primary{background:var(--answered);color:#fff;box-shadow:0 6px 18px rgba(27,138,95,.28)}
-  .btn-primary:hover{background:var(--answered-bright)}
-  .btn-ghost{background:transparent;color:var(--ink);border-color:var(--line)}
-  .btn-ghost:hover{border-color:var(--ink)}
-  :focus-visible{outline:3px solid var(--answered-bright);outline-offset:2px;border-radius:6px}
+  .stage{position:relative;min-height:100svh;width:100%;display:grid;grid-template-columns:minmax(360px,430px) 1fr;
+    background:radial-gradient(120% 90% at 70% 24%, #1a2236 0%, rgba(26,34,54,0) 55%), radial-gradient(90% 80% at 30% 96%, #141a2b 0%, rgba(20,26,43,0) 60%), var(--ink);}
 
-  /* ---------- nav ---------- */
-  nav{position:sticky;top:0;z-index:40;background:rgba(247,246,242,.82);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .nav-in{display:flex;align-items:center;justify-content:space-between;height:68px}
-  .brand{display:flex;align-items:center;gap:10px;font-family:"Bricolage Grotesque";font-weight:800;font-size:20px;letter-spacing:-.02em}
-  .brand .dot{width:11px;height:11px;border-radius:50%;background:var(--answered);box-shadow:0 0 0 4px rgba(27,138,95,.18);animation:pulse 2.4s infinite}
-  @keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(27,138,95,.18)}50%{box-shadow:0 0 0 8px rgba(27,138,95,0)}}
-  .nav-cta{display:flex;align-items:center;gap:18px}
-  .nav-cta a.text{font-weight:600;font-size:15px;text-decoration:none;color:var(--ink-soft)}
-  .nav-cta a.text:hover{color:var(--ink)}
+  .panel{position:relative;z-index:3;display:flex;flex-direction:column;gap:17px;padding:28px clamp(22px,2.4vw,38px) 32px;background:linear-gradient(180deg, rgba(13,18,30,.9), rgba(11,15,25,.96));border-right:1px solid var(--line);overflow-y:auto;max-height:100svh}
+  .brand{display:flex;align-items:center;gap:11px;font-family:var(--display);font-weight:800;letter-spacing:-.01em;font-size:19px}
+  .brand .dot{width:30px;height:30px;border-radius:9px;flex:0 0 auto;background:linear-gradient(150deg,var(--brass),var(--brass-deep));display:grid;place-items:center;color:#1a1205;box-shadow:0 6px 20px -6px rgba(240,187,99,.6)}
+  .brand .dot svg{width:17px;height:17px}
+  .eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);display:flex;align-items:center;gap:10px;margin-top:2px}
+  .eyebrow::before{content:"";width:26px;height:1px;background:var(--brass);opacity:.7}
+  h1{font-family:var(--display);font-weight:800;letter-spacing:-.025em;line-height:.98;font-size:clamp(34px,3.3vw,50px)}
+  h1 .swap{color:var(--brass)}
+  .sub{font-size:clamp(14px,1.05vw,15.5px);color:#d6d3c8}
+  .demo-controls{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+  .switch{position:relative;display:inline-flex;align-items:center;width:218px;height:52px;border-radius:40px;cursor:pointer;border:1px solid var(--line);background:rgba(8,11,19,.7);user-select:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 10px 30px -16px #000;transition:border-color .3s, box-shadow .3s;flex:0 0 auto}
+  .switch:focus-visible{outline:2px solid var(--brass);outline-offset:3px}
+  .switch.nudge{animation:nudge 1.2s ease}
+  @keyframes nudge{0%,100%{box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 10px 30px -16px #000}30%,70%{box-shadow:0 0 0 4px rgba(240,187,99,.4)}}
+  .switch .label{position:relative;z-index:2;flex:1;text-align:center;font-size:12px;font-weight:600;color:var(--muted);transition:color .3s;padding:0 6px}
+  .switch .knob{position:absolute;z-index:1;top:4px;left:4px;height:44px;width:calc(50% - 4px);border-radius:36px;background:linear-gradient(180deg,#2a3045,#1a2030);transition:transform .42s cubic-bezier(.65,.05,.2,1), background .42s, box-shadow .42s;box-shadow:0 6px 16px -6px #000, inset 0 1px 0 rgba(255,255,255,.08)}
+  .switch[data-on="true"] .knob{transform:translateX(calc(100% + 0px));background:linear-gradient(180deg,var(--brass),var(--brass-deep));box-shadow:0 8px 22px -6px rgba(240,187,99,.6), inset 0 1px 0 rgba(255,255,255,.25)}
+  .switch[data-on="false"] .label.off{color:var(--paper)}
+  .switch[data-on="true"] .label.on{color:#1a1205}
+  .counters{display:flex;gap:22px;font-family:var(--mono)}
+  .counter .n{font-size:24px;font-weight:700;line-height:1}
+  .counter .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-top:5px}
+  .counter.ans .n{color:var(--teal)}
+  .counter.lost .n{color:var(--miss)}
+  .counter.lost[data-zero="true"] .n{color:var(--muted)}
 
-  /* ---------- hero ---------- */
-  .hero{padding:72px 0 40px}
-  .hero-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
-  .eyebrow{font-weight:600;font-size:13.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:20px}
-  h1.title{font-size:clamp(40px,6.2vw,68px)}
-  h1.title .miss{color:var(--missed)}
-  .lede{margin-top:24px;font-size:19px;color:var(--ink-soft);max-width:30em}
-  .hero-cta{display:flex;gap:14px;margin-top:32px;flex-wrap:wrap}
-  .reassure{margin-top:18px;font-size:14px;color:var(--ink-soft)}
-  .reassure b{color:var(--answered);font-weight:600}
+  .capture{margin-top:2px;background:rgba(8,11,19,.5);border:1px solid var(--line);border-radius:18px;padding:18px}
+  .capture h3{font-family:var(--display);font-weight:700;font-size:18px;letter-spacing:-.01em;margin-bottom:4px}
+  .capture .lede{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+  .field{position:relative;margin-bottom:9px}
+  .field label{display:block;font-size:11px;font-family:var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:0 0 5px 2px}
+  .field input,.field select{width:100%;height:46px;border-radius:11px;border:1px solid var(--line);background:rgba(8,11,19,.8);color:var(--paper);font-family:var(--body);font-size:15px;padding:0 13px;transition:border-color .2s, box-shadow .2s}
+  .field input::placeholder{color:#6c7488}
+  .field select option{background:#0c111d;color:#f3eee2}
+  .field input:focus,.field select:focus{outline:none;border-color:var(--brass);box-shadow:0 0 0 3px rgba(240,187,99,.16)}
+  .field input.bad,.field select.bad{border-color:var(--miss);box-shadow:0 0 0 3px rgba(229,97,74,.16)}
+  .field.optional{display:none}
+  .twocol{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+  @media (max-width:520px){.twocol{grid-template-columns:1fr}}
+  .err{font-size:11.5px;color:var(--miss);margin:-3px 2px 7px;display:none}
+  .err.show{display:block}
+  .consent{display:flex;gap:10px;align-items:flex-start;margin:4px 0 12px;cursor:pointer}
+  .consent input{position:absolute;opacity:0;width:1px;height:1px}
+  .consent .box{flex:0 0 auto;width:22px;height:22px;border-radius:7px;border:1.5px solid var(--line);background:rgba(8,11,19,.7);display:grid;place-items:center;margin-top:1px;transition:.2s}
+  .consent .box svg{width:13px;height:13px;opacity:0;transform:scale(.5);transition:.2s}
+  .consent input:checked + .box{background:linear-gradient(160deg,var(--teal),#27a583);border-color:transparent}
+  .consent input:checked + .box svg{opacity:1;transform:scale(1)}
+  .consent input:focus-visible + .box{outline:2px solid var(--brass);outline-offset:2px}
+  .consent .ct{font-size:11.5px;color:#c4c9d4;line-height:1.45}
+  .consent.bad .box{border-color:var(--miss)}
+  .btn{width:100%;height:48px;border:none;border-radius:11px;cursor:pointer;font-family:var(--display);font-weight:700;font-size:15.5px;color:#1a1205;background:linear-gradient(160deg,var(--brass),var(--brass-deep));box-shadow:0 14px 30px -12px rgba(240,187,99,.6);transition:transform .12s, filter .2s;display:flex;align-items:center;justify-content:center;gap:9px}
+  .btn:hover{filter:brightness(1.05)}.btn:active{transform:translateY(1px)}
+  .btn svg{width:16px;height:16px}
+  .micro{font-size:10.5px;color:var(--muted);text-align:center;margin-top:10px;font-family:var(--mono)}
+  .done{display:none;text-align:center;padding:6px 2px 2px}
+  .done.show{display:block;animation:slidein .4s ease both}
+  .done .ring{width:56px;height:56px;border-radius:50%;margin:2px auto 12px;display:grid;place-items:center;background:rgba(58,209,166,.14);color:var(--teal)}
+  .done .ring svg{width:28px;height:28px}
+  .done h3{font-family:var(--display);font-weight:700;font-size:19px;margin-bottom:6px}
+  .done p{font-size:13px;color:#c4c9d4}
+  .capture.is-done{border-color:rgba(58,209,166,.4)}
 
-  /* ---------- call-log signature ---------- */
-  .phone{background:var(--panel);border-radius:24px;padding:22px 20px 24px;box-shadow:0 30px 60px -24px rgba(15,29,38,.55);border:1px solid var(--line-dark)}
-  .phone-top{display:flex;align-items:center;justify-content:space-between;padding:2px 6px 16px;border-bottom:1px solid var(--line-dark)}
-  .phone-top .label{color:#fff;font-family:"Bricolage Grotesque";font-weight:700;font-size:15px}
-  .phone-top .when{color:rgba(255,255,255,.45);font-size:12px}
-  .log{list-style:none;margin:0;padding:8px 0 0}
-  .row{display:flex;align-items:center;gap:13px;padding:13px 6px;border-bottom:1px solid var(--line-dark);opacity:0;transform:translateY(8px);animation:rise .5s forwards}
-  .row:last-child{border-bottom:0}
-  @keyframes rise{to{opacity:1;transform:none}}
-  .icn{flex:none;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px}
-  .icn.miss{background:rgba(219,82,71,.16);color:var(--missed)}
-  .icn.ans{background:rgba(43,179,124,.16);color:var(--answered-bright)}
-  .row .who{flex:1;min-width:0}
-  .row .who .n{color:#fff;font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .row .who .s{font-size:12.5px;margin-top:1px}
-  .row.miss .s{color:var(--missed)}
-  .row.ans .s{color:rgba(255,255,255,.55)}
-  .row .meta{flex:none;text-align:right}
-  .row .meta .t{color:rgba(255,255,255,.5);font-size:12px}
-  .row .meta .d{font-size:11px;color:var(--answered-bright);margin-top:2px}
-  .phone-foot{margin-top:14px;text-align:center;font-size:12.5px;color:rgba(255,255,255,.5)}
-  .phone-foot b{color:var(--answered-bright)}
+  .threed{position:relative;z-index:1;min-height:520px;overflow:hidden}
+  #scene{position:absolute;inset:0;display:block;width:100%;height:100%;cursor:grab;touch-action:none}
+  #scene.grabbing{cursor:grabbing}
+  .loading{position:absolute;inset:0;display:grid;place-items:center;text-align:center;color:var(--muted);font-family:var(--mono);font-size:13px;z-index:2;pointer-events:none;padding:24px;transition:opacity .5s}
+  .live{position:absolute;z-index:4;top:22px;left:24px;display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:11px;letter-spacing:.06em;color:var(--muted);text-transform:uppercase;pointer-events:none}
+  .live .pip{width:8px;height:8px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(58,209,166,.55)}70%{box-shadow:0 0 0 9px rgba(58,209,166,0)}100%{box-shadow:0 0 0 0 rgba(58,209,166,0)}}
+  .log{position:absolute;z-index:4;right:22px;top:22px;width:288px;background:rgba(13,18,30,.74);border:1px solid var(--line);border-radius:16px;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);padding:13px 13px 6px;box-shadow:0 24px 60px -30px #000;pointer-events:none}
+  .log h4{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:8px;margin-bottom:9px}
+  .log h4 .pip{width:7px;height:7px;border-radius:50%;background:var(--teal);animation:pulse 2s infinite}
+  .rows{display:flex;flex-direction:column;gap:2px;min-height:148px}
+  .row{display:flex;gap:10px;padding:7px 4px;border-radius:8px;align-items:flex-start;animation:slidein .4s ease both}
+  @keyframes slidein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+  .row .ic{flex:0 0 auto;width:18px;height:18px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;margin-top:1px}
+  .row.ans .ic{background:rgba(58,209,166,.16);color:var(--teal)}
+  .row.miss .ic{background:rgba(229,97,74,.16);color:var(--miss)}
+  .row .body{flex:1;min-width:0}
+  .row .t{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row .s{font-size:11.5px;color:var(--muted);font-family:var(--mono)}
+  .row.miss .t{color:#e9b3a8}
+  .badge{position:absolute;z-index:4;left:24px;bottom:22px;display:flex;gap:12px;align-items:center;font-family:var(--mono);font-size:11.5px;letter-spacing:.03em;color:rgba(243,238,226,.78);background:rgba(8,11,19,.55);padding:9px 14px;border-radius:30px;border:1px solid var(--line);backdrop-filter:blur(6px);transition:opacity .5s;pointer-events:none}
+  .badge b{color:var(--brass);font-weight:700}.badge svg{width:15px;height:15px;opacity:.85}
+  .buildtag{position:absolute;right:24px;bottom:24px;z-index:4;font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:rgba(243,238,226,.38);pointer-events:none}
 
-  /* ---------- cost strip ---------- */
-  .cost{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:#fff}
-  .cost-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0}
-  .cost-cell{padding:38px 28px;border-left:1px solid var(--line)}
-  .cost-cell:first-child{border-left:0}
-  .cost-cell h3{font-size:21px;margin-bottom:8px}
-  .cost-cell p{color:var(--ink-soft);font-size:16px}
+  section.block{max-width:1100px;margin:0 auto;padding:clamp(60px,9vw,110px) clamp(20px,5vw,40px)}
+  .kicker{font-family:var(--mono);font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--brass);margin-bottom:14px;display:flex;gap:10px;align-items:center}
+  .kicker::before{content:"";width:26px;height:1px;background:var(--brass);opacity:.7}
+  h2{font-family:var(--display);font-weight:800;letter-spacing:-.025em;font-size:clamp(28px,4.4vw,46px);line-height:1.02;max-width:18ch}
+  .lead{color:var(--muted);font-size:clamp(15px,1.8vw,18px);max-width:54ch;margin-top:16px}
+  .stakes{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:46px}
+  .stake{border:1px solid var(--line);border-radius:16px;padding:24px;background:var(--ink-2)}
+  .stake .num{font-family:var(--mono);font-size:12px;color:var(--brass);letter-spacing:.1em}
+  .stake h3{font-family:var(--display);font-weight:700;font-size:20px;margin:14px 0 8px;letter-spacing:-.01em}
+  .stake p{color:var(--muted);font-size:14px}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);margin-top:46px;border:1px solid var(--line);border-radius:18px;overflow:hidden}
+  .step{padding:30px 26px}.step + .step{border-left:1px solid var(--line)}
+  .step .si{font-family:var(--mono);font-size:13px;color:var(--brass);letter-spacing:.12em}
+  .step h3{font-family:var(--display);font-weight:700;font-size:21px;margin:18px 0 9px;letter-spacing:-.01em}
+  .step p{color:var(--muted);font-size:14px}
+  .who{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+  .chip{border:1px solid var(--line);border-radius:30px;padding:9px 16px;font-size:14px;color:#d6d3c8;background:var(--ink-2)}
+  .final{background:linear-gradient(180deg,var(--ink-2),var(--ink));border-top:1px solid var(--line)}
+  .final-wrap{max-width:1100px;margin:0 auto;padding:clamp(60px,9vw,100px) clamp(20px,5vw,40px);display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center}
+  .promises{display:flex;flex-direction:column;gap:16px;margin-top:26px}
+  .promise{display:flex;gap:13px;align-items:flex-start}
+  .promise .pk{flex:0 0 auto;width:24px;height:24px;border-radius:50%;background:rgba(58,209,166,.15);color:var(--teal);display:grid;place-items:center}
+  .promise .pk svg{width:14px;height:14px}.promise span{font-size:14.5px;color:#cdd2dc}
+  footer{border-top:1px solid var(--line);padding:26px clamp(20px,5vw,40px);max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:13px;font-family:var(--mono)}
+  .capture.inline{max-width:380px}
 
-  /* ---------- section heading ---------- */
-  .sec{padding:76px 0}
-  .sec-head{max-width:34ch;margin-bottom:44px}
-  .sec-head .eyebrow{margin-bottom:14px}
-  .sec-head h2{font-size:clamp(30px,4.2vw,44px)}
-
-  /* ---------- steps ---------- */
-  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
-  .step{padding-top:22px;border-top:2px solid var(--ink)}
-  .step .num{font-family:"JetBrains Mono";font-size:13px;color:var(--answered);font-weight:500;letter-spacing:.05em}
-  .step h3{font-size:21px;margin:14px 0 8px}
-  .step p{color:var(--ink-soft);font-size:15.5px}
-
-  /* ---------- who-for chips ---------- */
-  .forwho{background:#fff;border-top:1px solid var(--line)}
-  .chips{display:flex;flex-wrap:wrap;gap:11px;margin-top:8px}
-  .chip{border:1.5px solid var(--line);border-radius:999px;padding:9px 16px;font-weight:500;font-size:15px}
-
-  /* ---------- form ---------- */
-  .signup{padding:78px 0 92px}
-  .signup-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:start}
-  .signup-copy h2{font-size:clamp(30px,4.4vw,46px)}
-  .signup-copy p{color:var(--ink-soft);margin-top:18px;font-size:17.5px;max-width:30em}
-  .trust{margin-top:26px;display:flex;flex-direction:column;gap:11px}
-  .trust li{list-style:none;display:flex;gap:11px;align-items:flex-start;font-size:15px;color:var(--ink-soft)}
-  .trust .tick{color:var(--answered);font-weight:700;flex:none}
-
-  form.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:30px;box-shadow:0 24px 50px -30px rgba(15,29,38,.4)}
-  .field{margin-bottom:16px}
-  .field label{display:block;font-weight:600;font-size:14px;margin-bottom:6px}
-  .field .hint{font-weight:400;color:var(--ink-soft);font-size:12.5px}
-  input,select{width:100%;font-family:inherit;font-size:16px;color:var(--ink);background:var(--paper);border:1.5px solid var(--line);border-radius:10px;padding:12px 14px;transition:border .15s}
-  input:focus,select:focus{border-color:var(--answered);outline:none}
-  .two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-
-  .consent{margin-top:8px;border-top:1px solid var(--line);padding-top:18px}
-  .check{display:flex;gap:12px;align-items:flex-start;margin-bottom:14px}
-  .check input{width:20px;height:20px;flex:none;margin-top:2px;accent-color:var(--answered)}
-  .check label{font-size:14px;line-height:1.5;color:var(--ink)}
-  .check.optional label{color:var(--ink-soft)}
-  .consent .req{color:var(--missed);font-weight:600}
-  .smallprint{font-size:12.5px;color:var(--ink-soft);line-height:1.5;margin:6px 0 18px}
-  .smallprint a{color:var(--answered);font-weight:600}
-  .submit{width:100%;justify-content:center;font-size:17px;padding:16px}
-  .formfoot{font-size:12px;color:var(--ink-soft);text-align:center;margin-top:14px}
-
-  .success{display:none;text-align:center;padding:28px 10px}
-  .success .big{width:60px;height:60px;border-radius:50%;background:rgba(43,179,124,.15);color:var(--answered);display:grid;place-items:center;font-size:30px;margin:0 auto 18px}
-  .success h3{font-size:24px;margin-bottom:10px}
-  .success p{color:var(--ink-soft)}
-  form.sent .form-body{display:none}
-  form.sent .success{display:block}
-
-  /* ---------- footer ---------- */
-  footer{border-top:1px solid var(--line);padding:40px 0;background:#fff}
-  .foot-in{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:14px;color:var(--ink-soft)}
-  .foot-in a{color:var(--ink-soft);text-decoration:none;margin-left:20px}
-  .foot-in a:hover{color:var(--ink)}
-
-  /* ---------- responsive ---------- */
-  @media (max-width:880px){
-    .hero-grid,.signup-grid{grid-template-columns:1fr;gap:40px}
-    .cost-grid{grid-template-columns:1fr}
-    .cost-cell{border-left:0;border-top:1px solid var(--line)}
-    .cost-cell:first-child{border-top:0}
-    .steps{grid-template-columns:1fr}
-    .hero{padding:48px 0 20px}
-    .sec,.signup{padding:56px 0}
-  }
-  @media (prefers-reduced-motion:reduce){
-    *{animation:none!important;scroll-behavior:auto!important}
-    .row{opacity:1;transform:none}
-  }
+  @media (max-width:980px){.stakes,.steps{grid-template-columns:1fr}.step + .step{border-left:none;border-top:1px solid var(--line)}.final-wrap{grid-template-columns:1fr;gap:36px}}
+  @media (max-width:820px){.stage{grid-template-columns:1fr;grid-template-rows:auto auto;min-height:0}.threed{order:-1;height:60svh;min-height:440px}.panel{max-height:none;border-right:none;border-top:1px solid var(--line)}.log{display:none}h1{font-size:clamp(34px,9vw,48px)}}
+  @media (prefers-reduced-motion:reduce){*{animation-duration:.001ms !important;animation-iteration-count:1 !important}html{scroll-behavior:auto}}
 </style>
+</head>
+<body>
 
-<nav>
-  <div class="wrap nav-in">
-    <div class="brand"><span class="dot"></span>Switchboard</div>
-    <div class="nav-cta">
-      <a class="text" href="#how">How it works</a>
-      <a class="btn btn-primary" href="#demo">Get a demo call</a>
+<div class="stage" id="stage">
+  <aside class="panel">
+    <div class="brand"><span class="dot" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 4.5c-1 0-2 .8-2 2 0 7 6 13 13 13 1.2 0 2-1 2-2v-2.3c0-.6-.4-1-.9-1.2l-2.7-.6c-.5-.1-1 .1-1.3.5l-.8 1c-2-.9-3.6-2.5-4.5-4.5l1-.8c.4-.3.6-.8.5-1.3l-.6-2.7c-.1-.5-.6-.9-1.2-.9H6.5Z" fill="currentColor"/></svg></span>Switchboard</div>
+    <div class="eyebrow">When you're too busy to pick up</div>
+    <h1>We answer the calls you <span class="swap">can't</span>.</h1>
+    <p class="sub">Every missed call is a customer who rang someone else. Flip the switch and watch Switchboard catch them — answered, booked, and texted to your phone.</p>
+    <div class="demo-controls">
+      <button class="switch" id="switch" data-on="false" role="switch" aria-checked="false" aria-label="Toggle Switchboard"><span class="knob" aria-hidden="true"></span><span class="label off">You're busy</span><span class="label on">Switchboard on</span></button>
+      <div class="counters"><div class="counter ans"><div class="n" id="cAns">0</div><div class="k">Answered</div></div><div class="counter lost" data-zero="true"><div class="n" id="cLost">0</div><div class="k">Lost</div></div></div>
     </div>
-  </div>
-</nav>
+    <div class="capture" id="capture">
+      <form id="form" novalidate>
+        <h3>Hear it answer your calls</h3>
+        <p class="lede">Pop your details in and we'll give you a quick demo call so you can hear exactly how it sounds picking up for your business.</p>
+        <div class="twocol">
+          <div class="field"><label for="businessName">Business name</label><input id="businessName" name="businessName" type="text" autocomplete="organization" required></div>
+          <div class="field"><label for="fullName">Your name</label><input id="fullName" name="fullName" type="text" autocomplete="name" required></div>
+        </div>
+        <div class="field"><label for="phone">Phone number — the number we'll demo on</label><input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel" required></div>
+        <div class="field"><label for="businessType">What's your line of work?</label><select id="businessType" name="businessType" required><option value="">Choose one…</option><option>Barber / hairdresser</option><option>Beauty / nails</option><option>Plumber / heating</option><option>Electrician</option><option>Mechanic / motor</option><option>Cleaner</option><option>Other trade</option><option>Something else</option></select></div>
+        <label class="consent" id="consentWrap"><input type="checkbox" id="consentCall" name="consentCall" required><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#06231b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ct">Yes, call this number to show me how it works. I'm happy for that to include an automated or AI voice call from Switchboard about my demo and setting up the service. I can tell you to stop at any time. See the <a href="privacy.html">Privacy Notice</a>.</span></label>
+        <div class="err" id="consentErr">We need your explicit okay before we can call.</div>
+        <label class="consent" id="emailConsentWrap"><input type="checkbox" id="consentEmail" name="consentEmail"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#06231b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ct">Optional: email me occasional tips on getting more bookings. Leave unticked — you'll still get your demo call.</span></label>
+        <div class="field optional" id="emailField"><label for="email">Email — only if you ticked the box above</label><input id="email" name="email" type="email" inputmode="email" autocomplete="email"></div>
+        <div class="err" id="sendErr"></div>
+        <button class="btn" type="submit">Get my demo call <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1205" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <p class="micro">Takes 20 seconds · we'll usually call within one working day</p>
+      </form>
+      <div class="done" id="done"><div class="ring"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 4.5c-1 0-2 .8-2 2 0 7 6 13 13 13 1.2 0 2-1 2-2v-2.3c0-.6-.4-1-.9-1.2l-2.7-.6c-.5-.1-1 .1-1.3.5l-.8 1c-2-.9-3.6-2.5-4.5-4.5l1-.8c.4-.3.6-.8.5-1.3l-.6-2.7c-.1-.5-.6-.9-1.2-.9H6.5Z" fill="currentColor"/></svg></div><h3>You're on the list.</h3><p id="doneMsg">We'll be in touch shortly to set up your demo call.</p></div>
+    </div>
+  </aside>
 
-<header class="hero">
-  <div class="wrap hero-grid">
+  <div class="threed" id="threed">
+    <canvas id="scene"></canvas>
+    <div class="loading" id="loading">Loading 3D scene…</div>
+    <div class="live"><span class="pip"></span> Today's calls · live</div>
+    <div class="log"><h4><span class="pip"></span> Today's calls live</h4><div class="rows" id="rows"></div></div>
+    <div class="badge" id="badge"><svg viewBox="0 0 24 24" fill="none"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span><b>Drag</b> to rotate · <b>tap</b> to add a call</span></div>
+    <div class="buildtag">build 4</div>
+  </div>
+</div>
+
+<section class="block">
+  <div class="kicker">Why it matters</div>
+  <h2>They don't call back. They ring the next name.</h2>
+  <p class="lead">A missed call rarely tries again — and the worst calls always come at the worst moment. Here's what's quietly walking out the door.</p>
+  <div class="stakes">
+    <div class="stake"><div class="num">01</div><h3>They don't call back</h3><p>A missed call rarely tries again. They just ring the next name on the list — and that name answers.</p></div>
+    <div class="stake"><div class="num">02</div><h3>It rings at the worst time</h3><p>Mid-haircut, under a sink, hands full with a customer. That's exactly when the good calls come in.</p></div>
+    <div class="stake"><div class="num">03</div><h3>Voicemail loses the job</h3><p>Every booking that hits voicemail is money walking out. We make sure a real voice picks up instead.</p></div>
+  </div>
+</section>
+
+<section class="block" id="how">
+  <div class="kicker">How it works</div>
+  <h2>Three steps. You barely lift a finger.</h2>
+  <div class="steps">
+    <div class="step"><div class="si">Step 01</div><h3>Forward your calls</h3><p>Send your number to us whenever you're busy, closed or on the tools. One tap on your phone — switch it on and off as you like.</p></div>
+    <div class="step"><div class="si">Step 02</div><h3>We answer as your business</h3><p>We pick up in your name, sound like part of the team, help the caller, and either book them in or take a clear message.</p></div>
+    <div class="step"><div class="si">Step 03</div><h3>You get it by text</h3><p>The booking or message lands on your phone straight away — name, number and what they wanted — ready for when you're free.</p></div>
+  </div>
+  <div class="kicker" style="margin-top:64px">Built for</div>
+  <h2>Small businesses that can't stop to answer.</h2>
+  <div class="who"><span class="chip">Barbers</span><span class="chip">Hairdressers</span><span class="chip">Plumbers</span><span class="chip">Electricians</span><span class="chip">Mobile mechanics</span><span class="chip">Cleaners</span><span class="chip">Dog groomers</span><span class="chip">Tradespeople</span><span class="chip">Beauty &amp; nails</span><span class="chip">Solo consultants</span></div>
+</section>
+
+<div class="final" id="demo">
+  <div class="final-wrap">
     <div>
-      <div class="eyebrow">When you're too busy to pick up, we do</div>
-      <h1 class="title">Every <span class="miss">missed call</span> is a customer who rang someone else.</h1>
-      <p class="lede">We answer your phone when you can't — a warm, professional voice that books jobs, takes messages and never drops anyone into voicemail. The details land on your phone by text before you've finished what you were doing.</p>
-      <div class="hero-cta">
-        <a class="btn btn-primary" href="#demo">Hear it answer your calls</a>
-        <a class="btn btn-ghost" href="#how">See how it works</a>
-      </div>
-      <p class="reassure">No contract · no card · <b>set up in a day</b></p>
-    </div>
-
-    <!-- SIGNATURE: live call log, red "missed" world flipping to green "answered" -->
-    <div class="phone" aria-hidden="true">
-      <div class="phone-top">
-        <span class="label">Today's calls</span>
-        <span class="when mono">live</span>
-      </div>
-      <ul class="log">
-        <li class="row miss" style="animation-delay:.05s">
-          <span class="icn miss">✕</span>
-          <span class="who"><span class="n">07733 ••• 412</span><span class="s">Missed — no voicemail left</span></span>
-          <span class="meta"><span class="t mono">08:02</span></span>
-        </li>
-        <li class="row ans" style="animation-delay:.20s">
-          <span class="icn ans">✓</span>
-          <span class="who"><span class="n">Booking — cut &amp; beard trim</span><span class="s">Answered &amp; added to your diary</span></span>
-          <span class="meta"><span class="t mono">09:14</span><span class="d mono">2m 06s</span></span>
-        </li>
-        <li class="row ans" style="animation-delay:.35s">
-          <span class="icn ans">✓</span>
-          <span class="who"><span class="n">Quote — bathroom re-fit</span><span class="s">Message + number texted to you</span></span>
-          <span class="meta"><span class="t mono">10:48</span><span class="d mono">1m 39s</span></span>
-        </li>
-        <li class="row ans" style="animation-delay:.50s">
-          <span class="icn ans">✓</span>
-          <span class="who"><span class="n">Booking — Saturday, 2pm</span><span class="s">Answered &amp; confirmed</span></span>
-          <span class="meta"><span class="t mono">11:21</span><span class="d mono">1m 12s</span></span>
-        </li>
-      </ul>
-      <p class="phone-foot">3 calls answered · <b>0 lost</b> while you were busy</p>
-    </div>
-  </div>
-</header>
-
-<section class="cost">
-  <div class="wrap cost-grid">
-    <div class="cost-cell">
-      <h3>They don't call back.</h3>
-      <p>A missed call rarely tries again. They just ring the next name on the list — and that name answers.</p>
-    </div>
-    <div class="cost-cell">
-      <h3>The phone rings at the worst time.</h3>
-      <p>Mid-haircut, under a sink, hands full with a customer. That's exactly when the good calls come in.</p>
-    </div>
-    <div class="cost-cell">
-      <h3>Voicemail loses the job.</h3>
-      <p>Every booking that hits voicemail is money walking out the door. We make sure a real voice picks up instead.</p>
-    </div>
-  </div>
-</section>
-
-<section class="sec" id="how">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">How it works</div>
-      <h2>Three steps. You barely lift a finger.</h2>
-    </div>
-    <div class="steps">
-      <div class="step">
-        <div class="num">STEP 01</div>
-        <h3>Forward your calls</h3>
-        <p>Send your number to us whenever you're busy, closed or on the tools. One tap on your phone — switch it on and off as you like.</p>
-      </div>
-      <div class="step">
-        <div class="num">STEP 02</div>
-        <h3>We answer as your business</h3>
-        <p>We pick up in your name, sound like part of the team, help the caller, and either book them in or take a clear message.</p>
-      </div>
-      <div class="step">
-        <div class="num">STEP 03</div>
-        <h3>You get it by text</h3>
-        <p>The booking or message lands on your phone straight away — name, number and what they wanted — ready for when you're free.</p>
+      <div class="kicker">Hear it for yourself</div>
+      <h2>One call. No pressure. You'll just get it.</h2>
+      <div class="promises">
+        <div class="promise"><span class="pk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>One call to show you how it works — no pressure, no contract.</span></div>
+        <div class="promise"><span class="pk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>We never sell or share your number. Ask us to stop and we stop.</span></div>
+        <div class="promise"><span class="pk"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>We screen every number against the TPS/CTPS registers.</span></div>
       </div>
     </div>
-  </div>
-</section>
-
-<section class="sec forwho">
-  <div class="wrap">
-    <div class="sec-head">
-      <div class="eyebrow">Built for</div>
-      <h2>Small businesses that can't stop to answer.</h2>
-    </div>
-    <div class="chips">
-      <span class="chip">Barbers</span>
-      <span class="chip">Hairdressers</span>
-      <span class="chip">Plumbers</span>
-      <span class="chip">Electricians</span>
-      <span class="chip">Mobile mechanics</span>
-      <span class="chip">Cleaners</span>
-      <span class="chip">Dog groomers</span>
-      <span class="chip">Tradespeople</span>
-      <span class="chip">Beauty &amp; nails</span>
-      <span class="chip">Solo consultants</span>
-    </div>
-  </div>
-</section>
-
-<section class="signup" id="demo">
-  <div class="wrap signup-grid">
-    <div class="signup-copy">
-      <h2>Hear it answer your calls.</h2>
-      <p>Pop your details in and we'll give you a quick demo call so you can hear exactly how it sounds picking up for your business.</p>
-      <ul class="trust">
-        <li><span class="tick">✓</span><span>One call to show you how it works — no pressure, no contract.</span></li>
-        <li><span class="tick">✓</span><span>We never sell or share your number. Ask us to stop and we stop.</span></li>
-        <li><span class="tick">✓</span><span>We screen every number against the TPS/CTPS registers.</span></li>
-      </ul>
-    </div>
-
-    <!-- FORM_ENDPOINT: replace the no-op submit handler in <script> with a POST to your CRM / Formspree -->
-    <form class="card" id="demoForm" novalidate>
-      <div class="form-body">
-        <div class="two">
-          <div class="field">
-            <label for="biz">Business name</label>
-            <input id="biz" name="businessName" type="text" autocomplete="organization" placeholder="e.g. Tony's Barbers" required>
-          </div>
-          <div class="field">
-            <label for="name">Your name</label>
-            <input id="name" name="fullName" type="text" autocomplete="name" placeholder="First name" required>
-          </div>
+    <div class="capture inline" id="capture2">
+      <form id="form2" novalidate>
+        <h3>Get your demo call</h3>
+        <p class="lede">Same demo request — repeated here so visitors don't have to scroll back up.</p>
+        <div class="twocol">
+          <div class="field"><label for="businessName2">Business name</label><input id="businessName2" name="businessName" type="text" autocomplete="organization" required></div>
+          <div class="field"><label for="fullName2">Your name</label><input id="fullName2" name="fullName" type="text" autocomplete="name" required></div>
         </div>
-
-        <div class="field">
-          <label for="phone">Phone number <span class="hint">— the number we'll demo on</span></label>
-          <input id="phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" placeholder="07…" required>
-        </div>
-
-        <div class="field">
-          <label for="type">What's your line of work?</label>
-          <select id="type" name="businessType">
-            <option value="" selected>Choose one…</option>
-            <option>Barber / hairdresser</option>
-            <option>Beauty / nails</option>
-            <option>Plumber / heating</option>
-            <option>Electrician</option>
-            <option>Mechanic / motor</option>
-            <option>Cleaner</option>
-            <option>Other trade</option>
-            <option>Something else</option>
-          </select>
-        </div>
-
-        <div class="consent">
-          <!-- PRIMARY CONSENT — explicit, specific to automated/AI voice calls, NOT pre-ticked, required -->
-          <div class="check">
-            <input id="consentCall" name="consentCall" type="checkbox" required>
-            <label for="consentCall">
-              <span class="req">Yes, call this number</span> to show me how it works. I'm happy for that to include an
-              <strong>automated or AI voice call</strong> from Switchboard about my demo and setting up the service.
-            </label>
-          </div>
-          <p class="smallprint">
-            We'll only call about your demo and getting you set up — nothing else. You can tell us to stop at any time and we'll
-            remove your number. We never pass it to anyone else. See how we handle your details in our
-            <a href="privacy.html" target="_blank" rel="noopener">Privacy Notice</a>.
-          </p>
-
-          <!-- SECONDARY CONSENT — separate, optional, unbundled from the call consent above -->
-          <div class="check optional">
-            <input id="consentEmail" name="consentEmail" type="checkbox">
-            <label for="consentEmail">
-              Optional: email me occasional tips on getting more bookings. (Leave unticked — you'll still get your demo call.)
-            </label>
-          </div>
-          <div class="field" id="emailField" style="display:none">
-            <label for="email">Email <span class="hint">— only if you ticked the box above</span></label>
-            <input id="email" name="email" type="email" autocomplete="email" placeholder="you@business.co.uk">
-          </div>
-        </div>
-
-        <button class="btn btn-primary submit" type="submit">Get my demo call</button>
-        <p class="formfoot">Takes 20 seconds · we'll usually call within one working day</p>
-      </div>
-
-      <div class="success" role="status" aria-live="polite">
-        <div class="big">✓</div>
-        <h3>You're booked in.</h3>
-        <p>Keep your phone handy — we'll ring <span id="echoPhone">that number</span> shortly to show you how Switchboard sounds answering for your business.</p>
-      </div>
-    </form>
-  </div>
-</section>
-
-<footer>
-  <div class="wrap foot-in">
-    <div>© <span id="yr"></span> Switchboard — never miss a call again.</div>
-    <div>
-      <a href="privacy.html">Privacy Notice</a>
-      <a href="terms.html">Terms</a>
-      <a href="#demo">Get a demo</a>
+        <div class="field"><label for="phone2">Phone number — the number we'll demo on</label><input id="phone2" name="phone" type="tel" inputmode="tel" autocomplete="tel" required></div>
+        <div class="field"><label for="businessType2">What's your line of work?</label><select id="businessType2" name="businessType" required><option value="">Choose one…</option><option>Barber / hairdresser</option><option>Beauty / nails</option><option>Plumber / heating</option><option>Electrician</option><option>Mechanic / motor</option><option>Cleaner</option><option>Other trade</option><option>Something else</option></select></div>
+        <label class="consent" id="consentWrap2"><input type="checkbox" id="consentCall2" name="consentCall" required><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#06231b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ct">Yes, call this number to show me how it works. I'm happy for that to include an automated or AI voice call from Switchboard about my demo and setting up the service. I can tell you to stop at any time. See the <a href="privacy.html">Privacy Notice</a>.</span></label>
+        <div class="err" id="consentErr2">We need your explicit okay before we can call.</div>
+        <label class="consent" id="emailConsentWrap2"><input type="checkbox" id="consentEmail2" name="consentEmail"><span class="box" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5l4.5 4.5L19 7" stroke="#06231b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span class="ct">Optional: email me occasional tips on getting more bookings. Leave unticked — you'll still get your demo call.</span></label>
+        <div class="field optional" id="emailField2"><label for="email2">Email — only if you ticked the box above</label><input id="email2" name="email" type="email" inputmode="email" autocomplete="email"></div>
+        <div class="err" id="sendErr2"></div>
+        <button class="btn" type="submit">Get my demo call <svg viewBox="0 0 24 24" fill="none"><path d="M5 12h14M13 6l6 6-6 6" stroke="#1a1205" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <p class="micro">Takes 20 seconds · we'll usually call within one working day</p>
+      </form>
+      <div class="done" id="done2"><div class="ring"><svg viewBox="0 0 24 24" fill="none"><path d="M6.5 4.5c-1 0-2 .8-2 2 0 7 6 13 13 13 1.2 0 2-1 2-2v-2.3c0-.6-.4-1-.9-1.2l-2.7-.6c-.5-.1-1 .1-1.3.5l-.8 1c-2-.9-3.6-2.5-4.5-4.5l1-.8c.4-.3.6-.8.5-1.3l-.6-2.7c-.1-.5-.6-.9-1.2-.9H6.5Z" fill="currentColor"/></svg></div><h3>You're on the list.</h3><p>We'll be in touch shortly to set up your demo call.</p></div>
     </div>
   </div>
-</footer>
+  <footer><span>© Switchboard — never miss a call again.</span><span>TPS/CTPS screened · No contract · Set up in a day · <a href="privacy.html">Privacy Notice</a> · <a href="terms.html">Terms</a></span></footer>
+</div>
 
-<!-- EmailJS SDK -->
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
-  document.getElementById('yr').textContent = new Date().getFullYear();
+(function(){
+  "use strict";
+  var reduceMotion=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var rowsEl=document.getElementById('rows'), cAns=document.getElementById('cAns'), cLost=document.getElementById('cLost'), lostCounter=document.querySelector('.counter.lost');
+  var loadingEl=document.getElementById('loading'), badge=document.getElementById('badge');
+  var hooks={setSwitch:null,spawn:null,pulse:null};
 
-  // ===========================================================================
-  // EMAILJS CREDENTIALS — fill these in from your EmailJS dashboard.
-  //   1. Sign up free at https://www.emailjs.com
-  //   2. Add an Email Service (Gmail works) → copy the Service ID
-  //   3. Create a Template (see variable list below) → copy the Template ID
-  //   4. Go to Account → copy your Public Key
-  //
-  // Template variables to add in EmailJS dashboard:
-  //   {{business_name}}  {{full_name}}  {{phone}}  {{business_type}}
-  //   {{email}}  {{consent_to_call}}  {{consent_to_email}}
-  //   {{consent_text}}  {{consent_version}}  {{captured_at}}  {{page_url}}
-  //   {{lead_json}}  — full JSON blob for your records
-  // ===========================================================================
+  var jobs=["Booking — cut & beard trim","Quote — bathroom re-fit","Booking — Saturday, 2pm","Quote — boiler service","Booking — full colour & cut","Message — gate repair call-back","Booking — dog groom, Friday","Quote — kitchen tap swap","Booking — Tuesday, 9am","Message — quote for re-wire"];
+  var jobi=0; function nextJob(){var j=jobs[jobi%jobs.length];jobi++;return j;}
+  function maskedNum(){var a=7700+Math.floor(Math.random()*99),b=Math.floor(Math.random()*900+100);return "07"+a+" ••• "+b;}
+  function clockStr(){var d=new Date(),h=d.getHours(),m=d.getMinutes();return (h<10?"0":"")+h+":"+(m<10?"0":"")+m;}
+  function clip(s,n){return s.length>n?s.slice(0,n-1)+'…':s;}
+  var onRowChange=null;
+  function addRow(type,title,sub){var row=document.createElement('div');row.className='row '+(type==='ans'?'ans':'miss');row.innerHTML='<span class="ic">'+(type==='ans'?'✓':'✕')+'</span><span class="body"><span class="t">'+title+'</span><span class="s">'+sub+'</span></span>';rowsEl.insertBefore(row,rowsEl.firstChild);while(rowsEl.children.length>4){rowsEl.removeChild(rowsEl.lastChild);}if(onRowChange)onRowChange();}
+  var answered=0, lost=0;
+  function bump(){cAns.textContent=answered;cLost.textContent=lost;lostCounter.setAttribute('data-zero',lost===0?'true':'false');}
+  addRow('ans','Booking — cut & beard trim','Answered & added to your diary · '+clockStr());
+
+  // ---------- FORMS + EMAILJS (same functionality as current live page; visuals only changed) ----------
   var EMAILJS_PUBLIC_KEY  = "2zWT2u9WBwMHxwfDm";
   var EMAILJS_SERVICE_ID  = "service_no5z8ek";
   var EMAILJS_TEMPLATE_ID = "template_nx30joi";
   var RECIPIENT_EMAIL     = "ed.ebell@gmail.com";
-
-  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-
-  // reveal the optional email field only when its box is ticked
-  var consentEmail = document.getElementById('consentEmail');
-  var emailField = document.getElementById('emailField');
-  consentEmail.addEventListener('change', function(){
-    emailField.style.display = this.checked ? 'block' : 'none';
-  });
-
   var CONSENT = {
     version: "call-consent-v1-2026-06",
     text: "Yes, call this number to show me how it works. I'm happy for that to include an automated or AI voice call from Switchboard about my demo and setting up the service."
   };
-
-  var form = document.getElementById('demoForm');
-  var submitBtn = form.querySelector('.submit');
-  var btnLabel = submitBtn.textContent;
-
-  var errLine = document.createElement('p');
-  errLine.setAttribute('role', 'alert');
-  errLine.style.cssText = 'display:none;color:#DB5247;font-size:14px;font-weight:600;margin:12px 0 0;text-align:center';
-  submitBtn.insertAdjacentElement('afterend', errLine);
-
-  form.addEventListener('submit', async function(e){
-    e.preventDefault();
-    if(!form.checkValidity()){ form.reportValidity(); return; }
-
-    var payload = {
-      businessName:    form.businessName.value.trim(),
-      fullName:        form.fullName.value.trim(),
-      phone:           form.phone.value.trim(),
-      businessType:    form.businessType.value,
-      email:           form.consentEmail.checked ? form.email.value.trim() : null,
-      consentToCall:   form.consentCall.checked,
-      consentToEmail:  form.consentEmail.checked,
-      consentText:     CONSENT.text,
-      consentVersion:  CONSENT.version,
-      capturedAt:      new Date().toISOString(),
-      pageUrl:         window.location.href
-    };
-
-    // Preview mode — credentials not yet set
-    if(EMAILJS_PUBLIC_KEY.indexOf('PASTE') !== -1){
-      console.warn('EmailJS not configured — lead (not sent):', payload);
-      return showSuccess(payload);
-    }
-
-    errLine.style.display = 'none';
-    submitBtn.disabled = true;
-    submitBtn.textContent = 'Sending…';
-
-    try{
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email:        RECIPIENT_EMAIL,
-        business_name:   payload.businessName,
-        full_name:       payload.fullName,
-        phone:           payload.phone,
-        business_type:   payload.businessType,
-        email:           payload.email || '(not provided)',
-        consent_to_call: payload.consentToCall,
-        consent_to_email:payload.consentToEmail,
-        consent_text:    payload.consentText,
-        consent_version: payload.consentVersion,
-        captured_at:     payload.capturedAt,
-        page_url:        payload.pageUrl,
-        lead_json:       JSON.stringify(payload, null, 2)
-      });
-      showSuccess(payload);
-    }catch(err){
-      console.error('EmailJS send failed:', err, payload);
-      submitBtn.disabled = false;
-      submitBtn.textContent = btnLabel;
-      errLine.textContent = "That didn't send — check your connection and try again, or call us and we'll set it up over the phone.";
-      errLine.style.display = 'block';
-    }
-  });
-
-  function showSuccess(payload){
-    document.getElementById('echoPhone').textContent = payload.phone || 'that number';
-    form.classList.add('sent');
-    form.scrollIntoView({behavior:'smooth', block:'center'});
+  if(window.emailjs){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+  function bindCurrentForm(cfg){
+    var form=document.getElementById(cfg.form), done=document.getElementById(cfg.done), card=document.getElementById(cfg.card); if(!form)return;
+    var consentEmail=document.getElementById(cfg.consentEmail), emailField=document.getElementById(cfg.emailField), sendErr=document.getElementById(cfg.sendErr), consentWrap=document.getElementById(cfg.consentWrap), consentErr=document.getElementById(cfg.consentErr), btn=form.querySelector('button[type="submit"]'), btnLabel=btn?btn.textContent:'Get my demo call';
+    if(consentEmail&&emailField){consentEmail.addEventListener('change',function(){emailField.style.display=this.checked?'block':'none';});}
+    form.addEventListener('submit', async function(e){
+      e.preventDefault();
+      if(sendErr){sendErr.classList.remove('show');sendErr.textContent='';}
+      if(!form.checkValidity()){form.reportValidity();return;}
+      var fd=new FormData(form);
+      if(consentWrap)consentWrap.classList.remove('bad'); if(consentErr)consentErr.classList.remove('show');
+      var payload={
+        businessName:(fd.get('businessName')||'').trim(),
+        fullName:(fd.get('fullName')||'').trim(),
+        phone:(fd.get('phone')||'').trim(),
+        businessType:fd.get('businessType')||'',
+        email:fd.get('consentEmail')?(fd.get('email')||'').trim():null,
+        consentToCall:!!fd.get('consentCall'),
+        consentToEmail:!!fd.get('consentEmail'),
+        consentText:CONSENT.text,
+        consentVersion:CONSENT.version,
+        capturedAt:new Date().toISOString(),
+        pageUrl:window.location.href
+      };
+      if(!payload.consentToCall){if(consentWrap)consentWrap.classList.add('bad');if(consentErr)consentErr.classList.add('show');return;}
+      if(btn){btn.disabled=true;btn.textContent='Sending…';}
+      try{
+        if(!window.emailjs) throw new Error('EmailJS SDK did not load');
+        await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID,{
+          to_email:RECIPIENT_EMAIL,
+          business_name:payload.businessName,
+          full_name:payload.fullName,
+          phone:payload.phone,
+          business_type:payload.businessType,
+          email:payload.email||'(not provided)',
+          consent_to_call:payload.consentToCall,
+          consent_to_email:payload.consentToEmail,
+          consent_text:payload.consentText,
+          consent_version:payload.consentVersion,
+          captured_at:payload.capturedAt,
+          page_url:payload.pageUrl,
+          lead_json:JSON.stringify(payload,null,2)
+        });
+        var dmsg=done&&done.querySelector('p'); if(dmsg)dmsg.textContent='Keep your phone handy — we will ring '+payload.phone+' shortly to show you how Switchboard sounds answering for your business.';
+        form.style.display='none'; if(done)done.classList.add('show'); if(card)card.classList.add('is-done');
+        if(hooks.setSwitch)hooks.setSwitch(true); if(hooks.spawn){hooks.spawn();setTimeout(hooks.spawn,250);} if(hooks.pulse)hooks.pulse();
+      }catch(err){
+        console.error('EmailJS send failed:',err,payload);
+        if(btn){btn.disabled=false;btn.textContent=btnLabel;}
+        if(sendErr){sendErr.textContent="That didn't send — check your connection and try again.";sendErr.classList.add('show');}
+      }
+    });
   }
+  bindCurrentForm({form:'form',done:'done',card:'capture',consentEmail:'consentEmail',emailField:'emailField',sendErr:'sendErr',consentWrap:'consentWrap',consentErr:'consentErr'});
+  bindCurrentForm({form:'form2',done:'done2',card:'capture2',consentEmail:'consentEmail2',emailField:'emailField2',sendErr:'sendErr2',consentWrap:'consentWrap2',consentErr:'consentErr2'});
+
+  // ---------- THREE LOADER (multi-CDN) ----------
+  var CDN=['https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js','https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js','https://unpkg.com/three@0.128.0/build/three.min.js'];
+  function loadThree(done){var i=0;(function next(){if(typeof THREE!=='undefined')return done(true);if(i>=CDN.length)return done(false);var s=document.createElement('script');s.src=CDN[i++];s.onload=function(){done(true);};s.onerror=next;document.head.appendChild(s);})();}
+  loadThree(function(ok){if(!ok||!hasWebGL()){if(loadingEl)loadingEl.textContent='The 3D graphics library needs an internet connection to load. The rest of the page still works.';if(badge)badge.style.display='none';return;}init();});
+  function hasWebGL(){try{var c=document.createElement('canvas');return !!(c.getContext('webgl')||c.getContext('experimental-webgl'));}catch(e){return false;}}
+
+  // ---------- 3D SCENE ----------
+  function init(){
+    var canvas=document.getElementById('scene'), view=document.getElementById('threed');
+    var switchEl=document.getElementById('switch');
+    var switchboardOn=false;
+
+    var renderer=new THREE.WebGLRenderer({canvas:canvas,antialias:true});
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+    if(renderer.outputEncoding!==undefined)renderer.outputEncoding=THREE.sRGBEncoding;
+
+    var scene=new THREE.Scene();
+    // vivid gradient backdrop so it reads as a real space, never a black void
+    (function(){var c=document.createElement('canvas');c.width=8;c.height=256;var g=c.getContext('2d');var grd=g.createLinearGradient(0,0,0,256);grd.addColorStop(0,'#0a1428');grd.addColorStop(0.5,'#13213e');grd.addColorStop(0.8,'#1d2c4e');grd.addColorStop(1,'#272238');g.fillStyle=grd;g.fillRect(0,0,8,256);var tex=new THREE.Texture(c);tex.needsUpdate=true;tex.minFilter=THREE.LinearFilter;tex.magFilter=THREE.LinearFilter;if(tex.encoding!==undefined)tex.encoding=THREE.sRGBEncoding;scene.background=tex;})();
+    scene.fog=new THREE.Fog(0x17263f,10,34);
+
+    var camera=new THREE.PerspectiveCamera(48,1,0.1,100);
+    scene.add(new THREE.AmbientLight(0x6878a0,1.1));
+    var key=new THREE.PointLight(0xffcf86,2.3,70);key.position.set(-5,6,7);scene.add(key);
+    var fill=new THREE.PointLight(0x49d6ad,1.1,70);fill.position.set(6,-1,4);scene.add(fill);
+    var front=new THREE.PointLight(0xffffff,0.7,60);front.position.set(2,1.5,9);scene.add(front);
+    var rim=new THREE.DirectionalLight(0xbcd0ff,0.7);rim.position.set(2,6,-6);scene.add(rim);
+    var world=new THREE.Group();scene.add(world);
+
+    function glowTexture(){var c=document.createElement('canvas');c.width=c.height=128;var g=c.getContext('2d');var grd=g.createRadialGradient(64,64,0,64,64,64);grd.addColorStop(0,'rgba(255,255,255,1)');grd.addColorStop(.25,'rgba(255,255,255,.75)');grd.addColorStop(1,'rgba(255,255,255,0)');g.fillStyle=grd;g.fillRect(0,0,128,128);var t=new THREE.Texture(c);t.needsUpdate=true;return t;}
+    function shadowTexture(){var c=document.createElement('canvas');c.width=c.height=128;var g=c.getContext('2d');var grd=g.createRadialGradient(64,64,0,64,64,64);grd.addColorStop(0,'rgba(0,0,0,.5)');grd.addColorStop(.6,'rgba(0,0,0,.22)');grd.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=grd;g.fillRect(0,0,128,128);var t=new THREE.Texture(c);t.needsUpdate=true;return t;}
+    var GLOW=glowTexture(), SHADOW=shadowTexture();
+
+    var grid=new THREE.GridHelper(70,70,0x5a73a8,0x2b3c64);grid.position.y=-1.9;grid.material.transparent=true;grid.material.opacity=0.7;world.add(grid);
+    function groundShadow(x,z,s){var m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshBasicMaterial({map:SHADOW,transparent:true,depthWrite:false}));m.rotation.x=-Math.PI/2;m.position.set(x,-1.88,z);m.scale.setScalar(s);world.add(m);}
+
+    // PHONE — bright metallic slab with glowing screen + halo
+    function roundedRectShape(w,h,r){var s=new THREE.Shape();var x=-w/2,y=-h/2;s.moveTo(x+r,y);s.lineTo(x+w-r,y);s.quadraticCurveTo(x+w,y,x+w,y+r);s.lineTo(x+w,y+h-r);s.quadraticCurveTo(x+w,y+h,x+w-r,y+h);s.lineTo(x+r,y+h);s.quadraticCurveTo(x,y+h,x,y+h-r);s.lineTo(x,y+r);s.quadraticCurveTo(x,y,x+r,y);return s;}
+    var phone=new THREE.Group();phone.position.set(1.5,0.2,0);phone.scale.setScalar(1.18);world.add(phone);
+    var phoneTilt=new THREE.Group();phone.add(phoneTilt);
+    var pGeo=new THREE.ExtrudeGeometry(roundedRectShape(1.25,2.45,0.28),{depth:0.24,bevelEnabled:true,bevelThickness:0.07,bevelSize:0.07,bevelSegments:4,steps:1,curveSegments:16});pGeo.center();
+    var phoneBody=new THREE.Mesh(pGeo,new THREE.MeshStandardMaterial({color:0x3a486a,metalness:0.85,roughness:0.26}));phoneTilt.add(phoneBody);
+    var halo=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0x2f7bff,blending:THREE.AdditiveBlending,transparent:true,opacity:0.25,depthWrite:false}));halo.scale.setScalar(5.2);halo.position.z=-0.3;phoneTilt.add(halo);
+    var screenCanvas=document.createElement('canvas');screenCanvas.width=300;screenCanvas.height=600;var sctx=screenCanvas.getContext('2d');
+    var screenTex=new THREE.Texture(screenCanvas);screenTex.needsUpdate=true;if(screenTex.encoding!==undefined)screenTex.encoding=THREE.sRGBEncoding;
+    var screen=new THREE.Mesh(new THREE.PlaneGeometry(1.04,2.2),new THREE.MeshBasicMaterial({map:screenTex}));screen.position.z=0.222;phoneTilt.add(screen);
+    var screenGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0x49d6ad,blending:THREE.AdditiveBlending,transparent:true,opacity:0.3,depthWrite:false}));screenGlow.scale.setScalar(3.4);screenGlow.position.z=0.34;phoneTilt.add(screenGlow);
+    phoneTilt.rotation.set(0.05,-0.42,0);
+    groundShadow(phone.position.x,phone.position.z,3.2);
+
+    var screenFlash=0;
+    function roundRectC(ctx,x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+    function updateScreen(){var w=300,h=600;sctx.fillStyle='#0c1530';sctx.fillRect(0,0,w,h);sctx.textAlign='left';sctx.fillStyle='#8c97ad';sctx.font='600 16px Inter, sans-serif';sctx.fillText(clockStr(),18,30);sctx.textAlign='right';sctx.fillText('5G  ▮▮▮',w-18,30);sctx.textAlign='left';sctx.fillStyle='#f3eee2';sctx.font='700 26px "Bricolage Grotesque", sans-serif';sctx.fillText('Switchboard',18,74);sctx.fillStyle='#3ad1a6';sctx.font='700 13px "Space Mono", monospace';sctx.fillText('● TEXTS',18,98);var dr=rowsEl.children,y=132;for(var i=0;i<Math.min(4,dr.length);i++){var r=dr[i],isAns=r.classList.contains('ans');var t=r.querySelector('.t').textContent,s=r.querySelector('.s').textContent;sctx.fillStyle=isAns?'rgba(58,209,166,.14)':'rgba(229,97,74,.14)';roundRectC(sctx,14,y,w-28,96,14);sctx.fill();sctx.fillStyle=isAns?'#3ad1a6':'#e5614a';sctx.beginPath();sctx.arc(34,y+28,7,0,Math.PI*2);sctx.fill();sctx.fillStyle=isAns?'#eef1f5':'#e9b3a8';sctx.font='600 17px Inter, sans-serif';sctx.fillText(clip(t,26),54,y+34);sctx.fillStyle='#8c97ad';sctx.font='400 13px "Space Mono", monospace';sctx.fillText(clip(s,30),54,y+62);y+=112;}if(screenFlash>0){sctx.fillStyle='rgba(58,209,166,'+(0.3*screenFlash)+')';sctx.fillRect(0,0,w,h);}screenTex.needsUpdate=true;}
+    onRowChange=updateScreen; updateScreen();
+
+    // SWITCHBOARD COIL — always visible, glowing, dims when off / blazes when on
+    var operator=new THREE.Group();operator.position.set(-1.85,0.1,0.2);world.add(operator);
+    var coilMat=new THREE.MeshStandardMaterial({color:0xf0bb63,emissive:0xe09a32,emissiveIntensity:0.9,metalness:0.5,roughness:0.28});
+    var coilMat2=new THREE.MeshStandardMaterial({color:0xfff0d4,emissive:0xf0bb63,emissiveIntensity:0.8,metalness:0.35,roughness:0.4});
+    var r1=new THREE.Mesh(new THREE.TorusGeometry(0.82,0.09,22,72),coilMat);operator.add(r1);
+    var r2=new THREE.Mesh(new THREE.TorusGeometry(0.62,0.06,18,60),coilMat2);r2.rotation.x=Math.PI/2.4;operator.add(r2);
+    var r3=new THREE.Mesh(new THREE.TorusGeometry(0.46,0.05,16,52),coilMat);r3.rotation.y=Math.PI/2.6;operator.add(r3);
+    var opGlow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xf0bb63,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,opacity:0.55}));opGlow.scale.setScalar(4.2);operator.add(opGlow);
+    var opCore=new THREE.Mesh(new THREE.SphereGeometry(0.16,20,20),new THREE.MeshBasicMaterial({color:0xfff3dc}));operator.add(opCore);
+    var opOn=0; groundShadow(operator.position.x,operator.position.z,2.9);
+
+    // sparks
+    var dust;(function(){var N=reduceMotion?60:200;var geo=new THREE.BufferGeometry();var pos=new Float32Array(N*3);for(var i=0;i<N;i++){pos[i*3]=(Math.random()-0.5)*24;pos[i*3+1]=(Math.random()-0.5)*13;pos[i*3+2]=(Math.random()-0.5)*12-1;}geo.setAttribute('position',new THREE.BufferAttribute(pos,3));var mat=new THREE.PointsMaterial({color:0xaeb9d4,size:0.04,transparent:true,opacity:0.6,depthWrite:false});dust=new THREE.Points(geo,mat);world.add(dust);})();
+
+    // CALLS
+    var POOL=10, calls=[];
+    function makeLabel(){var c=document.createElement('canvas');c.width=512;c.height=128;var tex=new THREE.Texture(c);tex.needsUpdate=true;if(tex.encoding!==undefined)tex.encoding=THREE.sRGBEncoding;var spr=new THREE.Sprite(new THREE.SpriteMaterial({map:tex,transparent:true,depthWrite:false}));spr.scale.set(2.5,0.625,1);return{spr:spr,canvas:c,tex:tex};}
+    function setLabel(lab,text,hex){var ctx=lab.canvas.getContext('2d');ctx.clearRect(0,0,512,128);ctx.fillStyle='rgba(9,14,25,0.88)';roundRectC(ctx,6,34,500,60,30);ctx.fill();ctx.strokeStyle='rgba(243,238,226,0.16)';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#'+('000000'+hex.toString(16)).slice(-6);ctx.beginPath();ctx.arc(40,64,9,0,Math.PI*2);ctx.fill();ctx.fillStyle='#f3eee2';ctx.font='600 30px Inter, sans-serif';ctx.textBaseline='middle';ctx.textAlign='left';ctx.fillText(clip(text,26),66,67);lab.tex.needsUpdate=true;}
+    function makeTrail(){var N=24;var g=new THREE.BufferGeometry();var pos=new Float32Array(N*3);g.setAttribute('position',new THREE.BufferAttribute(pos,3));var m=new THREE.LineBasicMaterial({color:0xf0bb63,transparent:true,opacity:0.6,blending:THREE.AdditiveBlending,depthWrite:false});var line=new THREE.Line(g,m);line.frustumCulled=false;return{line:line,pos:pos,N:N};}
+    function makeOrb(){var g=new THREE.Group();var core=new THREE.Mesh(new THREE.SphereGeometry(0.22,24,24),new THREE.MeshStandardMaterial({color:0xffffff,emissive:0xf0bb63,emissiveIntensity:1.9,metalness:0.2,roughness:0.3}));var glow=new THREE.Sprite(new THREE.SpriteMaterial({map:GLOW,color:0xf0bb63,blending:THREE.AdditiveBlending,transparent:true,depthWrite:false,opacity:1}));glow.scale.setScalar(1.7);g.add(core);g.add(glow);g.visible=false;world.add(g);var trail=makeTrail();trail.line.visible=false;world.add(trail.line);var lab=makeLabel();lab.spr.visible=false;world.add(lab.spr);return{grp:g,core:core,glow:glow,trail:trail,lab:lab,active:false,state:'idle',t:0,from:new THREE.Vector3(),ctrl:new THREE.Vector3(),to:new THREE.Vector3(),speed:1,job:''};}
+    for(var i=0;i<POOL;i++)calls.push(makeOrb());
+    function freeOrb(o){o.active=false;o.state='idle';o.grp.visible=false;o.trail.line.visible=false;o.lab.spr.visible=false;}
+    function getOrb(){for(var i=0;i<calls.length;i++){if(!calls[i].active)return calls[i];}return null;}
+    function colorOrb(o,hex){o.core.material.emissive.setHex(hex);o.core.material.color.setHex(hex===0x3ad1a6?0xdfffee:0xffffff);o.glow.material.color.setHex(hex);o.trail.line.material.color.setHex(hex);}
+    function resetTrail(o,p){for(var k=0;k<o.trail.N;k++){o.trail.pos[k*3]=p.x;o.trail.pos[k*3+1]=p.y;o.trail.pos[k*3+2]=p.z;}o.trail.line.geometry.attributes.position.needsUpdate=true;}
+    function pushTrail(o){var P=o.trail.pos;for(var k=o.trail.N-1;k>0;k--){P[k*3]=P[(k-1)*3];P[k*3+1]=P[(k-1)*3+1];P[k*3+2]=P[(k-1)*3+2];}P[0]=o.grp.position.x;P[1]=o.grp.position.y;P[2]=o.grp.position.z;o.trail.line.geometry.attributes.position.needsUpdate=true;}
+    function edgeStart(){var side=Math.floor(Math.random()*4),v=new THREE.Vector3();if(side===0)v.set((Math.random()-0.5)*7,4.8,(Math.random()-0.5)*5-2);else if(side===1)v.set(-7,(Math.random()-0.5)*3.5,(Math.random()-0.5)*5-3);else if(side===2)v.set(7,(Math.random()-0.5)*3.5,(Math.random()-0.5)*5-2);else v.set((Math.random()-0.5)*6,(Math.random()-0.5)*3,-7);return v;}
+
+    function spawnCall(){var o=getOrb();if(!o)return;o.active=true;o.grp.visible=true;o.trail.line.visible=true;o.lab.spr.visible=true;o.t=0;o.job=nextJob();o.from.copy(edgeStart());o.grp.position.copy(o.from);o.grp.scale.setScalar(1);o.glow.material.opacity=1;o.trail.line.material.opacity=0.6;resetTrail(o,o.from);if(switchboardOn){o.state='to-operator';o.to.copy(operator.position);}else{o.state='to-phone';o.to.copy(phone.position).add(new THREE.Vector3(-0.2,0,0.5));}colorOrb(o,0xf0bb63);setLabel(o.lab,o.job,0xf0bb63);o.ctrl.copy(o.from).add(o.to).multiplyScalar(0.5);o.ctrl.y+=(Math.random()*2-0.2);o.ctrl.z+=1.4;o.speed=0.34+Math.random()*0.12;}
+    function sendMessage(fromPos){var o=getOrb();if(!o)return;o.active=true;o.grp.visible=true;o.trail.line.visible=true;o.lab.spr.visible=false;o.state='message';o.t=0;o.from.copy(fromPos);o.to.copy(phone.position).add(new THREE.Vector3(0,0,0.4));o.ctrl.copy(o.from).add(o.to).multiplyScalar(0.5);o.ctrl.y+=1.1;o.grp.position.copy(o.from);o.grp.scale.setScalar(0.6);resetTrail(o,o.from);colorOrb(o,0x3ad1a6);o.glow.material.opacity=1;o.speed=0.9;}
+    function bezier(out,a,c,b,t){var mt=1-t;out.x=mt*mt*a.x+2*mt*t*c.x+t*t*b.x;out.y=mt*mt*a.y+2*mt*t*c.y+t*t*b.y;out.z=mt*mt*a.z+2*mt*t*c.z+t*t*b.z;return out;}
+    function onAnswered(o){answered++;bump();addRow('ans',o.job,'Answered & texted to you · '+clockStr());screenFlash=1;pulsePhone();}
+    function onMissed(o){lost++;bump();addRow('miss',maskedNum(),'Missed — rang someone else · '+clockStr());}
+    var phoneShake=0;function pulsePhone(){phoneShake=1;}
+    function updateCalls(dt){for(var i=0;i<calls.length;i++){var o=calls[i];if(!o.active)continue;var st=o.state;
+      if(st==='to-operator'){o.t+=dt*o.speed;bezier(o.grp.position,o.from,o.ctrl,o.to,Math.min(o.t,1));o.lab.spr.material.opacity=Math.max(0,1-Math.max(0,(o.t-0.6))/0.4);if(o.t>=1){colorOrb(o,0x3ad1a6);o.state='answered-pop';o.t=0;o.lab.spr.visible=false;onAnswered(o);sendMessage(operator.position.clone());}}
+      else if(st==='to-phone'){o.t+=dt*o.speed;bezier(o.grp.position,o.from,o.ctrl,o.to,Math.min(o.t,1));o.lab.spr.material.opacity=Math.max(0,1-Math.max(0,(o.t-0.6))/0.4);if(o.t>=1){o.state='missing';o.t=0;o.lab.spr.visible=false;o.from.copy(o.grp.position);o.to.set(o.grp.position.x*0.4,-5,o.grp.position.z);o.ctrl.copy(o.from).add(o.to).multiplyScalar(0.5);colorOrb(o,0xe5614a);onMissed(o);}}
+      else if(st==='missing'){o.t+=dt*0.75;bezier(o.grp.position,o.from,o.ctrl,o.to,Math.min(o.t,1));var f=1-Math.min(o.t,1);o.grp.scale.setScalar(0.2+0.8*f);o.glow.material.opacity=f;o.trail.line.material.opacity=0.6*f;if(o.t>=1)freeOrb(o);}
+      else if(st==='answered-pop'){o.t+=dt*2.2;o.grp.scale.setScalar(1+o.t*1.8);o.glow.material.opacity=Math.max(0,1-o.t);o.trail.line.material.opacity=0.6*(1-o.t);if(o.t>=1)freeOrb(o);}
+      else if(st==='message'){o.t+=dt*o.speed;bezier(o.grp.position,o.from,o.ctrl,o.to,Math.min(o.t,1));if(o.t>=1){freeOrb(o);screenFlash=1;pulsePhone();}}
+      pushTrail(o);if(o.lab.spr.visible){o.lab.spr.position.set(o.grp.position.x,o.grp.position.y+0.55,o.grp.position.z);}}}
+
+    function setSwitch(on){switchboardOn=on;switchEl.setAttribute('data-on',on?'true':'false');switchEl.setAttribute('aria-checked',on?'true':'false');fill.color.setHex(on?0x49d6ad:0x3a4f74);}
+    hooks.setSwitch=setSwitch; hooks.spawn=spawnCall; hooks.pulse=pulsePhone;
+    var userToggled=false;
+    switchEl.addEventListener('click',function(){userToggled=true;setSwitch(!switchboardOn);});
+    switchEl.addEventListener('keydown',function(e){if(e.key===' '||e.key==='Enter'){e.preventDefault();userToggled=true;setSwitch(!switchboardOn);}});
+
+    // orbit + tap
+    var cam={theta:-0.5,phi:1.06,radius:6.6,tgt:new THREE.Vector3(0,0.25,0)};
+    var vel={theta:0,phi:0},dragging=false,lastX=0,lastY=0,downX=0,downY=0,downT=0,moved=false,idle=0;
+    function applyCam(){var r=cam.radius,ph=cam.phi,th=cam.theta;camera.position.set(cam.tgt.x+r*Math.sin(ph)*Math.sin(th),cam.tgt.y+r*Math.cos(ph),cam.tgt.z+r*Math.sin(ph)*Math.cos(th));camera.lookAt(cam.tgt);}
+    function clampPhi(p){return Math.max(0.5,Math.min(1.45,p));}
+    canvas.addEventListener('pointerdown',function(e){dragging=true;moved=false;downX=lastX=e.clientX;downY=lastY=e.clientY;downT=performance.now();canvas.classList.add('grabbing');try{canvas.setPointerCapture(e.pointerId);}catch(_){}});
+    window.addEventListener('pointermove',function(e){if(!dragging)return;var dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;if(Math.abs(e.clientX-downX)+Math.abs(e.clientY-downY)>6)moved=true;cam.theta-=dx*0.006;cam.phi=clampPhi(cam.phi-dy*0.006);vel.theta=-dx*0.006;vel.phi=-dy*0.006;idle=0;});
+    window.addEventListener('pointerup',function(){if(!dragging)return;dragging=false;canvas.classList.remove('grabbing');if(!moved&&performance.now()-downT<350){spawnCall();if(badge)badge.style.opacity='0';}});
+
+    function resize(){var w=view.clientWidth,h=view.clientHeight;if(w<2||h<2)return;renderer.setSize(w,h,false);canvas.style.width=w+'px';canvas.style.height=h+'px';camera.aspect=w/h;cam.radius=w<560?9.2:(w<900?7.8:6.6);camera.updateProjectionMatrix();}
+    window.addEventListener('resize',resize);
+
+    var spawnTimer=0, spawnGap=reduceMotion?3.2:1.6, last=performance.now(), hidden=false, started=false;
+    document.addEventListener('visibilitychange',function(){hidden=document.hidden;last=performance.now();});
+
+    function tick(now){requestAnimationFrame(tick);if(hidden)return;var dt=Math.min((now-last)/1000,0.05);last=now;var t=now*0.001;
+      spawnTimer+=dt;if(spawnTimer>=spawnGap){spawnTimer=0;spawnCall();}
+      if(!dragging){cam.theta+=vel.theta;cam.phi=clampPhi(cam.phi+vel.phi);vel.theta*=0.92;vel.phi*=0.92;idle+=dt;if(idle>0.8&&!reduceMotion){cam.theta+=dt*0.16;}}
+      applyCam();
+      var shake=0;if(phoneShake>0){phoneShake=Math.max(0,phoneShake-dt*2.2);shake=Math.sin(now*0.05)*0.07*phoneShake;}
+      if(!reduceMotion){phone.position.y=0.2+Math.sin(t*0.9)*0.08;phoneTilt.rotation.z=shake;phoneTilt.rotation.y=-0.42+Math.sin(t*0.4)*0.07;}
+      screenGlow.material.opacity=0.24+0.12*Math.sin(t*2);
+      opOn+=((switchboardOn?1:0)-opOn)*0.08;
+      coilMat.emissiveIntensity=0.8+opOn*1.0+Math.sin(t*3)*0.18;coilMat2.emissiveIntensity=0.7+opOn*0.8;
+      opGlow.material.opacity=0.4+opOn*0.4;opGlow.material.color.setHex(switchboardOn?0x6affc8:0xf0bb63);
+      if(!reduceMotion){r1.rotation.z+=dt*(0.5+opOn*0.7);r2.rotation.y+=dt*(0.8+opOn*0.8);r3.rotation.x+=dt*(1.0+opOn);var pl=1+Math.sin(t*3)*0.07;opGlow.scale.setScalar(4.2*pl);}
+      if(dust&&!reduceMotion){dust.rotation.y+=dt*0.012;dust.rotation.x+=dt*0.004;}
+      if(screenFlash>0){screenFlash=Math.max(0,screenFlash-dt*1.6);updateScreen();}
+      updateCalls(dt);
+      renderer.render(scene,camera);
+      if(!started){started=true;if(loadingEl){loadingEl.style.opacity='0';setTimeout(function(){loadingEl.style.display='none';},500);}}
+    }
+
+    resize();setSwitch(false);applyCam();requestAnimationFrame(tick);
+    setTimeout(resize,250);
+    spawnCall();setTimeout(spawnCall,400);setTimeout(spawnCall,800);setTimeout(spawnCall,1200);
+    setTimeout(function(){if(!userToggled){setSwitch(true);switchEl.classList.add('nudge');setTimeout(function(){switchEl.classList.remove('nudge');},1300);}},6500);
+  }
+})();
 </script>
+</body>
+</html>
