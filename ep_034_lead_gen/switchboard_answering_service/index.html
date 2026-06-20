@@ -15,9 +15,8 @@
   • This page does not screen TPS/CTPS — that happens on YOUR side before any
     human warm-up call. The demo-call consent captured here is what lets the
     AI agent dial later.
-  • Replace the FORM_ENDPOINT below with your real handler (Formspree, your
-    CRM webhook, etc.). Right now submit just shows a success state.
-  • Swap the Privacy Notice / Terms hrefs for your real pages.
+  • EmailJS is wired below. Keep the consent payload intact and verify the EmailJS service/template before launch.
+  • Privacy Notice / Terms links are relative for GitHub Pages subdirectory deployment.
   • This is a practical build, not legal advice — have a solicitor confirm the
     final consent wording before you scale.
   ============================================================================
@@ -381,7 +380,7 @@
           <p class="smallprint">
             We'll only call about your demo and getting you set up — nothing else. You can tell us to stop at any time and we'll
             remove your number. We never pass it to anyone else. See how we handle your details in our
-            <a href="/privacy" target="_blank" rel="noopener">Privacy Notice</a>.
+            <a href="privacy.html" target="_blank" rel="noopener">Privacy Notice</a>.
           </p>
 
           <!-- SECONDARY CONSENT — separate, optional, unbundled from the call consent above -->
@@ -414,8 +413,8 @@
   <div class="wrap foot-in">
     <div>© <span id="yr"></span> Switchboard — never miss a call again.</div>
     <div>
-      <a href="/privacy">Privacy Notice</a>
-      <a href="/terms">Terms</a>
+      <a href="privacy.html">Privacy Notice</a>
+      <a href="terms.html">Terms</a>
       <a href="#demo">Get a demo</a>
     </div>
   </div>
