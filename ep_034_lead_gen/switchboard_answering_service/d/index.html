@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Switchboard demo</title>
+  <meta name="robots" content="noindex">
+  <script>
+    (function () {
+      var base = '../';
+      var params = new URLSearchParams(window.location.search);
+      if (!params.has('src')) params.set('src', 'ep034_local_services_001');
+      if (!params.has('channel')) params.set('channel', 'manual');
+      if (!params.has('niche')) params.set('niche', 'local_services');
+      var target = base + '?' + params.toString();
+      window.location.replace(target);
+    }());
+  </script>
+  <noscript>
+    <meta http-equiv="refresh" content="0; url=../?src=ep034_local_services_001&channel=manual&niche=local_services">
+  </noscript>
+</head>
+<body>
+  <p>Opening the Switchboard demo…</p>
+  <p><a href="../?src=ep034_local_services_001&channel=manual&niche=local_services">Continue to demo</a></p>
+</body>
+</html>
