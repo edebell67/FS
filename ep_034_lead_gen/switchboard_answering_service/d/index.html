@@ -7,13 +7,29 @@
   <meta name="robots" content="noindex">
   <script>
     (function () {
-      var base = '../';
-      var params = new URLSearchParams(window.location.search);
-      if (!params.has('src')) params.set('src', 'ep034_local_services_001');
-      if (!params.has('channel')) params.set('channel', 'manual');
-      if (!params.has('niche')) params.set('niche', 'local_services');
-      var target = base + '?' + params.toString();
-      window.location.replace(target);
+      var input = new URLSearchParams(window.location.search);
+      var out = new URLSearchParams();
+      out.set('src', input.get('src') || 'ep034_local_services_001');
+      out.set('channel', input.get('channel') || 'manual');
+      out.set('niche', input.get('niche') || 'local_services');
+
+      var variant = input.get('variant') || input.get('v') || 'missed_calls_v1';
+      if (variant === 'm1') variant = 'missed_calls_v1';
+      if (variant === 'b1') variant = 'busy_with_customer_v1';
+      out.set('variant', variant);
+
+      var batch = input.get('batch') || input.get('b');
+      if (batch) out.set('batch', String(batch).padStart(3, '0'));
+
+      var target = input.get('target') || input.get('t');
+      if (target) {
+        if (/^\d+$/.test(target)) {
+          target = 'ep034_local_services_001_' + String(target).padStart(4, '0');
+        }
+        out.set('target', target);
+      }
+
+      window.location.replace('../?' + out.toString());
     }());
   </script>
   <noscript>
