@@ -1,7 +1,7 @@
 const fmtGBP = v => Number(v||0).toLocaleString('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0});
 const fmtUSD = v => Number(v||0).toLocaleString('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0});
 document.getElementById('menuBtn')?.addEventListener('click',()=>document.getElementById('nav')?.classList.toggle('open'));
-async function loadData(){ const r=await fetch('data/spreads.json'); return await r.json(); }
+async function loadData(){ if(window.EP038_SPREAD_DATA) return window.EP038_SPREAD_DATA; const r=await fetch('data/spreads.json'); return await r.json(); }
 function card(s){
   const demo = s.source_kind !== 'live' || s.qualified_spread !== 'yes';
   return `<article class="spread-card ${demo?'demo-card':''}"><div class="top"><span class="badge">${demo?'DEMO / NOT LIVE':s.state}</span><span>${s.category}</span></div><h3>${s.item_name}</h3><p class="risk">${s.variant||''}</p><div class="prices"><div><small>Marketplace / sale guide</small><b>${s.marketplace_price} ${s.currency}</b></div><div><small>Source</small><b>${s.source_price} ${s.currency}</b></div><div><small>Spread</small><b>${s.gross_spread_pct||'TBD'}%</b></div></div><p>${s.public_card_summary}</p><div class="urgency"><b>Time pressure:</b> ${s.urgency_level||'low'} · ${s.expiry_type||'not time-sensitive'} · ${s.hours_to_expiry||'no countdown'}h</div><p class="risk"><b>Risk:</b> ${s.risk_notes}</p></article>`
@@ -19,7 +19,7 @@ async function initBoard(){
   boardMetrics.innerHTML=`<div><small>Qualified live spread value</small><strong>${fmtGBP(data.metrics.qualified_live_gross_spread_value||0)}</strong></div><div><small>Qualified live spreads</small><strong>${data.metrics.qualified_live_spread_count||0}</strong></div><div><small>Auction watch candidates</small><strong>${data.metrics.auction_watch_count||0}</strong></div><div><small>Demo examples</small><strong>${data.metrics.demo_example_count||0}</strong></div>`;
   const notice=document.createElement('section');
   notice.className='notice';
-  notice.innerHTML='<b>Current live status:</b> No qualified live spreads are currently displayed. The records below are labelled demo examples until real source price + sale/reference/guide price are confirmed.';
+  notice.innerHTML = (data.metrics.qualified_live_spread_count||0) > 0 ? `<b>Current live status:</b> ${data.metrics.qualified_live_spread_count} qualified live spread${data.metrics.qualified_live_spread_count===1?'':'s'} displayed. Qualified gross spread value: ${fmtGBP(data.metrics.qualified_live_gross_spread_value||0)}.` : '<b>Current live status:</b> No qualified live spreads are currently displayed. The records below are labelled demo examples until real source price + sale/reference/guide price are confirmed.';
   grid.parentNode.insertBefore(notice, grid);
   function matches(s){const q=search.value.toLowerCase(); const st=stateFilter.value; const cat=categoryFilter.value; const t=timeOnly.checked; return (!q||(s.item_name+s.category+s.variant).toLowerCase().includes(q))&&(!st||s.state===st)&&(!cat||s.category===cat)&&(!t||s.time_sensitive==='yes');}
   function render(){
