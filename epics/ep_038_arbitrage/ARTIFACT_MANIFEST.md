@@ -132,3 +132,11 @@ No live purchases, listings, automated scraping at scale, or marketplace transac
 - Updated `site_launch/data/spreads.json` so public live metrics show 0 qualified live spreads, 1 auction watch candidate, and 10 demo examples.
 - Updated `site_launch/assets/app.js` to render qualified live spreads separately from demo examples.
 - Updated `site_launch/index.html` headline to avoid claiming live spread value from demo records.
+
+
+## First qualified live eBay spread — 2026-06-28T22:35:53
+
+- `SPRD-EBAY-001` added to `data/live_spread_board.csv` and `site_launch/data/spreads.json`.
+- `data/live_spread_observations.csv` records `OBS-EBAY-001`.
+- `spikes/005-ebay-qualified-live-spread/README.md` records evidence and guardrails.
+- Launch metrics now show 1 qualified live spread and £27.93 qualified live gross spread value.
