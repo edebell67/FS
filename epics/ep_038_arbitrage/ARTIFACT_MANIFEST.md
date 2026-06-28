@@ -117,3 +117,10 @@ No live purchases, listings, automated scraping at scale, or marketplace transac
 - `data/live_auction_observations.csv` — captured observation with current bid, time left, reference check, and spread status.
 - `scripts/live_auction_watch_once.py` — one-shot capture script, no bidding/buying/contacting.
 - `data/live_spread_board.csv` and `site_launch/data/spreads.json` — updated with `SPRD-LIVE-001`.
+
+
+## Spread inclusion correction — 2026-06-28T19:19:21
+
+- `EP038_SPREAD_INCLUSION_RULES.md` — mandatory rule: sale/reference/guide price required before board inclusion.
+- Removed `SPRD-LIVE-001` from `data/live_spread_board.csv` and `site_launch/data/spreads.json`.
+- Preserved `namedigital.com` as auction-watch observation only in `data/live_auction_observations.csv`.

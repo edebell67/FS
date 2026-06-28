@@ -61,3 +61,10 @@ scripts/live_auction_watch_once.py
 No bid, buy, listing, contact, or transaction occurred.
 
 This is research/information capture only.
+
+
+## Correction after product review
+
+User clarified that a spread only exists when sale price or guide sale price is known.
+
+Therefore `namedigital.com` is preserved as an auction-watch observation, but removed from the live spread board and spread-value metrics until a sale/reference/guide price is confirmed.

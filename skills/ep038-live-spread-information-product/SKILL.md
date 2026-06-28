@@ -145,6 +145,19 @@ open_ep038_launch_site.bat
 - public card summary;
 - internal notes.
 
+
+## Spread Inclusion Gate
+
+A product/asset can only appear on the live spread board when both sides of the spread are known or defensibly estimated:
+
+```text
+source/acquisition price + sale price/sold price/credible guide sale price
+```
+
+If sale/reference/guide price is unknown, keep the item as an `auction watch candidate` or `research observation`, not a spread. It must not count toward active spread count, active gross spread value, expiring spread value, or subscriber spread alerts.
+
+Auction-side current bid alone is not a spread.
+
 ## Required Metrics
 
 The website must publish these headline metrics:
