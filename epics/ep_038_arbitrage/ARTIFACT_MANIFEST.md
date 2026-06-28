@@ -107,3 +107,13 @@ No live purchases, listings, automated scraping at scale, or marketplace transac
 - `open_ep038_launch_site.bat` — Windows review launcher.
 - `DEPLOY_EP038_LAUNCH_SITE.md` — deployment notes and blockers.
 - `EP038_MARKETING_LAUNCH_PLAN.md` — marketing/launch plan.
+
+
+## Live auction product proof — 2026-06-28T17:03:53
+
+- `EP038_LIVE_AUCTION_PROOF_REQUIREMENT.md` — requirement for one real live auction product monitored end-to-end.
+- `spikes/004-live-auction-proof/README.md` — selected live auction product and observation notes.
+- `data/live_auction_watch.csv` — current live auction watch record for `namedigital.com`.
+- `data/live_auction_observations.csv` — captured observation with current bid, time left, reference check, and spread status.
+- `scripts/live_auction_watch_once.py` — one-shot capture script, no bidding/buying/contacting.
+- `data/live_spread_board.csv` and `site_launch/data/spreads.json` — updated with `SPRD-LIVE-001`.
