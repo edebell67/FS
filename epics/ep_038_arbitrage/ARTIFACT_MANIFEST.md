@@ -124,3 +124,11 @@ No live purchases, listings, automated scraping at scale, or marketplace transac
 - `EP038_SPREAD_INCLUSION_RULES.md` — mandatory rule: sale/reference/guide price required before board inclusion.
 - Removed `SPRD-LIVE-001` from `data/live_spread_board.csv` and `site_launch/data/spreads.json`.
 - Preserved `namedigital.com` as auction-watch observation only in `data/live_auction_observations.csv`.
+
+
+## Demo/live separation — 2026-06-28T21:35:45
+
+- Updated `data/live_spread_board.csv` with `source_kind`, `data_quality`, `qualified_spread`, and `display_section`.
+- Updated `site_launch/data/spreads.json` so public live metrics show 0 qualified live spreads, 1 auction watch candidate, and 10 demo examples.
+- Updated `site_launch/assets/app.js` to render qualified live spreads separately from demo examples.
+- Updated `site_launch/index.html` headline to avoid claiming live spread value from demo records.
