@@ -1,0 +1,16 @@
+marketplace_id,name,url,marketplace_type,primary_categories,auction_visibility_0_5,buyer_demand_visibility_0_5,sold_completed_data_0_5,listing_turnover_signal_0_5,category_relevance_0_5,access_feasibility_0_5,policy_fit_0_5,automation_feasibility_0_5,noise_fraud_inverse_0_5,total_score_45,tier,initial_role,notes
+MKT001,eBay UK,https://www.ebay.co.uk/,auction+fixed-price,general/trainers/electronics/collectibles/domains,5,5,5,4,5,4,4,3,3,38,Tier 1,sale-side primary,Strong sold/completed and auction dynamics; access/API/scraping constraints need care.
+MKT002,Vinted UK,https://www.vinted.co.uk/,fixed-price/high-turnover,fashion/trainers/accessories,0,4,1,5,5,3,4,2,3,27,Tier 1,sale-side turnover,High listing churn and buyers; sold proof weaker; delisting not always sale.
+MKT003,Depop,https://www.depop.com/,fixed-price/high-turnover,fashion/streetwear/trainers,0,4,1,4,5,3,4,2,3,26,Tier 1,sale-side turnover,Good youth/fashion demand; sold evidence/access may be limited.
+MKT004,StockX,https://stockx.com/,bid/ask market,trainers/streetwear/collectibles,4,5,4,3,5,3,4,2,4,34,Tier 1,sale-side pricing reference,Strong price discovery for trainers; access and regional fees need validation.
+MKT005,Laced,https://www.laced.com/,fixed-price specialist,trainers/streetwear UK,0,4,2,3,5,4,4,2,4,28,Tier 1,sale-side UK trainer reference,UK trainer marketplace; useful for ask/reference data.
+MKT006,Sedo,https://sedo.com/,fixed-price/offer domain market,domains,1,4,2,2,5,4,5,3,4,30,Tier 1,domain marketplace,Good domain marketplace presence; sold comps often need other sources.
+MKT007,GoDaddy Auctions,https://auctions.godaddy.com/,auction/closeout,domains,5,4,3,3,5,3,5,2,4,34,Tier 1,domain auction/acquisition,Strong auction/closeout dynamics; may require account/access.
+MKT008,ExpiredDomains.net,https://www.expireddomains.net/,discovery/source list,domains,2,2,1,5,5,4,5,3,4,31,Tier 1,source-side discovery,Strong domain source/discovery; keyword filtering may need account.
+MKT009,Facebook Marketplace,https://www.facebook.com/marketplace/,classified/high-turnover/buyer-request,local general goods,0,4,0,4,4,2,3,1,2,20,Tier 3,manual/local watch,Buyer intent and turnover possible but access/privacy/manual-heavy.
+MKT010,Gumtree UK,https://www.gumtree.com/,classified,local general goods,0,3,0,3,3,4,4,2,3,22,Tier 3,manual/local watch,Local classified turnover; sold proof weak.
+MKT011,Cardmarket,https://www.cardmarket.com/,fixed-price specialist,trading cards,0,5,3,4,4,3,4,2,3,28,Tier 2,collectibles expansion,Strong specialist buyer demand; category-specific.
+MKT012,BrickLink,https://www.bricklink.com/,fixed-price specialist,LEGO,0,5,3,3,4,3,4,2,4,28,Tier 2,collectibles expansion,Good specialist demand and catalogue structure.
+MKT013,Discogs,https://www.discogs.com/sell/list,fixed-price specialist,vinyl/music,0,5,4,3,3,4,4,2,4,29,Tier 2,collectibles expansion,Strong historical price/reference data for music.
+MKT014,Reverb,https://reverb.com/,fixed-price/offer specialist,instruments/audio gear,1,5,4,3,3,4,4,2,4,30,Tier 2,specialist expansion,Good sold/reverb price-guide signals.
+MKT015,Flippa,https://flippa.com/,auction/fixed-price,websites/apps/domains,4,4,3,2,5,3,4,2,3,30,Tier 2,digital asset expansion,Useful for digital assets; due diligence heavy.

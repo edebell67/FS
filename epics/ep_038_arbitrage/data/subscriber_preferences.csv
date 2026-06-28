@@ -1,0 +1,4 @@
+subscriber_id,status,email_or_channel,category_filters,marketplace_filters,min_gross_spread_pct,min_gross_spread_value,min_confidence_score,max_risk_score,time_sensitive_only,expiry_window_hours,frequency,created_at,updated_at,notes
+SUB-DEMO-001,active,demo@example.com,Trainers|Collectibles,eBay UK|StockX|Laced,25,20,55,high,yes,24,instant,2026-06-27,2026-06-27,Demo subscriber interested in time-sensitive trainer/collectible spreads.
+SUB-DEMO-002,active,domain-demo@example.com,Domains,Sedo|GoDaddy Auctions|ExpiredDomains.net,50,100,35,medium-high,yes,24,daily,2026-06-27,2026-06-27,Demo subscriber interested in domain spreads and closeouts.
+SUB-DEMO-003,active,digital-demo@example.com,Digital templates|Digital products,Etsy|Gumroad|AppSumo,40,10,30,high,no,,daily,2026-06-27,2026-06-27,Demo subscriber interested in digital-product rights-checked spread candidates.

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EP038 — Alert Preferences</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="nav">
+    <a class="logo" href="index.html">EP038</a>
+    <nav>
+      <a class="" href="index.html">Home</a>
+      <a class="" href="live-spreads.html">Live board</a>
+      <a class="" href="methodology.html">Methodology</a>
+      <a class="active" href="preferences.html">Preferences</a>
+    </nav>
+  </header>
+  <main><section class="section"><p class="eyebrow">Subscriber alerts</p><h1>Tell EP038 what spreads you want.</h1><p class="lead">Subscribers will be notified when preferred spread candidates become available, cross a threshold, or approach expiry.</p><div class="grid"><article class="panel"><h3>Preference controls</h3><ul><li>Categories: trainers, domains, digital products, electronics, collectibles</li><li>Minimum spread value and percentage</li><li>Minimum confidence / maximum risk</li><li>Time-sensitive only or expiry window</li><li>Marketplaces and source types</li></ul></article><article class="panel"><h3>Example alert</h3><p><b>Trainer spread matched:</b> £31 gross spread · 25.8% · auction closes in 6h · confidence 67/100.</p><p class="risk">Research information only. Verify price, stock, fees, delivery, authenticity, rights and platform rules before acting. No profit is guaranteed.</p></article><article class="panel"><h3>MVP capture fields</h3><p>Email/channel, category filters, marketplace filters, min spread %, min spread value, confidence threshold, risk ceiling, expiry window, frequency.</p></article></div><div class="notice" style="margin-top:28px"><b>Current build:</b> preferences are modelled in <code>data/subscriber_preferences.csv</code>. The local matcher writes would-send events to <code>data/alert_events.csv</code>; no real notifications are sent yet.</div></section></main>
+  <footer><b>Information product only.</b> EP038 provides pricing-spread research and market information. It does not guarantee profit and does not instruct users to buy, sell, list, or transact.</footer>
+</body>
+</html>
