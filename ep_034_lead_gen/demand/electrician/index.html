@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Electrical Enquiry — Demand Capture Example</title>
+<style>
+  :root{
+    --bg:#071019;--panel:#0d1825;--panel2:#111f30;--ink:#f5f7fb;--muted:#9fb0c4;--line:#223247;
+    --blue:#5ee6ff;--green:#4ff0a6;--amber:#ffc76a;--red:#ff6b7a;--violet:#a78bfa;
+    --shadow:0 24px 80px rgba(0,0,0,.45);--r:24px;
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{margin:0;background:
+    radial-gradient(circle at 10% 0%,rgba(94,230,255,.18),transparent 32%),
+    radial-gradient(circle at 92% 8%,rgba(167,139,250,.16),transparent 34%),
+    linear-gradient(180deg,#071019,#09131f 58%,#071019);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;}
+  a{color:inherit}.wrap{width:min(1160px,calc(100% - 32px));margin:auto}
+  .nav{height:74px;display:flex;align-items:center;justify-content:space-between;color:var(--muted)}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--ink)}.bolt{width:34px;height:34px;border-radius:12px;background:linear-gradient(135deg,var(--blue),var(--green));display:grid;place-items:center;color:#041018;box-shadow:0 0 26px rgba(94,230,255,.4)}
+  .pill{border:1px solid var(--line);border-radius:999px;padding:8px 12px;background:rgba(255,255,255,.04);font-size:13px}
+  .hero{display:grid;grid-template-columns:1.04fr .96fr;gap:28px;align-items:center;padding:30px 0 46px}.eyebrow{color:var(--blue);text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:800}.hero h1{font-size:clamp(42px,6vw,76px);line-height:.92;margin:16px 0 18px;letter-spacing:-.06em}.hero p{color:var(--muted);font-size:19px;line-height:1.55;max-width:58ch}.actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:24px}.btn{border:0;border-radius:16px;padding:15px 19px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;gap:9px;align-items:center}.primary{background:linear-gradient(135deg,var(--green),var(--blue));color:#041018;box-shadow:0 16px 45px rgba(79,240,166,.24)}.secondary{background:rgba(255,255,255,.06);border:1px solid var(--line);color:var(--ink)}
+  .trust{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:25px}.trust div{border:1px solid var(--line);border-radius:16px;padding:13px;background:rgba(255,255,255,.035);color:var(--muted);font-size:13px}.trust b{display:block;color:var(--ink);font-size:18px;margin-bottom:4px}
+  .phone{position:relative;background:linear-gradient(180deg,#162337,#0b1421);border:1px solid #2a3c55;border-radius:38px;padding:18px;box-shadow:var(--shadow);max-width:450px;margin-left:auto}.screen{border-radius:28px;background:#08111c;overflow:hidden;border:1px solid var(--line);padding:18px;min-height:590px}.livebar{height:10px;border-radius:99px;background:rgba(255,255,255,.08);overflow:hidden;margin-bottom:18px}.livebar span{display:block;height:100%;width:62%;background:linear-gradient(90deg,var(--green),var(--blue))}.card-mini{background:rgba(255,255,255,.055);border:1px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}.card-mini h3{margin:0 0 8px;font-size:16px}.spark{height:166px;border-radius:20px;background:linear-gradient(135deg,rgba(94,230,255,.28),rgba(79,240,166,.15)),repeating-linear-gradient(45deg,rgba(255,255,255,.05) 0 12px,transparent 12px 24px);position:relative;overflow:hidden}.spark:after{content:"";position:absolute;inset:22px;border:2px dashed rgba(255,255,255,.25);border-radius:18px}.summary-list{display:grid;gap:9px}.summary-list div{display:flex;justify-content:space-between;gap:10px;border-bottom:1px solid rgba(255,255,255,.08);padding-bottom:8px;color:var(--muted);font-size:13px}.summary-list strong{color:var(--ink);text-align:right}
+  .builder{padding:34px 0 72px}.builder-grid{display:grid;grid-template-columns:1fr 390px;gap:24px;align-items:start}.panel{background:rgba(13,24,37,.88);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:24px}.step-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}.step-top h2{margin:0;font-size:28px;letter-spacing:-.03em}.progress{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin:8px 0 0}.progress span{display:block;height:100%;width:16%;background:linear-gradient(90deg,var(--green),var(--blue));transition:.25s}.step{display:none}.step.active{display:block;animation:rise .25s ease}@keyframes rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .q{font-size:25px;font-weight:900;margin:8px 0 8px;letter-spacing:-.025em}.hint{color:var(--muted);line-height:1.5;margin-bottom:18px}.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.choice{border:1px solid var(--line);background:rgba(255,255,255,.045);border-radius:18px;padding:16px;cursor:pointer;min-height:92px;transition:.18s;text-align:left;color:var(--ink)}.choice:hover{border-color:rgba(94,230,255,.65);transform:translateY(-1px)}.choice.selected{border-color:var(--green);box-shadow:0 0 0 2px rgba(79,240,166,.18);background:rgba(79,240,166,.09)}.choice b{display:block;margin-bottom:6px}.choice span{color:var(--muted);font-size:13px;line-height:1.35}.field{margin:13px 0}.field label{display:block;color:var(--muted);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin:0 0 7px}.field input,.field textarea{width:100%;background:#08111c;border:1px solid var(--line);border-radius:15px;color:var(--ink);font-size:17px;padding:14px 15px;outline:none}.field textarea{min-height:104px;resize:vertical}.field input:focus,.field textarea:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(94,230,255,.12)}.error{display:none;color:#ffd4da;background:rgba(255,107,122,.1);border:1px solid rgba(255,107,122,.32);border-radius:12px;padding:10px;margin-top:8px;font-size:14px}.error.show{display:block}.navBtns{display:flex;justify-content:space-between;gap:12px;margin-top:22px}.navBtns .btn{justify-content:center}.navBtns .btn[disabled]{opacity:.35;cursor:not-allowed}.consent{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:16px;background:rgba(255,255,255,.04);margin:12px 0;cursor:pointer}.consent input{width:20px;height:20px;accent-color:#4ff0a6}.consent span{color:var(--muted);line-height:1.42}.sticky{position:sticky;top:18px}.score{display:flex;gap:10px;align-items:end;margin:14px 0}.score .n{font-size:44px;font-weight:950;color:var(--green);line-height:1}.tag{display:inline-flex;border:1px solid rgba(79,240,166,.35);background:rgba(79,240,166,.08);color:#bfffe0;border-radius:999px;padding:6px 10px;font-size:12px;font-weight:800}.summary h3{margin:0 0 12px}.summary .empty{color:var(--muted);font-style:italic}.kv{display:grid;gap:10px}.kv div{border:1px solid var(--line);border-radius:14px;padding:11px;background:rgba(255,255,255,.035)}.kv label{display:block;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em}.kv strong{display:block;margin-top:4px}.success{display:none;text-align:center;padding:24px}.success.show{display:block}.tick{width:72px;height:72px;border-radius:50%;margin:0 auto 14px;background:linear-gradient(135deg,var(--green),var(--blue));display:grid;place-items:center;color:#041018;font-size:34px;font-weight:900}.small{font-size:12px;color:var(--muted);line-height:1.45}.footer{border-top:1px solid var(--line);padding:26px 0;color:var(--muted);font-size:13px}
+  @media(max-width:920px){.hero,.builder-grid{grid-template-columns:1fr}.phone{margin:0 auto}.trust{grid-template-columns:1fr}.cards{grid-template-columns:1fr}.sticky{position:static}.hero h1{font-size:48px}}
+</style>
+</head>
+<body>
+  <nav class="wrap nav"><div class="logo"><div class="bolt">⚡</div><span>Electrical Enquiry Match</span></div><div class="pill">Demand-side example · not live</div></nav>
+
+  <main class="wrap hero">
+    <section>
+      <div class="eyebrow">For people who need electrical work</div>
+      <h1>Create a clear electrical enquiry in under 60 seconds.</h1>
+      <p>Tell us the job type, postcode, urgency and best callback details. We’ll turn it into a structured enquiry that can be reviewed and, where possible, matched with a suitable electrical contractor.</p>
+      <div class="actions"><a class="btn primary" href="#builder">Start my enquiry →</a><a class="btn secondary" href="#how">See what we capture</a></div>
+      <div class="trust"><div><b>No obligation</b>Your enquiry is reviewed first.</div><div><b>Consent-led</b>Provider sharing only if you agree.</div><div><b>Quote-ready</b>Better details than “please call me”.</div></div>
+    </section>
+    <aside class="phone" aria-hidden="true"><div class="screen"><div class="livebar"><span></span></div><div class="card-mini"><h3>Your enquiry summary</h3><div class="spark"></div></div><div class="card-mini"><div class="summary-list"><div>Job type <strong>EICR / safety certificate</strong></div><div>Area <strong>SE9</strong></div><div>Urgency <strong>This week</strong></div><div>Consent <strong>Provider share: yes</strong></div></div></div><div class="card-mini"><span class="tag">Provider-ready score: 11/14</span></div></div></aside>
+  </main>
+
+  <section id="builder" class="wrap builder">
+    <div class="builder-grid">
+      <form class="panel" id="leadForm" novalidate>
+        <div class="step-top"><div><div class="eyebrow">Enquiry builder</div><h2 id="stepTitle">Step 1 of 6</h2><div class="progress"><span id="bar"></span></div></div><span class="pill" id="stepPill">Service type</span></div>
+
+        <div class="step active" data-step="0" data-key="service_type"><div class="q">What electrical work do you need?</div><p class="hint">Tap the closest option. “Not sure” is fine — it still helps qualify the enquiry.</p><div class="cards">
+          <button type="button" class="choice" data-val="Emergency fault"><b>Emergency fault</b><span>Power issue, unsafe electrics, urgent call-back.</span></button>
+          <button type="button" class="choice" data-val="EICR / safety certificate"><b>EICR / safety certificate</b><span>Landlord, rental, sale or compliance check.</span></button>
+          <button type="button" class="choice" data-val="Installation or upgrade"><b>Installation or upgrade</b><span>Lighting, sockets, consumer unit, EV, etc.</span></button>
+          <button type="button" class="choice" data-val="Commercial project"><b>Commercial project</b><span>Office, retail, facilities or fit-out work.</span></button>
+          <button type="button" class="choice" data-val="Rewire / refurbishment"><b>Rewire / refurbishment</b><span>Planned works with quote/spec needed.</span></button>
+          <button type="button" class="choice" data-val="Not sure yet"><b>Not sure yet</b><span>Describe the problem and we’ll classify it.</span></button>
+        </div><div class="error">Please choose the closest service type.</div></div>
+
+        <div class="step" data-step="1"><div class="q">Where is the job?</div><p class="hint">Postcode is enough for this stage. It helps check area fit before anyone wastes a call.</p><div class="field"><label for="postcode">Job postcode</label><input id="postcode" name="postcode" autocomplete="postal-code" placeholder="e.g. SE9 3XX" /></div><div class="error">Please add the job postcode.</div></div>
+
+        <div class="step" data-step="2" data-key="urgency"><div class="q">How soon do you need help?</div><p class="hint">Urgency changes who the enquiry should go to and how quickly they should respond.</p><div class="cards">
+          <button type="button" class="choice" data-val="Today / emergency"><b>Today / emergency</b><span>Safety issue, outage or urgent fault.</span></button>
+          <button type="button" class="choice" data-val="This week"><b>This week</b><span>You need a call or visit soon.</span></button>
+          <button type="button" class="choice" data-val="This month"><b>This month</b><span>Planned work, quote needed.</span></button>
+          <button type="button" class="choice" data-val="Planning ahead"><b>Planning ahead</b><span>Gathering quotes for later.</span></button>
+        </div><div class="error">Please choose urgency.</div></div>
+
+        <div class="step" data-step="3" data-key="property_context"><div class="q">What type of job is this?</div><p class="hint">This helps route domestic, landlord and commercial enquiries differently.</p><div class="cards">
+          <button type="button" class="choice" data-val="Home / domestic"><b>Home / domestic</b><span>House, flat or owner-occupied property.</span></button>
+          <button type="button" class="choice" data-val="Landlord / rental"><b>Landlord / rental</b><span>Rental property, tenant issue or compliance.</span></button>
+          <button type="button" class="choice" data-val="Commercial premises"><b>Commercial premises</b><span>Shop, office, workshop, unit or facilities.</span></button>
+          <button type="button" class="choice" data-val="Construction / refurbishment"><b>Construction / refurbishment</b><span>Works tied to a larger project.</span></button>
+        </div><div class="error">Please choose the job context.</div></div>
+
+        <div class="step" data-step="4"><div class="q">How should someone contact you?</div><p class="hint">We need a real callback route before this can become provider-ready.</p><div class="field"><label for="fullName">Your name</label><input id="fullName" name="fullName" autocomplete="name" /></div><div class="field"><label for="phone">Best phone number</label><input id="phone" name="phone" autocomplete="tel" inputmode="tel" /></div><div class="field"><label for="email">Email (optional)</label><input id="email" name="email" autocomplete="email" inputmode="email" /></div><div class="error">Please add your name and phone number.</div></div>
+
+        <div class="step" data-step="5"><div class="q">Last details</div><p class="hint">Optional detail improves the lead score, but the consent choices are required before routing.</p><div class="field"><label for="description">Briefly describe the job</label><textarea id="description" name="description" placeholder="e.g. Need EICR for rented flat; tenant available evenings..."></textarea></div><label class="consent"><input type="checkbox" id="contactConsent" /><span>I agree to be contacted about this electrical enquiry.</span></label><label class="consent"><input type="checkbox" id="shareConsent" /><span>I agree that my enquiry details may be shared with a suitable electrical contractor so they can respond.</span></label><div class="error">Please tick both consent boxes before creating the enquiry summary.</div></div>
+
+        <div class="navBtns"><button type="button" class="btn secondary" id="back" disabled>← Back</button><button type="button" class="btn primary" id="next">Next →</button></div>
+      </form>
+
+      <aside class="panel sticky summary" id="how"><h3>Live provider-ready summary</h3><p class="small">This card updates as the visitor answers. The form feels useful, while we capture qualification data.</p><div class="score"><div class="n" id="score">0</div><div><span class="tag" id="status">Needs details</span><p class="small">Lead score / 14</p></div></div><div class="kv" id="kv"><p class="empty">Start the enquiry to build the summary.</p></div><div class="success" id="success"><div class="tick">✓</div><h3>Enquiry summary created</h3><p class="small">In a live version this would be stored privately, scored, and reviewed before matching with a provider. This demo does not send data externally.</p></div></aside>
+    </div>
+  </section>
+
+  <footer class="wrap footer">Example only · no external send · no live provider matching · consent wording and private storage must be finalised before launch.</footer>
+<script>
+const state={service_type:'',postcode:'',urgency:'',property_context:'',fullName:'',phone:'',email:'',description:'',contactConsent:false,shareConsent:false};
+let step=0; const steps=[...document.querySelectorAll('.step')], bar=document.getElementById('bar'), title=document.getElementById('stepTitle'), pill=document.getElementById('stepPill');
+const labels=['Service type','Location','Urgency','Project type','Contact','Consent'];
+function calcScore(){let s=0;if(state.postcode)s+=2;if(state.service_type)s+=2;if(state.urgency)s+=1;if(state.property_context)s+=1;if(state.phone)s+=2;if(state.contactConsent)s+=2;if(state.shareConsent)s+=3;if(state.description)s+=1;return s;}
+function status(score){if(!state.shareConsent)return 'Do not route yet'; if(score>=10)return 'Qualified'; if(score>=6)return 'Review'; return 'Needs details';}
+function render(){steps.forEach((el,i)=>el.classList.toggle('active',i===step));bar.style.width=((step+1)/steps.length*100)+'%';title.textContent=`Step ${step+1} of ${steps.length}`;pill.textContent=labels[step];document.getElementById('back').disabled=step===0;document.getElementById('next').textContent=step===steps.length-1?'Create summary':'Next →';
+ ['postcode','fullName','phone','email','description'].forEach(id=>{let el=document.getElementById(id); if(el) state[id]=el.value.trim();}); state.contactConsent=document.getElementById('contactConsent').checked; state.shareConsent=document.getElementById('shareConsent').checked;
+ const score=calcScore();document.getElementById('score').textContent=score;document.getElementById('status').textContent=status(score); const kv=document.getElementById('kv'); const rows=[['Service',state.service_type],['Postcode',state.postcode],['Urgency',state.urgency],['Project',state.property_context],['Contact',state.fullName&&state.phone?`${state.fullName} · ${state.phone}`:''],['Consent',state.shareConsent?'Can share with provider':state.contactConsent?'Contact only':'Not yet']].filter(x=>x[1]); kv.innerHTML=rows.length?rows.map(([k,v])=>`<div><label>${k}</label><strong>${v}</strong></div>`).join(''):'<p class="empty">Start the enquiry to build the summary.</p>';}
+document.querySelectorAll('.choice').forEach(btn=>btn.addEventListener('click',()=>{const parent=btn.closest('.step'),key=parent.dataset.key; parent.querySelectorAll('.choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');state[key]=btn.dataset.val;parent.querySelector('.error').classList.remove('show');render();}));
+document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',render));document.querySelectorAll('input[type=checkbox]').forEach(el=>el.addEventListener('change',render));
+function valid(){const el=steps[step],err=el.querySelector('.error'); let ok=true; if(step===0)ok=!!state.service_type; if(step===1)ok=!!document.getElementById('postcode').value.trim(); if(step===2)ok=!!state.urgency; if(step===3)ok=!!state.property_context; if(step===4)ok=!!document.getElementById('fullName').value.trim()&&!!document.getElementById('phone').value.trim(); if(step===5)ok=document.getElementById('contactConsent').checked&&document.getElementById('shareConsent').checked; if(err)err.classList.toggle('show',!ok); return ok;}
+document.getElementById('next').onclick=()=>{if(!valid())return; if(step<steps.length-1){step++;render();}else{document.getElementById('success').classList.add('show');document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});}};
+document.getElementById('back').onclick=()=>{if(step>0){step--;render();}}; render();
+</script>
+</body>
+</html>
