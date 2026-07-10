@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Electrical Enquiry — Demand Capture Example</title>
+<title>Electrical Enquiry Match — Create a clear project enquiry</title>
 <style>
   :root{
     --bg:#071019;--panel:#0d1825;--panel2:#111f30;--ink:#f5f7fb;--muted:#9fb0c4;--line:#223247;
@@ -28,7 +28,7 @@
 </style>
 </head>
 <body>
-  <nav class="wrap nav"><div class="logo"><div class="bolt">⚡</div><span>Electrical Enquiry Match</span></div><div class="pill">Demand-side example · not live</div></nav>
+  <nav class="wrap nav"><div class="logo"><div class="bolt">⚡</div><span>Electrical Enquiry Match</span></div><div class="pill">Demand-side electrician enquiry</div></nav>
 
   <main class="wrap hero">
     <section>
@@ -78,12 +78,18 @@
         <div class="navBtns"><button type="button" class="btn secondary" id="back" disabled>← Back</button><button type="button" class="btn primary" id="next">Next →</button></div>
       </form>
 
-      <aside class="panel sticky summary" id="how"><h3>Live provider-ready summary</h3><p class="small">This card updates as the visitor answers. The form feels useful, while we capture qualification data.</p><div class="score"><div class="n" id="score">0</div><div><span class="tag" id="status">Needs details</span><p class="small">Lead score / 14</p></div></div><div class="kv" id="kv"><p class="empty">Start the enquiry to build the summary.</p></div><div class="success" id="success"><div class="tick">✓</div><h3>Enquiry summary created</h3><p class="small">In a live version this would be stored privately, scored, and reviewed before matching with a provider. This demo does not send data externally.</p></div></aside>
+      <aside class="panel sticky summary" id="how"><h3>Live provider-ready summary</h3><p class="small">This card updates as the visitor answers. The form feels useful, while we capture qualification data.</p><div class="score"><div class="n" id="score">0</div><div><span class="tag" id="status">Needs details</span><p class="small">Lead score / 14</p></div></div><div class="kv" id="kv"><p class="empty">Start the enquiry to build the summary.</p></div><div class="success" id="success"><div class="tick">✓</div><h3>Enquiry summary created</h3><p class="small">Your enquiry has been captured for review. If suitable, it may be shared with a contractor only under the consent you provided.</p></div></aside>
     </div>
   </section>
 
   <footer class="wrap footer">Electrical Enquiry Match · Clear project details help suitable contractors understand the work before calling back. Your enquiry is only shared with a provider where you give consent.</footer>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <script>
+const EMAILJS_PUBLIC_KEY="2zWT2u9WBwMHxwfDm";
+const EMAILJS_SERVICE_ID="service_no5z8ek";
+const EMAILJS_TEMPLATE_ID="template_nx30joi";
+if(window.emailjs){ emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+const CONSENT_VERSION="demand-lead-consent-v1-2026-07";
 const state={service_type:'',postcode:'',urgency:'',property_context:'',fullName:'',phone:'',email:'',description:'',contactConsent:false,shareConsent:false};
 let step=0; const steps=[...document.querySelectorAll('.step')], bar=document.getElementById('bar'), title=document.getElementById('stepTitle'), pill=document.getElementById('stepPill');
 const labels=['Service type','Location','Urgency','Project type','Contact','Consent'];
@@ -95,7 +101,11 @@ function render(){steps.forEach((el,i)=>el.classList.toggle('active',i===step));
 document.querySelectorAll('.choice').forEach(btn=>btn.addEventListener('click',()=>{const parent=btn.closest('.step'),key=parent.dataset.key; parent.querySelectorAll('.choice').forEach(b=>b.classList.remove('selected'));btn.classList.add('selected');state[key]=btn.dataset.val;parent.querySelector('.error').classList.remove('show');render();}));
 document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',render));document.querySelectorAll('input[type=checkbox]').forEach(el=>el.addEventListener('change',render));
 function valid(){const el=steps[step],err=el.querySelector('.error'); let ok=true; if(step===0)ok=!!state.service_type; if(step===1)ok=!!document.getElementById('postcode').value.trim(); if(step===2)ok=!!state.urgency; if(step===3)ok=!!state.property_context; if(step===4)ok=!!document.getElementById('fullName').value.trim()&&!!document.getElementById('phone').value.trim(); if(step===5)ok=document.getElementById('contactConsent').checked&&document.getElementById('shareConsent').checked; if(err)err.classList.toggle('show',!ok); return ok;}
-document.getElementById('next').onclick=()=>{if(!valid())return; if(step<steps.length-1){step++;render();}else{document.getElementById('success').classList.add('show');document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'});}};
+
+function attribution(){const u=new URL(window.location.href); return {src:u.searchParams.get('src')||'',channel:u.searchParams.get('channel')||'',campaign:u.searchParams.get('campaign')||'',variant:u.searchParams.get('variant')||'',page_url:window.location.href};}
+function leadPayload(){render(); const score=calcScore(); const consentText='I agree to be contacted about this electrical enquiry. I agree that my enquiry details may be shared with a suitable electrical contractor so they can respond.'; return {lead_id:'ep034_demand_electrician_'+new Date().toISOString().replace(/[-:.TZ]/g,'').slice(0,14)+'_'+Math.random().toString(36).slice(2,8),source:'ep034_demand_electrician',niche:'electrician',service_type:state.service_type,postcode:state.postcode,urgency:state.urgency,property_context:state.property_context,description:state.description,contact:{name:state.fullName,phone:state.phone,email:state.email},consent:{contact:state.contactConsent,share_with_provider:state.shareConsent,text:consentText,version:CONSENT_VERSION,captured_at:new Date().toISOString(),page_url:window.location.href},attribution:attribution(),qualification:{score:score,status:status(score).toLowerCase().replaceAll(' ','_')}};}
+async function submitLead(){const btn=document.getElementById('next'); const old=btn.textContent; btn.disabled=true; btn.textContent='Creating summary…'; const payload=leadPayload(); try{ if(!window.emailjs) throw new Error('Email service unavailable'); await emailjs.send(EMAILJS_SERVICE_ID,EMAILJS_TEMPLATE_ID,{businessName:'Electrical enquiry - '+payload.postcode,fullName:payload.contact.name,phone:payload.contact.phone,businessType:'Demand lead: '+payload.service_type,email:payload.contact.email,consentToCall:payload.consent.contact,consentToEmail:false,consentText:payload.consent.text,consentVersion:payload.consent.version,capturedAt:payload.consent.captured_at,pageUrl:payload.consent.page_url,lead_json:JSON.stringify(payload,null,2)}); document.getElementById('success').classList.add('show'); document.getElementById('success').scrollIntoView({behavior:'smooth',block:'center'}); }catch(e){ alert('Sorry — the enquiry could not be sent just now. Please try again in a moment.'); console.error('lead-submit-failed',e); } finally{btn.disabled=false; btn.textContent=old;}}
+document.getElementById('next').onclick=()=>{if(!valid())return; if(step<steps.length-1){step++;render();}else{submitLead();}};
 document.getElementById('back').onclick=()=>{if(step>0){step--;render();}}; render();
 </script>
 </body>
