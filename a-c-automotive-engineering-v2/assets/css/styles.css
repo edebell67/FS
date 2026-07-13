@@ -728,18 +728,119 @@ p { margin: 0; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
 
-/* EP006 A C Automotive review variant — matched to visible frontage, without copying Google imagery */
+/* EP006 A C Automotive review variant — premium identity panel, no weak frontage illustration */
 .owner-banner { background: #fff1f2; color: #881337; }
 .owner-banner p { color:#881337; }
 .owner-banner strong,.owner-banner a.link { color:#b91c1c; }
 .brand-emblem { background:#f8fafc; color:#c9282d; border:2px solid rgba(201,40,45,.72); }
 .hero { background: linear-gradient(135deg,#101317 0%,#1f2933 50%,#0f172a 100%); }
-.hero-visual--frontage { padding:12px; background: linear-gradient(180deg,#f8fafc,#dfe6e8); border-color: rgba(248,250,252,.42); min-height:auto; }
-.frontage-illustration { width:100%; border-radius:18px; border:1px solid rgba(15,23,42,.14); box-shadow:0 24px 60px rgba(15,23,42,.22); }
-.frontage-card { position:absolute; left:24px; right:24px; bottom:24px; background:rgba(16,19,23,.88); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,.16); }
-.hero-visual-emblem { background: linear-gradient(135deg,#c9282d,#0891B2); color:#fff; }
+.hero-visual--premium {
+  min-height: 560px;
+  padding: 28px;
+  background:
+    radial-gradient(circle at 22% 14%, rgba(225,29,72,.35), transparent 30%),
+    radial-gradient(circle at 84% 76%, rgba(8,145,178,.30), transparent 34%),
+    linear-gradient(145deg, #0b0f14 0%, #151c24 48%, #0f172a 100%);
+  border: 1px solid rgba(255,255,255,.14);
+  overflow: hidden;
+}
+.hero-visual--premium::before {
+  background-image:
+    linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 28px 28px;
+  opacity: .55;
+}
+.premium-sign-panel {
+  position: absolute;
+  left: 32px;
+  right: 32px;
+  top: 72px;
+  padding: clamp(26px, 5vw, 42px) 28px;
+  border-radius: 28px;
+  border: 1px solid rgba(255,255,255,.16);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.035)),
+    rgba(12,17,23,.78);
+  box-shadow: 0 28px 90px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.15);
+  text-align: center;
+  backdrop-filter: blur(10px);
+}
+.premium-sign-kicker {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: #fda4af;
+  margin-bottom: 16px;
+}
+.premium-sign-logo {
+  width: 116px;
+  height: 116px;
+  margin: 0 auto 22px;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-display);
+  font-size: 42px;
+  font-weight: 900;
+  letter-spacing: -.08em;
+  color: #fff;
+  background: linear-gradient(135deg, #c9282d, #0891B2);
+  box-shadow: 0 20px 42px rgba(201,40,45,.25);
+}
+.premium-sign-name {
+  font-family: var(--font-display);
+  font-size: clamp(24px, 3vw, 34px);
+  font-weight: 800;
+  line-height: 1.05;
+  color: #fff;
+}
+.premium-sign-subtitle {
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: #d0d8de;
+}
+.premium-sign-divider {
+  width: 72px;
+  height: 3px;
+  margin: 24px auto;
+  border-radius: 99px;
+  background: linear-gradient(90deg, #c9282d, #0891B2);
+}
+.premium-service-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.premium-service-row span {
+  border: 1px solid rgba(255,255,255,.14);
+  border-radius: 999px;
+  padding: 8px 14px;
+  color: #f8fafc;
+  background: rgba(255,255,255,.06);
+  font-weight: 800;
+}
+.frontage-card,
+.premium-card {
+  position:absolute;
+  left:24px;
+  right:24px;
+  bottom:24px;
+  background:rgba(16,19,23,.88);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.16);
+}
 .hero h1 .accent { color:#fb7185; }
 .btn-primary { background:#c9282d; color:#fff; }
 .btn-primary:hover { background:#e23a40; }
 .eyebrow,.section-head .eyebrow { color:#c9282d; }
 .eyebrow::before { background:#c9282d; }
+@media (max-width: 940px) {
+  .hero-visual--premium { min-height: 520px; }
+  .premium-sign-panel { top: 66px; left: 20px; right: 20px; }
+}
