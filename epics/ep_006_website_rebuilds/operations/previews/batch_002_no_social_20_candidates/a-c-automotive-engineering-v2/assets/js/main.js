@@ -746,7 +746,6 @@
     initBeforeAfter();
     initFaq();
     initPaymentModal();
-    initCookieBanner();
     initCounters();
     initHeaderScroll();
     attachRevealObserver();
