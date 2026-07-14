@@ -44,6 +44,7 @@ test("health and static assets are executable", async () => {
   const widget = await request("/widget.js");
   assert.equal(widget.status, 200);
   assert.match(widget.body, /attachShadow/);
+  assert.match(widget.body, /header:after\s*\{[^}]*pointer-events:none/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);

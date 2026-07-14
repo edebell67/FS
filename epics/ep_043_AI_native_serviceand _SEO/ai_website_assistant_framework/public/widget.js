@@ -22,7 +22,7 @@
     .panel { position:absolute;right:0;bottom:76px;width:min(390px,calc(100vw - 24px));height:min(660px,calc(100svh - 112px));background:#fffdf8;border:1px solid #17211f1f;border-radius:26px;box-shadow:0 28px 90px #11191640;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;transform-origin:bottom right;animation:arrive .32s cubic-bezier(.2,.8,.2,1); }
     @keyframes arrive { from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none} }
     header { background:var(--ink);color:white;padding:20px 20px 17px;position:relative;overflow:hidden; }
-    header:after { content:"";position:absolute;width:130px;height:130px;border:1px solid #ffffff2b;border-radius:50%;right:-45px;top:-72px; }
+    header:after { content:"";position:absolute;width:130px;height:130px;border:1px solid #ffffff2b;border-radius:50%;right:-45px;top:-72px;pointer-events:none; }
     .brand { display:flex;gap:12px;align-items:center; }
     .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
     h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
