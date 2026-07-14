@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
+      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -178,14 +178,14 @@
           }
         ],
         "slots": [
-          "Today · 14:30",
-          "Tomorrow · 10:00",
-          "Saturday · 12:15"
+          "Today \u00b7 14:30",
+          "Tomorrow \u00b7 10:00",
+          "Saturday \u00b7 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -280,12 +280,352 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
+        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
       },
       {
         "id": "appointments",
         "title": "Appointments and walk-ins",
         "content": "Walk-ins are welcome when availability permits. Customers should call ahead to check availability. Evening appointments may be available."
+      }
+    ]
+  },
+  {
+    "id": "docklands-vehicle-centre",
+    "publicKey": "auto_docklands_e3",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Docklands Vehicle Centre Ltd",
+    "tagline": "Vehicle repair preview assistant",
+    "logoText": "DVC",
+    "theme": {
+      "accent": "#ff7a1a",
+      "ink": "#14171a",
+      "surface": "#f7f4ef"
+    },
+    "contact": {
+      "telephone": "020 7515 9099",
+      "email": "",
+      "address": "E3 3LT \u2014 see the preview contact section",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "Demo",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Services",
+        "url": "index.html#services",
+        "keywords": [
+          "service",
+          "services",
+          "mot",
+          "repair",
+          "diagnostic",
+          "tyres",
+          "brakes"
+        ]
+      },
+      {
+        "title": "Enquiry",
+        "url": "index.html#tool",
+        "keywords": [
+          "quote",
+          "enquiry",
+          "book",
+          "booking",
+          "callback"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration preview for Docklands Vehicle Centre Ltd. Service scope, availability and operating details require owner confirmation before any live launch."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "The preview presents MOT testing, servicing, diagnostics, brakes and tyres as enquiry topics. Please use the enquiry section or call the business to confirm suitability and availability."
+      }
+    ]
+  },
+  {
+    "id": "aa-autos",
+    "publicKey": "auto_aa_e3",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "AA Autos",
+    "tagline": "Vehicle repair preview assistant",
+    "logoText": "AAA",
+    "theme": {
+      "accent": "#ff7a1a",
+      "ink": "#14171a",
+      "surface": "#f7f4ef"
+    },
+    "contact": {
+      "telephone": "07956 824262",
+      "email": "",
+      "address": "E3 4AG \u2014 see the preview contact section",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "Demo",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Services",
+        "url": "index.html#services",
+        "keywords": [
+          "service",
+          "services",
+          "mot",
+          "repair",
+          "diagnostic",
+          "tyres",
+          "brakes"
+        ]
+      },
+      {
+        "title": "Enquiry",
+        "url": "index.html#tool",
+        "keywords": [
+          "quote",
+          "enquiry",
+          "book",
+          "booking",
+          "callback"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration preview for AA Autos. Service scope, availability and operating details require owner confirmation before any live launch."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "The preview presents MOT testing, servicing, diagnostics, brakes and tyres as enquiry topics. Please use the enquiry section or call the business to confirm suitability and availability."
+      }
+    ]
+  },
+  {
+    "id": "abbey-auto-services",
+    "publicKey": "auto_abbey_se13",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Abbey Auto Services",
+    "tagline": "Vehicle repair preview assistant",
+    "logoText": "AAS",
+    "theme": {
+      "accent": "#ff7a1a",
+      "ink": "#14171a",
+      "surface": "#f7f4ef"
+    },
+    "contact": {
+      "telephone": "020 8852 3652",
+      "email": "",
+      "address": "SE13 6HE \u2014 see the preview contact section",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "Demo",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Services",
+        "url": "index.html#services",
+        "keywords": [
+          "service",
+          "services",
+          "mot",
+          "repair",
+          "diagnostic",
+          "tyres",
+          "brakes"
+        ]
+      },
+      {
+        "title": "Enquiry",
+        "url": "index.html#tool",
+        "keywords": [
+          "quote",
+          "enquiry",
+          "book",
+          "booking",
+          "callback"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration preview for Abbey Auto Services. Service scope, availability and operating details require owner confirmation before any live launch."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "The preview presents MOT testing, servicing, diagnostics, brakes and tyres as enquiry topics. Please use the enquiry section or call the business to confirm suitability and availability."
+      }
+    ]
+  },
+  {
+    "id": "ac-automotive-engineering",
+    "publicKey": "auto_ac_goldhawk",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "A C Automotive Engineering",
+    "tagline": "Automotive engineering preview assistant",
+    "logoText": "ACA",
+    "theme": {
+      "accent": "#c9282d",
+      "ink": "#14171a",
+      "surface": "#f7f4ef"
+    },
+    "contact": {
+      "telephone": "020 8741 9993",
+      "email": "",
+      "address": "247\u2013251 Goldhawk Road, London",
+      "mapUrl": "",
+      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
+    },
+    "booking": {
+      "provider": "Demo",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Services",
+        "url": "index.html#services",
+        "keywords": [
+          "service",
+          "services",
+          "mot",
+          "repair",
+          "diagnostic",
+          "tyres",
+          "brakes"
+        ]
+      },
+      {
+        "title": "Enquiry",
+        "url": "index.html#tool",
+        "keywords": [
+          "quote",
+          "enquiry",
+          "book",
+          "booking",
+          "callback"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration preview for A C Automotive Engineering. Service scope, availability and operating details require owner confirmation before any live launch."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "The preview describes A C Automotive Engineering as an American car specialist with sales, service and parts shown as preview information. Call to confirm current scope and availability."
       }
     ]
   }
