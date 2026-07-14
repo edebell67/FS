@@ -246,7 +246,7 @@
           <p>We're open Monday to Saturday, 10am to 7pm. Drop by or call us to secure your spot.</p>
           <div class="cta-actions">
             <a href="tel:02086760226" class="button button-primary large">Call 020 8676 0226</a>
-            <a href="https://www.google.com/maps/search/4+Central+Parade,+Penge+High+Street,+London+SE20+7TN" target="_blank" class="button button-secondary large">Get Directions</a>
+            <a href="https://www.openstreetmap.org/search?query=4%20Central%20Parade%2C%20Penge%20High%20Street%2C%20London%20SE20%207TN" target="_blank" rel="noopener noreferrer" class="button button-secondary large">Get Directions</a>
           </div>
         </div>
       </section>
@@ -284,20 +284,13 @@
     <a href="tel:02086760226" class="primary">Call</a>
     <a href="#contact">Book</a>
     <a href="gallery.html">Gallery</a>
-    <a href="https://www.google.com/maps/search/4+Central+Parade,+Penge+High+Street,+London+SE20+7TN" target="_blank">Directions</a>
+    <a href="https://www.openstreetmap.org/search?query=4%20Central%20Parade%2C%20Penge%20High%20Street%2C%20London%20SE20%207TN" target="_blank" rel="noopener noreferrer">Directions</a>
   </div>
 
-  <script src="reveal.js"></script>
+  <script src="reveal.js?v=20260715-fun-cuts-mobile-nav"></script>
   <script src="assistant-embed.js"></script>
   <script>
     (function () {
-      const toggle = document.getElementById('navToggle');
-      const drawer = document.getElementById('mobileDrawer');
-      const close = document.getElementById('drawerClose');
-      toggle?.addEventListener('click', () => drawer.classList.add('open'));
-      close?.addEventListener('click', () => drawer.classList.remove('open'));
-      drawer?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => drawer.classList.remove('open')));
-
       const navLinks = document.querySelectorAll('#mainNav a[href^="#"]');
       const sections = [...navLinks].map((a) => document.querySelector(a.getAttribute('href'))).filter(Boolean);
       const spy = new IntersectionObserver((entries) => {
