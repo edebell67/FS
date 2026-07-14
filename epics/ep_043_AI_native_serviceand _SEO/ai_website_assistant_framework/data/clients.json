@@ -109,7 +109,8 @@
         "title": "Guarantee",
         "content": "Completed repair work includes a 12-month workmanship guarantee. Manufacturer warranties remain subject to their own terms."
       }
-    ]
+    ],
+    "demoWorkflows": {}
   },
   {
     "id": "hoxtans",
@@ -117,6 +118,7 @@
     "allowedHosts": [
       "localhost",
       "127.0.0.1",
+      "edebell67.github.io",
       "hoxtans.co.uk",
       "www.hoxtans.co.uk"
     ],
@@ -158,12 +160,28 @@
     "demoWorkflows": {
       "booking": {
         "services": [
-          { "name": "Full-body spray tan", "price": 25 },
-          { "name": "Express spray tan", "price": 18 },
-          { "name": "Lash lift and tint", "price": 35 },
-          { "name": "Manicure or pedicure", "price": 20 }
+          {
+            "name": "Full-body spray tan",
+            "price": 25
+          },
+          {
+            "name": "Express spray tan",
+            "price": 18
+          },
+          {
+            "name": "Lash lift and tint",
+            "price": 35
+          },
+          {
+            "name": "Manicure or pedicure",
+            "price": 20
+          }
         ],
-        "slots": ["Today · 14:30", "Tomorrow · 10:00", "Saturday · 12:15"]
+        "slots": [
+          "Today · 14:30",
+          "Tomorrow · 10:00",
+          "Saturday · 12:15"
+        ]
       },
       "payment": {
         "currency": "GBP",
@@ -171,37 +189,71 @@
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
-        "subjects": ["Appointment details", "Treatment enquiry", "Aftercare information"]
+        "subjects": [
+          "Appointment details",
+          "Treatment enquiry",
+          "Aftercare information"
+        ]
       },
       "crm": {
-        "pipelineStages": ["New enquiry", "Contacted", "Demo booked"]
+        "pipelineStages": [
+          "New enquiry",
+          "Contacted",
+          "Demo booked"
+        ]
       }
     },
     "pages": [
       {
         "title": "Tanning services",
         "url": "index.html#tanning",
-        "keywords": ["tanning", "spray tan", "sunbed"]
+        "keywords": [
+          "tanning",
+          "spray tan",
+          "sunbed"
+        ]
       },
       {
         "title": "Beauty treatments",
         "url": "index.html#beauty",
-        "keywords": ["beauty", "brows", "lashes", "nails", "manicure", "pedicure"]
+        "keywords": [
+          "beauty",
+          "brows",
+          "lashes",
+          "nails",
+          "manicure",
+          "pedicure"
+        ]
       },
       {
         "title": "Treatment prices",
         "url": "index.html#services",
-        "keywords": ["price", "prices", "cost", "treatments"]
+        "keywords": [
+          "price",
+          "prices",
+          "cost",
+          "treatments"
+        ]
       },
       {
         "title": "Gallery",
         "url": "gallery.html",
-        "keywords": ["gallery", "photos", "results", "shades"]
+        "keywords": [
+          "gallery",
+          "photos",
+          "results",
+          "shades"
+        ]
       },
       {
         "title": "Contact and booking",
         "url": "index.html#contact",
-        "keywords": ["contact", "book", "telephone", "email"]
+        "keywords": [
+          "contact",
+          "book",
+          "telephone",
+          "email"
+        ]
       }
     ],
     "knowledge": [
