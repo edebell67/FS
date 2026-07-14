@@ -322,9 +322,59 @@
       "assistant",
       "faq",
       "navigation",
-      "contact"
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
     ],
-    "demoWorkflows": {},
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "Demo vehicle check",
+            "price": 45
+          },
+          {
+            "name": "Demo interim service",
+            "price": 89
+          },
+          {
+            "name": "Demo diagnostic check",
+            "price": 65
+          },
+          {
+            "name": "Demo MOT enquiry",
+            "price": 55
+          }
+        ],
+        "slots": [
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+      },
+      "email": {
+        "fromName": "Docklands Vehicle Centre Demo Service Desk",
+        "subjects": [
+          "Demo vehicle enquiry confirmation",
+          "Demo appointment summary",
+          "Demo diagnostic follow-up"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "Demo new enquiry",
+          "Demo details requested",
+          "Demo appointment selected",
+          "Demo owner follow-up required"
+        ]
+      }
+    },
     "pages": [
       {
         "title": "Services",
@@ -407,9 +457,59 @@
       "assistant",
       "faq",
       "navigation",
-      "contact"
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
     ],
-    "demoWorkflows": {},
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "Demo vehicle check",
+            "price": 45
+          },
+          {
+            "name": "Demo interim service",
+            "price": 89
+          },
+          {
+            "name": "Demo diagnostic check",
+            "price": 65
+          },
+          {
+            "name": "Demo MOT enquiry",
+            "price": 55
+          }
+        ],
+        "slots": [
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+      },
+      "email": {
+        "fromName": "AA Autos Demo Service Desk",
+        "subjects": [
+          "Demo vehicle enquiry confirmation",
+          "Demo appointment summary",
+          "Demo diagnostic follow-up"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "Demo new enquiry",
+          "Demo details requested",
+          "Demo appointment selected",
+          "Demo owner follow-up required"
+        ]
+      }
+    },
     "pages": [
       {
         "title": "Services",
@@ -492,9 +592,59 @@
       "assistant",
       "faq",
       "navigation",
-      "contact"
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
     ],
-    "demoWorkflows": {},
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "Demo vehicle check",
+            "price": 45
+          },
+          {
+            "name": "Demo interim service",
+            "price": 89
+          },
+          {
+            "name": "Demo diagnostic check",
+            "price": 65
+          },
+          {
+            "name": "Demo MOT enquiry",
+            "price": 55
+          }
+        ],
+        "slots": [
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+      },
+      "email": {
+        "fromName": "Abbey Auto Services Demo Service Desk",
+        "subjects": [
+          "Demo vehicle enquiry confirmation",
+          "Demo appointment summary",
+          "Demo diagnostic follow-up"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "Demo new enquiry",
+          "Demo details requested",
+          "Demo appointment selected",
+          "Demo owner follow-up required"
+        ]
+      }
+    },
     "pages": [
       {
         "title": "Services",
@@ -577,9 +727,59 @@
       "assistant",
       "faq",
       "navigation",
-      "contact"
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
     ],
-    "demoWorkflows": {},
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "Demo vehicle check",
+            "price": 45
+          },
+          {
+            "name": "Demo interim service",
+            "price": 89
+          },
+          {
+            "name": "Demo diagnostic check",
+            "price": 65
+          },
+          {
+            "name": "Demo MOT enquiry",
+            "price": 55
+          }
+        ],
+        "slots": [
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+      },
+      "email": {
+        "fromName": "A C Automotive Engineering Demo Service Desk",
+        "subjects": [
+          "Demo vehicle enquiry confirmation",
+          "Demo appointment summary",
+          "Demo diagnostic follow-up"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "Demo new enquiry",
+          "Demo details requested",
+          "Demo appointment selected",
+          "Demo owner follow-up required"
+        ]
+      }
+    },
     "pages": [
       {
         "title": "Services",
@@ -626,6 +826,170 @@
         "id": "services",
         "title": "Services",
         "content": "The preview describes A C Automotive Engineering as an American car specialist with sales, service and parts shown as preview information. Call to confirm current scope and availability."
+      }
+    ]
+  },
+  {
+    "id": "fun-cuts",
+    "publicKey": "funcuts_se20",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io",
+      "funcuts.co.uk",
+      "www.funcuts.co.uk"
+    ],
+    "businessName": "Fun Cuts",
+    "tagline": "Style for the Family",
+    "logoText": "FC",
+    "theme": {
+      "accent": "#2c7a7b",
+      "ink": "#1a1a1a",
+      "surface": "#fafafa"
+    },
+    "contact": {
+      "telephone": "020 8676 0226",
+      "email": "info@funcuts.co.uk",
+      "address": "4 Central Parade, Penge High Street, London SE20 7TN",
+      "mapUrl": "https://www.google.com/maps/search/4+Central+Parade,+Penge+High+Street,+London+SE20+7TN",
+      "openingHours": "Monday to Saturday 10:00-19:00; closed Sunday"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [
+      "info@funcuts.co.uk"
+    ],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
+    ],
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "Cuts and finishing",
+            "price": 15
+          },
+          {
+            "name": "Colour and care",
+            "price": 45
+          },
+          {
+            "name": "Family session",
+            "price": 12
+          },
+          {
+            "name": "Styling and events",
+            "price": 25
+          }
+        ],
+        "slots": [
+          "Today \u00b7 16:00",
+          "Tomorrow \u00b7 10:30",
+          "Saturday \u00b7 11:15"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
+      },
+      "email": {
+        "fromName": "Fun Cuts Demo Concierge",
+        "subjects": [
+          "Appointment details",
+          "Styling enquiry",
+          "Aftercare information"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "New enquiry",
+          "Contacted",
+          "Demo booked"
+        ]
+      }
+    },
+    "pages": [
+      {
+        "title": "Hair services",
+        "url": "index.html#services",
+        "keywords": [
+          "haircut",
+          "colour",
+          "cut",
+          "styling",
+          "prices"
+        ]
+      },
+      {
+        "title": "Our story",
+        "url": "index.html#about",
+        "keywords": [
+          "about",
+          "story",
+          "stylists",
+          "experience",
+          "penge"
+        ]
+      },
+      {
+        "title": "Contact and booking",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "book",
+          "telephone",
+          "email",
+          "directions"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "location",
+        "title": "Location",
+        "content": "Fun Cuts is at 4 Central Parade, Penge High Street, London SE20 7TN."
+      },
+      {
+        "id": "contact",
+        "title": "Contact details",
+        "content": "Call Fun Cuts on 020 8676 0226 or email info@funcuts.co.uk."
+      },
+      {
+        "id": "hours",
+        "title": "Opening hours",
+        "content": "Fun Cuts is open Monday to Saturday from 10:00 to 19:00, and closed on Sundays."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "Fun Cuts offers cuts and finishing, colour and care treatments, family sessions for children, and styling for special occasions and events."
+      },
+      {
+        "id": "pricing",
+        "title": "Prices",
+        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
+      },
+      {
+        "id": "offer",
+        "title": "Wednesday offer",
+        "content": "Fun Cuts offers 15% off for senior citizens every Wednesday."
+      },
+      {
+        "id": "experience",
+        "title": "Experience",
+        "content": "Fun Cuts has over 10 years of experience in the Penge community and is 100% family friendly."
       }
     ]
   }
