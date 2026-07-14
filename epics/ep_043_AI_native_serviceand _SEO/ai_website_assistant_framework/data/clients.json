@@ -1,0 +1,240 @@
+[
+  {
+    "id": "northstar-heating",
+    "publicKey": "demo_northstar",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1"
+    ],
+    "businessName": "Northstar Heating",
+    "tagline": "Warm homes. Clear answers.",
+    "logoText": "N/H",
+    "theme": {
+      "accent": "#e85d3f",
+      "ink": "#17211f",
+      "surface": "#f5f0e7"
+    },
+    "contact": {
+      "telephone": "020 7946 0182",
+      "email": "hello@northstar.example",
+      "address": "18 Meridian Yard, London SE19",
+      "mapUrl": "https://maps.google.com/?q=London+SE19",
+      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
+    },
+    "booking": {
+      "provider": "Calendly",
+      "url": "https://calendly.com/"
+    },
+    "status": "demo",
+    "notificationDestinations": [
+      "hello@northstar.example"
+    ],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "booking",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Boiler servicing",
+        "url": "#services",
+        "keywords": [
+          "boiler",
+          "service",
+          "servicing"
+        ]
+      },
+      {
+        "title": "Emergency repairs",
+        "url": "#repairs",
+        "keywords": [
+          "repair",
+          "emergency",
+          "broken",
+          "no heating"
+        ]
+      },
+      {
+        "title": "Customer stories",
+        "url": "#stories",
+        "keywords": [
+          "testimonial",
+          "review",
+          "stories"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "email",
+          "phone",
+          "telephone"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "hours",
+        "title": "Opening hours",
+        "content": "Northstar Heating is open Monday to Friday from 08:00 to 18:00 and Saturday from 09:00 to 14:00."
+      },
+      {
+        "id": "areas",
+        "title": "Service area",
+        "content": "We serve South London and nearby areas, including SE19, SE20, SE21, CR0 and BR3."
+      },
+      {
+        "id": "services",
+        "title": "Services",
+        "content": "Approved services are annual boiler servicing, boiler repairs, heating diagnostics, radiator balancing and smart thermostat installation."
+      },
+      {
+        "id": "pricing",
+        "title": "Pricing",
+        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+      },
+      {
+        "id": "payment",
+        "title": "Payment",
+        "content": "We accept major debit and credit cards and bank transfer. Payment is due after completed work unless agreed otherwise."
+      },
+      {
+        "id": "guarantee",
+        "title": "Guarantee",
+        "content": "Completed repair work includes a 12-month workmanship guarantee. Manufacturer warranties remain subject to their own terms."
+      }
+    ]
+  },
+  {
+    "id": "hoxtans",
+    "publicKey": "hoxtans_n1",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "hoxtans.co.uk",
+      "www.hoxtans.co.uk"
+    ],
+    "businessName": "Hoxtans",
+    "tagline": "Tanning & Beauty Studio",
+    "logoText": "HX",
+    "theme": {
+      "accent": "#c1622b",
+      "ink": "#2b211b",
+      "surface": "#fdfaf7"
+    },
+    "contact": {
+      "telephone": "020 3325 6208",
+      "email": "hoxtans@gmail.com",
+      "address": "203 Hoxton Street, London N1 6RA",
+      "mapUrl": "https://maps.google.com/?q=203+Hoxton+Street+London+N1+6RA",
+      "openingHours": "Call Hoxtans to confirm today's opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [
+      "hoxtans@gmail.com"
+    ],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
+    ],
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          { "name": "Full-body spray tan", "price": 25 },
+          { "name": "Express spray tan", "price": 18 },
+          { "name": "Lash lift and tint", "price": 35 },
+          { "name": "Manicure or pedicure", "price": 20 }
+        ],
+        "slots": ["Today · 14:30", "Tomorrow · 10:00", "Saturday · 12:15"]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card •••• 4242"
+      },
+      "email": {
+        "fromName": "Hoxtans Demo Concierge",
+        "subjects": ["Appointment details", "Treatment enquiry", "Aftercare information"]
+      },
+      "crm": {
+        "pipelineStages": ["New enquiry", "Contacted", "Demo booked"]
+      }
+    },
+    "pages": [
+      {
+        "title": "Tanning services",
+        "url": "index.html#tanning",
+        "keywords": ["tanning", "spray tan", "sunbed"]
+      },
+      {
+        "title": "Beauty treatments",
+        "url": "index.html#beauty",
+        "keywords": ["beauty", "brows", "lashes", "nails", "manicure", "pedicure"]
+      },
+      {
+        "title": "Treatment prices",
+        "url": "index.html#services",
+        "keywords": ["price", "prices", "cost", "treatments"]
+      },
+      {
+        "title": "Gallery",
+        "url": "gallery.html",
+        "keywords": ["gallery", "photos", "results", "shades"]
+      },
+      {
+        "title": "Contact and booking",
+        "url": "index.html#contact",
+        "keywords": ["contact", "book", "telephone", "email"]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "location",
+        "title": "Location",
+        "content": "Hoxtans is at 203 Hoxton Street, London N1 6RA."
+      },
+      {
+        "id": "contact",
+        "title": "Contact details",
+        "content": "Call Hoxtans on 020 3325 6208 or email hoxtans@gmail.com. Call to confirm today's opening hours and availability."
+      },
+      {
+        "id": "tanning",
+        "title": "Tanning services",
+        "content": "Hoxtans offers full-body spray tans, express spray tans, sunbed sessions and courses, plus tanning preparation and aftercare advice."
+      },
+      {
+        "id": "beauty",
+        "title": "Beauty treatments",
+        "content": "Beauty treatments include brow shaping and tinting, lash lifts and tints, manicures, pedicures and facial treatments."
+      },
+      {
+        "id": "pricing",
+        "title": "Treatment prices",
+        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
+      },
+      {
+        "id": "appointments",
+        "title": "Appointments and walk-ins",
+        "content": "Walk-ins are welcome when availability permits. Customers should call ahead to check availability. Evening appointments may be available."
+      }
+    ]
+  }
+]

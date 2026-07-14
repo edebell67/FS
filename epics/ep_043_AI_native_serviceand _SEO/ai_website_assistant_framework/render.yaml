@@ -1,0 +1,25 @@
+# Render Blueprint for the shared, multi-tenant website assistant API.
+# Keep provider and admin credentials in Render's encrypted environment settings.
+services:
+  - type: web
+    name: shared-website-assistant-api
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: HOST
+        value: 0.0.0.0
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_MODEL
+        value: gpt-5.4-mini
+      - key: OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: NOTIFICATION_WEBHOOK_URL
+        sync: false

@@ -1,0 +1,15 @@
+{
+  "name": "ai-website-assistant-framework",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reusable multi-tenant AI website assistant, widget, modules, and admin workspace.",
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test --test-concurrency=1",
+    "check": "node --check src/server.js && node --check public/widget.js && node --check public/admin.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

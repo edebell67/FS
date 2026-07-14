@@ -1,0 +1,238 @@
+import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createServer } from "node:http";
+import { readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { createAssistantReply } from "./assistant.js";
+import { JsonStore } from "./store.js";
+
+const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const publicDir = path.join(rootDir, "public");
+const runtimeEnv = loadEnvironment(path.join(rootDir, ".env"));
+const dataDir = runtimeEnv.DATA_DIR ? path.resolve(runtimeEnv.DATA_DIR) : path.join(rootDir, "data");
+const MIME = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml", ".json": "application/json; charset=utf-8" };
+
+function json(res, status, body, extraHeaders = {}) {
+  res.writeHead(status, { "Content-Type": MIME[".json"], "Cache-Control": "no-store", ...extraHeaders });
+  res.end(JSON.stringify(body));
+}
+
+function safeEqual(a, b) {
+  const left = createHash("sha256").update(String(a)).digest();
+  const right = createHash("sha256").update(String(b)).digest();
+  return timingSafeEqual(left, right);
+}
+
+function adminAuthorized(req, env) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  return Boolean(env.ADMIN_TOKEN && safeEqual(token, env.ADMIN_TOKEN));
+}
+
+async function bodyJson(req, maxBytes = 64 * 1024) {
+  let raw = "";
+  for await (const chunk of req) {
+    raw += chunk;
+    if (Buffer.byteLength(raw) > maxBytes) throw Object.assign(new Error("Request body is too large."), { status: 413 });
+  }
+  try { return JSON.parse(raw || "{}"); } catch { throw Object.assign(new Error("Request body must be valid JSON."), { status: 400 }); }
+}
+
+function cleanText(value, max, required = false) {
+  const cleaned = String(value || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, max);
+  if (required && !cleaned) throw Object.assign(new Error("A required field is missing."), { status: 400 });
+  return cleaned;
+}
+
+function requestHost(req, suppliedHost) {
+  try { return req.headers.origin ? new URL(req.headers.origin).hostname : suppliedHost || ""; } catch { return suppliedHost || ""; }
+}
+
+function corsHeaders(req) {
+  return req.headers.origin ? { "Access-Control-Allow-Origin": req.headers.origin, "Vary": "Origin" } : {};
+}
+
+function demoReference(prefix) {
+  return `DEMO-${prefix}-${randomUUID().slice(0, 8).toUpperCase()}`;
+}
+
+function validEmail(value) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+}
+
+async function notify({ env, client, kind, record }) {
+  if (client.status !== "live" || !env.NOTIFICATION_WEBHOOK_URL) return { delivered: false, reason: client.status === "demo" ? "demo_mode" : "not_configured" };
+  const response = await fetch(env.NOTIFICATION_WEBHOOK_URL, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ kind, clientId: client.id, destinations: client.notificationDestinations, record })
+  });
+  return { delivered: response.ok, reason: response.ok ? "sent" : `webhook_${response.status}` };
+}
+
+export async function createApp({ store = new JsonStore(dataDir), env = runtimeEnv } = {}) {
+  await store.init();
+  return createServer(async (req, res) => {
+    const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
+    try {
+      if (req.method === "OPTIONS") {
+        res.writeHead(204, { ...corsHeaders(req), "Access-Control-Allow-Headers": "Content-Type, Authorization", "Access-Control-Allow-Methods": "GET, POST, PUT, OPTIONS", "Access-Control-Max-Age": "86400" });
+        return res.end();
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/health") return json(res, 200, { ok: true, service: "ai-website-assistant", version: "0.1.0" });
+
+      if (req.method === "GET" && url.pathname === "/api/public/config") {
+        const client = store.resolveClient({ publicKey: url.searchParams.get("clientKey"), host: requestHost(req, url.searchParams.get("host")) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        return json(res, 200, { client: store.publicClient(client) }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/chat") {
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        const message = cleanText(input.message, 2000, true);
+        const history = Array.isArray(input.history) ? input.history.slice(-8) : [];
+        let reply;
+        try { reply = await createAssistantReply({ client, message, history, env }); }
+        catch { reply = { text: "I’m having trouble reaching the answer service. I can still help you contact the team.", sources: [], action: client.enabledModules.includes("contact") ? { type: "contact", label: `Call ${client.contact.telephone}`, url: `tel:${client.contact.telephone.replace(/\s/g, "")}` } : null }; }
+        await store.appendRecord("conversations", { clientId: client.id, sessionId: cleanText(input.sessionId, 100), pageUrl: cleanText(input.pageUrl, 500), message, reply: reply.text, mode: client.status });
+        return json(res, 200, { reply, mode: client.status }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && ["/api/public/leads", "/api/public/callbacks"].includes(url.pathname)) {
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        const isLead = url.pathname.endsWith("leads");
+        const requiredModule = isLead ? "leadCapture" : "callback";
+        if (!client.enabledModules.includes(requiredModule)) return json(res, 403, { error: "This module is not enabled." }, corsHeaders(req));
+        const record = await store.appendRecord(isLead ? "leads" : "callbacks", {
+          clientId: client.id,
+          name: cleanText(input.name, 120, true),
+          telephone: cleanText(input.telephone, 40, true),
+          email: cleanText(input.email, 160),
+          preferredTime: cleanText(input.preferredTime, 120),
+          service: cleanText(input.service, 160),
+          reason: cleanText(input.reason || input.notes, 1000),
+          simulated: client.status === "demo"
+        });
+        const notification = await notify({ env, client, kind: isLead ? "lead" : "callback", record });
+        return json(res, 201, { accepted: true, simulated: record.simulated, notification }, corsHeaders(req));
+      }
+
+      const demoMatch = url.pathname.match(/^\/api\/public\/demo\/(booking|payment|email|crm)$/);
+      if (req.method === "POST" && demoMatch) {
+        const workflow = demoMatch[1];
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        if (client.status !== "demo") return json(res, 403, { error: "Simulated workflows are available only in demo mode." }, corsHeaders(req));
+        const modules = { booking: "demoBooking", payment: "demoPayment", email: "demoEmail", crm: "demoCrm" };
+        if (!client.enabledModules.includes(modules[workflow])) return json(res, 403, { error: "This demo workflow is not enabled." }, corsHeaders(req));
+
+        const config = client.demoWorkflows || {};
+        let record;
+        if (workflow === "booking") {
+          const service = cleanText(input.service, 160, true);
+          const slot = cleanText(input.slot, 120, true);
+          const serviceConfig = (config.booking?.services || []).find((item) => item.name === service);
+          if (!serviceConfig || !(config.booking?.slots || []).includes(slot)) throw Object.assign(new Error("Choose one of the seeded demo services and slots."), { status: 400 });
+          record = await store.appendRecord("bookings", {
+            clientId: client.id, reference: demoReference("BOOK"), name: cleanText(input.name, 120, true),
+            telephone: cleanText(input.telephone, 40, true), email: cleanText(input.email, 160), service, slot,
+            amount: serviceConfig.price, currency: config.payment?.currency || "GBP", status: "reserved", simulated: true
+          });
+        } else if (workflow === "payment") {
+          const service = cleanText(input.service, 160, true);
+          const serviceConfig = (config.booking?.services || []).find((item) => item.name === service);
+          if (!serviceConfig) throw Object.assign(new Error("Choose one of the seeded demo services."), { status: 400 });
+          record = await store.appendRecord("payments", {
+            clientId: client.id, reference: demoReference("PAY"), customerName: cleanText(input.customerName, 120, true),
+            service, amount: serviceConfig.price, currency: config.payment?.currency || "GBP",
+            cardLabel: config.payment?.testCardLabel || "Demo card", status: "approved", simulated: true
+          });
+        } else if (workflow === "email") {
+          const email = cleanText(input.email, 160, true);
+          if (!validEmail(email)) throw Object.assign(new Error("Enter a valid demo recipient email address."), { status: 400 });
+          const subject = cleanText(input.subject, 160, true);
+          if (!(config.email?.subjects || []).includes(subject)) throw Object.assign(new Error("Choose one of the seeded demo email subjects."), { status: 400 });
+          record = await store.appendRecord("emails", {
+            clientId: client.id, reference: demoReference("MAIL"), recipientName: cleanText(input.recipientName, 120, true),
+            email, subject, message: cleanText(input.message, 1200, true), fromName: config.email?.fromName || client.businessName,
+            status: "previewed_not_sent", simulated: true
+          });
+        } else {
+          const email = cleanText(input.email, 160);
+          const telephone = cleanText(input.telephone, 40);
+          if (!email && !telephone) throw Object.assign(new Error("Add a demo email address or telephone number."), { status: 400 });
+          if (email && !validEmail(email)) throw Object.assign(new Error("Enter a valid demo email address."), { status: 400 });
+          const stage = cleanText(input.stage, 80, true);
+          if (!(config.crm?.pipelineStages || []).includes(stage)) throw Object.assign(new Error("Choose one of the seeded demo CRM stages."), { status: 400 });
+          record = await store.appendRecord("crmLeads", {
+            clientId: client.id, reference: demoReference("CRM"), name: cleanText(input.name, 120, true), email, telephone,
+            interest: cleanText(input.interest, 160, true), stage, status: "created_in_demo_pipeline", simulated: true
+          });
+        }
+        return json(res, 201, { accepted: true, simulated: true, workflow, record }, corsHeaders(req));
+      }
+
+      if (url.pathname.startsWith("/api/admin/")) {
+        if (!adminAuthorized(req, env)) return json(res, 401, { error: "Administrator authorization is required." });
+        if (req.method === "GET" && url.pathname === "/api/admin/clients") return json(res, 200, { clients: store.listClients() });
+        if (req.method === "GET" && url.pathname === "/api/admin/records") return json(res, 200, { records: store.listRecords() });
+        if (req.method === "POST" && url.pathname === "/api/admin/clients") return json(res, 201, { client: await store.createClient(await bodyJson(req)) });
+        const duplicateMatch = url.pathname.match(/^\/api\/admin\/clients\/([^/]+)\/duplicate$/);
+        if (req.method === "POST" && duplicateMatch) {
+          const client = await store.duplicateClient(decodeURIComponent(duplicateMatch[1]));
+          return client ? json(res, 201, { client }) : json(res, 404, { error: "Client not found." });
+        }
+        const updateMatch = url.pathname.match(/^\/api\/admin\/clients\/([^/]+)$/);
+        if (req.method === "PUT" && updateMatch) {
+          const client = await store.updateClient(decodeURIComponent(updateMatch[1]), await bodyJson(req));
+          return client ? json(res, 200, { client }) : json(res, 404, { error: "Client not found." });
+        }
+      }
+
+      if (req.method === "GET") return serveStatic(url.pathname, res);
+      return json(res, 404, { error: "Not found." });
+    } catch (error) {
+      return json(res, error.status || 500, { error: error.status ? error.message : "The service could not complete this request." });
+    }
+  });
+}
+
+async function serveStatic(pathname, res) {
+  const routes = { "/": "index.html", "/admin": "admin.html", "/widget.js": "widget.js" };
+  const relative = routes[pathname] || pathname.replace(/^\//, "");
+  const file = path.resolve(publicDir, relative);
+  if (!file.startsWith(`${publicDir}${path.sep}`)) return json(res, 403, { error: "Forbidden." });
+  try {
+    const body = await readFile(file);
+    const headers = { "Content-Type": MIME[path.extname(file)] || "application/octet-stream", "X-Content-Type-Options": "nosniff", "Referrer-Policy": "strict-origin-when-cross-origin" };
+    if (path.basename(file) === "widget.js") headers["Cache-Control"] = "public, max-age=300";
+    res.writeHead(200, headers);
+    res.end(body);
+  } catch { json(res, 404, { error: "Not found." }); }
+}
+
+if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  const app = await createApp();
+  const port = Number(runtimeEnv.PORT || 4310);
+  const host = runtimeEnv.HOST || "127.0.0.1";
+  app.listen(port, host, () => console.log(`AI Website Assistant running at http://${host}:${port}`));
+}
+
+function loadEnvironment(file) {
+  const loaded = { ...process.env };
+  try {
+    for (const line of readFileSync(file, "utf8").split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Z_][A-Z0-9_]*)\s*=\s*(.*)\s*$/i);
+      if (!match || loaded[match[1]] !== undefined) continue;
+      loaded[match[1]] = match[2].replace(/^(['"])(.*)\1$/, "$2");
+    }
+  } catch { /* The environment file is optional. */ }
+  loaded.ADMIN_TOKEN ||= "change-me-before-live-use";
+  return loaded;
+}

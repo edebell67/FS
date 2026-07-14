@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Assistant Platform — Administration</title>
+  <link rel="stylesheet" href="/admin.css">
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <a class="product" href="/admin"><span>AP</span><strong>Assistant<br>Platform</strong></a>
+      <nav><button class="nav-active" data-view="clients">Client profiles <b id="client-count">—</b></button><button data-view="activity">Activity <b id="activity-count">—</b></button></nav>
+      <div class="connection"><i></i><span>Central service<br><b id="connection-label">Connecting</b></span></div>
+    </aside>
+    <main>
+      <header class="topbar"><div><p class="kicker">Platform administration</p><h1 id="view-title">Client profiles</h1></div><div class="auth"><label for="admin-token">Admin token</label><input id="admin-token" type="password" autocomplete="current-password"><button id="connect">Connect</button></div></header>
+      <section id="clients-view" class="workspace">
+        <div class="client-rail"><div class="rail-head"><span>Profiles</span><button id="new-client" aria-label="Create client">＋</button></div><div id="client-list"></div></div>
+        <form id="client-form" class="editor" hidden>
+          <div class="editor-head"><div><p class="kicker" id="client-key"></p><h2 id="editor-title"></h2></div><div class="actions"><button type="button" id="duplicate">Duplicate</button><button class="primary" type="submit">Save changes</button></div></div>
+          <div class="section"><h3>Identity & activation</h3><div class="fields two"><label>Business name<input name="businessName" required maxlength="120"></label><label>Tagline<input name="tagline" maxlength="160"></label><label>Website hosts<input name="allowedHosts" placeholder="example.com, www.example.com"></label><label>Status<select name="status"><option value="demo">Demo</option><option value="live">Live</option></select></label></div></div>
+          <div class="section"><h3>Brand system</h3><div class="fields four"><label>Mark<input name="logoText" maxlength="4"></label><label>Accent<input name="accent" type="color"></label><label>Ink<input name="ink" type="color"></label><label>Surface<input name="surface" type="color"></label></div></div>
+          <div class="section"><h3>Enabled modules</h3><p class="hint">The core assistant is always enabled. Every other capability can operate independently.</p><div id="module-grid" class="module-grid"></div></div>
+          <div class="section"><h3>Contact & booking</h3><div class="fields two"><label>Telephone<input name="telephone"></label><label>Email<input name="email" type="email"></label><label>Address<input name="address"></label><label>Opening hours<input name="openingHours"></label><label>Booking provider<input name="bookingProvider"></label><label>Booking URL<input name="bookingUrl" type="url"></label></div></div>
+          <div class="section"><div class="section-title"><h3>Approved knowledge</h3><button type="button" id="add-knowledge">Add entry</button></div><div id="knowledge-list"></div></div>
+          <div class="save-bar"><span id="save-state">Changes are saved to the central client profile.</span><button class="primary" type="submit">Save changes</button></div>
+        </form>
+        <div id="empty-state" class="empty"><span>↖</span><h2>Select a client profile</h2><p>Review branding, modules and approved business knowledge.</p></div>
+      </section>
+      <section id="activity-view" class="activity" hidden><div class="activity-filter"><button class="active" data-type="conversations">Conversations</button><button data-type="leads">Leads</button><button data-type="callbacks">Callbacks</button><button data-type="bookings">Bookings</button><button data-type="payments">Payments</button><button data-type="emails">Email previews</button><button data-type="crmLeads">CRM leads</button></div><div id="activity-table"></div></section>
+    </main>
+  </div>
+  <script src="/admin.js" defer></script>
+</body>
+</html>
