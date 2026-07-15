@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
+      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -178,14 +178,14 @@
           }
         ],
         "slots": [
-          "Today \u00b7 14:30",
-          "Tomorrow \u00b7 10:00",
-          "Saturday \u00b7 12:15"
+          "Today · 14:30",
+          "Tomorrow · 10:00",
+          "Saturday · 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
+        "testCardLabel": "Demo card •••• 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -280,7 +280,7 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
+        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
       },
       {
         "id": "appointments",
@@ -308,7 +308,7 @@
     "contact": {
       "telephone": "020 7515 9099",
       "email": "",
-      "address": "E3 3LT \u2014 see the preview contact section",
+      "address": "E3 3LT — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -349,14 +349,14 @@
           }
         ],
         "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
+          "Demo slot · Monday 09:00",
+          "Demo slot · Wednesday 13:30",
+          "Demo slot · Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+        "testCardLabel": "Demo card •••• 4242 — no charge"
       },
       "email": {
         "fromName": "Docklands Vehicle Centre Demo Service Desk",
@@ -443,7 +443,7 @@
     "contact": {
       "telephone": "07956 824262",
       "email": "",
-      "address": "E3 4AG \u2014 see the preview contact section",
+      "address": "E3 4AG — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -484,14 +484,14 @@
           }
         ],
         "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
+          "Demo slot · Monday 09:00",
+          "Demo slot · Wednesday 13:30",
+          "Demo slot · Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+        "testCardLabel": "Demo card •••• 4242 — no charge"
       },
       "email": {
         "fromName": "AA Autos Demo Service Desk",
@@ -578,7 +578,7 @@
     "contact": {
       "telephone": "020 8852 3652",
       "email": "",
-      "address": "SE13 6HE \u2014 see the preview contact section",
+      "address": "SE13 6HE — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -619,14 +619,14 @@
           }
         ],
         "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
+          "Demo slot · Monday 09:00",
+          "Demo slot · Wednesday 13:30",
+          "Demo slot · Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+        "testCardLabel": "Demo card •••• 4242 — no charge"
       },
       "email": {
         "fromName": "Abbey Auto Services Demo Service Desk",
@@ -713,9 +713,9 @@
     "contact": {
       "telephone": "020 8741 9993",
       "email": "",
-      "address": "247\u2013251 Goldhawk Road, London",
+      "address": "247–251 Goldhawk Road, London",
       "mapUrl": "",
-      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
+      "openingHours": "Monday–Friday 08:00–18:00; Saturday 08:30–13:00"
     },
     "booking": {
       "provider": "Demo",
@@ -754,14 +754,14 @@
           }
         ],
         "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
+          "Demo slot · Monday 09:00",
+          "Demo slot · Wednesday 13:30",
+          "Demo slot · Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
+        "testCardLabel": "Demo card •••• 4242 — no charge"
       },
       "email": {
         "fromName": "A C Automotive Engineering Demo Service Desk",
@@ -899,14 +899,14 @@
           }
         ],
         "slots": [
-          "Today \u00b7 16:00",
-          "Tomorrow \u00b7 10:30",
-          "Saturday \u00b7 11:15"
+          "Today · 16:00",
+          "Tomorrow · 10:30",
+          "Saturday · 11:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
+        "testCardLabel": "Demo card •••• 4242"
       },
       "email": {
         "fromName": "Fun Cuts Demo Concierge",
@@ -983,7 +983,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
+        "content": "Cuts and finishing start from £15, colour and care from £45, family sessions from £12, and styling and events from £25."
       },
       {
         "id": "offer",
@@ -996,5 +996,1382 @@
         "content": "Fun Cuts has over 10 years of experience in the Penge community and is 100% family friendly."
       }
     ]
+  },
+  {
+    "id": "sanu-motors",
+    "publicKey": "ep044_sanu_motors",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Sanu Motors",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "SM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 7551 021029",
+      "email": "info@sanumotors.com",
+      "address": "76A College Road, BR1 3PE",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Sanu Motors, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 7551 021029; email info@sanumotors.com; address 76A College Road, BR1 3PE."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/sanu-motors/",
+      "hostedUrl": "https://edebell67.github.io/epics/sanu-motors/"
+    }
+  },
+  {
+    "id": "a-team-auto",
+    "publicKey": "ep044_a_team_auto",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "A Team Auto",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "ATA",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 3909 0159",
+      "email": "",
+      "address": "Address to confirm",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for A Team Auto, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 3909 0159; email not confirmed; address Address to confirm."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/a-team-auto/",
+      "hostedUrl": "https://edebell67.github.io/epics/a-team-auto/"
+    }
+  },
+  {
+    "id": "bancroft-garage",
+    "publicKey": "ep044_bancroft_garage",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Bancroft Garage",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "BG",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 7790 6128",
+      "email": "",
+      "address": "Address to confirm",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Bancroft Garage, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 7790 6128; email not confirmed; address Address to confirm."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/bancroft-garage/",
+      "hostedUrl": "https://edebell67.github.io/epics/bancroft-garage/"
+    }
+  },
+  {
+    "id": "battersea-motors-ltd",
+    "publicKey": "ep044_battersea_motors_ltd",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Battersea Motors Ltd.",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "BML",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+442076229413",
+      "email": "",
+      "address": "36 Portslade Road",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Battersea Motors Ltd., not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +442076229413; email not confirmed; address 36 Portslade Road."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/battersea-motors-ltd/",
+      "hostedUrl": "https://edebell67.github.io/epics/battersea-motors-ltd/"
+    }
+  },
+  {
+    "id": "belgravia-garage",
+    "publicKey": "ep044_belgravia_garage",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Belgravia Garage",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "BG",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 7235 9900",
+      "email": "",
+      "address": "Address to confirm",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Belgravia Garage, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 7235 9900; email not confirmed; address Address to confirm."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/belgravia-garage/",
+      "hostedUrl": "https://edebell67.github.io/epics/belgravia-garage/"
+    }
+  },
+  {
+    "id": "bennett-and-barnes",
+    "publicKey": "ep044_bennett_and_barnes",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Bennett & Barnes",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "BB",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 72749002",
+      "email": "",
+      "address": "423 Gordon Grove, SE5 9DU",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Bennett & Barnes, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 72749002; email not confirmed; address 423 Gordon Grove, SE5 9DU."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/bennett-and-barnes/",
+      "hostedUrl": "https://edebell67.github.io/epics/bennett-and-barnes/"
+    }
+  },
+  {
+    "id": "boundary-autos",
+    "publicKey": "ep044_boundary_autos",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Boundary Autos",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "BA",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+442077203937",
+      "email": "",
+      "address": "653",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Boundary Autos, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +442077203937; email not confirmed; address 653."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/boundary-autos/",
+      "hostedUrl": "https://edebell67.github.io/epics/boundary-autos/"
+    }
+  },
+  {
+    "id": "c-and-h-taxi-s",
+    "publicKey": "ep044_c_and_h_taxi_s",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "C & H Taxi's",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "CHT",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 8983 0679",
+      "email": "",
+      "address": "2A Vyner Street",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for C & H Taxi's, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 8983 0679; email not confirmed; address 2A Vyner Street."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/c-and-h-taxi-s/",
+      "hostedUrl": "https://edebell67.github.io/epics/c-and-h-taxi-s/"
+    }
+  },
+  {
+    "id": "c-b-motors",
+    "publicKey": "ep044_c_b_motors",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "C B Motors",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "CBM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 8455 3373",
+      "email": "",
+      "address": "9 Hoop Lane, NW11 8JR",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for C B Motors, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 8455 3373; email not confirmed; address 9 Hoop Lane, NW11 8JR."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/c-b-motors/",
+      "hostedUrl": "https://edebell67.github.io/epics/c-b-motors/"
+    }
+  },
+  {
+    "id": "chequers-autos-ltd",
+    "publicKey": "ep044_chequers_autos_ltd",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Chequers Autos Ltd.",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "CAL",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+442077207287",
+      "email": "",
+      "address": "654",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Chequers Autos Ltd., not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +442077207287; email not confirmed; address 654."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/chequers-autos-ltd/",
+      "hostedUrl": "https://edebell67.github.io/epics/chequers-autos-ltd/"
+    }
+  },
+  {
+    "id": "clee-brothers",
+    "publicKey": "ep044_clee_brothers",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Clee Brothers",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "CB",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 8889 6090",
+      "email": "",
+      "address": "Address to confirm",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Clee Brothers, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 8889 6090; email not confirmed; address Address to confirm."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/clee-brothers/",
+      "hostedUrl": "https://edebell67.github.io/epics/clee-brothers/"
+    }
+  },
+  {
+    "id": "concept-customs",
+    "publicKey": "ep044_concept_customs",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Concept Customs",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "CC",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 7842 154048",
+      "email": "",
+      "address": "189 High Street Harlesden",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Concept Customs, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 7842 154048; email not confirmed; address 189 High Street Harlesden."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/concept-customs/",
+      "hostedUrl": "https://edebell67.github.io/epics/concept-customs/"
+    }
+  },
+  {
+    "id": "dandt-wise",
+    "publicKey": "ep044_dandt_wise",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "D&T Wise",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "DTW",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 8303 5211",
+      "email": "",
+      "address": "Broadway, DA6 8AA",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for D&T Wise, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 8303 5211; email not confirmed; address Broadway, DA6 8AA."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/dandt-wise/",
+      "hostedUrl": "https://edebell67.github.io/epics/dandt-wise/"
+    }
+  },
+  {
+    "id": "detailz-london",
+    "publicKey": "ep044_detailz_london",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Detailz London",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "DL",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 79 5799 7997",
+      "email": "",
+      "address": "605 Romford Road",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Detailz London, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 79 5799 7997; email not confirmed; address 605 Romford Road."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/detailz-london/",
+      "hostedUrl": "https://edebell67.github.io/epics/detailz-london/"
+    }
+  },
+  {
+    "id": "e-two-mot-centre",
+    "publicKey": "ep044_e_two_mot_centre",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "E-Two MOT Centre",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "ETM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 7739 1922;+44 20 7729 4600",
+      "email": "",
+      "address": "Arch 288 Cambridge Heath Road",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for E-Two MOT Centre, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 7739 1922;+44 20 7729 4600; email not confirmed; address Arch 288 Cambridge Heath Road."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/e-two-mot-centre/",
+      "hostedUrl": "https://edebell67.github.io/epics/e-two-mot-centre/"
+    }
+  },
+  {
+    "id": "e3-motoring",
+    "publicKey": "ep044_e3_motoring",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "E3 Motoring",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "EM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 20 8980 9844",
+      "email": "",
+      "address": "Address to confirm",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for E3 Motoring, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 20 8980 9844; email not confirmed; address Address to confirm."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/e3-motoring/",
+      "hostedUrl": "https://edebell67.github.io/epics/e3-motoring/"
+    }
+  },
+  {
+    "id": "eagle-s-garage",
+    "publicKey": "ep044_eagle_s_garage",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Eagle's Garage",
+    "tagline": "Private owner preview — vehicle repair enquiries",
+    "logoText": "ESG",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "+44 7723 692 826",
+      "email": "",
+      "address": "160 Homerton High Street",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Vehicle repair enquiry",
+        "url": "#tool",
+        "keywords": [
+          "vehicle",
+          "repair",
+          "enquiry",
+          "quote"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration for Eagle's Garage, not the official business website. No enquiry is sent from the website."
+      },
+      {
+        "id": "contact",
+        "title": "Public contact route",
+        "content": "Publicly listed contact route: telephone +44 7723 692 826; email not confirmed; address 160 Homerton High Street."
+      },
+      {
+        "id": "services",
+        "title": "Service scope",
+        "content": "Specific services, prices, availability, qualifications and opening hours require owner confirmation. The assistant should not guess them."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/eagle-s-garage/",
+      "hostedUrl": "https://edebell67.github.io/epics/eagle-s-garage/"
+    }
   }
 ]
