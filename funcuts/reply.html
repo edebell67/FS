@@ -61,7 +61,9 @@
             body: JSON.stringify({ clientKey: "funcuts_se20", action, sessionId, pageUrl: location.href })
           });
           if (!response.ok) throw new Error("Unable to record this selection.");
-          result.textContent = messages[action];
+          result.textContent = `${messages[action]} This page will now close.`;
+          setTimeout(() => { window.close(); }, 1200);
+          setTimeout(() => { if (!window.closed) location.replace("about:blank"); }, 1800);
         } catch {
           result.className = "reply-result error";
           result.textContent = "We could not record that selection. Please try again later.";
