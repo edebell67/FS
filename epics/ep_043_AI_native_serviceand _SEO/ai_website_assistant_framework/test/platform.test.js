@@ -12,12 +12,21 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 let temporary;
 let server;
 let base;
+let ledgerWrites = [];
 
 test.before(async () => {
   temporary = await mkdtemp(path.join(os.tmpdir(), "assistant-platform-"));
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
-  server = await createApp({ store: new JsonStore(temporary), env: { ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "" } });
+  server = await createApp({ store: new JsonStore(temporary), env: {
+    ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
+    fetchImpl: async (_url, options = {}) => {
+      if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
+      ledgerWrites.push(JSON.parse(options.body));
+      return { status: 201, ok: true, json: async () => ({ content: { sha: "next-sha" } }) };
+    }
+  } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
@@ -145,6 +154,9 @@ test("preview response endpoint records a private decision without email or noti
   });
   assert.equal(accepted.status, 201);
   assert.equal(accepted.body.accepted, true);
+  assert.equal(accepted.body.durable, true);
+  assert.equal(ledgerWrites.length, 1);
+  assert.match(Buffer.from(ledgerWrites[0].content, "base64").toString("utf8"), /Fun Cuts response - discuss activation/);
   assert.equal(accepted.body.notification, undefined);
   const records = await request("/api/admin/records", { token: "test-secret" });
   assert.equal(records.body.records.previewResponses.length, 1);

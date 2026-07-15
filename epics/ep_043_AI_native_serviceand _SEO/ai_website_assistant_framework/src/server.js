@@ -60,6 +60,29 @@ function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+async function writeResponseLedger({ env, record }) {
+  const token = String(env.RESPONSE_LEDGER_GITHUB_TOKEN || "").trim();
+  const repository = String(env.RESPONSE_LEDGER_REPOSITORY || "").trim();
+  const filePath = String(env.RESPONSE_LEDGER_PATH || "responses.ndjson").trim().replace(/^\/+/, "");
+  if (!token || !repository || !filePath) throw Object.assign(new Error("Durable response storage is not configured."), { status: 503 });
+  const api = `https://api.github.com/repos/${repository}/contents/${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "ai-website-assistant" };
+  const request = env.fetchImpl || fetch;
+  const existing = await request(api, { method: "GET", headers });
+  let prior = ""; let sha;
+  if (existing.ok) {
+    const body = await existing.json();
+    prior = Buffer.from(String(body.content || "").replace(/\s/g, ""), "base64").toString("utf8");
+    sha = body.sha;
+  } else if (existing.status !== 404) {
+    throw Object.assign(new Error("The private response ledger could not be read."), { status: 502 });
+  }
+  const line = `${JSON.stringify({ id: record.id, createdAt: record.createdAt, business: record.businessName, action: record.action, summary: record.summary, pageUrl: record.pageUrl })}\n`;
+  const saved = await request(api, { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ message: `Record ${record.summary}`, content: Buffer.from(`${prior}${line}`, "utf8").toString("base64"), ...(sha ? { sha } : {}) }) });
+  if (!saved.ok) throw Object.assign(new Error("The private response ledger could not be updated."), { status: 502 });
+  return { repository, filePath };
+}
+
 async function notify({ env, client, kind, record }) {
   if (client.status !== "live" || !env.NOTIFICATION_WEBHOOK_URL) return { delivered: false, reason: client.status === "demo" ? "demo_mode" : "not_configured" };
   const response = await fetch(env.NOTIFICATION_WEBHOOK_URL, {
@@ -110,10 +133,11 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         if (!allowedActions.has(action)) throw Object.assign(new Error("Choose a valid preview response."), { status: 400 });
         const labels = { discuss_activation: "discuss activation", request_callback: "arrange callback", close_preview: "close preview" };
         const record = await store.appendRecord("previewResponses", {
-          clientId: client.id, action, summary: `${client.businessName} response - ${labels[action]}`,
+          clientId: client.id, businessName: client.businessName, action, summary: `${client.businessName} response - ${labels[action]}`,
           pageUrl: cleanText(input.pageUrl, 500), sessionId: cleanText(input.sessionId, 100), simulated: client.status === "demo"
         });
-        return json(res, 201, { accepted: true, record: { id: record.id, action: record.action, createdAt: record.createdAt }, simulated: record.simulated }, corsHeaders(req));
+        await writeResponseLedger({ env, record });
+        return json(res, 201, { accepted: true, durable: true, record: { id: record.id, action: record.action, createdAt: record.createdAt }, simulated: record.simulated }, corsHeaders(req));
       }
 
       if (req.method === "POST" && ["/api/public/leads", "/api/public/callbacks"].includes(url.pathname)) {
