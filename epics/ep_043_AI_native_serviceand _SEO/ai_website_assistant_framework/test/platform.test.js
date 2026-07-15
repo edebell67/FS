@@ -136,6 +136,23 @@ test("Hoxtans demo business workflows are tenant-scoped, simulated, and recorded
   assert.ok(["bookings", "payments", "emails", "crmLeads"].every((type) => records.body.records[type][0].simulated));
 });
 
+test("preview response endpoint records a private decision without email or notification", async () => {
+  const accepted = await request("/api/public/preview-responses", {
+    method: "POST",
+    origin: "https://edebell67.github.io",
+    body: { clientKey: "funcuts_se20", action: "discuss_activation", pageUrl: "https://edebell67.github.io/epics/funcuts/reply.html" }
+  });
+  assert.equal(accepted.status, 201);
+  assert.equal(accepted.body.accepted, true);
+  assert.equal(accepted.body.notification, undefined);
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  assert.equal(records.body.records.previewResponses.length, 1);
+  assert.equal(records.body.records.previewResponses[0].clientId, "fun-cuts");
+  assert.equal(records.body.records.previewResponses[0].action, "discuss_activation");
+  const invalid = await request("/api/public/preview-responses", { method: "POST", body: { clientKey: "funcuts_se20", host: "localhost", action: "anything_else" } });
+  assert.equal(invalid.status, 400);
+});
+
 test("admin endpoints enforce auth and persist configurable module/live state", async () => {
   const denied = await request("/api/admin/clients");
   assert.equal(denied.status, 401);

@@ -3,7 +3,9 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const clone = (value) => structuredClone(value);
-const RECORD_TYPES = ["conversations", "leads", "callbacks", "bookings", "payments", "emails", "crmLeads"];
+const RECORD_TYPES = ["conversations", "previewResponses", "leads", "callbacks", "bookings", "payments", "emails", "crmLeads"];
+const WORKFLOW_STATUSES = new Set(["not_started", "in_progress", "ready_for_outreach", "blocked", "outreach_sent", "replied", "closed_do_not_contact"]);
+const WORKFLOW_STAGE_STATES = new Set(["pending", "complete", "not_applicable"]);
 
 function normalizeHost(value = "") {
   return String(value).trim().toLowerCase().replace(/^https?:\/\//, "").split("/")[0].split(":")[0];
@@ -21,7 +23,7 @@ export class JsonStore {
 
   async init() {
     await mkdir(this.dataDir, { recursive: true });
-    this.clients = JSON.parse(await readFile(this.clientsPath, "utf8"));
+    this.clients = JSON.parse(await readFile(this.clientsPath, "utf8")).map(normalizeClient);
     const records = JSON.parse(await readFile(this.recordsPath, "utf8"));
     this.records = Object.fromEntries(RECORD_TYPES.map((type) => [type, Array.isArray(records[type]) ? records[type] : []]));
     return this;
@@ -128,6 +130,15 @@ function slugify(value = "client") {
   return String(value).toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 48) || `client-${randomUUID().slice(0, 6)}`;
 }
 
+function normalizeWorkflow(workflow = {}) {
+  const stages = Object.fromEntries(Object.entries(workflow?.stages || {}).map(([key, value]) => [String(key).slice(0, 80), WORKFLOW_STAGE_STATES.has(value) ? value : "pending"]));
+  return {
+    status: WORKFLOW_STATUSES.has(workflow?.status) ? workflow.status : "not_started",
+    blocker: String(workflow?.blocker || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 1500),
+    stages
+  };
+}
+
 function normalizeClient(client) {
   const modules = ["assistant", ...(Array.isArray(client.enabledModules) ? client.enabledModules : [])];
   return {
@@ -140,7 +151,9 @@ function normalizeClient(client) {
     enabledModules: [...new Set(modules)],
     pages: Array.isArray(client.pages) ? client.pages : [],
     knowledge: Array.isArray(client.knowledge) ? client.knowledge : [],
+    deployments: Array.isArray(client.deployments) ? client.deployments : (client.deployment ? [client.deployment] : []),
     notificationDestinations: Array.isArray(client.notificationDestinations) ? client.notificationDestinations : [],
+    workflow: normalizeWorkflow(client.workflow),
     demoWorkflows: client.demoWorkflows && typeof client.demoWorkflows === "object" ? client.demoWorkflows : {}
   };
 }
