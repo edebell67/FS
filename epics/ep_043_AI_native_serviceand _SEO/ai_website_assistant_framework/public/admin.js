@@ -3,7 +3,21 @@ const MODULES = [
   ["callback", "Callback"], ["leadCapture", "Lead capture"], ["contact", "Contact help"],
   ["demoBooking", "Demo booking"], ["demoPayment", "Demo payment"], ["demoEmail", "Demo email"], ["demoCrm", "Demo CRM"]
 ];
-const state = { clients: [], selected: null, records: {}, recordType: "conversations" };
+const DEPLOYMENT_STATUSES = ["local", "github", "github+render", "demo", "live"];
+const WORKFLOW_STAGES = [
+  ["candidate_qualified", "Candidate matches the offer and scope"],
+  ["site_and_assistant_checked", "Current site and visible assistant checked"],
+  ["public_facts_verified", "Public facts and owner contact route verified"],
+  ["assistant_demo_prepared", "Current-site assistant demo prepared"],
+  ["github_committed", "Source committed to GitHub"],
+  ["hosted_url_verified", "Public hosted URL verified"],
+  ["tenant_and_browser_qa", "Tenant, assistant controls, close/reopen and console QA passed"],
+  ["outreach_copy_prepared", "Owner-specific outreach copy and reply route prepared"],
+  ["ed_send_approval", "Ed approved exact recipient and send"],
+  ["outreach_sent", "Outreach sent and logged"],
+  ["inbound_outcome_recorded", "Reply / opt-out / next permitted action recorded"]
+];
+const state = { clients: [], selected: null, records: {}, recordType: "previewResponses" };
 const $ = (selector) => document.querySelector(selector);
 
 const tokenInput = $("#admin-token");
@@ -13,6 +27,7 @@ $("#client-form").addEventListener("submit", saveClient);
 $("#duplicate").addEventListener("click", duplicateClient);
 $("#new-client").addEventListener("click", createClient);
 $("#add-knowledge").addEventListener("click", () => addKnowledgeRow({ title: "", content: "" }));
+$("#add-deployment").addEventListener("click", () => addDeploymentRow({}));
 document.querySelectorAll("aside nav button").forEach((button) => button.addEventListener("click", () => switchView(button.dataset.view)));
 document.querySelectorAll(".activity-filter button").forEach((button) => button.addEventListener("click", () => { state.recordType = button.dataset.type; document.querySelectorAll(".activity-filter button").forEach((item) => item.classList.toggle("active", item === button)); renderActivity(); }));
 connect();
@@ -62,6 +77,49 @@ function selectClient(id) {
   const moduleGrid = $("#module-grid"); moduleGrid.replaceChildren();
   for (const [key, label] of MODULES) { const wrap = document.createElement("label"); const input = document.createElement("input"); input.type = "checkbox"; input.value = key; input.checked = client.enabledModules.includes(key); input.disabled = key === "assistant"; wrap.append(input, label); moduleGrid.append(wrap); }
   const knowledge = $("#knowledge-list"); knowledge.replaceChildren(); (client.knowledge || []).forEach(addKnowledgeRow);
+  const deployments = $("#deployment-list"); deployments.replaceChildren();
+  const deploymentEntries = Array.isArray(client.deployments) ? client.deployments : (client.deployment ? [client.deployment] : []);
+  if (deploymentEntries.length) deploymentEntries.forEach(addDeploymentRow); else addDeploymentRow({});
+  const workflow = client.workflow || {};
+  setValue(form, "workflowStatus", workflow.status || "not_started"); setValue(form, "workflowBlocker", workflow.blocker || "");
+  renderWorkflowStages(workflow.stages || {});
+}
+
+function renderWorkflowStages(stages) {
+  const list = $("#workflow-stage-list"); list.replaceChildren();
+  for (const [key, label] of WORKFLOW_STAGES) {
+    const row = document.createElement("label"); row.className = "workflow-stage";
+    const text = document.createElement("span"); text.textContent = label;
+    const select = document.createElement("select"); select.dataset.workflowStage = key;
+    for (const [value, optionLabel] of [["pending", "Pending"], ["complete", "Complete"], ["not_applicable", "N/A"]]) { const option = document.createElement("option"); option.value = value; option.textContent = optionLabel; option.selected = (stages[key] || "pending") === value; select.append(option); }
+    row.append(text, select); list.append(row);
+  }
+}
+
+function addDeploymentRow(item) {
+  const row = document.createElement("div"); row.className = "deployment-row"; row.dataset.id = item.id || `deploy-${crypto.randomUUID().slice(0, 6)}`;
+  const topGrid = document.createElement("div"); topGrid.className = "grid";
+  const labelField = document.createElement("label"); labelField.textContent = "Instance label";
+  const labelInput = document.createElement("input"); labelInput.className = "deploy-label"; labelInput.placeholder = "Redesigned site + AI"; labelInput.value = item.label || ""; labelInput.maxLength = 80;
+  labelField.append(labelInput);
+  const statusField = document.createElement("label"); statusField.textContent = "Workflow status";
+  const statusSelect = document.createElement("select"); statusSelect.className = "deploy-status";
+  for (const status of DEPLOYMENT_STATUSES) { const option = document.createElement("option"); option.value = status; option.textContent = status; if ((item.status || "local") === status) option.selected = true; statusSelect.append(option); }
+  statusField.append(statusSelect);
+  topGrid.append(labelField, statusField);
+
+  const bottomGrid = document.createElement("div"); bottomGrid.className = "grid wide";
+  const locField = document.createElement("label"); locField.textContent = "App location";
+  const locInput = document.createElement("input"); locInput.className = "deploy-location"; locInput.placeholder = "epics/ep_044_web_apps/funcut_redesigned/"; locInput.value = item.appLocation || "";
+  locField.append(locInput);
+  const urlField = document.createElement("label"); urlField.textContent = "Hosted URL";
+  const urlInput = document.createElement("input"); urlInput.className = "deploy-url"; urlInput.type = "url"; urlInput.placeholder = "https://edebell67.github.io/epics/..."; urlInput.value = item.hostedUrl || "";
+  urlField.append(urlInput);
+  bottomGrid.append(locField, urlField);
+
+  const remove = document.createElement("button"); remove.type = "button"; remove.className = "remove-deployment"; remove.textContent = "×"; remove.setAttribute("aria-label", "Remove deployment instance"); remove.addEventListener("click", () => row.remove());
+
+  row.append(remove, topGrid, bottomGrid); $("#deployment-list").append(row);
 }
 
 function addKnowledgeRow(item) {
@@ -77,9 +135,16 @@ async function saveClient(event) {
   const form = new FormData(event.currentTarget);
   const enabledModules = [...document.querySelectorAll("#module-grid input:checked")].map((input) => input.value);
   const knowledge = [...document.querySelectorAll(".knowledge-row")].map((row) => ({ id: row.dataset.id, title: row.querySelector("input").value.trim(), content: row.querySelector("textarea").value.trim() })).filter((item) => item.title && item.content);
+  const deployments = [...document.querySelectorAll(".deployment-row")].map((row) => ({
+    id: row.dataset.id,
+    label: row.querySelector(".deploy-label").value.trim(),
+    status: row.querySelector(".deploy-status").value,
+    appLocation: row.querySelector(".deploy-location").value.trim(),
+    hostedUrl: row.querySelector(".deploy-url").value.trim()
+  })).filter((item) => item.label || item.appLocation || item.hostedUrl);
   const patch = {
     businessName: form.get("businessName"), tagline: form.get("tagline"), status: form.get("status"), logoText: form.get("logoText"),
-    allowedHosts: form.get("allowedHosts").split(",").map((item) => item.trim()).filter(Boolean), enabledModules, knowledge,
+    allowedHosts: form.get("allowedHosts").split(",").map((item) => item.trim()).filter(Boolean), enabledModules, knowledge, deployments,
     theme: { accent: form.get("accent"), ink: form.get("ink"), surface: form.get("surface") },
     contact: { ...state.selected.contact, telephone: form.get("telephone"), email: form.get("email"), address: form.get("address"), openingHours: form.get("openingHours") },
     booking: { provider: form.get("bookingProvider"), url: form.get("bookingUrl") }
@@ -97,7 +162,7 @@ async function duplicateClient() {
 async function createClient() {
   const businessName = prompt("Business name"); if (!businessName) return;
   try {
-    const { client } = await api("/api/admin/clients", { method:"POST", body:JSON.stringify({ businessName, status:"demo", allowedHosts:["localhost"], logoText:businessName.slice(0,2).toUpperCase(), theme:{ accent:"#e85d3f", ink:"#17211f", surface:"#f5f0e7" }, contact:{}, booking:{}, enabledModules:["assistant","faq","contact"], pages:[], knowledge:[], notificationDestinations:[] }) });
+    const { client } = await api("/api/admin/clients", { method:"POST", body:JSON.stringify({ businessName, status:"demo", allowedHosts:["localhost"], logoText:businessName.slice(0,2).toUpperCase(), theme:{ accent:"#e85d3f", ink:"#17211f", surface:"#f5f0e7" }, contact:{}, booking:{}, deployment:{}, enabledModules:["assistant","faq","contact"], pages:[], knowledge:[], notificationDestinations:[] }) });
     state.clients.push(client); $("#client-count").textContent = state.clients.length; selectClient(client.id); toast("Client profile created");
   } catch (error) { toast(error.message); }
 }
@@ -114,7 +179,7 @@ function renderActivity() {
     const row = document.createElement("div"); row.className = "record";
     const time = document.createElement("time"); time.textContent = new Date(record.createdAt).toLocaleString();
     const client = document.createElement("strong"); client.textContent = state.clients.find((item) => item.id === record.clientId)?.businessName || record.clientId;
-    const detail = document.createElement("div"); detail.textContent = [record.reference, record.message || record.reason || record.service || record.subject || record.interest || record.name].filter(Boolean).join(" · ") || "—";
+    const detail = document.createElement("div"); detail.textContent = [record.summary, record.reference, record.message || record.reason || record.service || record.subject || record.interest || record.name].filter(Boolean).join(" · ") || "—";
     const mode = document.createElement("span"); mode.textContent = record.simulated || record.mode === "demo" ? "Demo" : "Live";
     row.append(time, client, detail, mode); table.append(row);
   }

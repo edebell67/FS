@@ -48,6 +48,7 @@ test("health and static assets are executable", async () => {
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);
+  assert.match(admin.body, /Preview responses/);
 });
 
 test("public configuration is tenant-scoped, host-bound, and safely projected", async () => {
