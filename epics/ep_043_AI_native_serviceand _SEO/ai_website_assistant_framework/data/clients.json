@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
+      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -178,14 +178,14 @@
           }
         ],
         "slots": [
-          "Today \u00b7 14:30",
-          "Tomorrow \u00b7 10:00",
-          "Saturday \u00b7 12:15"
+          "Today · 14:30",
+          "Tomorrow · 10:00",
+          "Saturday · 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
+        "testCardLabel": "Demo card •••• 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -280,7 +280,7 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
+        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
       },
       {
         "id": "appointments",
@@ -308,7 +308,7 @@
     "contact": {
       "telephone": "020 7515 9099",
       "email": "",
-      "address": "E3 3LT \u2014 see the preview contact section",
+      "address": "E3 3LT — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -322,59 +322,9 @@
       "assistant",
       "faq",
       "navigation",
-      "contact",
-      "demoBooking",
-      "demoPayment",
-      "demoEmail",
-      "demoCrm"
+      "contact"
     ],
-    "demoWorkflows": {
-      "booking": {
-        "services": [
-          {
-            "name": "Demo vehicle check",
-            "price": 45
-          },
-          {
-            "name": "Demo interim service",
-            "price": 89
-          },
-          {
-            "name": "Demo diagnostic check",
-            "price": 65
-          },
-          {
-            "name": "Demo MOT enquiry",
-            "price": 55
-          }
-        ],
-        "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
-        ]
-      },
-      "payment": {
-        "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
-      },
-      "email": {
-        "fromName": "Docklands Vehicle Centre Demo Service Desk",
-        "subjects": [
-          "Demo vehicle enquiry confirmation",
-          "Demo appointment summary",
-          "Demo diagnostic follow-up"
-        ]
-      },
-      "crm": {
-        "pipelineStages": [
-          "Demo new enquiry",
-          "Demo details requested",
-          "Demo appointment selected",
-          "Demo owner follow-up required"
-        ]
-      }
-    },
+    "demoWorkflows": {},
     "pages": [
       {
         "title": "Services",
@@ -443,7 +393,7 @@
     "contact": {
       "telephone": "07956 824262",
       "email": "",
-      "address": "E3 4AG \u2014 see the preview contact section",
+      "address": "E3 4AG — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -457,59 +407,9 @@
       "assistant",
       "faq",
       "navigation",
-      "contact",
-      "demoBooking",
-      "demoPayment",
-      "demoEmail",
-      "demoCrm"
+      "contact"
     ],
-    "demoWorkflows": {
-      "booking": {
-        "services": [
-          {
-            "name": "Demo vehicle check",
-            "price": 45
-          },
-          {
-            "name": "Demo interim service",
-            "price": 89
-          },
-          {
-            "name": "Demo diagnostic check",
-            "price": 65
-          },
-          {
-            "name": "Demo MOT enquiry",
-            "price": 55
-          }
-        ],
-        "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
-        ]
-      },
-      "payment": {
-        "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
-      },
-      "email": {
-        "fromName": "AA Autos Demo Service Desk",
-        "subjects": [
-          "Demo vehicle enquiry confirmation",
-          "Demo appointment summary",
-          "Demo diagnostic follow-up"
-        ]
-      },
-      "crm": {
-        "pipelineStages": [
-          "Demo new enquiry",
-          "Demo details requested",
-          "Demo appointment selected",
-          "Demo owner follow-up required"
-        ]
-      }
-    },
+    "demoWorkflows": {},
     "pages": [
       {
         "title": "Services",
@@ -578,7 +478,7 @@
     "contact": {
       "telephone": "020 8852 3652",
       "email": "",
-      "address": "SE13 6HE \u2014 see the preview contact section",
+      "address": "SE13 6HE — see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -592,59 +492,9 @@
       "assistant",
       "faq",
       "navigation",
-      "contact",
-      "demoBooking",
-      "demoPayment",
-      "demoEmail",
-      "demoCrm"
+      "contact"
     ],
-    "demoWorkflows": {
-      "booking": {
-        "services": [
-          {
-            "name": "Demo vehicle check",
-            "price": 45
-          },
-          {
-            "name": "Demo interim service",
-            "price": 89
-          },
-          {
-            "name": "Demo diagnostic check",
-            "price": 65
-          },
-          {
-            "name": "Demo MOT enquiry",
-            "price": 55
-          }
-        ],
-        "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
-        ]
-      },
-      "payment": {
-        "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
-      },
-      "email": {
-        "fromName": "Abbey Auto Services Demo Service Desk",
-        "subjects": [
-          "Demo vehicle enquiry confirmation",
-          "Demo appointment summary",
-          "Demo diagnostic follow-up"
-        ]
-      },
-      "crm": {
-        "pipelineStages": [
-          "Demo new enquiry",
-          "Demo details requested",
-          "Demo appointment selected",
-          "Demo owner follow-up required"
-        ]
-      }
-    },
+    "demoWorkflows": {},
     "pages": [
       {
         "title": "Services",
@@ -713,9 +563,9 @@
     "contact": {
       "telephone": "020 8741 9993",
       "email": "",
-      "address": "247\u2013251 Goldhawk Road, London",
+      "address": "247–251 Goldhawk Road, London",
       "mapUrl": "",
-      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
+      "openingHours": "Monday–Friday 08:00–18:00; Saturday 08:30–13:00"
     },
     "booking": {
       "provider": "Demo",
@@ -727,59 +577,9 @@
       "assistant",
       "faq",
       "navigation",
-      "contact",
-      "demoBooking",
-      "demoPayment",
-      "demoEmail",
-      "demoCrm"
+      "contact"
     ],
-    "demoWorkflows": {
-      "booking": {
-        "services": [
-          {
-            "name": "Demo vehicle check",
-            "price": 45
-          },
-          {
-            "name": "Demo interim service",
-            "price": 89
-          },
-          {
-            "name": "Demo diagnostic check",
-            "price": 65
-          },
-          {
-            "name": "Demo MOT enquiry",
-            "price": 55
-          }
-        ],
-        "slots": [
-          "Demo slot \u00b7 Monday 09:00",
-          "Demo slot \u00b7 Wednesday 13:30",
-          "Demo slot \u00b7 Saturday 10:15"
-        ]
-      },
-      "payment": {
-        "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
-      },
-      "email": {
-        "fromName": "A C Automotive Engineering Demo Service Desk",
-        "subjects": [
-          "Demo vehicle enquiry confirmation",
-          "Demo appointment summary",
-          "Demo diagnostic follow-up"
-        ]
-      },
-      "crm": {
-        "pipelineStages": [
-          "Demo new enquiry",
-          "Demo details requested",
-          "Demo appointment selected",
-          "Demo owner follow-up required"
-        ]
-      }
-    },
+    "demoWorkflows": {},
     "pages": [
       {
         "title": "Services",
@@ -859,6 +659,10 @@
       "url": ""
     },
     "status": "demo",
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/funcut_orig/",
+      "hostedUrl": "https://edebell67.github.io/epics/funcuts/"
+    },
     "notificationDestinations": [
       "info@funcuts.co.uk"
     ],
@@ -895,14 +699,14 @@
           }
         ],
         "slots": [
-          "Today \u00b7 16:00",
-          "Tomorrow \u00b7 10:30",
-          "Saturday \u00b7 11:15"
+          "Today · 16:00",
+          "Tomorrow · 10:30",
+          "Saturday · 11:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
+        "testCardLabel": "Demo card •••• 4242"
       },
       "email": {
         "fromName": "Fun Cuts Demo Concierge",
@@ -979,7 +783,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
+        "content": "Cuts and finishing start from £15, colour and care from £45, family sessions from £12, and styling and events from £25."
       },
       {
         "id": "offer",
