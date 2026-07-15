@@ -108,9 +108,10 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const action = cleanText(input.action, 80, true);
         const allowedActions = new Set(["discuss_activation", "request_callback", "close_preview"]);
         if (!allowedActions.has(action)) throw Object.assign(new Error("Choose a valid preview response."), { status: 400 });
+        const labels = { discuss_activation: "discuss activation", request_callback: "arrange callback", close_preview: "close preview" };
         const record = await store.appendRecord("previewResponses", {
-          clientId: client.id, action, pageUrl: cleanText(input.pageUrl, 500),
-          sessionId: cleanText(input.sessionId, 100), simulated: client.status === "demo"
+          clientId: client.id, action, summary: `${client.businessName} response - ${labels[action]}`,
+          pageUrl: cleanText(input.pageUrl, 500), sessionId: cleanText(input.sessionId, 100), simulated: client.status === "demo"
         });
         return json(res, 201, { accepted: true, record: { id: record.id, action: record.action, createdAt: record.createdAt }, simulated: record.simulated }, corsHeaders(req));
       }

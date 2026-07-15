@@ -149,6 +149,7 @@ test("preview response endpoint records a private decision without email or noti
   assert.equal(records.body.records.previewResponses.length, 1);
   assert.equal(records.body.records.previewResponses[0].clientId, "fun-cuts");
   assert.equal(records.body.records.previewResponses[0].action, "discuss_activation");
+  assert.equal(records.body.records.previewResponses[0].summary, "Fun Cuts response - discuss activation");
   const invalid = await request("/api/public/preview-responses", { method: "POST", body: { clientKey: "funcuts_se20", host: "localhost", action: "anything_else" } });
   assert.equal(invalid.status, 400);
 });
