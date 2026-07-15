@@ -1,0 +1,8 @@
+{
+  "businessName": "Mobile Mechanics Finchley",
+  "deliveryPriority": "mobile",
+  "sourceBatches": [
+    "user_provided_mobile_mechanic_leads"
+  ],
+  "candidateId": "user-provided-mobile-mechanic-lead"
+}

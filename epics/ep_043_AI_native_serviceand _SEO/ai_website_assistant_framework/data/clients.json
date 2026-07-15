@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
+      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -178,14 +178,14 @@
           }
         ],
         "slots": [
-          "Today · 14:30",
-          "Tomorrow · 10:00",
-          "Saturday · 12:15"
+          "Today \u00b7 14:30",
+          "Tomorrow \u00b7 10:00",
+          "Saturday \u00b7 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -280,7 +280,7 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
+        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
       },
       {
         "id": "appointments",
@@ -308,7 +308,7 @@
     "contact": {
       "telephone": "020 7515 9099",
       "email": "",
-      "address": "E3 3LT — see the preview contact section",
+      "address": "E3 3LT \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -349,14 +349,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Docklands Vehicle Centre Demo Service Desk",
@@ -443,7 +443,7 @@
     "contact": {
       "telephone": "07956 824262",
       "email": "",
-      "address": "E3 4AG — see the preview contact section",
+      "address": "E3 4AG \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -484,14 +484,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "AA Autos Demo Service Desk",
@@ -578,7 +578,7 @@
     "contact": {
       "telephone": "020 8852 3652",
       "email": "",
-      "address": "SE13 6HE — see the preview contact section",
+      "address": "SE13 6HE \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -619,14 +619,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Abbey Auto Services Demo Service Desk",
@@ -713,9 +713,9 @@
     "contact": {
       "telephone": "020 8741 9993",
       "email": "",
-      "address": "247–251 Goldhawk Road, London",
+      "address": "247\u2013251 Goldhawk Road, London",
       "mapUrl": "",
-      "openingHours": "Monday–Friday 08:00–18:00; Saturday 08:30–13:00"
+      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
     },
     "booking": {
       "provider": "Demo",
@@ -754,14 +754,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "A C Automotive Engineering Demo Service Desk",
@@ -899,14 +899,14 @@
           }
         ],
         "slots": [
-          "Today · 16:00",
-          "Tomorrow · 10:30",
-          "Saturday · 11:15"
+          "Today \u00b7 16:00",
+          "Tomorrow \u00b7 10:30",
+          "Saturday \u00b7 11:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Fun Cuts Demo Concierge",
@@ -983,7 +983,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "Cuts and finishing start from £15, colour and care from £45, family sessions from £12, and styling and events from £25."
+        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
       },
       {
         "id": "offer",
@@ -1006,7 +1006,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Sanu Motors",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "SM",
     "theme": {
       "accent": "#38bdf8",
@@ -1087,7 +1087,7 @@
       "edebell67.github.io"
     ],
     "businessName": "A Team Auto",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ATA",
     "theme": {
       "accent": "#38bdf8",
@@ -1168,7 +1168,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Bancroft Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BG",
     "theme": {
       "accent": "#38bdf8",
@@ -1249,7 +1249,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Battersea Motors Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BML",
     "theme": {
       "accent": "#38bdf8",
@@ -1330,7 +1330,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Belgravia Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BG",
     "theme": {
       "accent": "#38bdf8",
@@ -1411,7 +1411,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Bennett & Barnes",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BB",
     "theme": {
       "accent": "#38bdf8",
@@ -1492,7 +1492,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Boundary Autos",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BA",
     "theme": {
       "accent": "#38bdf8",
@@ -1573,7 +1573,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C & H Taxi's",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CHT",
     "theme": {
       "accent": "#38bdf8",
@@ -1654,7 +1654,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C B Motors",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CBM",
     "theme": {
       "accent": "#38bdf8",
@@ -1735,7 +1735,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Chequers Autos Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CAL",
     "theme": {
       "accent": "#38bdf8",
@@ -1816,7 +1816,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Clee Brothers",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CB",
     "theme": {
       "accent": "#38bdf8",
@@ -1897,7 +1897,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Concept Customs",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CC",
     "theme": {
       "accent": "#38bdf8",
@@ -1978,7 +1978,7 @@
       "edebell67.github.io"
     ],
     "businessName": "D&T Wise",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "DTW",
     "theme": {
       "accent": "#38bdf8",
@@ -2059,7 +2059,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Detailz London",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "DL",
     "theme": {
       "accent": "#38bdf8",
@@ -2140,7 +2140,7 @@
       "edebell67.github.io"
     ],
     "businessName": "E-Two MOT Centre",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ETM",
     "theme": {
       "accent": "#38bdf8",
@@ -2221,7 +2221,7 @@
       "edebell67.github.io"
     ],
     "businessName": "E3 Motoring",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "EM",
     "theme": {
       "accent": "#38bdf8",
@@ -2302,7 +2302,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Eagle's Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ESG",
     "theme": {
       "accent": "#38bdf8",
@@ -2372,6 +2372,656 @@
     "deployment": {
       "appLocation": "epics/ep_044_web_apps/eagle-s-garage/",
       "hostedUrl": "https://edebell67.github.io/epics/eagle-s-garage/"
+    }
+  },
+  {
+    "id": "mobile-mechanic-greenford",
+    "publicKey": "ep044_mobile_mechanic_greenford",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Mobile Mechanic",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07947 767567",
+      "email": "",
+      "address": "Greenford, West London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/mobile-mechanic-greenford/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "blessed-autos-se17",
+    "publicKey": "ep044_blessed_autos_se17",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Blessed Autos",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07958 425317",
+      "email": "",
+      "address": "SE17, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/blessed-autos-se17/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "cosar-motors-body-work-n17",
+    "publicKey": "ep044_cosar_motors_body_work_n17",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Cosar Motors Body Work",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07869 487755",
+      "email": "",
+      "address": "N17, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/cosar-motors-body-work-n17/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "domen-garage-greenford",
+    "publicKey": "ep044_domen_garage_greenford",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Domen Garage",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07771 069746",
+      "email": "",
+      "address": "Greenford, West London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/domen-garage-greenford/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "martins-auto-mechanic-west-ealing",
+    "publicKey": "ep044_martins_auto_mechanic_west_ealing",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Martins Auto Mechanic",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07880 363425",
+      "email": "",
+      "address": "West Ealing, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/martins-auto-mechanic-west-ealing/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "nb-mobile-mechanic-w3",
+    "publicKey": "ep044_nb_mobile_mechanic_w3",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "NB Mobile Mechanic",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07772 722424",
+      "email": "",
+      "address": "W3, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/nb-mobile-mechanic-w3/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "mobile-mechanics-finchley-nw5",
+    "publicKey": "ep044_mobile_mechanics_finchley_nw5",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Mobile Mechanics Finchley",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07359 230343",
+      "email": "",
+      "address": "NW5, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/mobile-mechanics-finchley-nw5/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "cem-mobile-mechanic-north-london",
+    "publicKey": "ep044_cem_mobile_mechanic_north_london",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "CEM Mobile Mechanic",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07473 425360",
+      "email": "",
+      "address": "North London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/cem-mobile-mechanic-north-london/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "a-jax-mobile-car-services-e3",
+    "publicKey": "ep044_a_jax_mobile_car_services_e3",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "A-Jax Mobile Car Services",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07951 220384",
+      "email": "",
+      "address": "E3, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/a-jax-mobile-car-services-e3/",
+      "hostedUrl": ""
+    }
+  },
+  {
+    "id": "l-k-mobile-mechanic-nw9",
+    "publicKey": "ep044_l_k_mobile_mechanic_nw9",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "L K Mobile Mechanic",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
+    "logoText": "MM",
+    "theme": {
+      "accent": "#38bdf8",
+      "ink": "#172033",
+      "surface": "#f8fafc"
+    },
+    "contact": {
+      "telephone": "07522 414256",
+      "email": "",
+      "address": "NW9, London",
+      "mapUrl": "",
+      "openingHours": "Call to confirm opening hours"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "phone",
+          "mobile",
+          "area"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "preview",
+        "title": "Preview status",
+        "content": "This is a private demonstration, not the official business website. No website enquiry is sent."
+      },
+      {
+        "id": "scope",
+        "title": "Service scope",
+        "content": "Services, availability, prices and hours need owner confirmation; do not guess."
+      }
+    ],
+    "demoWorkflows": [],
+    "deployment": {
+      "appLocation": "epics/ep_044_web_apps/l-k-mobile-mechanic-nw9/",
+      "hostedUrl": ""
     }
   }
 ]
