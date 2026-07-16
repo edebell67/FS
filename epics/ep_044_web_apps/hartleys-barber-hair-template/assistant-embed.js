@@ -11,5 +11,15 @@
   widget.dataset.apiBase = apiBase;
   widget.defer = true;
   widget.onerror = () => console.warn("Hartley's assistant is currently unavailable.");
+  // This template deliberately opens its assistant as soon as tenant configuration is ready.
+  widget.addEventListener("load", () => {
+    const openWhenReady = (attempt = 0) => {
+      const host = document.querySelector("ai-website-assistant");
+      const launcher = host?.shadowRoot?.querySelector('[aria-label="Open website assistant"]');
+      if (launcher && launcher.style.display !== "none") { launcher.click(); return; }
+      if (attempt < 100) window.setTimeout(() => openWhenReady(attempt + 1), 100);
+    };
+    openWhenReady();
+  }, { once: true });
   document.head.append(widget);
 })();
