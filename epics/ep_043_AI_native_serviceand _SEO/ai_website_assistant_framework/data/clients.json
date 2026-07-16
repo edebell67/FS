@@ -3047,6 +3047,8 @@
       "url": ""
     },
     "status": "demo",
+    "engagementMode": "proactive",
+    "proactiveDelayMs": 0,
     "notificationDestinations": [],
     "enabledModules": [
       "assistant",
