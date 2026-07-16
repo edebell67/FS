@@ -2814,5 +2814,345 @@
       "blocker": "",
       "stages": {}
     }
+  },
+  {
+    "id": "auto-garage-template",
+    "publicKey": "autogarage_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Ridgeline Motor Works",
+    "tagline": "Vehicle diagnostics, servicing & repair",
+    "logoText": "RMW",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "Sample template - replace per client",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Home",
+        "url": "index.html",
+        "keywords": [
+          "services",
+          "contact",
+          "quote"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "template",
+        "title": "Sample template",
+        "content": "A reusable sample garage template. Services and availability need owner confirmation."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "auto-garage-template-pages",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/auto-garage-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/auto-garage-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
+  },
+  {
+    "id": "bloom-nail-bar-template",
+    "publicKey": "bloomnailbar_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Bloom Nail Bar",
+    "tagline": "Manicure, pedicure & nail art",
+    "logoText": "BN",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "Sample template - replace per client",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Home",
+        "url": "index.html",
+        "keywords": [
+          "services",
+          "contact",
+          "quote"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "template",
+        "title": "Sample template",
+        "content": "A reusable sample nail-bar template. Services, prices and availability need owner confirmation."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "bloom-nail-bar-template-pages",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/bloom-nail-bar-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/bloom-nail-bar-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
+  },
+  {
+    "id": "bright-clear-cleaning-template",
+    "publicKey": "brightclear_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Bright & Clear Cleaning",
+    "tagline": "Domestic & specialist cleaning",
+    "logoText": "BC",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "Sample template - replace per client",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Home",
+        "url": "index.html",
+        "keywords": [
+          "services",
+          "contact",
+          "quote"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "template",
+        "title": "Sample template",
+        "content": "A reusable sample cleaning template. Service scope, prices and availability need owner confirmation."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "bright-clear-cleaning-template-pages",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/bright-clear-cleaning-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/bright-clear-cleaning-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
+  },
+  {
+    "id": "hartleys-barber-hair-template",
+    "publicKey": "hartleys_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Hartley's Barber & Hair Studio",
+    "tagline": "Barbering & hair styling",
+    "logoText": "HB",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "Sample template - replace per client",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Home",
+        "url": "index.html",
+        "keywords": [
+          "services",
+          "contact",
+          "quote"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "template",
+        "title": "Sample template",
+        "content": "A reusable sample barber and hair-studio template. Services, prices and availability need owner confirmation."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "hartleys-barber-hair-template-pages",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/hartleys-barber-hair-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/hartleys-barber-hair-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
+  },
+  {
+    "id": "slate-stone-tiling-template",
+    "publicKey": "slatestone_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Slate & Stone Tiling",
+    "tagline": "Bathrooms, kitchens & tilework",
+    "logoText": "SS",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "Sample template - replace per client",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Home",
+        "url": "index.html",
+        "keywords": [
+          "services",
+          "contact",
+          "quote"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "template",
+        "title": "Sample template",
+        "content": "A reusable sample tiling template. Service scope, prices and availability need owner confirmation."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "slate-stone-tiling-template-pages",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/slate-stone-tiling-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/slate-stone-tiling-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
   }
 ]
