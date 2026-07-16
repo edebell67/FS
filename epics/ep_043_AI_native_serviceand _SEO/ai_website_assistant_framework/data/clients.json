@@ -2618,5 +2618,201 @@
       "appLocation": "epics/ep_044_web_apps/l-k-mobile-mechanic-nw9/",
       "hostedUrl": ""
     }
+  },
+  {
+    "id": "fix-and-finish-handyman",
+    "publicKey": "fixfinish_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Fix & Finish Home Services",
+    "tagline": "Handyman, Trades & Renovations",
+    "logoText": "FF",
+    "theme": {
+      "accent": "#3d6b8a",
+      "ink": "#1b2733",
+      "surface": "#f4f6f8"
+    },
+    "contact": {
+      "telephone": "020 8399 7200",
+      "email": "hello@fixandfinish.co.uk",
+      "address": "8 Victoria Road, Surbiton, Surrey KT6 4JS",
+      "mapUrl": "https://maps.google.com/?q=8+Victoria+Road+Surbiton+Surrey+KT6+4JS",
+      "openingHours": "Sample placeholder business — replace with real details per client"
+    },
+    "booking": {
+      "provider": "Telephone",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [
+      "hello@fixandfinish.co.uk"
+    ],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
+    ],
+    "demoWorkflows": {
+      "booking": {
+        "services": [
+          {
+            "name": "General Handyman",
+            "price": 35
+          },
+          {
+            "name": "Plumbing & Drains",
+            "price": 45
+          },
+          {
+            "name": "Electrical Works",
+            "price": 50
+          },
+          {
+            "name": "Gardening",
+            "price": 30
+          }
+        ],
+        "slots": [
+          "Today · 15:00",
+          "Tomorrow · 09:30",
+          "Saturday · 11:00"
+        ]
+      },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Demo card •••• 4242"
+      },
+      "email": {
+        "fromName": "Fix & Finish Demo Concierge",
+        "subjects": [
+          "Quote request",
+          "Job confirmation",
+          "Aftercare information"
+        ]
+      },
+      "crm": {
+        "pipelineStages": [
+          "New enquiry",
+          "Contacted",
+          "Demo quote sent"
+        ]
+      }
+    },
+    "pages": [
+      {
+        "title": "Services menu",
+        "url": "index.html#services",
+        "keywords": [
+          "services",
+          "price",
+          "prices",
+          "handyman",
+          "quote"
+        ]
+      },
+      {
+        "title": "Kitchens & bathrooms",
+        "url": "index.html#renovations",
+        "keywords": [
+          "kitchen",
+          "bathroom",
+          "renovation",
+          "fitting",
+          "tiling"
+        ]
+      },
+      {
+        "title": "General trades",
+        "url": "index.html#trades",
+        "keywords": [
+          "painting",
+          "plumbing",
+          "electrical",
+          "gardening",
+          "trades"
+        ]
+      },
+      {
+        "title": "Gallery",
+        "url": "gallery.html",
+        "keywords": [
+          "gallery",
+          "photos",
+          "work",
+          "jobs"
+        ]
+      },
+      {
+        "title": "Contact and quotes",
+        "url": "index.html#contact",
+        "keywords": [
+          "contact",
+          "quote",
+          "telephone",
+          "email"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "location",
+        "title": "Location",
+        "content": "Fix & Finish Home Services is a sample template business at 8 Victoria Road, Surbiton, Surrey KT6 4JS."
+      },
+      {
+        "id": "contact",
+        "title": "Contact details",
+        "content": "Call Fix & Finish on 020 8399 7200 or email hello@fixandfinish.co.uk for a free written quote."
+      },
+      {
+        "id": "services",
+        "title": "Trades covered",
+        "content": "Fix & Finish covers six trades under one team: general handyman jobs, painting and decorating, plumbing and drains, electrical works, gardening, and full kitchen fitting."
+      },
+      {
+        "id": "renovations",
+        "title": "Kitchens and bathrooms",
+        "content": "Renovation-grade work includes kitchen fitting and cabinetry, bathroom refits, and tiling and finishing, with plumbing and electrical included."
+      },
+      {
+        "id": "trades",
+        "title": "Everyday trades",
+        "content": "For smaller jobs, Fix & Finish offers general handyman repairs, painting and decorating, plumbing and electrical call-outs, and garden tidy-ups."
+      },
+      {
+        "id": "pricing",
+        "title": "Prices",
+        "content": "General handyman work starts from £35/hr, plumbing and drains from £45/hr, electrical works from £50/hr, gardening from £30/hr. Painting and decorating and kitchen fitting are quoted for free based on the job."
+      },
+      {
+        "id": "trust",
+        "title": "Why Fix & Finish",
+        "content": "Fix & Finish is fully insured, provides free written quotes before any work starts, and gives customers one number to call for every trade instead of juggling separate tradespeople."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "fixfinish-demo-site",
+        "label": "Generic template + AI",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/fix-and-finish-handyman-template/",
+        "hostedUrl": "https://edebell67.github.io/epics/fix-and-finish-handyman-template/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "",
+      "stages": {}
+    }
   }
 ]
