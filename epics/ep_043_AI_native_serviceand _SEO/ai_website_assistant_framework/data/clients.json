@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
+      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -178,14 +178,14 @@
           }
         ],
         "slots": [
-          "Today · 14:30",
-          "Tomorrow · 10:00",
-          "Saturday · 12:15"
+          "Today \u00b7 14:30",
+          "Tomorrow \u00b7 10:00",
+          "Saturday \u00b7 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -280,7 +280,7 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
+        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
       },
       {
         "id": "appointments",
@@ -308,7 +308,7 @@
     "contact": {
       "telephone": "020 7515 9099",
       "email": "",
-      "address": "E3 3LT — see the preview contact section",
+      "address": "E3 3LT \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -349,14 +349,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Docklands Vehicle Centre Demo Service Desk",
@@ -443,7 +443,7 @@
     "contact": {
       "telephone": "07956 824262",
       "email": "",
-      "address": "E3 4AG — see the preview contact section",
+      "address": "E3 4AG \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -484,14 +484,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "AA Autos Demo Service Desk",
@@ -578,7 +578,7 @@
     "contact": {
       "telephone": "020 8852 3652",
       "email": "",
-      "address": "SE13 6HE — see the preview contact section",
+      "address": "SE13 6HE \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -619,14 +619,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Abbey Auto Services Demo Service Desk",
@@ -713,9 +713,9 @@
     "contact": {
       "telephone": "020 8741 9993",
       "email": "",
-      "address": "247–251 Goldhawk Road, London",
+      "address": "247\u2013251 Goldhawk Road, London",
       "mapUrl": "",
-      "openingHours": "Monday–Friday 08:00–18:00; Saturday 08:30–13:00"
+      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
     },
     "booking": {
       "provider": "Demo",
@@ -754,14 +754,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "A C Automotive Engineering Demo Service Desk",
@@ -899,14 +899,14 @@
           }
         ],
         "slots": [
-          "Today · 16:00",
-          "Tomorrow · 10:30",
-          "Saturday · 11:15"
+          "Today \u00b7 16:00",
+          "Tomorrow \u00b7 10:30",
+          "Saturday \u00b7 11:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Fun Cuts Demo Concierge",
@@ -983,7 +983,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "Cuts and finishing start from £15, colour and care from £45, family sessions from £12, and styling and events from £25."
+        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
       },
       {
         "id": "offer",
@@ -1006,7 +1006,7 @@
       "edebell67.github.io"
     ],
     "businessName": "A Team Auto",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ATA",
     "theme": {
       "accent": "#38bdf8",
@@ -1087,7 +1087,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Battersea Motors Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BML",
     "theme": {
       "accent": "#38bdf8",
@@ -1168,7 +1168,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Belgravia Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BG",
     "theme": {
       "accent": "#38bdf8",
@@ -1249,7 +1249,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Bennett & Barnes",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BB",
     "theme": {
       "accent": "#38bdf8",
@@ -1330,7 +1330,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Boundary Autos",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BA",
     "theme": {
       "accent": "#38bdf8",
@@ -1411,7 +1411,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C & H Taxi's",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CHT",
     "theme": {
       "accent": "#38bdf8",
@@ -1492,7 +1492,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C B Motors",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CBM",
     "theme": {
       "accent": "#38bdf8",
@@ -1573,7 +1573,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Chequers Autos Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CAL",
     "theme": {
       "accent": "#38bdf8",
@@ -1654,7 +1654,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Clee Brothers",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CB",
     "theme": {
       "accent": "#38bdf8",
@@ -1735,7 +1735,7 @@
       "edebell67.github.io"
     ],
     "businessName": "D&T Wise",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "DTW",
     "theme": {
       "accent": "#38bdf8",
@@ -1816,7 +1816,7 @@
       "edebell67.github.io"
     ],
     "businessName": "E3 Motoring",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "EM",
     "theme": {
       "accent": "#38bdf8",
@@ -1897,7 +1897,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Eagle's Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ESG",
     "theme": {
       "accent": "#38bdf8",
@@ -1978,7 +1978,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2043,7 +2043,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Blessed Autos",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2108,7 +2108,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Cosar Motors Body Work",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2173,7 +2173,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Domen Garage",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2238,7 +2238,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Martins Auto Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2303,7 +2303,7 @@
       "edebell67.github.io"
     ],
     "businessName": "NB Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2368,7 +2368,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Mobile Mechanics Finchley",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2433,7 +2433,7 @@
       "edebell67.github.io"
     ],
     "businessName": "CEM Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2498,7 +2498,7 @@
       "edebell67.github.io"
     ],
     "businessName": "A-Jax Mobile Car Services",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2563,7 +2563,7 @@
       "edebell67.github.io"
     ],
     "businessName": "L K Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2640,7 +2640,7 @@
       "email": "hello@fixandfinish.co.uk",
       "address": "8 Victoria Road, Surbiton, Surrey KT6 4JS",
       "mapUrl": "https://maps.google.com/?q=8+Victoria+Road+Surbiton+Surrey+KT6+4JS",
-      "openingHours": "Sample placeholder business — replace with real details per client"
+      "openingHours": "Sample placeholder business \u2014 replace with real details per client"
     },
     "booking": {
       "provider": "Telephone",
@@ -2683,14 +2683,14 @@
           }
         ],
         "slots": [
-          "Today · 15:00",
-          "Tomorrow · 09:30",
-          "Saturday · 11:00"
+          "Today \u00b7 15:00",
+          "Tomorrow \u00b7 09:30",
+          "Saturday \u00b7 11:00"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Fix & Finish Demo Concierge",
@@ -2792,7 +2792,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "General handyman work starts from £35/hr, plumbing and drains from £45/hr, electrical works from £50/hr, gardening from £30/hr. Painting and decorating and kitchen fitting are quoted for free based on the job."
+        "content": "General handyman work starts from \u00a335/hr, plumbing and drains from \u00a345/hr, electrical works from \u00a350/hr, gardening from \u00a330/hr. Painting and decorating and kitchen fitting are quoted for free based on the job."
       },
       {
         "id": "trust",
@@ -3152,6 +3152,84 @@
     "workflow": {
       "status": "not_started",
       "blocker": "",
+      "stages": {}
+    }
+  },
+  {
+    "id": "air-quantum-existing-site-demo",
+    "publicKey": "air_quantum_existing_site_demo",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Air Quantum Ltd",
+    "tagline": "Refrigeration & air-conditioning integration preview",
+    "logoText": "AQ",
+    "theme": {
+      "accent": "#155e75",
+      "ink": "#102a43",
+      "surface": "#edf7f8"
+    },
+    "contact": {
+      "telephone": "",
+      "email": "",
+      "address": "2 Aldine Street, London W12 8AN",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required"
+    },
+    "booking": {
+      "provider": "",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation"
+    ],
+    "demoWorkflows": {},
+    "pages": [
+      {
+        "title": "Integration preview",
+        "url": "index.html",
+        "keywords": [
+          "refrigeration",
+          "air conditioning",
+          "contact"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "scope",
+        "title": "Current-site scope",
+        "content": "This independent integration preview is grounded only in the current public Air Quantum website, which describes air-conditioning and refrigeration servicing in Central and West London."
+      },
+      {
+        "id": "availability",
+        "title": "Availability",
+        "content": "Current availability, prices, appointment times and service scope need confirmation from Air Quantum. This preview does not make or accept bookings."
+      },
+      {
+        "id": "contact",
+        "title": "Contact route",
+        "content": "For confirmed contact details or service requests, use the existing Air Quantum website. This is a private demonstration and sends no notifications."
+      }
+    ],
+    "deployments": [
+      {
+        "id": "air-quantum-existing-site-demo-pages",
+        "label": "Private existing-site assistant integration preview",
+        "status": "github+render",
+        "appLocation": "epics/ep_044_web_apps/air-quantum-existing-site-demo/",
+        "hostedUrl": "https://edebell67.github.io/epics/air-quantum-existing-site-demo/"
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Owner review and approval required before any live-site installation or operational workflow.",
       "stages": {}
     }
   }
