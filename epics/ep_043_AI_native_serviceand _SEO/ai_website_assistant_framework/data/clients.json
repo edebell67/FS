@@ -3187,9 +3187,27 @@
     "enabledModules": [
       "assistant",
       "faq",
-      "navigation"
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact",
+      "demoBooking",
+      "demoPayment",
+      "demoEmail",
+      "demoCrm"
     ],
-    "demoWorkflows": {},
+    "demoWorkflows": {
+      "booking": {
+        "services": [{ "name": "Illustrative service request", "price": 0 }],
+        "slots": ["Illustrative weekday morning", "Illustrative weekday afternoon"]
+      },
+      "payment": { "currency": "GBP", "testCardLabel": "Illustrative demo card" },
+      "email": {
+        "fromName": "Air Quantum assistant demonstration",
+        "subjects": ["Illustrative enquiry response", "Illustrative appointment summary"]
+      },
+      "crm": { "pipelineStages": ["Illustrative new enquiry", "Illustrative follow-up"] }
+    },
     "pages": [
       {
         "title": "Integration preview",
@@ -3210,7 +3228,7 @@
       {
         "id": "availability",
         "title": "Availability",
-        "content": "Current availability, prices, appointment times and service scope need confirmation from Air Quantum. This preview does not make or accept bookings."
+        "content": "Current availability, prices, appointment times and service scope need confirmation from Air Quantum. This preview can demonstrate a fictional booking journey but does not make or accept live bookings."
       },
       {
         "id": "contact",

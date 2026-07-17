@@ -60,6 +60,8 @@ test("health and static assets are executable", async () => {
   assert.match(widget.body, /aria-label="Show assistant functions"/);
   assert.match(widget.body, /function showFunctionCatalog\(/);
   assert.match(widget.body, /Demo CRM/);
+  assert.match(widget.body, /leadCapture/);
+  assert.match(widget.body, /\.quick \{ display:flex;flex-wrap:wrap;gap:7px;overflow:visible/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);

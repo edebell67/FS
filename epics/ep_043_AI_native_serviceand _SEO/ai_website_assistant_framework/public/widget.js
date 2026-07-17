@@ -42,7 +42,7 @@
     .sources { font-size:10px;display:block;margin-top:7px;opacity:.66; }
     .action { border:1px solid var(--ink);background:transparent;color:var(--ink);padding:9px 12px;border-radius:999px;margin:0 6px 11px 0;font-size:11px;font-weight:700;transition:.18s; }
     .action:hover { background:var(--ink);color:white; }
-    .quick { display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none; }
+    .quick { display:flex;flex-wrap:wrap;gap:7px;overflow:visible;padding:0 0 10px; }
     .quick button { white-space:nowrap;border:1px solid #17211f24;background:#fffdf8;border-radius:999px;padding:8px 10px;font-size:10px;color:var(--ink); }
     .function-catalog { margin:0 0 12px;border:1px solid #17211f1b;border-radius:16px;background:white;overflow:hidden; }
     .function-catalog header { padding:12px 13px;background:#f2eee5;color:var(--ink);display:flex;justify-content:space-between;align-items:center; }
@@ -129,7 +129,7 @@
       ["navigation", "Navigation", "Finds and links to a matching page on the site"],
       ["booking", "Booking", "Links out to a configured booking provider"],
       ["callback", "Callback", "Collects callback details and submits a request"],
-      ["lead", "Lead capture", "Collects an enquiry and contact details"],
+      ["leadCapture", "Lead capture", "Collects an enquiry and contact details"],
       ["contact", "Contact help", "Surfaces approved contact details with an appropriate action"],
       ["demoBooking", "Demo booking", "Simulated appointment flow with a fictional receipt"],
       ["demoPayment", "Demo payment", "Simulated checkout — no real charge"],
@@ -166,7 +166,8 @@
       ...(client.enabledModules.includes("demoPayment") ? [["Demo payment", "Show the demo payment checkout"]] : []),
       ...(client.enabledModules.includes("demoEmail") ? [["Demo email", "Preview a demo email"]] : []),
       ...(client.enabledModules.includes("demoCrm") ? [["Demo CRM", "Create a demo CRM lead"]] : []),
-      ...(client.enabledModules.includes("callback") ? [["Callback", "Please call me back"]] : [])
+      ...(client.enabledModules.includes("callback") ? [["Callback", "Please call me back"]] : []),
+      ...(client.enabledModules.includes("leadCapture") ? [["Send enquiry", "I would like to send an enquiry"]] : [])
     ];
     for (const [label, prompt] of choices) { const button = element("button", "", label); button.type = "button"; button.addEventListener("click", () => send(prompt, panel)); quick.append(button); }
     messages.append(quick);
