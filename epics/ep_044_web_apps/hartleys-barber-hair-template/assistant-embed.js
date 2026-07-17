@@ -9,6 +9,7 @@
   widget.src = `${apiBase}/widget.js?v=20260716-hartleys`;
   widget.dataset.client = "hartleys_demo";
   widget.dataset.apiBase = apiBase;
+  widget.dataset.autoOpen = "true";
   widget.defer = true;
   widget.onerror = () => console.warn("Hartley's assistant is currently unavailable.");
   document.head.append(widget);

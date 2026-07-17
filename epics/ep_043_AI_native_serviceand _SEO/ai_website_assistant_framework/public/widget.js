@@ -2,6 +2,7 @@
   const script = document.currentScript;
   const clientKey = script?.dataset.client;
   const apiBase = (script?.dataset.apiBase || new URL(script.src).origin).replace(/\/$/, "");
+  const autoOpen = script?.dataset.autoOpen === "true";
   if (!clientKey || document.querySelector("ai-website-assistant")) return;
 
   const host = document.createElement("ai-website-assistant");
@@ -71,7 +72,11 @@
 
   fetch(`${apiBase}/api/public/config?clientKey=${encodeURIComponent(clientKey)}&host=${encodeURIComponent(location.hostname)}`)
     .then((response) => response.ok ? response.json() : Promise.reject(new Error("Assistant unavailable")))
-    .then(({ client }) => { state.client = client; applyTheme(client.theme); })
+    .then(({ client }) => {
+      state.client = client;
+      applyTheme(client.theme);
+      if (autoOpen) toggle();
+    })
     .catch(() => { launcher.disabled = true; launcher.title = "Assistant unavailable for this website"; });
 
   function toggle() {
