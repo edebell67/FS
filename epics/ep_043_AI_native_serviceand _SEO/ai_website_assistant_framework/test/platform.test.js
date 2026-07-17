@@ -19,7 +19,7 @@ test.before(async () => {
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
   server = await createApp({ store: new JsonStore(temporary), env: {
-    ADMIN_TOKEN: "test-secret", OWNER_CONSOLE_TOKENS_JSON: JSON.stringify({ "air-quantum-existing-site-demo": "owner-air-test" }), OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    ADMIN_TOKEN: "test-secret", OWNER_CONSOLE_TOKENS_JSON: JSON.stringify({ "air-quantum-existing-site-demo": "owner-air-test" }), OWNER_CONSOLE_TOKENS_JSON_BATCH_01: JSON.stringify({ "batch01-beck-and-call": "owner-batch-test" }), OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
     RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
     fetchImpl: async (_url, options = {}) => {
       if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
@@ -100,6 +100,14 @@ test("owner activity access is tenant-isolated and never accepts the admin token
   assert.equal(completed.status, 200);
   assert.equal(completed.body.record.handledByOwner, true);
   assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
+});
+
+test("batch owner token map authenticates only its named tenant", async () => {
+  const allowed = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.body.owner.businessName, "Beck and Call Services Limited");
+  const crossTenant = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-batch-test" });
+  assert.equal(crossTenant.status, 401);
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {

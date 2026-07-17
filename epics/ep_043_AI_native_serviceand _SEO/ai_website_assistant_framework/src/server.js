@@ -32,8 +32,9 @@ function adminAuthorized(req, env) {
 function ownerAuthorized(req, env, clientId) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
   try {
-    const tokens = JSON.parse(String(env.OWNER_CONSOLE_TOKENS_JSON || "{}"));
-    return Boolean(tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId] && safeEqual(token, tokens[clientId]));
+    const maps = ["OWNER_CONSOLE_TOKENS_JSON", "OWNER_CONSOLE_TOKENS_JSON_BATCH_01"].map((key) => JSON.parse(String(env[key] || "{}")));
+    const expected = maps.find((tokens) => tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId])?.[clientId];
+    return Boolean(expected && safeEqual(token, expected));
   } catch { return false; }
 }
 
