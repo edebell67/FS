@@ -3197,6 +3197,17 @@
       "demoCrm"
     ],
     "ownerReporting": {
+      "vocabulary": {
+        "visitor": "Assistant visitor",
+        "interest": "Service interest",
+        "lead": "Service enquiry",
+        "leadPlural": "Service enquiries",
+        "callback": "Callback request",
+        "outcome": "Job outcome",
+        "won": "Job awarded",
+        "revenue": "Confirmed job value",
+        "followUp": "Response time"
+      },
       "baseline": {
         "assistantVisitors": null,
         "leadsCaptured": 5,
@@ -3207,15 +3218,34 @@
     },
     "demoWorkflows": {
       "booking": {
-        "services": [{ "name": "Illustrative service request", "price": 0 }],
-        "slots": ["Illustrative weekday morning", "Illustrative weekday afternoon"]
+        "services": [
+          {
+            "name": "Illustrative service request",
+            "price": 0
+          }
+        ],
+        "slots": [
+          "Illustrative weekday morning",
+          "Illustrative weekday afternoon"
+        ]
       },
-      "payment": { "currency": "GBP", "testCardLabel": "Illustrative demo card" },
+      "payment": {
+        "currency": "GBP",
+        "testCardLabel": "Illustrative demo card"
+      },
       "email": {
         "fromName": "Air Quantum assistant demonstration",
-        "subjects": ["Illustrative enquiry response", "Illustrative appointment summary"]
+        "subjects": [
+          "Illustrative enquiry response",
+          "Illustrative appointment summary"
+        ]
       },
-      "crm": { "pipelineStages": ["Illustrative new enquiry", "Illustrative follow-up"] }
+      "crm": {
+        "pipelineStages": [
+          "Illustrative new enquiry",
+          "Illustrative follow-up"
+        ]
+      }
     },
     "pages": [
       {
@@ -3258,6 +3288,1326 @@
       "status": "not_started",
       "blocker": "Owner review and approval required before any live-site installation or operational workflow.",
       "stages": {}
+    }
+  },
+  {
+    "id": "batch01-af-refrigeration",
+    "publicKey": "batch01_af_refrigeration",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "A.F Refrigeration UK Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Commercial refrigeration",
+        "url": "#services",
+        "keywords": [
+          "commercial refrigeration"
+        ]
+      },
+      {
+        "title": "Air conditioning",
+        "url": "#services",
+        "keywords": [
+          "air conditioning"
+        ]
+      },
+      {
+        "title": "Servicing & repairs",
+        "url": "#services",
+        "keywords": [
+          "servicing & repairs"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Commercial refrigeration, Air conditioning, Servicing & repairs. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "service interest",
+        "lead": "service enquiry",
+        "outcome": "job outcome",
+        "won": "job awarded",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-af-refrigeration-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/af-refrigeration/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-aa-removals",
+    "publicKey": "batch01_aa_removals",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "AA Removals London Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Removals",
+        "url": "#services",
+        "keywords": [
+          "removals"
+        ]
+      },
+      {
+        "title": "Packing",
+        "url": "#services",
+        "keywords": [
+          "packing"
+        ]
+      },
+      {
+        "title": "Storage",
+        "url": "#services",
+        "keywords": [
+          "storage"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Removals, Packing, Storage. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "move interest",
+        "lead": "quote request",
+        "outcome": "removal outcome",
+        "won": "move booked",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-aa-removals-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/aa-removals/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-murtagh-construction",
+    "publicKey": "batch01_murtagh_construction",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Murtagh Construction Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Brickwork",
+        "url": "#services",
+        "keywords": [
+          "brickwork"
+        ]
+      },
+      {
+        "title": "Architectural masonry",
+        "url": "#services",
+        "keywords": [
+          "architectural masonry"
+        ]
+      },
+      {
+        "title": "Refurbishment",
+        "url": "#services",
+        "keywords": [
+          "refurbishment"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Brickwork, Architectural masonry, Refurbishment. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "project interest",
+        "lead": "project enquiry",
+        "outcome": "quote outcome",
+        "won": "project awarded",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-murtagh-construction-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/murtagh-construction/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-all-day-removals",
+    "publicKey": "batch01_all_day_removals",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "All Day Removals & Storage Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "House removals",
+        "url": "#services",
+        "keywords": [
+          "house removals"
+        ]
+      },
+      {
+        "title": "Business moves",
+        "url": "#services",
+        "keywords": [
+          "business moves"
+        ]
+      },
+      {
+        "title": "Storage",
+        "url": "#services",
+        "keywords": [
+          "storage"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: House removals, Business moves, Storage. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "move interest",
+        "lead": "quote request",
+        "outcome": "removal outcome",
+        "won": "move booked",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-all-day-removals-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/all-day-removals/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-anaya-hair-beauty",
+    "publicKey": "batch01_anaya_hair_beauty",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Anaya Hair and Beauty London Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Braids",
+        "url": "#services",
+        "keywords": [
+          "braids"
+        ]
+      },
+      {
+        "title": "Hair treatment",
+        "url": "#services",
+        "keywords": [
+          "hair treatment"
+        ]
+      },
+      {
+        "title": "Hair cuts",
+        "url": "#services",
+        "keywords": [
+          "hair cuts"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Braids, Hair treatment, Hair cuts. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "treatment interest",
+        "lead": "appointment request",
+        "outcome": "appointment outcome",
+        "won": "attended appointment",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-anaya-hair-beauty-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/anaya-hair-beauty/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-bear-fencing",
+    "publicKey": "batch01_bear_fencing",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Bear Fencing Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Repair",
+        "url": "#services",
+        "keywords": [
+          "repair"
+        ]
+      },
+      {
+        "title": "Supply",
+        "url": "#services",
+        "keywords": [
+          "supply"
+        ]
+      },
+      {
+        "title": "Installation",
+        "url": "#services",
+        "keywords": [
+          "installation"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Repair, Supply, Installation. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "fencing interest",
+        "lead": "estimate request",
+        "outcome": "project outcome",
+        "won": "project awarded",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-bear-fencing-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/bear-fencing/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-area-pest-control",
+    "publicKey": "batch01_area_pest_control",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Area Pest Control UK Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Pest guidance",
+        "url": "#services",
+        "keywords": [
+          "pest guidance"
+        ]
+      },
+      {
+        "title": "Business services",
+        "url": "#services",
+        "keywords": [
+          "business services"
+        ]
+      },
+      {
+        "title": "Areas covered",
+        "url": "#services",
+        "keywords": [
+          "areas covered"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Pest guidance, Business services, Areas covered. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "pest-control interest",
+        "lead": "service enquiry",
+        "outcome": "treatment outcome",
+        "won": "work completed",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-area-pest-control-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/area-pest-control/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-beck-and-call",
+    "publicKey": "batch01_beck_and_call",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Beck and Call Services Limited",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Office cleaning",
+        "url": "#services",
+        "keywords": [
+          "office cleaning"
+        ]
+      },
+      {
+        "title": "Domestic cleaning",
+        "url": "#services",
+        "keywords": [
+          "domestic cleaning"
+        ]
+      },
+      {
+        "title": "Specialist services",
+        "url": "#services",
+        "keywords": [
+          "specialist services"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Office cleaning, Domestic cleaning, Specialist services. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "cleaning-service interest",
+        "lead": "quote request",
+        "outcome": "service outcome",
+        "won": "service completed",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-beck-and-call-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/beck-and-call/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-becks-homes",
+    "publicKey": "batch01_becks_homes",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Beck's Homes UK Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Handyman",
+        "url": "#services",
+        "keywords": [
+          "handyman"
+        ]
+      },
+      {
+        "title": "Kitchen renovation",
+        "url": "#services",
+        "keywords": [
+          "kitchen renovation"
+        ]
+      },
+      {
+        "title": "Painting & decorating",
+        "url": "#services",
+        "keywords": [
+          "painting & decorating"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Handyman, Kitchen renovation, Painting & decorating. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "project-service interest",
+        "lead": "quote request",
+        "outcome": "project outcome",
+        "won": "project awarded",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-becks-homes-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/becks-homes/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-de-salons",
+    "publicKey": "batch01_de_salons",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "De Salons",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Cuts",
+        "url": "#services",
+        "keywords": [
+          "cuts"
+        ]
+      },
+      {
+        "title": "Colour",
+        "url": "#services",
+        "keywords": [
+          "colour"
+        ]
+      },
+      {
+        "title": "Products",
+        "url": "#services",
+        "keywords": [
+          "products"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Cuts, Colour, Products. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "treatment interest",
+        "lead": "appointment request",
+        "outcome": "appointment outcome",
+        "won": "attended appointment",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-de-salons-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/de-salons/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-solid-carpentry",
+    "publicKey": "batch01_solid_carpentry",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Solid Carpentry Ltd",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Fitted furniture",
+        "url": "#services",
+        "keywords": [
+          "fitted furniture"
+        ]
+      },
+      {
+        "title": "Carpentry",
+        "url": "#services",
+        "keywords": [
+          "carpentry"
+        ]
+      },
+      {
+        "title": "Home refurbishments",
+        "url": "#services",
+        "keywords": [
+          "home refurbishments"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Fitted furniture, Carpentry, Home refurbishments. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "furniture interest",
+        "lead": "project enquiry",
+        "outcome": "quote outcome",
+        "won": "project awarded",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-solid-carpentry-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/solid-carpentry/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
+    }
+  },
+  {
+    "id": "batch01-handyman-arts",
+    "publicKey": "batch01_handyman_arts",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Handyman Arts Limited",
+    "tagline": "Private AI assistant integration concept",
+    "logoText": "AI",
+    "theme": {
+      "accent": "#2f7185",
+      "ink": "#142a3b",
+      "surface": "#f6f8f9"
+    },
+    "contact": {
+      "telephone": "Use the current public website contact route",
+      "email": "",
+      "address": "See the current public website",
+      "mapUrl": "",
+      "openingHours": "Not recorded \u2014 use the current public website"
+    },
+    "booking": {
+      "provider": "Not enabled",
+      "url": ""
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "callback",
+      "leadCapture",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Handyman work",
+        "url": "#services",
+        "keywords": [
+          "handyman work"
+        ]
+      },
+      {
+        "title": "Tiling",
+        "url": "#services",
+        "keywords": [
+          "tiling"
+        ]
+      },
+      {
+        "title": "Smart-home installation",
+        "url": "#services",
+        "keywords": [
+          "smart-home installation"
+        ]
+      },
+      {
+        "title": "Contact",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "enquiry"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "services",
+        "title": "Public service categories",
+        "content": "This private assistant demonstration is grounded only in these public service categories: Handyman work, Tiling, Smart-home installation. For current details, use the business's public website."
+      },
+      {
+        "id": "demo",
+        "title": "Demonstration status",
+        "content": "This is a private assistant integration demonstration. Any visitor journey is simulated; no external notification, booking, callback, email, payment or CRM update is sent."
+      }
+    ],
+    "ownerReporting": {
+      "vocabulary": {
+        "interest": "service interest",
+        "lead": "service enquiry",
+        "outcome": "job outcome",
+        "won": "job completed",
+        "value": "owner-confirmed value"
+      },
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": null,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "No business baseline supplied."
+      }
+    },
+    "deployments": [
+      {
+        "id": "batch01-handyman-arts-private-companion",
+        "label": "Private existing-site assistant concept",
+        "status": "local_pending_public_qa",
+        "appLocation": "epics/ep_044_web_apps/batch_01_existing_site_assistant_demos/handyman-arts/",
+        "hostedUrl": ""
+      }
+    ],
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
     }
   }
 ]

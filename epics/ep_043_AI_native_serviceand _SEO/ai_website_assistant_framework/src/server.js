@@ -261,7 +261,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const records = Object.fromEntries(Object.entries(allRecords).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)]));
         const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
         return json(res, 200, {
-          owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules },
+          owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules, reportingVocabulary: client.ownerReporting?.vocabulary || {} },
           records, summary, performance: ownerPerformance(records, client)
         });
       }
