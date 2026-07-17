@@ -35,6 +35,7 @@ function render() {
   $("#mode").textContent = owner.status === "demo" ? "Demo mode" : "Live mode";
   $("#demo-note").hidden = owner.status !== "demo";
   renderPerformance(state.data.performance);
+  renderOpportunityIntelligence();
   $("#access-card").hidden = true;
   $("#console").hidden = false;
   const metrics = [["conversations", "Conversations"], ["leads", "Enquiries"], ["callbacks", "Callbacks"], ["bookings", "Bookings"], ["payments", "Payments"], ["emails", "Email previews"], ["crmLeads", "CRM activity"], ["previewResponses", "Preview responses"]];
@@ -44,6 +45,21 @@ function render() {
   const activity = $("#activity"); activity.replaceChildren();
   if (!records.length) { const empty = document.createElement("p"); empty.className = "empty"; empty.textContent = "No visitor activity has been recorded yet."; activity.append(empty); return; }
   for (const record of records) activity.append(recordRow(record));
+}
+
+function renderOpportunityIntelligence() {
+  const node = $("#opportunity-intelligence"); node.replaceChildren();
+  const head = document.createElement("div"); const eyebrow = document.createElement("p"); eyebrow.className = "eyebrow"; eyebrow.textContent = "Optional owner intelligence"; const title = document.createElement("h2"); title.textContent = "What visitors want — and what becomes revenue"; const intro = document.createElement("p"); intro.textContent = "This is the linked assistant-to-outcome screen. These figures are illustrative examples, not this business’s data, until the relevant reporting modules are activated."; head.append(eyebrow, title, intro); node.append(head);
+  const grid = document.createElement("div"); grid.className = "opportunity-grid";
+  const cards = [
+    ["Visitor-interest map", "Top needs", ["Air-conditioning enquiry · 20", "Refrigeration enquiry · 14", "Pricing / availability · 11"], "Captures shortcut, question, page and approved interest category."],
+    ["Interest → lead conversion", "Where demand converts", ["Air-conditioning · 18 leads · 90%", "Refrigeration · 6 leads · 43%", "Pricing / availability · 2 leads · 18%"], "Shows which visitor needs create qualified opportunities."],
+    ["Lead → deal outcome", "What creates revenue", ["Air-conditioning · 7 won · owner-confirmed", "Refrigeration · 2 won · owner-confirmed", "Revenue · recorded only after owner/CRM confirmation"], "Links assistant interest to owner-confirmed deal stages and value."],
+    ["Content gaps", "What the site is missing", ["Repeated unanswered questions", "High-interest / low-conversion topics", "Slow response or follow-up bottlenecks"], "Gives the owner specific website, offer and staffing actions."]
+  ];
+  for (const [kicker, heading, items, description] of cards) { const card = document.createElement("article"); card.className = "opportunity-card"; const tag = document.createElement("span"); tag.textContent = "AVAILABLE WITH ACTIVATION"; const small = document.createElement("p"); small.className = "eyebrow"; small.textContent = kicker; const h = document.createElement("h3"); h.textContent = heading; const list = document.createElement("ul"); items.forEach((item) => { const li = document.createElement("li"); li.textContent = item; list.append(li); }); const note = document.createElement("p"); note.className = "module-note"; note.textContent = description; card.append(tag, small, h, list, note); grid.append(card); }
+  node.append(grid);
+  const footer = document.createElement("p"); footer.className = "activation-note"; footer.textContent = "Activation turns these examples into this tenant’s own observed interest, conversion, follow-up and owner-confirmed revenue data. It does not invent visitor interests, outcomes or revenue."; node.append(footer);
 }
 
 function renderPerformance(performance) {
