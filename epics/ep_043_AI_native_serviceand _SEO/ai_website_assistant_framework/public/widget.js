@@ -28,6 +28,8 @@
     .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
     h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
     .status { margin:4px 0 0;font-size:11px;color:#d8dfdc;letter-spacing:.03em; }
+    .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
+    .home:hover { background:#ffffff2b; }
     .close { position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:white;font-size:22px;line-height:1; }
     .demo { background:#f8d89a;color:#533c16;padding:7px 18px;font-size:11px;font-weight:700;letter-spacing:.04em; }
     .messages { padding:19px 17px 12px;overflow-y:auto;scroll-behavior:smooth;background:linear-gradient(#fffdf8,#fbf7ef); }
@@ -89,20 +91,32 @@
     panel.querySelector("input")?.focus();
   }
 
+  function resetConversation() {
+    state.sessionId = crypto.randomUUID();
+    state.history = [];
+    root.querySelector(".panel")?.remove();
+    if (!state.open || !state.client) return;
+    const panel = buildPanel();
+    root.insertBefore(panel, launcher);
+    panel.querySelector("input")?.focus();
+  }
+
   function buildPanel() {
     const client = state.client;
     const panel = element("section", "panel");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", `${client.businessName} assistant`);
-    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
+    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
     panel.querySelector(".mark").textContent = client.logoText || client.businessName.slice(0, 2);
     panel.querySelector("h2").textContent = client.businessName;
+    panel.querySelector(".home").addEventListener("click", resetConversation);
     panel.querySelector(".close").addEventListener("click", toggle);
     const messages = panel.querySelector(".messages");
     addMessage(messages, "assistant", `Hello — I’m the ${client.businessName} assistant. What can I help you find or arrange?`);
     const quick = element("div", "quick");
     const choices = [
       ["Services", "What services do you provide?"], ["Opening hours", "What are your opening hours?"],
+      ["Contact", "How can I contact you?"], ["Find information", "Where can I find more information on the website?"],
       ...(client.enabledModules.includes("demoBooking") ? [["Demo booking", "Show the demo booking flow"]] : client.enabledModules.includes("booking") ? [["Book", "I would like to book an appointment"]] : []),
       ...(client.enabledModules.includes("demoPayment") ? [["Demo payment", "Show the demo payment checkout"]] : []),
       ...(client.enabledModules.includes("demoEmail") ? [["Demo email", "Preview a demo email"]] : []),
