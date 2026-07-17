@@ -19,7 +19,7 @@ test.before(async () => {
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
   server = await createApp({ store: new JsonStore(temporary), env: {
-    ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    ADMIN_TOKEN: "test-secret", OWNER_CONSOLE_TOKENS_JSON: JSON.stringify({ "air-quantum-existing-site-demo": "owner-air-test" }), OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
     RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
     fetchImpl: async (_url, options = {}) => {
       if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
@@ -66,6 +66,9 @@ test("health and static assets are executable", async () => {
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);
   assert.match(admin.body, /Preview responses/);
+  const owner = await request("/owner");
+  assert.equal(owner.status, 200);
+  assert.match(owner.body, /Owner Activity Console/);
 });
 
 test("public configuration is tenant-scoped, host-bound, and safely projected", async () => {
@@ -79,14 +82,25 @@ test("public configuration is tenant-scoped, host-bound, and safely projected", 
   assert.equal(denied.status, 404);
 });
 
+test("owner activity access is tenant-isolated and never accepts the admin token", async () => {
+  const chat = await request("/api/public/chat", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "owner-console-test", message: "Show the demo booking flow" } });
+  assert.equal(chat.status, 200);
+  const denied = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "test-secret" });
+  assert.equal(denied.status, 401);
+  const activity = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-air-test" });
+  assert.equal(activity.status, 200);
+  assert.equal(activity.body.owner.businessName, "Air Quantum Ltd");
+  assert.equal(activity.body.records.conversations.every((record) => record.clientId === "air-quantum-existing-site-demo"), true);
+  assert.equal(activity.body.summary.conversations >= 1, true);
+});
+
 test("assistant answers from approved knowledge and records the conversation", async () => {
   const response = await request("/api/public/chat", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", sessionId: "test-session", message: "How much is an annual boiler service?" } });
   assert.equal(response.status, 200);
   assert.match(response.body.reply.text, /£95/);
   assert.deepEqual(response.body.reply.sources.map((item) => item.id), ["pricing"]);
   const records = await request("/api/admin/records", { token: "test-secret" });
-  assert.equal(records.body.records.conversations.length, 1);
-  assert.equal(records.body.records.conversations[0].clientId, "northstar-heating");
+  assert.equal(records.body.records.conversations.some((record) => record.clientId === "northstar-heating"), true);
 });
 
 test("navigation and booking intents return enabled module actions", async () => {

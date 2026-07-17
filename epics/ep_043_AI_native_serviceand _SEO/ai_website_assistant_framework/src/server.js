@@ -29,6 +29,14 @@ function adminAuthorized(req, env) {
   return Boolean(env.ADMIN_TOKEN && safeEqual(token, env.ADMIN_TOKEN));
 }
 
+function ownerAuthorized(req, env, clientId) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  try {
+    const tokens = JSON.parse(String(env.OWNER_CONSOLE_TOKENS_JSON || "{}"));
+    return Boolean(tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId] && safeEqual(token, tokens[clientId]));
+  } catch { return false; }
+}
+
 async function bodyJson(req, maxBytes = 64 * 1024) {
   let raw = "";
   for await (const chunk of req) {
@@ -217,6 +225,19 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 201, { accepted: true, simulated: true, workflow, record }, corsHeaders(req));
       }
 
+      if (req.method === "GET" && url.pathname === "/api/owner/activity") {
+        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
+        if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
+        const allRecords = store.listRecords();
+        const records = Object.fromEntries(Object.entries(allRecords).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)]));
+        const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
+        return json(res, 200, {
+          owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules },
+          records, summary
+        });
+      }
+
       if (url.pathname.startsWith("/api/admin/")) {
         if (!adminAuthorized(req, env)) return json(res, 401, { error: "Administrator authorization is required." });
         if (req.method === "GET" && url.pathname === "/api/admin/clients") return json(res, 200, { clients: store.listClients() });
@@ -243,7 +264,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
 }
 
 async function serveStatic(pathname, res) {
-  const routes = { "/": "index.html", "/admin": "admin.html", "/widget.js": "widget.js" };
+  const routes = { "/": "index.html", "/admin": "admin.html", "/owner": "owner.html", "/widget.js": "widget.js" };
   const relative = routes[pathname] || pathname.replace(/^\//, "");
   const file = path.resolve(publicDir, relative);
   if (!file.startsWith(`${publicDir}${path.sep}`)) return json(res, 403, { error: "Forbidden." });
