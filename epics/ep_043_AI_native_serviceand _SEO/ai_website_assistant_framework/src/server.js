@@ -29,6 +29,10 @@ function adminAuthorized(req, env) {
   return Boolean(env.ADMIN_TOKEN && safeEqual(token, env.ADMIN_TOKEN));
 }
 
+function ownerConsoleActivated(client) {
+  return client.ownerConsole?.activated !== false;
+}
+
 function ownerAuthorized(req, env, clientId) {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
   try {
@@ -246,6 +250,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
       if (req.method === "POST" && completeCallbackMatch) {
         const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
         if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
         if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
         const callbackId = cleanText(decodeURIComponent(completeCallbackMatch[1]), 120, true);
         const callback = (store.listRecords().callbacks || []).find((record) => record.id === callbackId && record.clientId === client.id);
@@ -257,6 +262,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
       if (req.method === "GET" && url.pathname === "/api/owner/activity") {
         const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
         if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
         if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
         const allRecords = store.listRecords();
         const records = Object.fromEntries(Object.entries(allRecords).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)]));

@@ -102,12 +102,10 @@ test("owner activity access is tenant-isolated and never accepts the admin token
   assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
 });
 
-test("batch owner token map authenticates only its named tenant", async () => {
-  const allowed = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
-  assert.equal(allowed.status, 200);
-  assert.equal(allowed.body.owner.businessName, "Beck and Call Services Limited");
-  const crossTenant = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-batch-test" });
-  assert.equal(crossTenant.status, 401);
+test("unactivated batch tenant cannot open owner console even with its private code", async () => {
+  const blocked = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
+  assert.equal(blocked.status, 403);
+  assert.equal(blocked.body.error, "Owner console is available after assistant activation only.");
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {
