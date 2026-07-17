@@ -3196,6 +3196,15 @@
       "demoEmail",
       "demoCrm"
     ],
+    "ownerReporting": {
+      "baseline": {
+        "assistantVisitors": null,
+        "leadsCaptured": 5,
+        "callbacks": null,
+        "averageCallbackMinutes": null,
+        "source": "Illustrative pre-assistant baseline for this private demo; not verified business data."
+      }
+    },
     "demoWorkflows": {
       "booking": {
         "services": [{ "name": "Illustrative service request", "price": 0 }],

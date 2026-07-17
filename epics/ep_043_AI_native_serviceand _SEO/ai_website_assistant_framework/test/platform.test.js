@@ -92,6 +92,8 @@ test("owner activity access is tenant-isolated and never accepts the admin token
   assert.equal(activity.body.owner.businessName, "Air Quantum Ltd");
   assert.equal(activity.body.records.conversations.every((record) => record.clientId === "air-quantum-existing-site-demo"), true);
   assert.equal(activity.body.summary.conversations >= 1, true);
+  assert.equal(activity.body.performance.today.assistantVisitors >= 1, true);
+  assert.equal(activity.body.performance.baseline.leadsCaptured, 5);
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {

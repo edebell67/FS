@@ -34,6 +34,7 @@ function render() {
   $("#subtitle").textContent = "Private assistant review — visitor questions, actions and follow-up signals.";
   $("#mode").textContent = owner.status === "demo" ? "Demo mode" : "Live mode";
   $("#demo-note").hidden = owner.status !== "demo";
+  renderPerformance(state.data.performance);
   $("#access-card").hidden = true;
   $("#console").hidden = false;
   const metrics = [["conversations", "Conversations"], ["leads", "Enquiries"], ["callbacks", "Callbacks"], ["bookings", "Bookings"], ["payments", "Payments"], ["emails", "Email previews"], ["crmLeads", "CRM activity"], ["previewResponses", "Preview responses"]];
@@ -44,6 +45,20 @@ function render() {
   if (!records.length) { const empty = document.createElement("p"); empty.className = "empty"; empty.textContent = "No visitor activity has been recorded yet."; activity.append(empty); return; }
   for (const record of records) activity.append(recordRow(record));
 }
+
+function renderPerformance(performance) {
+  const node = $("#performance"); node.replaceChildren();
+  if (!performance) return;
+  const heading = document.createElement("div"); const eyebrow = document.createElement("p"); eyebrow.className = "eyebrow"; eyebrow.textContent = "Performance comparison"; const title = document.createElement("h2"); title.textContent = "Today vs previous process"; const description = document.createElement("p"); description.textContent = "Assistant visitors are unique assistant conversation sessions, not total website traffic."; heading.append(eyebrow, title, description); node.append(heading);
+  const table = document.createElement("table"); table.className = "comparison"; const header = document.createElement("thead"); const body = document.createElement("tbody"); const headerRow = document.createElement("tr"); ["Measure", "Today", "Previously"].forEach((text) => { const cell = document.createElement("th"); cell.textContent = text; headerRow.append(cell); }); header.append(headerRow);
+  const today = performance.today || {}; const previous = performance.baseline || {};
+  const rows = [["Assistant visitors", today.assistantVisitors, previous.assistantVisitors], ["Leads captured", today.leadsCaptured, previous.leadsCaptured], ["Lead capture rate", today.leadRate == null ? null : `${today.leadRate}%`, previous.leadRate == null ? null : `${previous.leadRate}%`], ["Callback requests", today.callbacks, previous.callbacks], ["Average time to complete callback", today.averageCallbackMinutes == null ? null : `${today.averageCallbackMinutes} min`, previous.averageCallbackMinutes == null ? null : `${previous.averageCallbackMinutes} min`]];
+  for (const [label, current, baseline] of rows) { const row = document.createElement("tr"); const name = document.createElement("td"); name.textContent = label; const currentCell = metricCell(current); const baselineCell = metricCell(baseline); row.append(name, currentCell, baselineCell); body.append(row); }
+  table.append(header, body); node.append(table);
+  const source = document.createElement("p"); source.className = "baseline-source"; source.textContent = `Previous-process baseline: ${previous.source || "Not supplied."}`; node.append(source);
+}
+
+function metricCell(value) { const cell = document.createElement("td"); if (value == null) { cell.textContent = "Unknown"; cell.className = "unknown"; } else cell.textContent = String(value); return cell; }
 
 function recordRow(record) {
   const row = document.createElement("article"); row.className = "row";

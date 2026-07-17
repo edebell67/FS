@@ -68,6 +68,22 @@ function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+function ownerPerformance(records, client, now = new Date()) {
+  const day = now.toISOString().slice(0, 10);
+  const today = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.filter((entry) => String(entry.createdAt || "").slice(0, 10) === day)]));
+  const sessions = new Set((today.conversations || []).map((entry) => entry.sessionId).filter(Boolean));
+  const callbacks = today.callbacks || [];
+  const handled = callbacks.filter((entry) => entry.handledAt && Date.parse(entry.handledAt) >= Date.parse(entry.createdAt));
+  const callbackMinutes = handled.map((entry) => Math.round((Date.parse(entry.handledAt) - Date.parse(entry.createdAt)) / 60000));
+  const averageCallbackMinutes = callbackMinutes.length ? Math.round(callbackMinutes.reduce((sum, value) => sum + value, 0) / callbackMinutes.length) : null;
+  const visitorCount = sessions.size;
+  const leadCount = (today.leads || []).length;
+  return {
+    today: { date: day, assistantVisitors: visitorCount, leadsCaptured: leadCount, leadRate: visitorCount ? Math.round((leadCount / visitorCount) * 100) : null, callbacks: callbacks.length, averageCallbackMinutes, resolvedCallbacks: handled.length },
+    baseline: client.ownerReporting?.baseline || { assistantVisitors: null, leadsCaptured: null, callbacks: null, averageCallbackMinutes: null, source: "No previous baseline supplied." }
+  };
+}
+
 async function writeResponseLedger({ env, record }) {
   const token = String(env.RESPONSE_LEDGER_GITHUB_TOKEN || "").trim();
   const repository = String(env.RESPONSE_LEDGER_REPOSITORY || "").trim();
@@ -234,7 +250,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
         return json(res, 200, {
           owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules },
-          records, summary
+          records, summary, performance: ownerPerformance(records, client)
         });
       }
 
