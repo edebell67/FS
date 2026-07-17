@@ -258,7 +258,34 @@ Pages commit must include only the runtime manifest. Push both, then poll the pu
 
 ### 4. Deploy and verify Render
 
-A source push does not update the running shared service. Deploy the existing Render service manually when no authenticated Render API/dashboard session is available:
+A source push does not update the running shared service.
+
+### API-key deployment (preferred at scale)
+
+Store a Render API key only in the active Hermes environment secret file:
+
+```text
+/home/edebe/.hermes/.env
+RENDER_API_KEY=<secret>
+```
+
+Never put it in Git, `SKILL.md`, a project `.env`, a shell command captured in history, a source file, or chat. Restart the Hermes gateway after the secret is added so the gateway/agent process inherits it. Confirm presence only (never print its value):
+
+```bash
+test -n "${RENDER_API_KEY:-}" && echo present || echo absent
+```
+
+Run the included helper only after a source commit is pushed and the intended deployment has been approved:
+
+```bash
+bash skills/ep044_group/ep044-existing-site-svg-assistant-demo/scripts/trigger_render_deploy.sh
+```
+
+The helper invokes Render's documented `POST /v1/services/{serviceId}/deploys` endpoint for the existing shared assistant service. It never logs the token.
+
+### Dashboard fallback
+
+If no authenticated API key is available, deploy manually:
 
 ```text
 shared-website-assistant-api
