@@ -66,11 +66,20 @@ function recordRow(record) {
   const type = document.createElement("strong"); type.className = "type"; type.textContent = typeLabel(record.type);
   const detail = document.createElement("div"); detail.className = "detail"; detail.textContent = recordDetail(record);
   const tag = document.createElement("span"); tag.className = "tag"; tag.textContent = record.simulated || record.mode === "demo" ? "Simulated" : "Live";
-  row.append(time, type, detail, tag); return row;
+  row.append(time, type, detail, tag);
+  if (record.type === "callbacks" && !record.handledAt) { const complete = document.createElement("button"); complete.className = "complete"; complete.textContent = "Mark callback complete"; complete.addEventListener("click", () => completeCallback(record.id, complete)); detail.append(document.createElement("br"), complete); }
+  return row;
 }
 
 function typeLabel(type) { return ({ conversations:"Conversation", previewResponses:"Preview response", leads:"Enquiry", callbacks:"Callback", bookings:"Booking", payments:"Payment", emails:"Email preview", crmLeads:"CRM lead" })[type] || type; }
 function recordDetail(record) { return [record.summary, record.reference, record.message, record.reason, record.service, record.subject, record.interest, record.name].filter(Boolean).join(" · ") || "Activity recorded"; }
+
+function completeCallback(id, button) {
+  button.disabled = true; button.textContent = "Saving…";
+  fetch(`/api/owner/callbacks/${encodeURIComponent(id)}/complete?tenant=${encodeURIComponent(tenant)}`, { method:"POST", headers:{ Authorization:`Bearer ${state.code}` } })
+    .then(async (response) => { const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Could not complete callback."); return loadActivity(); })
+    .catch((error) => { button.disabled = false; button.textContent = error.message; });
+}
 
 function exportCsv() {
   if (!state.data) return;

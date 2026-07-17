@@ -108,6 +108,15 @@ export class JsonStore {
     return clone(this.records);
   }
 
+  async updateRecord(type, id, patch) {
+    if (!Object.hasOwn(this.records, type)) throw new Error("Unknown record type.");
+    const index = this.records[type].findIndex((record) => record.id === id);
+    if (index < 0) return null;
+    this.records[type][index] = { ...this.records[type][index], ...clone(patch), id: this.records[type][index].id, clientId: this.records[type][index].clientId, createdAt: this.records[type][index].createdAt };
+    await this.persistRecords();
+    return clone(this.records[type][index]);
+  }
+
   persistClients() {
     return this.enqueueWrite(this.clientsPath, this.clients);
   }

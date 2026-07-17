@@ -85,6 +85,8 @@ test("public configuration is tenant-scoped, host-bound, and safely projected", 
 test("owner activity access is tenant-isolated and never accepts the admin token", async () => {
   const chat = await request("/api/public/chat", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "owner-console-test", message: "Show the demo booking flow" } });
   assert.equal(chat.status, 200);
+  const callback = await request("/api/public/callbacks", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", name: "Demo owner", telephone: "07000 000000", reason: "Demo callback" } });
+  assert.equal(callback.status, 201);
   const denied = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "test-secret" });
   assert.equal(denied.status, 401);
   const activity = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-air-test" });
@@ -94,6 +96,10 @@ test("owner activity access is tenant-isolated and never accepts the admin token
   assert.equal(activity.body.summary.conversations >= 1, true);
   assert.equal(activity.body.performance.today.assistantVisitors >= 1, true);
   assert.equal(activity.body.performance.baseline.leadsCaptured, 5);
+  const completed = await request(`/api/owner/callbacks/${encodeURIComponent(activity.body.records.callbacks[0].id)}/complete?tenant=air-quantum-existing-site-demo`, { method: "POST", token: "owner-air-test" });
+  assert.equal(completed.status, 200);
+  assert.equal(completed.body.record.handledByOwner, true);
+  assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {

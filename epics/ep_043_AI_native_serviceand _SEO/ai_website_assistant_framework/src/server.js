@@ -241,6 +241,18 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 201, { accepted: true, simulated: true, workflow, record }, corsHeaders(req));
       }
 
+      const completeCallbackMatch = url.pathname.match(/^\/api\/owner\/callbacks\/([^/]+)\/complete$/);
+      if (req.method === "POST" && completeCallbackMatch) {
+        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
+        if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
+        const callbackId = cleanText(decodeURIComponent(completeCallbackMatch[1]), 120, true);
+        const callback = (store.listRecords().callbacks || []).find((record) => record.id === callbackId && record.clientId === client.id);
+        if (!callback) return json(res, 404, { error: "Callback activity was not found." });
+        const record = await store.updateRecord("callbacks", callbackId, { handledAt: new Date().toISOString(), handledByOwner: true });
+        return json(res, 200, { record, performance: ownerPerformance(Object.fromEntries(Object.entries(store.listRecords()).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)])), client) });
+      }
+
       if (req.method === "GET" && url.pathname === "/api/owner/activity") {
         const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
         if (!client) return json(res, 404, { error: "Owner console was not found." });
