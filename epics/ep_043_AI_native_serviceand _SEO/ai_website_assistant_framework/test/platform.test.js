@@ -57,6 +57,9 @@ test("health and static assets are executable", async () => {
   assert.match(widget.body, /aria-label="Start a new conversation"/);
   assert.match(widget.body, /function resetConversation\(/);
   assert.match(widget.body, /\["Contact", "How can I contact you\?"\]/);
+  assert.match(widget.body, /aria-label="Show assistant functions"/);
+  assert.match(widget.body, /function showFunctionCatalog\(/);
+  assert.match(widget.body, /Demo CRM/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);

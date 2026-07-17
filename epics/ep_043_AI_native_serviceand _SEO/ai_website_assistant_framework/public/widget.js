@@ -28,6 +28,8 @@
     .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
     h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
     .status { margin:4px 0 0;font-size:11px;color:#d8dfdc;letter-spacing:.03em; }
+    .functions { position:absolute;right:127px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 9px;font-size:10px;font-weight:700; }
+    .functions:hover { background:#ffffff2b; }
     .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
     .home:hover { background:#ffffff2b; }
     .close { position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:white;font-size:22px;line-height:1; }
@@ -42,6 +44,16 @@
     .action:hover { background:var(--ink);color:white; }
     .quick { display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none; }
     .quick button { white-space:nowrap;border:1px solid #17211f24;background:#fffdf8;border-radius:999px;padding:8px 10px;font-size:10px;color:var(--ink); }
+    .function-catalog { margin:0 0 12px;border:1px solid #17211f1b;border-radius:16px;background:white;overflow:hidden; }
+    .function-catalog header { padding:12px 13px;background:#f2eee5;color:var(--ink);display:flex;justify-content:space-between;align-items:center; }
+    .function-catalog header strong { font:700 14px Georgia,serif; }
+    .function-catalog header button { border:0;background:transparent;color:var(--ink);font-size:16px;line-height:1; }
+    .function-note { padding:9px 13px 3px;margin:0;color:#70695f;font-size:10px;line-height:1.45; }
+    .function-row { display:grid;grid-template-columns:1fr auto;gap:8px;padding:9px 13px;border-top:1px solid #17211f10; }
+    .function-row strong { display:block;font-size:11px; }
+    .function-row span { display:block;margin-top:2px;color:#70695f;font-size:10px;line-height:1.35; }
+    .function-state { align-self:start;border-radius:999px;padding:4px 6px;background:#f0ece3;color:#70695f;font-size:8px!important;font-weight:800;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap; }
+    .function-state.enabled { background:#e1f0e3;color:#356541; }
     form.composer { padding:11px 13px 13px;border-top:1px solid #17211f12;display:flex;gap:8px;background:#fffdf8; }
     .composer input { min-width:0;flex:1;border:1px solid #17211f25;background:white;border-radius:999px;padding:11px 14px;color:var(--ink);outline:none; }
     .composer input:focus { border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent),transparent 82%); }
@@ -101,15 +113,48 @@
     panel.querySelector("input")?.focus();
   }
 
+  function showFunctionCatalog(panel) {
+    const messages = panel.querySelector(".messages");
+    messages.querySelector(".function-catalog")?.remove();
+    const enabled = new Set(state.client.enabledModules || []);
+    const catalog = element("section", "function-catalog");
+    catalog.setAttribute("aria-label", "Assistant function catalogue");
+    const head = element("header");
+    const close = element("button", "", "×"); close.type = "button"; close.setAttribute("aria-label", "Close function catalogue");
+    close.addEventListener("click", () => catalog.remove());
+    head.append(element("strong", "", "Assistant functions"), close);
+    catalog.append(head, element("p", "function-note", "This shows the complete product capability set. Only items marked Available are enabled for this tenant."));
+    const capabilities = [
+      ["faq", "FAQ", "Answers from the approved knowledge base"],
+      ["navigation", "Navigation", "Finds and links to a matching page on the site"],
+      ["booking", "Booking", "Links out to a configured booking provider"],
+      ["callback", "Callback", "Collects callback details and submits a request"],
+      ["lead", "Lead capture", "Collects an enquiry and contact details"],
+      ["contact", "Contact help", "Surfaces approved contact details with an appropriate action"],
+      ["demoBooking", "Demo booking", "Simulated appointment flow with a fictional receipt"],
+      ["demoPayment", "Demo payment", "Simulated checkout — no real charge"],
+      ["demoEmail", "Demo email", "Simulated email preview — never sent"],
+      ["demoCrm", "Demo CRM", "Simulated CRM lead creation"]
+    ];
+    for (const [key, label, description] of capabilities) {
+      const row = element("div", "function-row");
+      const detail = element("div"); detail.append(element("strong", "", label), element("span", "", description));
+      const stateNode = element("span", `function-state${enabled.has(key) ? " enabled" : ""}`, enabled.has(key) ? "Available" : "Not enabled");
+      row.append(detail, stateNode); catalog.append(row);
+    }
+    messages.append(catalog); messages.scrollTop = messages.scrollHeight;
+  }
+
   function buildPanel() {
     const client = state.client;
     const panel = element("section", "panel");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", `${client.businessName} assistant`);
-    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
+    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="functions" aria-label="Show assistant functions">Functions</button><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
     panel.querySelector(".mark").textContent = client.logoText || client.businessName.slice(0, 2);
     panel.querySelector("h2").textContent = client.businessName;
     panel.querySelector(".home").addEventListener("click", resetConversation);
+    panel.querySelector(".functions").addEventListener("click", () => showFunctionCatalog(panel));
     panel.querySelector(".close").addEventListener("click", toggle);
     const messages = panel.querySelector(".messages");
     addMessage(messages, "assistant", `Hello — I’m the ${client.businessName} assistant. What can I help you find or arrange?`);
