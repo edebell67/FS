@@ -7,7 +7,9 @@
   const host = document.createElement("ai-website-assistant");
   const root = host.attachShadow({ mode: "open" });
   document.body.append(host);
-  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [] };
+  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [], proactive: false };
+  const declinedKey = `aiw-declined-${clientKey}`;
+  const NEGATIVE_REPLY = /^(no|nah|nope|no\s*thanks?|no\s*thank\s*you|not\s*now|not\s*interested|not\s*right\s*now|i'?m\s*(good|fine|ok|okay)|no\s*need|leave\s*me\s*alone|go\s*away|maybe\s*later|later)\b/i;
 
   const style = document.createElement("style");
   style.textContent = `
@@ -27,6 +29,8 @@
     .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
     h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
     .status { margin:4px 0 0;font-size:11px;color:#d8dfdc;letter-spacing:.03em; }
+    .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
+    .home:hover { background:#ffffff2b; }
     .close { position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:white;font-size:22px;line-height:1; }
     .demo { background:#f8d89a;color:#533c16;padding:7px 18px;font-size:11px;font-weight:700;letter-spacing:.04em; }
     .messages { padding:19px 17px 12px;overflow-y:auto;scroll-behavior:smooth;background:linear-gradient(#fffdf8,#fbf7ef); }
@@ -67,12 +71,28 @@
   launcher.type = "button";
   launcher.setAttribute("aria-label", "Open website assistant");
   launcher.addEventListener("click", toggle);
+  launcher.style.display = "none";
   root.append(launcher);
 
   fetch(`${apiBase}/api/public/config?clientKey=${encodeURIComponent(clientKey)}&host=${encodeURIComponent(location.hostname)}`)
     .then((response) => response.ok ? response.json() : Promise.reject(new Error("Assistant unavailable")))
-    .then(({ client }) => { state.client = client; applyTheme(client.theme); })
-    .catch(() => { launcher.disabled = true; launcher.title = "Assistant unavailable for this website"; });
+    .then(({ client }) => {
+      state.client = client;
+      applyTheme(client.theme);
+      launcher.style.display = "";
+      if (client.engagementMode === "proactive") scheduleProactivePrompt(client.proactiveDelayMs);
+    })
+    .catch(() => host.remove());
+
+  function scheduleProactivePrompt(delayMs) {
+    if (sessionStorage.getItem(declinedKey) === "1") return;
+    const delay = Number.isFinite(delayMs) ? delayMs : 2500;
+    setTimeout(() => {
+      if (state.open || sessionStorage.getItem(declinedKey) === "1") return;
+      state.proactive = true;
+      toggle();
+    }, delay);
+  }
 
   function toggle() {
     state.open = !state.open;
@@ -84,20 +104,49 @@
     panel.querySelector("input")?.focus();
   }
 
+  function resetConversation() {
+    state.sessionId = crypto.randomUUID();
+    state.history = [];
+    state.proactive = false;
+    root.querySelector(".panel")?.remove();
+    if (!state.open || !state.client) return;
+    const panel = buildPanel();
+    root.insertBefore(panel, launcher);
+    panel.querySelector("input")?.focus();
+  }
+
+  function declineProactive(panel) {
+    state.proactive = false;
+    sessionStorage.setItem(declinedKey, "1");
+    const messages = panel.querySelector(".messages");
+    messages.querySelector(".quick")?.remove();
+    addMessage(messages, "assistant", "No problem — I’ll stay tucked away. Click the icon anytime if you change your mind.");
+    setTimeout(() => { if (state.open) toggle(); }, 1100);
+  }
+
   function buildPanel() {
     const client = state.client;
     const panel = element("section", "panel");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", `${client.businessName} assistant`);
-    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
+    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
     panel.querySelector(".mark").textContent = client.logoText || client.businessName.slice(0, 2);
     panel.querySelector("h2").textContent = client.businessName;
+    panel.querySelector(".home").addEventListener("click", resetConversation);
     panel.querySelector(".close").addEventListener("click", toggle);
     const messages = panel.querySelector(".messages");
     addMessage(messages, "assistant", `Hello — I’m the ${client.businessName} assistant. What can I help you find or arrange?`);
     const quick = element("div", "quick");
+    if (state.proactive) {
+      const yes = element("button", "", "Yes, please"); yes.type = "button";
+      yes.addEventListener("click", () => { state.proactive = false; send("Yes, please help me", panel); });
+      const no = element("button", "", "No thanks"); no.type = "button";
+      no.addEventListener("click", () => declineProactive(panel));
+      quick.append(yes, no);
+    }
     const choices = [
       ["Services", "What services do you provide?"], ["Opening hours", "What are your opening hours?"],
+      ["Contact", "How can I contact you?"], ["Find information", "Where can I find more information on the website?"],
       ...(client.enabledModules.includes("demoBooking") ? [["Demo booking", "Show the demo booking flow"]] : client.enabledModules.includes("booking") ? [["Book", "I would like to book an appointment"]] : []),
       ...(client.enabledModules.includes("demoPayment") ? [["Demo payment", "Show the demo payment checkout"]] : []),
       ...(client.enabledModules.includes("demoEmail") ? [["Demo email", "Preview a demo email"]] : []),
@@ -113,9 +162,12 @@
   }
 
   async function send(message, panel) {
+    const isDecline = state.proactive && NEGATIVE_REPLY.test(message.trim());
+    state.proactive = false;
     const messages = panel.querySelector(".messages");
     messages.querySelector(".quick")?.remove();
     addMessage(messages, "user", message);
+    if (isDecline) { declineProactive(panel); return; }
     const pending = addMessage(messages, "assistant", "Thinking…");
     try {
       const response = await fetch(`${apiBase}/api/public/chat`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ clientKey, host:location.hostname, pageUrl:location.href, sessionId:state.sessionId, message, history:state.history }) });

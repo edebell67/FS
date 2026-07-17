@@ -12,12 +12,21 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "
 let temporary;
 let server;
 let base;
+let ledgerWrites = [];
 
 test.before(async () => {
   temporary = await mkdtemp(path.join(os.tmpdir(), "assistant-platform-"));
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
-  server = await createApp({ store: new JsonStore(temporary), env: { ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "" } });
+  server = await createApp({ store: new JsonStore(temporary), env: {
+    ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
+    fetchImpl: async (_url, options = {}) => {
+      if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
+      ledgerWrites.push(JSON.parse(options.body));
+      return { status: 201, ok: true, json: async () => ({ content: { sha: "next-sha" } }) };
+    }
+  } });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
   base = `http://127.0.0.1:${server.address().port}`;
 });
@@ -45,9 +54,12 @@ test("health and static assets are executable", async () => {
   assert.equal(widget.status, 200);
   assert.match(widget.body, /attachShadow/);
   assert.match(widget.body, /header:after\s*\{[^}]*pointer-events:none/);
+  assert.match(widget.body, /aria-label="Start a new conversation"/);
+  assert.match(widget.body, /function resetConversation\(/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);
+  assert.match(admin.body, /Preview responses/);
 });
 
 test("public configuration is tenant-scoped, host-bound, and safely projected", async () => {
@@ -59,6 +71,27 @@ test("public configuration is tenant-scoped, host-bound, and safely projected", 
   assert.equal("notificationDestinations" in valid.body.client, false);
   const denied = await request("/api/public/config?clientKey=demo_northstar&host=attacker.example");
   assert.equal(denied.status, 404);
+});
+
+test("engagement mode defaults to on_demand and can be switched to proactive by the site owner", async () => {
+  const defaulted = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
+  assert.equal(defaulted.body.client.engagementMode, "on_demand");
+  assert.equal(defaulted.body.client.proactiveDelayMs, 2500);
+
+  const list = await request("/api/admin/clients", { token: "test-secret" });
+  const northstar = list.body.clients[0];
+  const switched = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "proactive", proactiveDelayMs: 1200 } });
+  assert.equal(switched.body.client.engagementMode, "proactive");
+  assert.equal(switched.body.client.proactiveDelayMs, 1200);
+
+  const proactiveConfig = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
+  assert.equal(proactiveConfig.body.client.engagementMode, "proactive");
+  assert.equal(proactiveConfig.body.client.proactiveDelayMs, 1200);
+
+  const invalidMode = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "not-a-real-mode" } });
+  assert.equal(invalidMode.body.client.engagementMode, "on_demand");
+
+  await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "on_demand", proactiveDelayMs: 2500 } });
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {
@@ -91,6 +124,47 @@ test("demo lead and callback modules validate, persist, and suppress notificatio
   assert.equal(callback.body.simulated, true);
   const invalid = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Missing phone" } });
   assert.equal(invalid.status, 400);
+});
+
+test("lead follow-up recovers cold leads and feeds the ROI report", async () => {
+  const shortDelay = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { leadFollowupDelayMs: 50, averageJobValue: 180 } });
+  assert.equal(shortDelay.status, 200);
+  assert.equal(shortDelay.body.client.leadFollowupDelayMs, 50);
+
+  const cold = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Cold Lead", telephone: "07000 111222", service: "Boiler repair", notes: "Thinking about it" } });
+  assert.equal(cold.status, 201);
+  const coldId = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.name === "Cold Lead").id;
+  const scheduled = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.id === coldId);
+  assert.equal(scheduled.followupStatus, "scheduled");
+
+  await new Promise((resolve) => setTimeout(resolve, 150));
+  const afterDelay = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.id === coldId);
+  assert.equal(afterDelay.followupStatus, "sent");
+  assert.ok(afterDelay.followupSentAt);
+
+  const converted = await request(`/api/admin/leads/${coldId}/convert`, { method: "POST", token: "test-secret" });
+  assert.equal(converted.status, 200);
+  assert.equal(converted.body.lead.convertedVia, "after_followup");
+
+  const warm = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Warm Lead", telephone: "07000 333444", service: "Boiler repair" } });
+  assert.equal(warm.status, 201);
+  const warmId = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.name === "Warm Lead").id;
+  const warmConverted = await request(`/api/admin/leads/${warmId}/convert`, { method: "POST", token: "test-secret" });
+  assert.equal(warmConverted.body.lead.convertedVia, "same_session");
+
+  const roi = await request("/api/admin/roi?clientId=northstar-heating", { token: "test-secret" });
+  assert.equal(roi.status, 200);
+  assert.equal(roi.body.businessName, "Northstar Heating");
+  assert.ok(roi.body.followupsSent >= 1);
+  assert.ok(roi.body.convertedAfterFollowup >= 1);
+  assert.ok(roi.body.convertedSameSession >= 1);
+  assert.ok(roi.body.recoveryRate > 0);
+  assert.equal(roi.body.estimatedRecoveredRevenue, roi.body.convertedAfterFollowup * roi.body.averageJobValue);
+
+  const missing = await request("/api/admin/leads/does-not-exist/convert", { method: "POST", token: "test-secret" });
+  assert.equal(missing.status, 404);
+  const unauthorized = await request("/api/admin/roi?clientId=northstar-heating");
+  assert.equal(unauthorized.status, 401);
 });
 
 test("Hoxtans demo business workflows are tenant-scoped, simulated, and recorded", async () => {
@@ -134,6 +208,27 @@ test("Hoxtans demo business workflows are tenant-scoped, simulated, and recorded
   assert.equal(records.body.records.emails.length, 1);
   assert.equal(records.body.records.crmLeads.length, 1);
   assert.ok(["bookings", "payments", "emails", "crmLeads"].every((type) => records.body.records[type][0].simulated));
+});
+
+test("preview response endpoint records a private decision without email or notification", async () => {
+  const accepted = await request("/api/public/preview-responses", {
+    method: "POST",
+    origin: "https://edebell67.github.io",
+    body: { clientKey: "funcuts_se20", action: "discuss_activation", pageUrl: "https://edebell67.github.io/epics/funcuts/reply.html" }
+  });
+  assert.equal(accepted.status, 201);
+  assert.equal(accepted.body.accepted, true);
+  assert.equal(accepted.body.durable, true);
+  assert.equal(ledgerWrites.length, 1);
+  assert.match(Buffer.from(ledgerWrites[0].content, "base64").toString("utf8"), /Fun Cuts response - discuss activation/);
+  assert.equal(accepted.body.notification, undefined);
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  assert.equal(records.body.records.previewResponses.length, 1);
+  assert.equal(records.body.records.previewResponses[0].clientId, "fun-cuts");
+  assert.equal(records.body.records.previewResponses[0].action, "discuss_activation");
+  assert.equal(records.body.records.previewResponses[0].summary, "Fun Cuts response - discuss activation");
+  const invalid = await request("/api/public/preview-responses", { method: "POST", body: { clientKey: "funcuts_se20", host: "localhost", action: "anything_else" } });
+  assert.equal(invalid.status, 400);
 });
 
 test("admin endpoints enforce auth and persist configurable module/live state", async () => {
