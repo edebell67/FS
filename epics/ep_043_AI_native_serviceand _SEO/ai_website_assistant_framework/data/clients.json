@@ -4207,7 +4207,8 @@
     "ownerConsole": {
       "activated": true,
       "status": "activated_private_demo"
-    }
+    },
+    "ownerConsoleDemoUrl": "https://edebell67.github.io/epics/batch-01-existing-site-assistant-demos/beck-and-call/owner-console-demo.html"
   },
   {
     "id": "batch01-becks-homes",

@@ -58,7 +58,8 @@ export class JsonStore {
       status: client.status,
       enabledModules: client.enabledModules,
       pages: client.enabledModules.includes("navigation") ? client.pages : [],
-      demoWorkflows: client.status === "demo" ? client.demoWorkflows || {} : {}
+      demoWorkflows: client.status === "demo" ? client.demoWorkflows || {} : {},
+      ownerConsoleDemoUrl: client.status === "demo" ? client.ownerConsoleDemoUrl || "" : ""
     };
   }
 
