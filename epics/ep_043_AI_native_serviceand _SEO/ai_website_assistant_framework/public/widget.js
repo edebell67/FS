@@ -8,7 +8,8 @@
   const host = document.createElement("ai-website-assistant");
   const root = host.attachShadow({ mode: "open" });
   document.body.append(host);
-  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [], ownerDashboardUrl: "" };
+  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [], ownerDashboardUrl: "", demoOwnerDashboard: false };
+  const illustrativeDemoPassword = "DEMO-ONLY-NOT-A-REAL-PASSWORD";
 
   const style = document.createElement("style");
   style.textContent = `
@@ -150,14 +151,23 @@
     messages.append(catalog); messages.scrollTop = messages.scrollHeight;
   }
 
+  function showIllustrativeDashboard(panel) {
+    const messages = panel.querySelector(".messages");
+    const board = element("section", "module-form", '<strong>Illustrative owner dashboard</strong><p class="demo-note">SIMULATED · illustrative demo data only. No booking, charge, email, callback, CRM update, notification, or external action was sent.</p><div class="quick"><button type="button">Assistant interest: illustrative</button><button type="button">Enquiries: illustrative</button><button type="button">Owner follow-up: not recorded</button></div><p class="demo-note">A real activated owner dashboard is tenant-scoped and password-protected. This screen contains no real owner activity.</p>');
+    messages.append(board); messages.scrollTop = messages.scrollHeight;
+  }
+
   function showOwnerSignIn(panel) {
     const messages = panel.querySelector(".messages");
     messages.querySelector(".owner-sign-in")?.remove();
-    const form = element("form", "module-form owner-sign-in", '<strong>Owner dashboard sign in</strong><p class="demo-note">Private owner access only. Your password is checked securely and is never placed in this website’s source or URL.</p><input name="password" type="password" required autocomplete="current-password" placeholder="Owner Console Password"><button>Verify and show dashboard</button><span class="error"></span>');
+    const demoPasswordValue = state.client.status === "demo" ? ` value="${illustrativeDemoPassword}"` : "";
+    const demoNotice = state.client.status === "demo" ? '<p class="demo-note">Pre-filled with a non-secret illustrative password. It opens only the in-widget illustrative dashboard.</p>' : "";
+    const form = element("form", "module-form owner-sign-in", `<strong>Owner dashboard sign in</strong><p class="demo-note">Private owner access only. Your password is checked securely and is never placed in this website’s source or URL.</p><input name="password" type="password" required autocomplete="current-password" placeholder="Owner Console Password"${demoPasswordValue}>${demoNotice}<button>Verify and show dashboard</button><span class="error"></span>`);
     form.addEventListener("submit", async (event) => {
       event.preventDefault(); const password = form.password.value;
       const error = form.querySelector(".error"); const submit = form.querySelector("button"); error.textContent = ""; submit.disabled = true; submit.textContent = "Checking…";
       try {
+        if (state.client.status === "demo" && password === illustrativeDemoPassword) { state.demoOwnerDashboard = true; root.querySelector(".panel")?.remove(); root.insertBefore(buildPanel(), launcher); return; }
         const response = await fetch(`${apiBase}/api/public/owner-dashboard-access`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ clientKey, host:location.hostname, password }) });
         const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Owner access was not accepted.");
         state.ownerDashboardUrl = payload.dashboardUrl; root.querySelector(".panel")?.remove(); root.insertBefore(buildPanel(), launcher);
@@ -176,7 +186,10 @@
     panel.querySelector("h2").textContent = client.businessName;
     panel.querySelector(".home").addEventListener("click", resetConversation);
     const ownerAccess = panel.querySelector(".owner-access");
-    if (state.ownerDashboardUrl) {
+    if (state.demoOwnerDashboard) {
+      ownerAccess.classList.add("dashboard"); ownerAccess.textContent = "Open illustrative dashboard"; ownerAccess.setAttribute("aria-label", "Open illustrative owner dashboard");
+      ownerAccess.addEventListener("click", () => showIllustrativeDashboard(panel));
+    } else if (state.ownerDashboardUrl) {
       ownerAccess.classList.add("dashboard"); ownerAccess.textContent = "Open owner dashboard ↗"; ownerAccess.setAttribute("aria-label", "Open owner dashboard");
       ownerAccess.addEventListener("click", () => window.open(`${apiBase}${state.ownerDashboardUrl}`, "_blank", "noopener"));
     } else ownerAccess.addEventListener("click", () => showOwnerSignIn(panel));
