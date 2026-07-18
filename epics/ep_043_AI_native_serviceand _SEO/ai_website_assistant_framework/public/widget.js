@@ -8,7 +8,7 @@
   const host = document.createElement("ai-website-assistant");
   const root = host.attachShadow({ mode: "open" });
   document.body.append(host);
-  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [] };
+  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [], ownerDashboardUrl: "" };
 
   const style = document.createElement("style");
   style.textContent = `
@@ -34,6 +34,10 @@
     .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
     .home:hover { background:#ffffff2b; }
     .close { position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:white;font-size:22px;line-height:1; }
+    .owner-access { margin:10px 0 0;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:800; }
+    .owner-access.dashboard { background:var(--accent);border-color:var(--accent); }
+    .owner-access:hover { background:#ffffff2b; }
+    .owner-access.dashboard:hover { background:color-mix(in srgb,var(--accent),#000 14%); }
     .demo { background:#f8d89a;color:#533c16;padding:7px 18px;font-size:11px;font-weight:700;letter-spacing:.04em; }
     .messages { padding:19px 17px 12px;overflow-y:auto;scroll-behavior:smooth;background:linear-gradient(#fffdf8,#fbf7ef); }
     .message { max-width:88%;padding:12px 14px;margin:0 0 11px;border-radius:17px;font-size:13px;line-height:1.55;animation:message .23s ease both;white-space:pre-wrap; }
@@ -146,15 +150,36 @@
     messages.append(catalog); messages.scrollTop = messages.scrollHeight;
   }
 
+  function showOwnerSignIn(panel) {
+    const messages = panel.querySelector(".messages");
+    messages.querySelector(".owner-sign-in")?.remove();
+    const form = element("form", "module-form owner-sign-in", '<strong>Owner dashboard sign in</strong><p class="demo-note">Private owner access only. Your password is checked securely and is never placed in this website’s source or URL.</p><input name="password" type="password" required autocomplete="current-password" placeholder="Owner Console Password"><button>Verify and show dashboard</button><span class="error"></span>');
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault(); const password = form.password.value;
+      const error = form.querySelector(".error"); const submit = form.querySelector("button"); error.textContent = ""; submit.disabled = true; submit.textContent = "Checking…";
+      try {
+        const response = await fetch(`${apiBase}/api/public/owner-dashboard-access`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ clientKey, host:location.hostname, password }) });
+        const payload = await response.json(); if (!response.ok) throw new Error(payload.error || "Owner access was not accepted.");
+        state.ownerDashboardUrl = payload.dashboardUrl; root.querySelector(".panel")?.remove(); root.insertBefore(buildPanel(), launcher);
+      } catch (errorValue) { error.textContent = errorValue.message || "Owner access was not accepted."; submit.disabled = false; submit.textContent = "Verify and show dashboard"; form.password.value = ""; }
+    });
+    messages.append(form); messages.scrollTop = messages.scrollHeight; form.password.focus();
+  }
+
   function buildPanel() {
     const client = state.client;
     const panel = element("section", "panel");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", `${client.businessName} assistant`);
-    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="functions" aria-label="Show assistant functions">Functions</button><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
+    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="owner-access" aria-label="Owner dashboard sign in">Owner sign in</button><button class="functions" aria-label="Show assistant functions">Functions</button><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
     panel.querySelector(".mark").textContent = client.logoText || client.businessName.slice(0, 2);
     panel.querySelector("h2").textContent = client.businessName;
     panel.querySelector(".home").addEventListener("click", resetConversation);
+    const ownerAccess = panel.querySelector(".owner-access");
+    if (state.ownerDashboardUrl) {
+      ownerAccess.classList.add("dashboard"); ownerAccess.textContent = "Open owner dashboard ↗"; ownerAccess.setAttribute("aria-label", "Open owner dashboard");
+      ownerAccess.addEventListener("click", () => window.open(`${apiBase}${state.ownerDashboardUrl}`, "_blank", "noopener"));
+    } else ownerAccess.addEventListener("click", () => showOwnerSignIn(panel));
     panel.querySelector(".functions").addEventListener("click", () => showFunctionCatalog(panel));
     panel.querySelector(".close").addEventListener("click", toggle);
     const messages = panel.querySelector(".messages");

@@ -33,13 +33,21 @@ function ownerConsoleActivated(client) {
   return client.ownerConsole?.activated !== false;
 }
 
-function ownerAuthorized(req, env, clientId) {
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+function ownerTokenFor(env, clientId) {
   try {
     const maps = ["OWNER_CONSOLE_TOKENS_JSON", "OWNER_CONSOLE_TOKENS_JSON_BATCH_01"].map((key) => JSON.parse(String(env[key] || "{}")));
-    const expected = maps.find((tokens) => tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId])?.[clientId];
-    return Boolean(expected && safeEqual(token, expected));
-  } catch { return false; }
+    return maps.find((tokens) => tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId])?.[clientId] || "";
+  } catch { return ""; }
+}
+
+function ownerPasswordAuthorized(password, env, clientId) {
+  const expected = ownerTokenFor(env, clientId);
+  return Boolean(expected && safeEqual(password, expected));
+}
+
+function ownerAuthorized(req, env, clientId) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  return ownerPasswordAuthorized(token, env, clientId);
 }
 
 async function bodyJson(req, maxBytes = 64 * 1024) {
@@ -138,6 +146,16 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const client = store.resolveClient({ publicKey: url.searchParams.get("clientKey"), host: requestHost(req, url.searchParams.get("host")) });
         if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
         return json(res, 200, { client: store.publicClient(client) }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/owner-dashboard-access") {
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner dashboard is available after assistant activation only." }, corsHeaders(req));
+        const password = cleanText(input.password, 512, true);
+        if (!ownerPasswordAuthorized(password, env, client.id)) return json(res, 401, { error: "Owner password was not accepted." }, corsHeaders(req));
+        return json(res, 200, { dashboardUrl: `/owner?tenant=${encodeURIComponent(client.id)}` }, corsHeaders(req));
       }
 
       if (req.method === "POST" && url.pathname === "/api/public/chat") {

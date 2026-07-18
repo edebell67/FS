@@ -82,6 +82,16 @@ test("public configuration is tenant-scoped, host-bound, and safely projected", 
   assert.equal(denied.status, 404);
 });
 
+test("widget owner dashboard access is password-gated and tenant-scoped", async () => {
+  const blocked = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "wrong" }, origin: "http://localhost" });
+  assert.equal(blocked.status, 401);
+  const allowed = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "owner-air-test" }, origin: "http://localhost" });
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.body.dashboardUrl, "/owner?tenant=air-quantum-existing-site-demo");
+  const unactivated = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "batch01_beck_and_call", host: "localhost", password: "owner-batch-test" }, origin: "http://localhost" });
+  assert.equal(unactivated.status, 403);
+});
+
 test("owner activity access is tenant-isolated and never accepts the admin token", async () => {
   const chat = await request("/api/public/chat", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "owner-console-test", message: "Show the demo booking flow" } });
   assert.equal(chat.status, 200);
