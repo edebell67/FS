@@ -22,12 +22,13 @@
     .pulse { position:absolute;right:2px;top:2px;width:13px;height:13px;border:3px solid white;border-radius:50%;background:#68a878; }
     .panel { position:absolute;right:0;bottom:76px;width:min(390px,calc(100vw - 24px));height:min(660px,calc(100svh - 112px));background:#fffdf8;border:1px solid #17211f1f;border-radius:26px;box-shadow:0 28px 90px #11191640;overflow:hidden;display:grid;grid-template-rows:auto 1fr auto;transform-origin:bottom right;animation:arrive .32s cubic-bezier(.2,.8,.2,1); }
     @keyframes arrive { from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none} }
-    header { background:var(--ink);color:white;padding:20px 20px 17px;position:relative;overflow:hidden; }
+    header { background:var(--ink);color:white;padding:18px 18px 15px;position:relative;overflow:hidden; }
     header:after { content:"";position:absolute;width:130px;height:130px;border:1px solid #ffffff2b;border-radius:50%;right:-45px;top:-72px;pointer-events:none; }
-    .brand { display:flex;gap:12px;align-items:center; }
-    .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
-    h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
-    .status { margin:4px 0 0;font-size:11px;color:#d8dfdc;letter-spacing:.03em; }
+    .brand { display:flex;gap:10px;align-items:flex-start;padding-right:151px;min-width:0; }
+    .mark { width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
+    .brand > div:last-child { min-width:0; }
+    h2 { margin:0;font:700 15px/1.15 Georgia,serif;letter-spacing:-.2px;overflow-wrap:anywhere; }
+    .status { margin:4px 0 0;font-size:10px;line-height:1.35;color:#d8dfdc;letter-spacing:.03em; }
     .functions { position:absolute;right:127px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 9px;font-size:10px;font-weight:700; }
     .functions:hover { background:#ffffff2b; }
     .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
