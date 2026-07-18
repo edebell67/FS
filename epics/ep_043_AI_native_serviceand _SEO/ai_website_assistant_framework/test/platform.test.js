@@ -88,7 +88,7 @@ test("widget owner dashboard access is password-gated and tenant-scoped", async 
   const allowed = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "owner-air-test" }, origin: "http://localhost" });
   assert.equal(allowed.status, 200);
   assert.equal(allowed.body.dashboardUrl, "/owner?tenant=air-quantum-existing-site-demo");
-  const unactivated = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "batch01_beck_and_call", host: "localhost", password: "owner-batch-test" }, origin: "http://localhost" });
+  const unactivated = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "batch01_af_refrigeration", host: "localhost", password: "anything" }, origin: "http://localhost" });
   assert.equal(unactivated.status, 403);
 });
 
@@ -112,10 +112,11 @@ test("owner activity access is tenant-isolated and never accepts the admin token
   assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
 });
 
-test("unactivated batch tenant cannot open owner console even with its private code", async () => {
-  const blocked = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
-  assert.equal(blocked.status, 403);
-  assert.equal(blocked.body.error, "Owner console is available after assistant activation only.");
+test("activated batch tenant owner console accepts its password and remains tenant-scoped", async () => {
+  const allowed = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
+  assert.equal(allowed.status, 200);
+  const otherTenant = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-batch-test" });
+  assert.equal(otherTenant.status, 401);
 });
 
 test("assistant answers from approved knowledge and records the conversation", async () => {

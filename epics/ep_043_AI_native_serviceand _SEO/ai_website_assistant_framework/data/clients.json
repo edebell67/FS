@@ -4205,9 +4205,8 @@
       "blocker": "Private owner review and QA required before any live-site installation or operational workflow."
     },
     "ownerConsole": {
-      "activated": false,
-      "status": "not_activated",
-      "message": "Owner-console sign-in becomes available only after assistant activation."
+      "activated": true,
+      "status": "activated_private_demo"
     }
   },
   {
