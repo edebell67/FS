@@ -39,6 +39,9 @@
     .owner-access.dashboard { background:var(--accent);border-color:var(--accent); }
     .owner-access:hover { background:#ffffff2b; }
     .owner-access.dashboard:hover { background:color-mix(in srgb,var(--accent),#000 14%); }
+    .dashboard-tabs button.selected { background:var(--ink);color:#fff;border-color:var(--ink); }
+    .dashboard-detail { margin:10px 0;padding:11px;border-radius:10px;background:#f2f6f8;border-left:3px solid var(--accent);font-size:12px;line-height:1.45; }
+    .dashboard-detail p { margin:6px 0 0; }
     .demo { background:#f8d89a;color:#533c16;padding:7px 18px;font-size:11px;font-weight:700;letter-spacing:.04em; }
     .messages { padding:19px 17px 12px;overflow-y:auto;scroll-behavior:smooth;background:linear-gradient(#fffdf8,#fbf7ef); }
     .message { max-width:88%;padding:12px 14px;margin:0 0 11px;border-radius:17px;font-size:13px;line-height:1.55;animation:message .23s ease both;white-space:pre-wrap; }
@@ -153,7 +156,16 @@
 
   function showIllustrativeDashboard(panel) {
     const messages = panel.querySelector(".messages");
-    const board = element("section", "module-form", '<strong>Illustrative owner dashboard</strong><p class="demo-note">SIMULATED · illustrative demo data only. No booking, charge, email, callback, CRM update, notification, or external action was sent.</p><div class="quick"><button type="button">Assistant interest: illustrative</button><button type="button">Enquiries: illustrative</button><button type="button">Owner follow-up: not recorded</button></div><p class="demo-note">A real activated owner dashboard is tenant-scoped and password-protected. This screen contains no real owner activity.</p>');
+    messages.querySelector(".illustrative-dashboard")?.remove();
+    const board = element("section", "module-form illustrative-dashboard", '<strong>Illustrative owner dashboard</strong><p class="demo-note">SIMULATED · illustrative demo data only. No booking, charge, email, callback, CRM update, notification, or external action was sent.</p><div class="quick dashboard-tabs"><button type="button" data-view="interest">Assistant interest</button><button type="button" data-view="enquiries">Enquiries</button><button type="button" data-view="followup">Owner follow-up</button></div><div class="dashboard-detail" aria-live="polite"></div><p class="demo-note">A real activated owner dashboard is tenant-scoped and password-protected. This screen contains no real owner activity.</p>');
+    const details = {
+      interest: '<strong>Assistant interest — illustrative</strong><p>Example categories a tenant may review after activation: service questions, page-navigation requests, and repeated information gaps.</p><p><b>Status:</b> Illustrative only · no visitor records shown.</p>',
+      enquiries: '<strong>Enquiries — illustrative</strong><p>Example owner view: new service enquiry, requested contact route, and owner follow-up status.</p><p><b>Status:</b> No enquiry, email, callback, CRM update, or notification was sent.</p>',
+      followup: '<strong>Owner follow-up — not recorded</strong><p>After activation, only the owner can mark a captured opportunity as contacted, qualified, quoted, won, lost, or not suitable.</p><p><b>Revenue:</b> Not recorded — no outcome may be inferred.</p>'
+    };
+    const detail = board.querySelector(".dashboard-detail");
+    board.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => { detail.innerHTML = details[button.dataset.view]; board.querySelectorAll("[data-view]").forEach((item) => item.classList.toggle("selected", item === button)); }));
+    board.querySelector('[data-view="interest"]').click();
     messages.append(board); messages.scrollTop = messages.scrollHeight;
   }
 
