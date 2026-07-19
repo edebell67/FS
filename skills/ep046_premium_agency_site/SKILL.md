@@ -1,5 +1,5 @@
 ---
-name: premium-agency-site
+name: ep046_premium_agency_site
 description: Build a premium agency, studio, or consultancy website in an ink-first design language — near-black ground alternating with warm paper, a single high-voltage accent, hairline structure, oversized display type, and CSS-drawn imagery instead of stock photography. Use when asked for an "agency site", "studio site", "consultancy site", "portfolio site", a site that should "look high-end / expensive / like a real agency", or a redesign taking inspiration from sites like Torpedo Group, Engine Digital, or similar restrained B2B agency work. Covers the full build: palette with the dual-ground accent rule, type scale, section rhythm, motion with its fail-safes, blog/article pattern, JSON-LD SEO baseline, and a programmatic verification pass. Reference implementation: epics/ep_046_thetechprinciple/site (live at thetechprinciple.com). Also enforces claims discipline — never publish a portfolio figure derived from a folder count without reading what the folders represent.
 ---
 
