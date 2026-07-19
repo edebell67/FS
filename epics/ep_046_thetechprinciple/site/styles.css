@@ -708,6 +708,35 @@ a{ color: inherit; text-decoration: none; }
   align-items: end;
 }
 
+/* Breadcrumb — mirrors the BreadcrumbList JSON-LD exactly. If the visible
+   trail and the structured data disagree, Google treats it as a mismatch. */
+.crumbs{
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--on-paper-mute);
+  margin-bottom: 2.5rem;
+}
+.crumbs a{ transition: color 0.3s var(--ease); }
+.crumbs a:hover{ color: var(--accent-on-paper); }
+.crumbs [aria-current="page"]{ color: var(--on-paper); }
+
+.article .crumbs{ margin-bottom: 1.75rem; }
+
+.sec-head__more{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--accent-on-paper);
+}
+.sec-head__more:hover .btn__arrow{ transform: translateX(4px); }
+
+.archive{ padding-top: clamp(7rem, 12vw, 10rem); }
+
 .posts{
   display: grid;
   grid-template-columns: repeat(3, 1fr);

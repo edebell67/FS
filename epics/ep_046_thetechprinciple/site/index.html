@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>The Tech Principle — Design, AI and data systems for businesses that ship</title>
-<meta name="description" content="The Tech Principle is an umbrella technology studio: website design and rebuilds, AI site assistants, local SEO and lead generation, and trading and data products. Built, not templated.">
+<title>The Tech Principle — Web Design &amp; AI Studio, London</title>
+<meta name="description" content="Independent London technology studio building websites, AI site assistants, local SEO and the data systems underneath them. Hand-built, fast, and owned by you.">
 <link rel="canonical" href="https://www.thetechprinciple.com/">
 <meta name="theme-color" content="#0A0C0E">
 
@@ -33,6 +33,102 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
+
+<!-- Structured data. NOTE: no postal address or telephone is declared here.
+     Both are strong local-SEO signals, but a wrong or invented NAP is worse
+     than none — Google cross-references it against your Business Profile and
+     directory listings. Add `address` and `telephone` below once the real
+     details exist, and make them byte-identical everywhere they appear. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "ProfessionalService",
+      "@id": "https://www.thetechprinciple.com/#organisation",
+      "name": "The Tech Principle",
+      "url": "https://www.thetechprinciple.com/",
+      "description": "Independent London technology studio building websites, AI site assistants, local SEO and the data systems underneath them.",
+      "email": "hello@thetechprinciple.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://www.thetechprinciple.com/icon-180.png",
+        "width": 180,
+        "height": 180
+      },
+      "image": "https://www.thetechprinciple.com/og-image.png",
+      "areaServed": [
+        { "@type": "City", "name": "London" },
+        { "@type": "Country", "name": "United Kingdom" }
+      ],
+      "knowsAbout": [
+        "Web design",
+        "Website rebuilds",
+        "AI website assistants",
+        "Local SEO",
+        "Lead generation",
+        "Data engineering"
+      ],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Web design and rebuilds",
+              "description": "Bespoke, hand-built websites and rescue work for dated legacy builds, with content and search equity preserved."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "AI site assistants",
+              "description": "Trained website assistants that answer in your voice, capture leads and follow up automatically on non-converters."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Local SEO and lead generation",
+              "description": "Technical SEO, structured data, local pack positioning and automated prospect discovery."
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Trading and data products",
+              "description": "Market data pipelines, strategy execution with audit trails, and the analytics layer over them."
+            }
+          }
+        ]
+      }
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.thetechprinciple.com/#website",
+      "url": "https://www.thetechprinciple.com/",
+      "name": "The Tech Principle",
+      "inLanguage": "en-GB",
+      "publisher": { "@id": "https://www.thetechprinciple.com/#organisation" }
+    },
+    {
+      "@type": "WebPage",
+      "@id": "https://www.thetechprinciple.com/#webpage",
+      "url": "https://www.thetechprinciple.com/",
+      "name": "The Tech Principle — Web Design & AI Studio, London",
+      "isPartOf": { "@id": "https://www.thetechprinciple.com/#website" },
+      "about": { "@id": "https://www.thetechprinciple.com/#organisation" },
+      "inLanguage": "en-GB"
+    }
+  ]
+}
+</script>
+
 <script>
   /* Set before first paint: the reveal animation's hidden state is scoped to .js,
      so with JS unavailable (or blocked) every section renders fully visible
@@ -402,6 +498,7 @@
         <div>
           <p class="eyebrow eyebrow--dark">Writing</p>
           <h2 class="sec-title">Notes from<br>the workbench.</h2>
+          <a class="sec-head__more" href="blog/">All writing<span class="btn__arrow" aria-hidden="true">&#8594;</span></a>
         </div>
         <p class="sec-lede">
           Things we hit while building, written up while they're still fresh. Mostly the
@@ -493,14 +590,14 @@
     </div>
     <nav class="footer__nav" aria-label="Footer">
       <div class="footer__col">
-        <h4 class="mono">Services</h4>
+        <h3 class="mono">Services</h3>
         <a href="#services">Web design</a>
         <a href="#services">AI assistants</a>
         <a href="#services">Local SEO</a>
         <a href="#services">Data products</a>
       </div>
       <div class="footer__col">
-        <h4 class="mono">Studio</h4>
+        <h3 class="mono">Studio</h3>
         <a href="#work">Work</a>
         <a href="#process">Process</a>
         <a href="#writing">Writing</a>
