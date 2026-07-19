@@ -92,12 +92,18 @@
 
   var counters = document.querySelectorAll('[data-count]');
 
+  /* Figures may carry a qualifier ("25+"). The suffix rides along through the
+     tween so the final frame reads exactly what the markup declares. */
+  function render(el, value) {
+    return String(value) + (el.dataset.suffix || '');
+  }
+
   function runCounter(el) {
     var target = parseInt(el.dataset.count, 10);
     if (isNaN(target)) return;
 
     if (reduceMotion) {
-      el.textContent = String(target);
+      el.textContent = render(el, target);
       return;
     }
 
@@ -109,7 +115,7 @@
       var progress = Math.min((now - started) / duration, 1);
       // easeOutExpo — fast start, gentle settle
       var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      el.textContent = String(Math.round(target * eased));
+      el.textContent = render(el, Math.round(target * eased));
       if (progress < 1) window.requestAnimationFrame(frame);
     }
 
@@ -117,7 +123,7 @@
   }
 
   function settleCounters() {
-    counters.forEach(function (el) { el.textContent = el.dataset.count; });
+    counters.forEach(function (el) { el.textContent = render(el, el.dataset.count); });
   }
 
   if (!('IntersectionObserver' in window)) {

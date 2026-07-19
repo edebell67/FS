@@ -471,6 +471,16 @@ a{ color: inherit; text-decoration: none; }
   letter-spacing: -0.005em;
 }
 
+/* Qualifier under the stat band — the figures describe an estate in build,
+   not completed client work, and the copy must not be readable otherwise. */
+.stats__note{
+  margin-top: 1.5rem;
+  color: var(--on-ink-mute);
+  letter-spacing: 0.1em;
+  line-height: 1.7;
+  max-width: 68ch;
+}
+
 /* ============================================================
    SECTION SCAFFOLD
    ============================================================ */

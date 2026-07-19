@@ -79,6 +79,49 @@ confirmation was possible** in this environment, so the aesthetic result is unpr
 one way that matters most for a design deliverable; and the skill itself — the stated end goal
 — is not yet built.
 
+## Correction: false portfolio claims caught before deployment
+
+After the build was committed, the user stated the site is destined for the live domain
+`www.thetechprinciple.com`. That prompted a re-check of the stat band, which surfaced a
+material accuracy problem in copy I had written.
+
+The band originally read **"44 Client sites shipped"** and **"11 Legacy rebuilds"**. I had
+generated both by counting folders (`ls | wc -l`) and presented them as delivered client work
+without checking what the folders represented. In fact:
+
+- `ep_044_web_apps` holds **unsolicited outreach demos**, not client work. Every README states
+  *"Pipeline state: queued — not yet processed"* and *"No public site, outreach, or external
+  action has been created from this folder."* 32 of 46 are explicitly queued; 11 of the folders
+  are generic `*template*` builds with no business attached.
+- `ep_006_website_rebuilds/redesigns` is described by its own `DESIGN.md` as a *"Premium Salon
+  Sales Tool"* — speculative redesigns built so a prospect "can immediately imagine owning" one.
+  Pitch material, not delivered work. It is also **10 folders, not 11** — my original count
+  wrongly included loose files (`DESIGN.md`, `index.html`, `reveal.js`, `review.css`).
+
+Published on a commercial site these would have been false claims about client work — CAP Code
+exposure, and trivially disproved by any prospect asking for two references.
+
+Corrected, per the user's direction that the numbers describe work in progress:
+
+- `25+` / "Site builds in the deployment pipeline" — deliberately conservative and defensible.
+- `10` / "Legacy rebuilds in progress" — count corrected from 11.
+- `47` / "Products in the estate" — corrected from 45.
+- Added a dated qualifier under the band: *"Figures reflect work in active build and deployment
+  as at July 2026 — a live estate, not a closed archive."*
+- Work section heading changed from *"Built, shipped, and still running"* to *"In build, in
+  deployment, in the open."*
+- First case card reworded from "Forty-four hand-built sites" to "moving through the deployment
+  pipeline".
+
+Supporting change: the counter now honours a `data-suffix` attribute so `25+` animates with the
+qualifier attached throughout the tween rather than the `+` appearing at the end (which would
+cause a layout shift). The real figures now sit in the markup as the no-JS fallback, with the
+script zeroing them only when it is actually going to animate — previously the markup hard-coded
+`0`, so a JS failure would have displayed a stat band reading all zeros.
+
+**Lesson for the follow-up skill:** a folder count is not a portfolio claim. Any figure that
+will appear in public marketing copy needs its underlying records read, not just counted.
+
 ## Risks / Notes
 
 - **The visual result is unverified.** Every structural, behavioural and contrast check passes,

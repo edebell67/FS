@@ -53,10 +53,31 @@ Open it and look before it goes near a client or a deploy.
 
 Known caveats, carried from the task record:
 
-- Per-service outcome claims are positioning copy, not measured results.
-- `hello@thetechprinciple.com` is invented — no domain registered or verified.
-- Stat figures (44 / 11 / 45) were counted from the filesystem on 2026-07-19 and are
-  hardcoded in `index.html`; they will drift as the estate grows.
+- Per-service outcome claims ("converts twice as well as the one it replaced") are positioning
+  copy, not measured results. **Unresolved** — these are public advertising claims now that the
+  site is production-bound, and should be substantiated or softened.
+- `hello@thetechprinciple.com` needs a real mailbox behind it or enquiries are lost.
+- Production essentials not yet added: favicon, OG/Twitter cards, canonical URL, `robots.txt`,
+  `sitemap.xml`.
+
+## The stat band — read this before changing it
+
+The figures describe **work in progress**, not completed client work, and the labels are
+worded deliberately:
+
+| Figure | Label | Basis |
+|---|---|---|
+| `25+` | Site builds in the deployment pipeline | Deliberately conservative. 44 folders in `ep_044_web_apps` carry a built `index.html`, but 32 of 46 READMEs read *"queued — not yet processed"*, so the true shipped count is lower and moving. 25+ is defensible without qualification. |
+| `10` | Legacy rebuilds in progress | Folder count in `ep_006_website_rebuilds/redesigns`. |
+| `47` | Products in the estate | `ep_*` folder count. |
+| `4` | Disciplines under one roof | The four service lines. |
+
+An earlier draft of this site labelled these *"Client sites shipped"* and *"Legacy rebuilds"*.
+That was wrong and was corrected before any deployment: the `ep_044` folders are **unsolicited
+outreach demos** for businesses that are not clients and in most cases have not been contacted,
+and `ep_006/redesigns` is described by its own `DESIGN.md` as a *"Premium Salon Sales Tool"* —
+speculative pitch material. Do not restore completion language to these figures without
+evidence of actual signed, delivered client work.
 
 ## Next step
 
