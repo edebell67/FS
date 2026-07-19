@@ -88,63 +88,9 @@
     }, 1200);
   }
 
-  /* ---------- stat counters ---------- */
-
-  var counters = document.querySelectorAll('[data-count]');
-
-  /* Figures may carry a qualifier ("25+"). The suffix rides along through the
-     tween so the final frame reads exactly what the markup declares. */
-  function render(el, value) {
-    return String(value) + (el.dataset.suffix || '');
-  }
-
-  function runCounter(el) {
-    var target = parseInt(el.dataset.count, 10);
-    if (isNaN(target)) return;
-
-    if (reduceMotion) {
-      el.textContent = render(el, target);
-      return;
-    }
-
-    var duration = 1250;
-    var started = null;
-
-    function frame(now) {
-      if (started === null) started = now;
-      var progress = Math.min((now - started) / duration, 1);
-      // easeOutExpo — fast start, gentle settle
-      var eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
-      el.textContent = render(el, Math.round(target * eased));
-      if (progress < 1) window.requestAnimationFrame(frame);
-    }
-
-    window.requestAnimationFrame(frame);
-  }
-
-  function settleCounters() {
-    counters.forEach(function (el) { el.textContent = render(el, el.dataset.count); });
-  }
-
-  if (!('IntersectionObserver' in window)) {
-    settleCounters();
-  } else {
-    var countReported = false;
-
-    var countObserver = new IntersectionObserver(function (entries) {
-      countReported = true;
-      entries.forEach(function (entry) {
-        if (!entry.isIntersecting) return;
-        runCounter(entry.target);
-        countObserver.unobserve(entry.target);
-      });
-    }, { threshold: 0.6 });
-
-    counters.forEach(function (el) { countObserver.observe(el); });
-
-    /* Same watchdog as the reveal: never leave the stats reading "0". */
-    window.setTimeout(function () {
-      if (!countReported) settleCounters();
-    }, 1200);
-  }
+  /* The stat band deliberately carries qualitative phrases rather than counts,
+     so there is no counter animation here. If numeric figures are ever
+     reintroduced, note that the previous implementation put the real value in
+     the markup and only zeroed it when it was actually going to animate —
+     otherwise a JS failure leaves the band reading "0". */
 })();

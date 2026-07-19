@@ -119,8 +119,19 @@ cause a layout shift). The real figures now sit in the markup as the no-JS fallb
 script zeroing them only when it is actually going to animate — previously the markup hard-coded
 `0`, so a JS failure would have displayed a stat band reading all zeros.
 
+**Final resolution — numbers removed entirely.** On the user's direction the band was then
+stripped of numeric figures altogether, replaced with qualitative phrases: "Multiple sites /
+In the deployment pipeline right now", "Legacy rebuilds / Salon, barbering and trades — in
+progress", "A working estate / Web, AI, search and data products in active development", "Four
+disciplines / Under one roof, one standard". An exact count invites an audit the underlying
+records will not survive; the phrasing carries the same weight without the exposure. The
+counter animation was removed as dead code (a comment in `script.js` records the no-JS fallback
+pattern in case figures are ever reintroduced), `.stat__num` became `.stat__figure` at a type
+size suited to phrases rather than numerals, and the band was verified to contain zero digits.
+
 **Lesson for the follow-up skill:** a folder count is not a portfolio claim. Any figure that
-will appear in public marketing copy needs its underlying records read, not just counted.
+will appear in public marketing copy needs its underlying records read, not just counted — and
+the safest agency-site stat band is often one with no numbers in it at all.
 
 ## Risks / Notes
 

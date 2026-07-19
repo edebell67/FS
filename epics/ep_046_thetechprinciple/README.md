@@ -62,22 +62,34 @@ Known caveats, carried from the task record:
 
 ## The stat band — read this before changing it
 
-The figures describe **work in progress**, not completed client work, and the labels are
-worded deliberately:
+**The band carries no numbers, by decision.** It reads:
 
-| Figure | Label | Basis |
-|---|---|---|
-| `25+` | Site builds in the deployment pipeline | Deliberately conservative. 44 folders in `ep_044_web_apps` carry a built `index.html`, but 32 of 46 READMEs read *"queued — not yet processed"*, so the true shipped count is lower and moving. 25+ is defensible without qualification. |
-| `10` | Legacy rebuilds in progress | Folder count in `ep_006_website_rebuilds/redesigns`. |
-| `47` | Products in the estate | `ep_*` folder count. |
-| `4` | Disciplines under one roof | The four service lines. |
+| Figure | Label |
+|---|---|
+| Multiple sites | In the deployment pipeline right now |
+| Legacy rebuilds | Salon, barbering and trades — in progress |
+| A working estate | Web, AI, search and data products in active development |
+| Four disciplines | Under one roof, one standard |
 
-An earlier draft of this site labelled these *"Client sites shipped"* and *"Legacy rebuilds"*.
-That was wrong and was corrected before any deployment: the `ep_044` folders are **unsolicited
-outreach demos** for businesses that are not clients and in most cases have not been contacted,
-and `ep_006/redesigns` is described by its own `DESIGN.md` as a *"Premium Salon Sales Tool"* —
-speculative pitch material. Do not restore completion language to these figures without
-evidence of actual signed, delivered client work.
+This is the third version of this band, and the history matters because it is easy to
+reintroduce the original mistake.
+
+The first draft read *"44 Client sites shipped"* and *"11 Legacy rebuilds"* — figures produced
+by counting folders and captioned as delivered client work. They are not. The `ep_044_web_apps`
+folders are **unsolicited outreach demos** for businesses that are not clients and in most cases
+have not been contacted; every README states *"Pipeline state: queued — not yet processed"* and
+*"No public site, outreach, or external action has been created from this folder."*
+`ep_006/redesigns` is described by its own `DESIGN.md` as a *"Premium Salon Sales Tool"* —
+speculative pitch material. On a commercial site those would have been false claims about client
+work.
+
+The second draft corrected the framing to work-in-progress (`25+` / `10` / `47` / `4`). The
+current version drops numbers altogether: an exact count invites an audit that the underlying
+records will not survive, and the qualitative phrasing carries the same weight without the
+exposure.
+
+**If you reintroduce numbers,** verify what the folders actually represent first — a folder
+count is not a portfolio claim — and restore the no-JS fallback pattern noted in `script.js`.
 
 ## Next step
 
