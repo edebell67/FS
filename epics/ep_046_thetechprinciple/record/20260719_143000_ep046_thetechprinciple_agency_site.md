@@ -143,8 +143,11 @@ the safest agency-site stat band is often one with no numbers in it at all.
 - **Copy is placeholder-grade in one specific respect:** the outcome claims under each service
   ("loads in under a second", "converts twice as well") are plausible positioning copy, not
   measured results from the estate. They should be substantiated or softened before publication.
-- **Contact address `hello@thetechprinciple.com` is invented** — no domain has been registered or
-  verified as part of this task.
+- **Contact address is `edward.bell@thetechprinciple.com`**, set by the user on 2026-07-19
+  (replacing the `hello@` placeholder this task had invented). It appears in two places that
+  must stay in sync: the `mailto:` CTA and the `email` field in the homepage JSON-LD. Neither
+  the domain nor the mailbox has been verified as existing — if the mailbox is not live,
+  every enquiry the site generates is silently lost.
 - **The stat figures are real but will drift** — 44/11/45 were counted from the filesystem on
   2026-07-19 and are hardcoded in `index.html`. They will go stale as the estate grows.
 - **Follow-up task not yet created:** packaging `DESIGN.md` as a skill under `skills/` is the

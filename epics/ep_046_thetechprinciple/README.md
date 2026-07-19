@@ -17,6 +17,10 @@ Created 2026-07-19.
 | `site/index.html` | Single-page agency site — nav + drawer, hero, marquee, stats, 4 services, 6 work cards, process, principles, CTA, footer. |
 | `site/styles.css` | The design system implementation. |
 | `site/script.js` | Nav scroll state, accessible mobile drawer, scroll reveal, animated counters. Progressive enhancement throughout. |
+| `site/blog/` | Blog index (`index.html`) plus three post pages. |
+| `site/404.html` | Not-found page, `noindex`. |
+| `site/robots.txt`, `site/sitemap.xml` | Crawl directives; sitemap covers 5 URLs. |
+| `site/og-image.png`, `site/icon-180.png` | Social share card (1200×630) and touch icon. |
 | `site/serve_site.bat` | Local preview launcher (port 8130). |
 | `record/` | Build record — the workstream task file and a copy of the preview launch config. |
 
@@ -40,7 +44,7 @@ The site covers all four service lines and grounds its claims in the real estate
 
 | Line | Backed by |
 |---|---|
-| Web design & rebuilds | 44 built sites in `ep_044_web_apps`, 11 rebuilds in `ep_006_website_rebuilds/redesigns` |
+| Web design & rebuilds | `ep_044_web_apps` build pipeline, `ep_006_website_rebuilds/redesigns` — see the stat-band note below on how these may and may not be described |
 | AI site assistants | `ep_043` assistant framework |
 | Local SEO & lead generation | `ep_043`, `ep_034_lead_gen` |
 | Trading & data products | `ep_001`, `ep_024_hermes_digitals` and the wider trading estate |
@@ -53,12 +57,18 @@ Open it and look before it goes near a client or a deploy.
 
 Known caveats, carried from the task record:
 
-- Per-service outcome claims ("converts twice as well as the one it replaced") are positioning
-  copy, not measured results. **Unresolved** — these are public advertising claims now that the
-  site is production-bound, and should be substantiated or softened.
-- `hello@thetechprinciple.com` needs a real mailbox behind it or enquiries are lost.
-- Production essentials not yet added: favicon, OG/Twitter cards, canonical URL, `robots.txt`,
-  `sitemap.xml`.
+- Per-service outcome claims were softened before launch: "Typical outcome" became "What we
+  build toward", and the unmeasured "converts twice as well" / "measurable pound figure" claims
+  were removed. Keep it that way unless you have figures to cite.
+- `edward.bell@thetechprinciple.com` needs a real mailbox behind it or enquiries are lost.
+- The three blog posts were drafted here and published under the studio's name — **read them
+  before launch**, particularly "The lead you already paid for", which describes how the
+  assistant follow-up works and must match what is actually sold.
+- No postal address or telephone in the JSON-LD. Both are strong local-SEO signals, but an
+  invented NAP is worse than none — Google cross-checks it against the Business Profile. A
+  comment in `site/index.html` marks where to add them once real.
+- Ranking work that code cannot do: Google Business Profile, citations, and the domain
+  actually resolving.
 
 ## The stat band — read this before changing it
 
