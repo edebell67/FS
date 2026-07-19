@@ -145,9 +145,9 @@ the safest agency-site stat band is often one with no numbers in it at all.
   measured results from the estate. They should be substantiated or softened before publication.
 - **Contact address is `edward.bell@thetechprinciple.com`**, set by the user on 2026-07-19
   (replacing the `hello@` placeholder this task had invented). It appears in two places that
-  must stay in sync: the `mailto:` CTA and the `email` field in the homepage JSON-LD. Neither
-  the domain nor the mailbox has been verified as existing — if the mailbox is not live,
-  every enquiry the site generates is silently lost.
+  must stay in sync: the `mailto:` CTA and the `email` field in the homepage JSON-LD. Ed
+  confirmed on 2026-07-19 that the address is real and live, so the earlier caveat about
+  enquiries being silently lost no longer applies.
 - **The stat figures are real but will drift** — 44/11/45 were counted from the filesystem on
   2026-07-19 and are hardcoded in `index.html`. They will go stale as the estate grows.
 - **Follow-up task not yet created:** packaging `DESIGN.md` as a skill under `skills/` is the

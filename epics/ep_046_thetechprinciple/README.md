@@ -60,7 +60,9 @@ Known caveats, carried from the task record:
 - Per-service outcome claims were softened before launch: "Typical outcome" became "What we
   build toward", and the unmeasured "converts twice as well" / "measurable pound figure" claims
   were removed. Keep it that way unless you have figures to cite.
-- `edward.bell@thetechprinciple.com` needs a real mailbox behind it or enquiries are lost.
+- Contact address is `edward.bell@thetechprinciple.com` — confirmed live by Ed on 2026-07-19.
+  It appears in two places that must stay in sync: the `mailto:` CTA and the `email` field in
+  the homepage JSON-LD.
 - The three blog posts were drafted here and published under the studio's name — **read them
   before launch**, particularly "The lead you already paid for", which describes how the
   assistant follow-up works and must match what is actually sold.
