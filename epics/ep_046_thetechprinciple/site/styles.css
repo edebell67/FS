@@ -698,6 +698,200 @@ a{ color: inherit; text-decoration: none; }
 .step__desc{ color: var(--on-paper-mute); font-size: 0.9375rem; line-height: 1.65; }
 
 /* ============================================================
+   WRITING / POSTS
+   ============================================================ */
+
+.sec-head--split{
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: clamp(2rem, 5vw, 4.5rem);
+  align-items: end;
+}
+
+.posts{
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line-light);
+  border-block: 1px solid var(--line-light);
+}
+
+.post{ background: var(--paper); }
+
+/* The whole card is the hit target — one link, so there is a single tab stop
+   per post rather than a title/"read more" pair pointing at the same place. */
+.post__link{
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+  height: 100%;
+  padding: clamp(1.75rem, 3.5vw, 2.5rem) clamp(1.5rem, 3vw, 2.25rem);
+  transition: background-color 0.45s var(--ease);
+}
+.post__link:hover{ background: var(--paper-2); }
+
+.post__meta{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--on-paper-mute);
+}
+.post__dot{ opacity: 0.5; }
+
+.post__title{
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  transition: color 0.3s var(--ease);
+}
+.post__link:hover .post__title{ color: var(--accent-on-paper); }
+
+.post__excerpt{
+  font-size: 0.9375rem;
+  line-height: 1.62;
+  color: var(--on-paper-mute);
+}
+
+.post__more{
+  margin-top: 0.35rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent-on-paper);
+}
+.post__link:hover .btn__arrow{ transform: translateX(4px); }
+
+/* ============================================================
+   ARTICLE (blog post pages)
+   ============================================================ */
+
+.article{
+  background: var(--paper);
+  color: var(--on-paper);
+  padding-block: clamp(7rem, 12vw, 10rem) var(--section-y);
+}
+
+.article__shell{
+  width: 100%;
+  max-width: 46rem;          /* ~68ch measure — prose, not layout */
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.article__back{
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--on-paper-mute);
+  margin-bottom: 2.5rem;
+  transition: color 0.3s var(--ease);
+}
+.article__back:hover{ color: var(--on-paper); }
+
+.article__meta{
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--on-paper-mute);
+  margin-bottom: 1.5rem;
+}
+
+.article__title{
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  margin-bottom: 1.5rem;
+}
+
+.article__standfirst{
+  font-size: clamp(1.0625rem, 1rem + 0.35vw, 1.25rem);
+  line-height: 1.6;
+  color: var(--on-paper-mute);
+  padding-bottom: 2.5rem;
+  margin-bottom: 2.5rem;
+  border-bottom: 1px solid var(--line-light);
+}
+
+.article__body > * + *{ margin-top: 1.5rem; }
+
+.article__body h2{
+  font-size: clamp(1.35rem, 2.6vw, 1.85rem);
+  margin-top: 3rem;
+}
+
+.article__body p,
+.article__body li{
+  font-size: 1.0625rem;
+  line-height: 1.72;
+  color: var(--on-paper);
+}
+
+.article__body ul{
+  display: grid;
+  gap: 0.75rem;
+  padding-left: 0;
+}
+.article__body li{
+  position: relative;
+  padding-left: 1.6rem;
+}
+.article__body li::before{
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.66em;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 1px;
+  background: var(--accent-on-paper);
+  transform: rotate(45deg);
+}
+
+.article__body strong{ font-weight: 600; }
+
+.article__body code{
+  font-family: var(--mono);
+  font-size: 0.875em;
+  background: rgba(10, 12, 14, 0.06);
+  border: 1px solid var(--line-light);
+  border-radius: 4px;
+  padding: 0.15em 0.4em;
+}
+
+.article__body pre{
+  background: var(--ink);
+  color: var(--on-ink);
+  border-radius: 8px;
+  padding: 1.25rem 1.4rem;
+  overflow-x: auto;              /* wide code scrolls itself, never the page */
+  font-family: var(--mono);
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+.article__body pre code{
+  background: none;
+  border: 0;
+  padding: 0;
+  font-size: inherit;
+}
+
+.article__body blockquote{
+  border-left: 2px solid var(--accent-on-paper);
+  padding-left: 1.25rem;
+  color: var(--on-paper-mute);
+  font-style: normal;
+}
+
+.article__foot{
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--line-light);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* ============================================================
    PRINCIPLES
    ============================================================ */
 
@@ -839,6 +1033,8 @@ a{ color: inherit; text-decoration: none; }
 
 @media (max-width: 1024px){
   .work{ grid-template-columns: repeat(2, 1fr); }
+  .posts{ grid-template-columns: repeat(2, 1fr); }
+  .sec-head--split{ grid-template-columns: 1fr; align-items: start; }
   .principles__shell{ grid-template-columns: 1fr; }
   .stats__grid{ grid-template-columns: repeat(2, 1fr); }
   .svc__body{ grid-template-columns: 1fr; }
@@ -857,6 +1053,7 @@ a{ color: inherit; text-decoration: none; }
 
   .process{ grid-template-columns: 1fr; }
   .work{ grid-template-columns: 1fr; }
+  .posts{ grid-template-columns: 1fr; }
   .svc{ grid-template-columns: 1fr; gap: 0.75rem; }
   .svc__idx{ padding-top: 0; }
   .footer__inner{ grid-template-columns: 1fr; }

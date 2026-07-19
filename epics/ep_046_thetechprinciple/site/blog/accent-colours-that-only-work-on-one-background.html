@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The accent colour that only worked on half the site — The Tech Principle</title>
+<meta name="description" content="A lime that scored 15:1 on black and 1.5:1 on off-white, and the process step numbers nobody would have been able to read.">
+<link rel="canonical" href="https://www.thetechprinciple.com/blog/accent-colours-that-only-work-on-one-background.html">
+<meta name="theme-color" content="#0A0C0E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23C8F250'/%3E%3Crect x='11' y='11' width='10' height='10' rx='1' fill='%230A0C0E'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="The Tech Principle">
+<meta property="og:url" content="https://www.thetechprinciple.com/blog/accent-colours-that-only-work-on-one-background.html">
+<meta property="og:title" content="The accent colour that only worked on half the site">
+<meta property="og:description" content="A lime that scored 15:1 on black and 1.5:1 on off-white, and the step numbers nobody would have been able to read.">
+<meta property="og:image" content="https://www.thetechprinciple.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav is-stuck">
+  <div class="shell nav__inner">
+    <a class="brand" href="../index.html" aria-label="The Tech Principle — home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__word">The Tech Principle</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html#services">Services</a>
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#writing">Writing</a>
+      <a href="../index.html#principles">Principles</a>
+    </nav>
+    <a class="btn btn--pill" href="../index.html#contact">Let's talk<span class="btn__arrow" aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article">
+    <div class="article__shell">
+
+      <a class="article__back mono" href="../index.html#writing">
+        <span aria-hidden="true">←</span> All writing
+      </a>
+
+      <div class="article__meta">
+        <time class="mono" datetime="2026-07-19">19 Jul 2026</time>
+        <span aria-hidden="true">&middot;</span>
+        <span class="mono">Design</span>
+      </div>
+
+      <h1 class="article__title">The accent colour that only worked on half the site</h1>
+
+      <p class="article__standfirst">
+        We picked an electric lime for this site. On the near-black sections it is superb.
+        On the off-white sections it was very close to invisible &mdash; and we had already
+        used it for text.
+      </p>
+
+      <div class="article__body">
+
+        <p>
+          Picking a brand accent usually happens against one background. You are staring at a
+          dark hero, you try a colour, it sings, you commit. The problem arrives two sections
+          later when the page flips to a light ground and that same colour comes with it.
+        </p>
+
+        <p>
+          For this site the accent is <code>#C8F250</code>, an electric lime. Against the ink
+          ground it measures a contrast ratio of <strong>15.18:1</strong> &mdash; far beyond
+          what WCAG asks for, and it looks the part. Against the warm off-white used for the
+          alternating sections, the same colour measures <strong>1.50:1</strong>.
+        </p>
+
+        <blockquote>
+          4.5:1 is the minimum for normal body text. 1.5:1 is not a near miss. It is roughly
+          the contrast of pale yellow on white.
+        </blockquote>
+
+        <h2>Where it actually bit</h2>
+
+        <p>
+          A washed-out decorative flourish is survivable. This was not decorative. The accent
+          had been used for:
+        </p>
+
+        <ul>
+          <li>The <code>01</code> / <code>02</code> / <code>03</code> numerals on the process steps &mdash; real text, carrying real meaning</li>
+          <li>The diamond bullets on every service list</li>
+          <li>The short rule that sits before each section eyebrow</li>
+        </ul>
+
+        <p>
+          The step numbers are the serious one. They are content. Anyone reading that section
+          on a bright screen, or with even mild low-vision, would have been looking at three
+          faint smudges where the structure of the process was supposed to be.
+        </p>
+
+        <h2>The fix is a second token, not a compromise</h2>
+
+        <p>
+          The instinct is to find one colour that clears 4.5:1 on both grounds. Resist it. A
+          hue dark enough to read on off-white will be muddy and lifeless on near-black, and
+          you will have traded a real accent for a colour that is merely adequate twice.
+        </p>
+
+        <p>
+          Keep the accent that works, and give it a light-ground twin in the same hue family:
+        </p>
+
+<pre><code>--accent:          #C8F250;  /* 15.18:1 on ink   */
+--accent-on-paper: #4C6410;  /*  5.88:1 on paper */</code></pre>
+
+        <p>
+          The olive is unmistakably the same colour family &mdash; it reads as the brand, not
+          as a second brand &mdash; and it clears AA comfortably. Anything meaningful on a light
+          section uses it. The lime stays for dark ground and for the full-bleed accent panel,
+          where it earns its keep.
+        </p>
+
+        <h2>Test it, don't eyeball it</h2>
+
+        <p>
+          We found the replacement by generating candidates and measuring them rather than
+          nudging a colour picker until it felt right. Seven shades were scored against the
+          actual paper value; the first that cleared 4.5:1 with headroom won. That took about
+          a minute and removed the argument entirely.
+        </p>
+
+        <p>
+          The broader rule: <strong>a contrast check is per pairing, not per colour.</strong> If
+          your design alternates grounds &mdash; and most good ones do &mdash; then every token
+          needs checking against every ground it will actually land on. A palette that passes on
+          your hero says nothing about the section below it.
+        </p>
+
+      </div>
+
+      <div class="article__foot">
+        <a class="article__back mono" href="../index.html#writing">
+          <span aria-hidden="true">←</span> All writing
+        </a>
+        <a class="btn btn--ink" href="../index.html#contact">Start a project<span class="btn__arrow" aria-hidden="true">→</span></a>
+      </div>
+
+    </div>
+  </article>
+</main>
+
+<footer class="footer">
+  <div class="shell footer__base">
+    <span class="mono">&copy; 2026 The Tech Principle</span>
+    <span class="mono">London &middot; United Kingdom</span>
+  </div>
+</footer>
+
+</body>
+</html>

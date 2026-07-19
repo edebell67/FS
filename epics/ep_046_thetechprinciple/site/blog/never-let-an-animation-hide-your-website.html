@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Never let an animation decide whether your site is visible — The Tech Principle</title>
+<meta name="description" content="Scroll-reveal effects usually start by hiding everything. If the script that un-hides it fails, you have shipped a blank page.">
+<link rel="canonical" href="https://www.thetechprinciple.com/blog/never-let-an-animation-hide-your-website.html">
+<meta name="theme-color" content="#0A0C0E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23C8F250'/%3E%3Crect x='11' y='11' width='10' height='10' rx='1' fill='%230A0C0E'/%3E%3C/svg%3E">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="The Tech Principle">
+<meta property="og:url" content="https://www.thetechprinciple.com/blog/never-let-an-animation-hide-your-website.html">
+<meta property="og:title" content="Never let an animation decide whether your site is visible">
+<meta property="og:description" content="Scroll-reveal effects usually start by hiding everything. If the script that un-hides it fails, you have shipped a blank page.">
+<meta property="og:image" content="https://www.thetechprinciple.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav is-stuck">
+  <div class="shell nav__inner">
+    <a class="brand" href="../index.html" aria-label="The Tech Principle — home">
+      <span class="brand__mark" aria-hidden="true"></span>
+      <span class="brand__word">The Tech Principle</span>
+    </a>
+    <nav class="nav__links" aria-label="Primary">
+      <a href="../index.html#services">Services</a>
+      <a href="../index.html#work">Work</a>
+      <a href="../index.html#writing">Writing</a>
+      <a href="../index.html#principles">Principles</a>
+    </nav>
+    <a class="btn btn--pill" href="../index.html#contact">Let's talk<span class="btn__arrow" aria-hidden="true">→</span></a>
+  </div>
+</header>
+
+<main id="main">
+  <article class="article">
+    <div class="article__shell">
+
+      <a class="article__back mono" href="../index.html#writing">
+        <span aria-hidden="true">←</span> All writing
+      </a>
+
+      <div class="article__meta">
+        <time class="mono" datetime="2026-07-19">19 Jul 2026</time>
+        <span aria-hidden="true">&middot;</span>
+        <span class="mono">Engineering</span>
+      </div>
+
+      <h1 class="article__title">Never let an animation decide whether your site is visible</h1>
+
+      <p class="article__standfirst">
+        Almost every fade-in-on-scroll effect works by hiding your content first and revealing
+        it with JavaScript. Which means the failure mode is not "no animation". It is "no
+        website".
+      </p>
+
+      <div class="article__body">
+
+        <p>
+          The pattern is everywhere, and it looks harmless:
+        </p>
+
+<pre><code>.reveal      { opacity: 0; transform: translateY(22px); }
+.reveal.is-in{ opacity: 1; transform: none; }</code></pre>
+
+        <p>
+          Then an <code>IntersectionObserver</code> adds <code>.is-in</code> as each element
+          scrolls into view. Elegant, cheap, compositor-friendly. And it contains a quiet
+          assumption: <strong>that the JavaScript will run.</strong>
+        </p>
+
+        <p>
+          If it does not &mdash; a syntax error in an unrelated bundle, a blocked script, an
+          over-eager corporate proxy, a browser extension, a CDN having a bad afternoon &mdash;
+          then every element with that class stays at <code>opacity: 0</code>. Your page loads.
+          Your server returns 200. Your HTML is perfect. The visitor sees white.
+        </p>
+
+        <h2>We watched it happen</h2>
+
+        <p>
+          Building this site, the preview environment turned out not to be painting frames. A
+          direct test confirmed the observer never fired a single callback &mdash; not late, not
+          partially: zero. Result: 0 of 34 elements revealed, and a stat band frozen reading
+          "0".
+        </p>
+
+        <p>
+          That particular environment was an artefact of our own tooling, not something a real
+          visitor would hit. But it demonstrated the failure exactly, and the lesson stands on
+          its own: <strong>if an animation hook is the only thing standing between your content
+          and the viewer, you have made visibility conditional on code succeeding.</strong>
+        </p>
+
+        <h2>Two guards, about six lines</h2>
+
+        <p><strong>First: scope the hidden state to JavaScript being alive.</strong> An inline
+        script in the <code>&lt;head&gt;</code>, before first paint, marks the document:</p>
+
+<pre><code>&lt;script&gt;document.documentElement.classList.add('js');&lt;/script&gt;</code></pre>
+
+        <p>Then the hidden state only applies when that class is present:</p>
+
+<pre><code>.js .reveal      { opacity: 0; ... }
+.js .reveal.is-in{ opacity: 1; ... }</code></pre>
+
+        <p>
+          No JavaScript, no <code>.js</code> class, no hidden state &mdash; the page renders
+          plainly and completely. It must be inline and in the head; a deferred external file
+          is exactly the thing that might not arrive.
+        </p>
+
+        <p><strong>Second: give the observer a deadline.</strong> Scoping to <code>.js</code>
+        handles JavaScript being absent. It does not handle JavaScript running while the
+        observer never reports &mdash; throttled tabs, background renderers, and the situation
+        above. So set a watchdog:</p>
+
+<pre><code>var reported = false;
+var io = new IntersectionObserver(function (entries) {
+  reported = true;
+  /* ...reveal as normal... */
+});
+
+setTimeout(function () {
+  if (!reported) revealAll();
+}, 1200);</code></pre>
+
+        <p>
+          If the observer has not spoken once inside 1.2 seconds, stop waiting and show
+          everything. A visitor who misses a fade-in loses nothing. A visitor who gets a blank
+          page is gone.
+        </p>
+
+        <h2>The general shape</h2>
+
+        <p>
+          Progressive enhancement gets discussed as though it were about supporting ancient
+          browsers. It is not, really. It is about which direction your code fails in.
+        </p>
+
+        <ul>
+          <li>Content visible by default; the effect is what gets added.</li>
+          <li>Never make the base state depend on a script completing.</li>
+          <li>Any async mechanism that gates visibility needs a timeout.</li>
+          <li>Ask of each animation: if this never runs, what does the visitor see?</li>
+        </ul>
+
+        <p>
+          Same reasoning applies to counters that start at zero in the markup, tabs whose
+          panels are hidden until initialised, and accordions that collapse before hydration.
+          If the enhancement dies, the content should still be there.
+        </p>
+
+      </div>
+
+      <div class="article__foot">
+        <a class="article__back mono" href="../index.html#writing">
+          <span aria-hidden="true">←</span> All writing
+        </a>
+        <a class="btn btn--ink" href="../index.html#contact">Start a project<span class="btn__arrow" aria-hidden="true">→</span></a>
+      </div>
+
+    </div>
+  </article>
+</main>
+
+<footer class="footer">
+  <div class="shell footer__base">
+    <span class="mono">&copy; 2026 The Tech Principle</span>
+    <span class="mono">London &middot; United Kingdom</span>
+  </div>
+</footer>
+
+</body>
+</html>
