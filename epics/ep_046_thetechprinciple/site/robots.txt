@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.thetechprinciple.com/sitemap.xml
+Sitemap: https://thetechprinciple.com/sitemap.xml
