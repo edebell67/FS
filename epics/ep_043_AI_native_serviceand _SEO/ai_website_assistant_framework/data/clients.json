@@ -4676,7 +4676,9 @@
     "allowedHosts": [
       "localhost",
       "127.0.0.1",
-      "edebell67.github.io"
+      "edebell67.github.io",
+      "thetechprinciple.com",
+      "www.thetechprinciple.com"
     ],
     "businessName": "Barber Shop Limited Edition",
     "tagline": "Barbering · private website + assistant preview",
@@ -4760,8 +4762,8 @@
     },
     "deployments": [
       {
-        "hostedUrl": "https://edebell67.github.io/epics/260720_094043_london_ltd_no_website_ai_assistant_batch_01/barber-shop-limited-edition/",
-        "status": "pending_render_deploy"
+        "hostedUrl": "https://thetechprinciple.com/barber-shop-limited-edition/",
+        "status": "published_static_assistant_pending_verification"
       }
     ]
   }
