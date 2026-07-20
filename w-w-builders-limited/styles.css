@@ -21,3 +21,12 @@ h1 em { font-family:Georgia,serif; font-weight:400; color:var(--accent); }
 .contact { background:var(--accent); padding:92px max(5vw,calc((100vw - 1200px)/2)); color:#fff; }.contact .eyebrow { color:#fff; }.contact h2 { margin-bottom:35px; }.contact-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:18px; border-top:1px solid #ffffff66; padding-top:23px; }.contact-grid span { display:block; font-size:11px; letter-spacing:.08em; text-transform:uppercase; opacity:.75; margin-bottom:7px; }.contact-grid b { font-size:15px; word-break:break-word; }.contact-note { font-size:12px; opacity:.8; margin-top:28px; }
 footer { padding:28px 5vw; background:var(--ink); color:#fff; display:flex; justify-content:space-between; gap:20px; font-size:12px; }
 @media(max-width:800px) { header { padding:20px 5vw; } nav { display:none; }.hero { grid-template-columns:1fr; padding-top:62px; gap:38px; min-height:unset; }.hero-art { height:310px; }.steps,.facts,.contact-grid { grid-template-columns:1fr; }.statement,.facts,.contact { padding-top:64px; padding-bottom:64px; } footer { flex-direction:column; } }
+
+
+/* Bathroom-fitter private-demo image treatment: one compact AI-illustrative collage, not claimed customer work or stock. */
+.hero-art.photo-art { background:#172426; box-shadow:20px 20px 0 rgba(0,0,0,.08); }
+.hero-art.photo-art img { width:100%; height:100%; display:block; object-fit:cover; }
+.hero-art.photo-art::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg,transparent 45%,rgba(14,29,30,.82)); pointer-events:none; }
+.hero-art.photo-art figcaption { position:absolute; z-index:2; left:0; right:0; bottom:0; padding:24px 28px; color:#fff; font-size:12px; line-height:1.45; }
+.hero-art.photo-art figcaption span { display:block; margin-bottom:6px; color:#ead7c1; font-size:10px; font-weight:800; letter-spacing:.12em; }
+@media(max-width:800px) { .hero-art.photo-art figcaption { padding:18px; font-size:11px; } }
