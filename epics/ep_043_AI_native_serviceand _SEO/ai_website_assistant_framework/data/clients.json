@@ -4766,5 +4766,878 @@
         "status": "published_static_assistant_pending_verification"
       }
     ]
-  }
+  },
+{
+  "id": "batch10-bath-sorts-ltd",
+  "publicKey": "batch10_bath-sorts-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "Bath Sorts Ltd",
+  "tagline": "Bathroom fitting · private website + assistant preview",
+  "logoText": "BSL",
+  "theme": {
+    "accent": "#8B5E2B",
+    "ink": "#211B14",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 7700 1333",
+    "email": "info@bathsorts.co.uk",
+    "address": "38 Offord Road, Islington, London, N1 1DL",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for Bath Sorts Ltd. Source material confirms business identity, bathroom fitting category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 7700 1333; email info@bathsorts.co.uk; address 38 Offord Road, Islington, London, N1 1DL."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 2,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "Source email domain returned HTTP 404 during recheck."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/bath-sorts-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-donovan-design-studio-limited",
+  "publicKey": "batch10_donovan-design-studio-limited",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "Donovan Design Studio Limited",
+  "tagline": "Bathroom fitting · private website + assistant preview",
+  "logoText": "DDS",
+  "theme": {
+    "accent": "#624C9A",
+    "ink": "#1D1B2A",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 7376 4251",
+    "email": "info@donovanproperties.co.uk",
+    "address": "356 Fulham Road, West Brompton, London, SW10 9UH",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for Donovan Design Studio Limited. Source material confirms business identity, bathroom fitting category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 7376 4251; email info@donovanproperties.co.uk; address 356 Fulham Road, West Brompton, London, SW10 9UH."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 3,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "Source email domain returned HTTP 404 during recheck."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/donovan-design-studio-limited/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-11th-hour-building-solutions-ltd",
+  "publicKey": "batch10_11th-hour-building-solutions-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "11th Hour Building Solutions Ltd",
+  "tagline": "Building solutions · private website + assistant preview",
+  "logoText": "THB",
+  "theme": {
+    "accent": "#1D7A78",
+    "ink": "#112628",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 3488 2049",
+    "email": "info@11hour.co",
+    "address": "17 Hanover Square, London, W1S 1HU",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for 11th Hour Building Solutions Ltd. Source material confirms business identity, building solutions category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 3488 2049; email info@11hour.co; address 17 Hanover Square, London, W1S 1HU."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 4,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "Source email domain did not return a usable HTTP response during recheck."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/11th-hour-building-solutions-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-w-w-builders-limited",
+  "publicKey": "batch10_w-w-builders-limited",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "W & W Builders Limited",
+  "tagline": "Bathroom fitting · private website + assistant preview",
+  "logoText": "WWB",
+  "theme": {
+    "accent": "#8A5C16",
+    "ink": "#292012",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 8800 8935",
+    "email": "info@wwbuilders.org.uk",
+    "address": "163 New Park Avenue, Palmers Green, London, N13 5NA",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for W & W Builders Limited. Source material confirms business identity, bathroom fitting category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 8800 8935; email info@wwbuilders.org.uk; address 163 New Park Avenue, Palmers Green, London, N13 5NA."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 5,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "repair_rebuild_candidate",
+    "note": "Source domain returned a database connection failure, not a usable public website."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/w-w-builders-limited/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-t-j-r-bathrooms-ltd",
+  "publicKey": "batch10_t-j-r-bathrooms-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "t J r Bathrooms Ltd",
+  "tagline": "Bathroom fitting · private website + assistant preview",
+  "logoText": "TJR",
+  "theme": {
+    "accent": "#2C6DA4",
+    "ink": "#152536",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 8553 2658",
+    "email": "tjrbathrooms@btconnect.com",
+    "address": "662–666 Romford Road, Manor Park, London, E12 5AQ",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for t J r Bathrooms Ltd. Source material confirms business identity, bathroom fitting category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 8553 2658; email tjrbathrooms@btconnect.com; address 662–666 Romford Road, Manor Park, London, E12 5AQ."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 6,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "No business website domain supplied in the source workbook."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/t-j-r-bathrooms-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-marble-and-bathroom-world-ltd",
+  "publicKey": "batch10_marble-and-bathroom-world-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "Marble and Bathroom World Ltd",
+  "tagline": "Bathroom fitting · private website + assistant preview",
+  "logoText": "MAB",
+  "theme": {
+    "accent": "#526E4E",
+    "ink": "#19231A",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 8459 5938",
+    "email": "sales@marbleandbathroomworld.co.uk",
+    "address": "Unit 41 Sapcote Trading Centre, 374 High Road, Willesden, London, NW10 2DJ",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for Marble and Bathroom World Ltd. Source material confirms business identity, bathroom fitting category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 8459 5938; email sales@marbleandbathroomworld.co.uk; address Unit 41 Sapcote Trading Centre, 374 High Road, Willesden, London, NW10 2DJ."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 7,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "Source email domain did not return a usable HTTP response during recheck."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/marble-and-bathroom-world-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-muswell-hill-joinery-ltd",
+  "publicKey": "batch10_muswell-hill-joinery-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "Muswell Hill Joinery Ltd",
+  "tagline": "Joinery · private website + assistant preview",
+  "logoText": "MHJ",
+  "theme": {
+    "accent": "#9A4F38",
+    "ink": "#2A1B17",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "020 8348 8048",
+    "email": "muswellhilljoinery@gmail.com",
+    "address": "61 High Street, Hornsey, London, N8 7QB",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for Muswell Hill Joinery Ltd. Source material confirms business identity, joinery category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 020 8348 8048; email muswellhilljoinery@gmail.com; address 61 High Street, Hornsey, London, N8 7QB."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 9,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "No business website domain supplied in the source workbook."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/muswell-hill-joinery-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-adwood-joinery-ltd",
+  "publicKey": "batch10_adwood-joinery-ltd",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "AdWood Joinery Ltd",
+  "tagline": "Joinery · private website + assistant preview",
+  "logoText": "AJL",
+  "theme": {
+    "accent": "#376A68",
+    "ink": "#172928",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "07821 825835",
+    "email": "adwood@strony1234.com",
+    "address": "Unit 18, Fairways Business Park, 45 Lammas Road, London, E10 7QB",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for AdWood Joinery Ltd. Source material confirms business identity, joinery category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 07821 825835; email adwood@strony1234.com; address Unit 18, Fairways Business Park, 45 Lammas Road, London, E10 7QB."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 10,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "Source email domain does not identify a business website; no usable business domain supplied."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/adwood-joinery-ltd/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+},
+{
+  "id": "batch10-slsw-interiors-limited",
+  "publicKey": "batch10_slsw-interiors-limited",
+  "allowedHosts": [
+    "localhost",
+    "127.0.0.1",
+    "edebell67.github.io",
+    "thetechprinciple.com",
+    "www.thetechprinciple.com"
+  ],
+  "businessName": "SLSW INTERIORS LIMITED",
+  "tagline": "Joinery · private website + assistant preview",
+  "logoText": "SIL",
+  "theme": {
+    "accent": "#665A86",
+    "ink": "#211E2D",
+    "surface": "#f5f2ec"
+  },
+  "contact": {
+    "telephone": "07508 216866",
+    "email": "slswinteriors@yahoo.co.uk",
+    "address": "4A Roman Road, London, E6 3RX",
+    "mapUrl": "",
+    "openingHours": "Owner confirmation required before publication."
+  },
+  "status": "demo",
+  "notificationDestinations": [],
+  "enabledModules": [
+    "assistant",
+    "faq",
+    "navigation",
+    "contact"
+  ],
+  "pages": [
+    {
+      "title": "Private preview overview",
+      "url": "#top",
+      "keywords": [
+        "website",
+        "preview",
+        "information"
+      ]
+    },
+    {
+      "title": "Recognition details",
+      "url": "#contact",
+      "keywords": [
+        "contact",
+        "telephone",
+        "email",
+        "address"
+      ]
+    }
+  ],
+  "knowledge": [
+    {
+      "id": "scope",
+      "title": "Approved preview scope",
+      "content": "This is a private website and assistant concept for SLSW INTERIORS LIMITED. Source material confirms business identity, joinery category, address, telephone and email only."
+    },
+    {
+      "id": "commercial-boundary",
+      "title": "Commercial information",
+      "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+    },
+    {
+      "id": "contact",
+      "title": "Public recognition details",
+      "content": "Public source details for owner recognition: telephone 07508 216866; email slswinteriors@yahoo.co.uk; address 4A Roman Road, London, E6 3RX."
+    }
+  ],
+  "demoWorkflows": {},
+  "workflow": {
+    "status": "not_started",
+    "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+    "stages": {
+      "identity_recheck": "complete",
+      "site_build": "complete",
+      "owner_review": "pending",
+      "public_publish": "pending",
+      "outreach": "pending"
+    }
+  },
+  "sourceEvidence": {
+    "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+    "row": 11,
+    "checkedAt": "2026-07-20",
+    "siteStatus": "candidate_no_usable_site",
+    "note": "No business website domain supplied in the source workbook."
+  },
+  "deployments": [
+    {
+      "hostedUrl": "https://thetechprinciple.com/slsw-interiors-limited/",
+      "status": "staged_for_hosted_qa"
+    }
+  ]
+}
 ]
