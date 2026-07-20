@@ -4669,5 +4669,100 @@
       "status": "not_activated",
       "message": "Owner-console sign-in becomes available only after assistant activation."
     }
+  },
+  {
+    "id": "batch10-barber-shop-limited-edition",
+    "publicKey": "batch10_barber-shop-limited-edition",
+    "allowedHosts": [
+      "localhost",
+      "127.0.0.1",
+      "edebell67.github.io"
+    ],
+    "businessName": "Barber Shop Limited Edition",
+    "tagline": "Barbering · private website + assistant preview",
+    "logoText": "BSL",
+    "theme": {
+      "accent": "#AF3E52",
+      "ink": "#23151B",
+      "surface": "#f5f2ec"
+    },
+    "contact": {
+      "telephone": "020 8392 2396",
+      "email": "barbershoplimitededition@hotmail.com",
+      "address": "69 Lower Richmond Rd, London, SW14 7HJ",
+      "mapUrl": "",
+      "openingHours": "Owner confirmation required before publication."
+    },
+    "status": "demo",
+    "notificationDestinations": [],
+    "enabledModules": [
+      "assistant",
+      "faq",
+      "navigation",
+      "contact"
+    ],
+    "pages": [
+      {
+        "title": "Private preview overview",
+        "url": "#top",
+        "keywords": [
+          "website",
+          "preview",
+          "information"
+        ]
+      },
+      {
+        "title": "Recognition details",
+        "url": "#contact",
+        "keywords": [
+          "contact",
+          "telephone",
+          "email",
+          "address"
+        ]
+      }
+    ],
+    "knowledge": [
+      {
+        "id": "scope",
+        "title": "Approved preview scope",
+        "content": "This is a private website and assistant concept for Barber Shop Limited Edition. Source material confirms business identity, barbering category, address, telephone and email only."
+      },
+      {
+        "id": "commercial-boundary",
+        "title": "Commercial information",
+        "content": "Exact services, prices, opening hours, availability, coverage, staff details, bookings and callback handling need owner confirmation. This preview does not send a message, create a booking or notify anyone."
+      },
+      {
+        "id": "contact",
+        "title": "Public recognition details",
+        "content": "Public source details for owner recognition: telephone 020 8392 2396; email barbershoplimitededition@hotmail.com; address 69 Lower Richmond Rd, London, SW14 7HJ."
+      }
+    ],
+    "demoWorkflows": {},
+    "workflow": {
+      "status": "not_started",
+      "blocker": "Private review required before any publication, outreach, notification, booking or owner-console activation.",
+      "stages": {
+        "identity_recheck": "complete",
+        "site_build": "complete",
+        "owner_review": "pending",
+        "public_publish": "pending",
+        "outreach": "pending"
+      }
+    },
+    "sourceEvidence": {
+      "workbook": "London_Ltd_email_no_website_VERIFIED_FINAL_55.xlsx",
+      "row": 1,
+      "checkedAt": "2026-07-20",
+      "siteStatus": "candidate_no_usable_site",
+      "note": "No business domain supplied in the source workbook."
+    },
+    "deployments": [
+      {
+        "hostedUrl": "https://edebell67.github.io/epics/260720_094043_london_ltd_no_website_ai_assistant_batch_01/barber-shop-limited-edition/",
+        "status": "pending_render_deploy"
+      }
+    ]
   }
 ]
