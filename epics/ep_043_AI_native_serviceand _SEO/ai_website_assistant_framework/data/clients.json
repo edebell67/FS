@@ -36,11 +36,8 @@
       "booking",
       "callback",
       "leadCapture",
-      "leadFollowup",
       "contact"
     ],
-    "leadFollowupDelayMs": 15000,
-    "averageJobValue": 180,
     "pages": [
       {
         "title": "Boiler servicing",
@@ -231,24 +228,24 @@
       {
         "title": "Treatment prices",
         "url": "index.html#services",
-        "blueprint": "pricing",
         "keywords": [
           "price",
           "prices",
           "cost",
           "treatments"
-        ]
+        ],
+        "blueprint": "pricing"
       },
       {
         "title": "Gallery",
         "url": "gallery.html",
-        "blueprint": "gallery",
         "keywords": [
           "gallery",
           "photos",
           "results",
           "shades"
-        ]
+        ],
+        "blueprint": "gallery"
       },
       {
         "title": "Contact and booking",

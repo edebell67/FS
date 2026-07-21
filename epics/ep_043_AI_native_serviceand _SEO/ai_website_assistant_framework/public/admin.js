@@ -1,6 +1,6 @@
 const MODULES = [
   ["assistant", "AI assistant"], ["faq", "FAQ"], ["navigation", "Navigation"], ["booking", "Booking"],
-  ["callback", "Callback"], ["leadCapture", "Lead capture"], ["leadFollowup", "Lead follow-up"], ["contact", "Contact help"],
+  ["callback", "Callback"], ["leadCapture", "Lead capture"], ["contact", "Contact help"],
   ["demoBooking", "Demo booking"], ["demoPayment", "Demo payment"], ["demoEmail", "Demo email"], ["demoCrm", "Demo CRM"]
 ];
 const DEPLOYMENT_STATUSES = ["local", "github", "github+render", "demo", "live"];
@@ -71,8 +71,6 @@ function selectClient(id) {
   $("#editor-title").textContent = client.businessName; $("#client-key").textContent = `Public key · ${client.publicKey}`;
   const form = $("#client-form");
   setValue(form, "businessName", client.businessName); setValue(form, "tagline", client.tagline); setValue(form, "allowedHosts", client.allowedHosts.join(", ")); setValue(form, "status", client.status);
-  setValue(form, "engagementMode", client.engagementMode || "on_demand"); setValue(form, "proactiveDelayMs", client.proactiveDelayMs ?? 2500);
-  setValue(form, "leadFollowupDelayMs", client.leadFollowupDelayMs ?? 7200000); setValue(form, "averageJobValue", client.averageJobValue ?? 0);
   setValue(form, "logoText", client.logoText); setValue(form, "accent", client.theme?.accent || "#e85d3f"); setValue(form, "ink", client.theme?.ink || "#17211f"); setValue(form, "surface", client.theme?.surface || "#f5f0e7");
   setValue(form, "telephone", client.contact?.telephone); setValue(form, "email", client.contact?.email); setValue(form, "address", client.contact?.address); setValue(form, "openingHours", client.contact?.openingHours);
   setValue(form, "bookingProvider", client.booking?.provider); setValue(form, "bookingUrl", client.booking?.url);
@@ -146,8 +144,6 @@ async function saveClient(event) {
   })).filter((item) => item.label || item.appLocation || item.hostedUrl);
   const patch = {
     businessName: form.get("businessName"), tagline: form.get("tagline"), status: form.get("status"), logoText: form.get("logoText"),
-    engagementMode: form.get("engagementMode"), proactiveDelayMs: Number(form.get("proactiveDelayMs")) || 2500,
-    leadFollowupDelayMs: Number(form.get("leadFollowupDelayMs")) || 7200000, averageJobValue: Number(form.get("averageJobValue")) || 0,
     allowedHosts: form.get("allowedHosts").split(",").map((item) => item.trim()).filter(Boolean), enabledModules, knowledge, deployments,
     theme: { accent: form.get("accent"), ink: form.get("ink"), surface: form.get("surface") },
     contact: { ...state.selected.contact, telephone: form.get("telephone"), email: form.get("email"), address: form.get("address"), openingHours: form.get("openingHours") },
@@ -172,58 +168,8 @@ async function createClient() {
 }
 
 function switchView(view) {
-  $("#clients-view").hidden = view !== "clients"; $("#activity-view").hidden = view !== "activity"; $("#roi-view").hidden = view !== "roi";
-  $("#view-title").textContent = view === "clients" ? "Client profiles" : view === "activity" ? "Activity" : "Lead ROI";
+  $("#clients-view").hidden = view !== "clients"; $("#activity-view").hidden = view !== "activity"; $("#view-title").textContent = view === "clients" ? "Client profiles" : "Activity";
   document.querySelectorAll("aside nav button").forEach((button) => button.classList.toggle("nav-active", button.dataset.view === view));
-  if (view === "roi") renderRoiClientPicker();
-}
-
-function renderRoiClientPicker() {
-  const select = $("#roi-client-select");
-  const previous = select.value;
-  select.replaceChildren();
-  for (const client of state.clients) { const option = document.createElement("option"); option.value = client.id; option.textContent = client.businessName; select.append(option); }
-  select.value = state.clients.some((item) => item.id === previous) ? previous : (state.clients[0]?.id || "");
-  select.onchange = renderRoi;
-  if (select.value) renderRoi();
-}
-
-async function renderRoi() {
-  const clientId = $("#roi-client-select").value;
-  if (!clientId) return;
-  let roi, records;
-  try { [roi, records] = await Promise.all([api(`/api/admin/roi?clientId=${encodeURIComponent(clientId)}`), api("/api/admin/records")]); }
-  catch (error) { toast(error.message); return; }
-  state.records = records.records;
-  const stats = $("#roi-stats"); stats.replaceChildren();
-  const cards = [
-    ["Leads captured", roi.totalLeads],
-    ["Follow-ups sent", roi.followupsSent],
-    ["Converted (same session)", roi.convertedSameSession],
-    ["Converted after follow-up", roi.convertedAfterFollowup],
-    ["Follow-up recovery rate", `${Math.round(roi.recoveryRate * 100)}%`],
-    ["Estimated recovered revenue", `£${roi.estimatedRecoveredRevenue.toLocaleString()}`]
-  ];
-  cards.forEach(([label, value], index) => {
-    const card = document.createElement("div"); card.className = `roi-stat${index === cards.length - 1 ? " highlight" : ""}`;
-    const span = document.createElement("span"); span.textContent = label;
-    const strong = document.createElement("strong"); strong.textContent = value;
-    card.append(span, strong); stats.append(card);
-  });
-
-  const leads = (state.records.leads || []).filter((item) => item.clientId === clientId);
-  const list = $("#roi-leads"); list.replaceChildren();
-  if (!leads.length) { const empty = document.createElement("p"); empty.className = "notice"; empty.textContent = "No leads captured yet."; list.append(empty); return; }
-  for (const lead of leads) {
-    const row = document.createElement("div"); row.className = "roi-lead-row";
-    const time = document.createElement("time"); time.textContent = new Date(lead.createdAt).toLocaleString();
-    const name = document.createElement("span"); name.textContent = [lead.name, lead.service].filter(Boolean).join(" · ") || "—";
-    const followup = document.createElement("span"); followup.textContent = lead.followupStatus === "sent" ? "Follow-up sent" : lead.followupStatus === "scheduled" ? "Follow-up scheduled" : "No follow-up";
-    const action = document.createElement("button"); action.type = "button";
-    if (lead.convertedAt) { action.textContent = `Converted (${lead.convertedVia === "after_followup" ? "recovered" : "same session"})`; action.disabled = true; }
-    else { action.textContent = "Mark converted"; action.addEventListener("click", async () => { try { await api(`/api/admin/leads/${encodeURIComponent(lead.id)}/convert`, { method: "POST" }); await connect(); renderRoi(); toast("Lead marked converted"); } catch (error) { toast(error.message); } }); }
-    row.append(time, name, followup, action); list.append(row);
-  }
 }
 
 function renderActivity() {

@@ -19,7 +19,7 @@ test.before(async () => {
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
   server = await createApp({ store: new JsonStore(temporary), env: {
-    ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    ADMIN_TOKEN: "test-secret", OWNER_CONSOLE_TOKENS_JSON: JSON.stringify({ "air-quantum-existing-site-demo": "owner-air-test" }), OWNER_CONSOLE_TOKENS_JSON_BATCH_01: JSON.stringify({ "batch01-beck-and-call": "owner-batch-test" }), OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
     RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
     fetchImpl: async (_url, options = {}) => {
       if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
@@ -56,10 +56,17 @@ test("health and static assets are executable", async () => {
   assert.match(widget.body, /header:after\s*\{[^}]*pointer-events:none/);
   assert.match(widget.body, /aria-label="Start a new conversation"/);
   assert.match(widget.body, /function resetConversation\(/);
+  assert.match(widget.body, /assistantActions/);
+  assert.match(widget.body, /Platform demonstration/);
+  assert.match(widget.body, /function actionButton\(/);
+  assert.match(widget.body, /\.group-label/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);
   assert.match(admin.body, /Preview responses/);
+  const owner = await request("/owner");
+  assert.equal(owner.status, 200);
+  assert.match(owner.body, /Owner Activity Console/);
 });
 
 test("public configuration is tenant-scoped, host-bound, and safely projected", async () => {
@@ -73,25 +80,41 @@ test("public configuration is tenant-scoped, host-bound, and safely projected", 
   assert.equal(denied.status, 404);
 });
 
-test("engagement mode defaults to on_demand and can be switched to proactive by the site owner", async () => {
-  const defaulted = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
-  assert.equal(defaulted.body.client.engagementMode, "on_demand");
-  assert.equal(defaulted.body.client.proactiveDelayMs, 2500);
+test("widget owner dashboard access is password-gated and tenant-scoped", async () => {
+  const blocked = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "wrong" }, origin: "http://localhost" });
+  assert.equal(blocked.status, 401);
+  const allowed = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "owner-air-test" }, origin: "http://localhost" });
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.body.dashboardUrl, "/owner?tenant=air-quantum-existing-site-demo");
+  const unactivated = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "batch01_af_refrigeration", host: "localhost", password: "anything" }, origin: "http://localhost" });
+  assert.equal(unactivated.status, 403);
+});
 
-  const list = await request("/api/admin/clients", { token: "test-secret" });
-  const northstar = list.body.clients[0];
-  const switched = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "proactive", proactiveDelayMs: 1200 } });
-  assert.equal(switched.body.client.engagementMode, "proactive");
-  assert.equal(switched.body.client.proactiveDelayMs, 1200);
+test("owner activity access is tenant-isolated and never accepts the admin token", async () => {
+  const chat = await request("/api/public/chat", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "owner-console-test", message: "Show the demo booking flow" } });
+  assert.equal(chat.status, 200);
+  const callback = await request("/api/public/callbacks", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", name: "Demo owner", telephone: "07000 000000", reason: "Demo callback" } });
+  assert.equal(callback.status, 201);
+  const denied = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "test-secret" });
+  assert.equal(denied.status, 401);
+  const activity = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-air-test" });
+  assert.equal(activity.status, 200);
+  assert.equal(activity.body.owner.businessName, "Air Quantum Ltd");
+  assert.equal(activity.body.records.conversations.every((record) => record.clientId === "air-quantum-existing-site-demo"), true);
+  assert.equal(activity.body.summary.conversations >= 1, true);
+  assert.equal(activity.body.performance.today.assistantVisitors >= 1, true);
+  assert.equal(activity.body.performance.baseline.leadsCaptured, 5);
+  const completed = await request(`/api/owner/callbacks/${encodeURIComponent(activity.body.records.callbacks[0].id)}/complete?tenant=air-quantum-existing-site-demo`, { method: "POST", token: "owner-air-test" });
+  assert.equal(completed.status, 200);
+  assert.equal(completed.body.record.handledByOwner, true);
+  assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
+});
 
-  const proactiveConfig = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
-  assert.equal(proactiveConfig.body.client.engagementMode, "proactive");
-  assert.equal(proactiveConfig.body.client.proactiveDelayMs, 1200);
-
-  const invalidMode = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "not-a-real-mode" } });
-  assert.equal(invalidMode.body.client.engagementMode, "on_demand");
-
-  await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "on_demand", proactiveDelayMs: 2500 } });
+test("activated batch tenant owner console accepts its password and remains tenant-scoped", async () => {
+  const allowed = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
+  assert.equal(allowed.status, 200);
+  const otherTenant = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-batch-test" });
+  assert.equal(otherTenant.status, 401);
 });
 
 test("public config exposes blueprint assistant actions resolved from pages, modules, and knowledge", async () => {
@@ -135,8 +158,7 @@ test("assistant answers from approved knowledge and records the conversation", a
   assert.match(response.body.reply.text, /£95/);
   assert.deepEqual(response.body.reply.sources.map((item) => item.id), ["pricing"]);
   const records = await request("/api/admin/records", { token: "test-secret" });
-  assert.equal(records.body.records.conversations.length, 1);
-  assert.equal(records.body.records.conversations[0].clientId, "northstar-heating");
+  assert.equal(records.body.records.conversations.some((record) => record.clientId === "northstar-heating"), true);
 });
 
 test("navigation and booking intents return enabled module actions", async () => {
@@ -159,47 +181,6 @@ test("demo lead and callback modules validate, persist, and suppress notificatio
   assert.equal(callback.body.simulated, true);
   const invalid = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Missing phone" } });
   assert.equal(invalid.status, 400);
-});
-
-test("lead follow-up recovers cold leads and feeds the ROI report", async () => {
-  const shortDelay = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { leadFollowupDelayMs: 50, averageJobValue: 180 } });
-  assert.equal(shortDelay.status, 200);
-  assert.equal(shortDelay.body.client.leadFollowupDelayMs, 50);
-
-  const cold = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Cold Lead", telephone: "07000 111222", service: "Boiler repair", notes: "Thinking about it" } });
-  assert.equal(cold.status, 201);
-  const coldId = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.name === "Cold Lead").id;
-  const scheduled = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.id === coldId);
-  assert.equal(scheduled.followupStatus, "scheduled");
-
-  await new Promise((resolve) => setTimeout(resolve, 150));
-  const afterDelay = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.id === coldId);
-  assert.equal(afterDelay.followupStatus, "sent");
-  assert.ok(afterDelay.followupSentAt);
-
-  const converted = await request(`/api/admin/leads/${coldId}/convert`, { method: "POST", token: "test-secret" });
-  assert.equal(converted.status, 200);
-  assert.equal(converted.body.lead.convertedVia, "after_followup");
-
-  const warm = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Warm Lead", telephone: "07000 333444", service: "Boiler repair" } });
-  assert.equal(warm.status, 201);
-  const warmId = (await request("/api/admin/records", { token: "test-secret" })).body.records.leads.find((item) => item.name === "Warm Lead").id;
-  const warmConverted = await request(`/api/admin/leads/${warmId}/convert`, { method: "POST", token: "test-secret" });
-  assert.equal(warmConverted.body.lead.convertedVia, "same_session");
-
-  const roi = await request("/api/admin/roi?clientId=northstar-heating", { token: "test-secret" });
-  assert.equal(roi.status, 200);
-  assert.equal(roi.body.businessName, "Northstar Heating");
-  assert.ok(roi.body.followupsSent >= 1);
-  assert.ok(roi.body.convertedAfterFollowup >= 1);
-  assert.ok(roi.body.convertedSameSession >= 1);
-  assert.ok(roi.body.recoveryRate > 0);
-  assert.equal(roi.body.estimatedRecoveredRevenue, roi.body.convertedAfterFollowup * roi.body.averageJobValue);
-
-  const missing = await request("/api/admin/leads/does-not-exist/convert", { method: "POST", token: "test-secret" });
-  assert.equal(missing.status, 404);
-  const unauthorized = await request("/api/admin/roi?clientId=northstar-heating");
-  assert.equal(unauthorized.status, 401);
 });
 
 test("Hoxtans demo business workflows are tenant-scoped, simulated, and recorded", async () => {
