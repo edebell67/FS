@@ -7,7 +7,18 @@
   const host = document.createElement("ai-website-assistant");
   const root = host.attachShadow({ mode: "open" });
   document.body.append(host);
-  const state = { client: null, open: false, sessionId: crypto.randomUUID(), history: [], proactive: false };
+  // Share the analytics session id (aiw-session) when present, so a visitor's
+  // page behaviour and their chat stitch into one journey; otherwise mint one.
+  const sharedSessionId = (() => {
+    try {
+      const raw = sessionStorage.getItem("aiw-session");
+      if (raw) return JSON.parse(raw).id;
+      const id = crypto.randomUUID();
+      sessionStorage.setItem("aiw-session", JSON.stringify({ id, t: Date.now() }));
+      return id;
+    } catch { return crypto.randomUUID(); }
+  })();
+  const state = { client: null, open: false, sessionId: sharedSessionId, history: [], proactive: false };
   const declinedKey = `aiw-declined-${clientKey}`;
   const NEGATIVE_REPLY = /^(no|nah|nope|no\s*thanks?|no\s*thank\s*you|not\s*now|not\s*interested|not\s*right\s*now|i'?m\s*(good|fine|ok|okay)|no\s*need|leave\s*me\s*alone|go\s*away|maybe\s*later|later)\b/i;
 
@@ -41,7 +52,8 @@
     .sources { font-size:10px;display:block;margin-top:7px;opacity:.66; }
     .action { border:1px solid var(--ink);background:transparent;color:var(--ink);padding:9px 12px;border-radius:999px;margin:0 6px 11px 0;font-size:11px;font-weight:700;transition:.18s; }
     .action:hover { background:var(--ink);color:white; }
-    .quick { display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none; }
+    .quick { display:flex;gap:7px;overflow-x:auto;padding:0 0 10px;scrollbar-width:none;flex-wrap:wrap; }
+    .group-label { margin:2px 0 7px;padding-top:9px;border-top:1px solid #17211f16;font-size:9px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#8a837a; }
     .quick button { white-space:nowrap;border:1px solid #17211f24;background:#fffdf8;border-radius:999px;padding:8px 10px;font-size:10px;color:var(--ink); }
     form.composer { padding:11px 13px 13px;border-top:1px solid #17211f12;display:flex;gap:8px;background:#fffdf8; }
     .composer input { min-width:0;flex:1;border:1px solid #17211f25;background:white;border-radius:999px;padding:11px 14px;color:var(--ink);outline:none; }
@@ -99,6 +111,7 @@
     const existing = root.querySelector(".panel");
     if (existing) existing.remove();
     if (!state.open || !state.client) return;
+    window.aiwTrack?.("assistant_open", state.proactive ? "proactive" : "manual");
     const panel = buildPanel();
     root.insertBefore(panel, launcher);
     panel.querySelector("input")?.focus();
@@ -144,21 +157,40 @@
       no.addEventListener("click", () => declineProactive(panel));
       quick.append(yes, no);
     }
-    const choices = [
-      ["Services", "What services do you provide?"], ["Opening hours", "What are your opening hours?"],
-      ["Contact", "How can I contact you?"], ["Find information", "Where can I find more information on the website?"],
-      ...(client.enabledModules.includes("demoBooking") ? [["Demo booking", "Show the demo booking flow"]] : client.enabledModules.includes("booking") ? [["Book", "I would like to book an appointment"]] : []),
-      ...(client.enabledModules.includes("demoPayment") ? [["Demo payment", "Show the demo payment checkout"]] : []),
-      ...(client.enabledModules.includes("demoEmail") ? [["Demo email", "Preview a demo email"]] : []),
-      ...(client.enabledModules.includes("demoCrm") ? [["Demo CRM", "Create a demo CRM lead"]] : []),
-      ...(client.enabledModules.includes("callback") ? [["Callback", "Please call me back"]] : [])
-    ];
-    for (const [label, prompt] of choices) { const button = element("button", "", label); button.type = "button"; button.addEventListener("click", () => send(prompt, panel)); quick.append(button); }
+    // Canonical blueprint functions, resolved server-side from this client's
+    // pages and enabled modules. A "navigate" action opens the real page; a
+    // "prompt" action asks the assistant so it can answer or offer a module.
+    for (const action of client.assistantActions || []) quick.append(actionButton(action, panel));
     messages.append(quick);
+
+    // Platform demonstration workflows are not blueprint visitor functions, so
+    // they are grouped separately and labelled to avoid confusing a real visitor.
+    const demoActions = client.demoActions || [];
+    if (demoActions.length) {
+      messages.append(textElement("p", "group-label", "Platform demonstration"));
+      const demoQuick = element("div", "quick");
+      for (const action of demoActions) demoQuick.append(actionButton(action, panel));
+      messages.append(demoQuick);
+    }
     const form = element("form", "composer", '<input maxlength="2000" aria-label="Your message" placeholder="Ask a question…" autocomplete="off"><button class="send" aria-label="Send message">↑</button>');
     form.addEventListener("submit", (event) => { event.preventDefault(); const input = form.querySelector("input"); const value = input.value.trim(); if (value) { input.value = ""; send(value, panel); } });
     panel.append(form);
     return panel;
+  }
+
+  function actionButton(action, panel) {
+    const button = element("button", "", action.label);
+    button.type = "button";
+    button.dataset.blueprint = action.key;
+    if (action.type === "navigate" && action.url) {
+      button.addEventListener("click", () => {
+        if (/^(https?:|tel:|mailto:)/.test(action.url)) window.open(action.url, "_blank", "noopener");
+        else location.href = action.url;
+      });
+    } else {
+      button.addEventListener("click", () => send(action.prompt, panel));
+    }
+    return button;
   }
 
   async function send(message, panel) {
@@ -211,6 +243,7 @@
       try {
         const response = await fetch(`${apiBase}/api/public/${lead ? "leads" : "callbacks"}`, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify({ clientKey, host:location.hostname, ...values }) });
         const payload = await response.json(); if (!response.ok) throw new Error(payload.error);
+        window.aiwTrack?.("assistant_handoff", lead ? "lead" : "callback");
         form.replaceChildren(element("strong", "", payload.simulated ? "Demo captured — no notification was sent." : "Thank you — the team has your request."));
       } catch (error) { form.querySelector(".error").textContent = error.message || "Could not submit."; button.disabled = false; }
     });

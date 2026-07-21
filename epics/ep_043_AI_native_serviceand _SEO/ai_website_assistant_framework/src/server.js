@@ -60,6 +60,61 @@ function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
 }
 
+// Whitelist of visitor-analytics event types. Anything else is dropped, so a
+// page cannot log arbitrary/PII event names into the store.
+const ALLOWED_EVENT_TYPES = new Set([
+  "pageview", "page_exit", "scroll_depth", "cta_click", "phone_click",
+  "email_click", "whatsapp_click", "form_start", "form_submit",
+  "gallery_open", "gallery_view", "assistant_open", "assistant_handoff", "outbound_click"
+]);
+
+// Reduce an incoming event to a safe, PII-free, identity-free record. Only a
+// bounded set of low-cardinality fields are kept; the session id is ephemeral
+// (tab-scoped) with no persistent visitor id, so events cannot be tied to a
+// person across visits. Free-text is length-capped and control characters
+// stripped by cleanText.
+function sanitizeEvent(event, { clientId, sessionId }) {
+  const num = (value, max) => {
+    const n = Number(value);
+    return Number.isFinite(n) ? Math.max(0, Math.min(max, Math.round(n))) : undefined;
+  };
+  return {
+    clientId,
+    sessionId,
+    type: cleanText(event.type, 40),
+    path: cleanText(event.path, 300),          // page path only, never query string with PII
+    label: cleanText(event.label, 120),        // e.g. CTA id "cta:quote"
+    referrerHost: cleanText(event.referrerHost, 120),
+    device: cleanText(event.device, 20),       // "mobile" | "tablet" | "desktop"
+    scrollPct: num(event.scrollPct, 100),
+    dwellMs: num(event.dwellMs, 86400000),
+    ts: cleanText(event.ts, 40)                // client timestamp (ISO)
+  };
+}
+
+async function writeResponseLedger({ env, record }) {
+  const token = String(env.RESPONSE_LEDGER_GITHUB_TOKEN || "").trim();
+  const repository = String(env.RESPONSE_LEDGER_REPOSITORY || "").trim();
+  const filePath = String(env.RESPONSE_LEDGER_PATH || "responses.ndjson").trim().replace(/^\/+/, "");
+  if (!token || !repository || !filePath) throw Object.assign(new Error("Durable response storage is not configured."), { status: 503 });
+  const api = `https://api.github.com/repos/${repository}/contents/${filePath.split("/").map(encodeURIComponent).join("/")}`;
+  const headers = { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "ai-website-assistant" };
+  const request = env.fetchImpl || fetch;
+  const existing = await request(api, { method: "GET", headers });
+  let prior = ""; let sha;
+  if (existing.ok) {
+    const body = await existing.json();
+    prior = Buffer.from(String(body.content || "").replace(/\s/g, ""), "base64").toString("utf8");
+    sha = body.sha;
+  } else if (existing.status !== 404) {
+    throw Object.assign(new Error("The private response ledger could not be read."), { status: 502 });
+  }
+  const line = `${JSON.stringify({ id: record.id, createdAt: record.createdAt, business: record.businessName, action: record.action, summary: record.summary, pageUrl: record.pageUrl })}\n`;
+  const saved = await request(api, { method: "PUT", headers: { ...headers, "Content-Type": "application/json" }, body: JSON.stringify({ message: `Record ${record.summary}`, content: Buffer.from(`${prior}${line}`, "utf8").toString("base64"), ...(sha ? { sha } : {}) }) });
+  if (!saved.ok) throw Object.assign(new Error("The private response ledger could not be updated."), { status: 502 });
+  return { repository, filePath };
+}
+
 async function notify({ env, client, kind, record }) {
   if (client.status !== "live" || !env.NOTIFICATION_WEBHOOK_URL) return { delivered: false, reason: client.status === "demo" ? "demo_mode" : "not_configured" };
   const response = await fetch(env.NOTIFICATION_WEBHOOK_URL, {
@@ -68,6 +123,21 @@ async function notify({ env, client, kind, record }) {
     body: JSON.stringify({ kind, clientId: client.id, destinations: client.notificationDestinations, record })
   });
   return { delivered: response.ok, reason: response.ok ? "sent" : `webhook_${response.status}` };
+}
+
+// Recovers a lead that didn't convert in-session: after leadFollowupDelayMs,
+// re-notify the client's destinations so they can chase it up. Skips leads
+// that already converted in the meantime (checked at send time, not just at
+// schedule time, since the delay can be hours).
+function scheduleLeadFollowup({ store, env, client, leadId, delayMs }) {
+  const timer = setTimeout(async () => {
+    const current = store.getRecord("leads", leadId);
+    if (!current || current.convertedAt || current.followupStatus !== "scheduled") return;
+    await notify({ env, client, kind: "lead_followup", record: current });
+    await store.updateRecord("leads", leadId, { followupStatus: "sent", followupSentAt: new Date().toISOString() });
+  }, delayMs);
+  if (typeof timer.unref === "function") timer.unref();
+  return timer;
 }
 
 export async function createApp({ store = new JsonStore(dataDir), env = runtimeEnv } = {}) {
@@ -101,6 +171,22 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 200, { reply, mode: client.status }, corsHeaders(req));
       }
 
+      if (req.method === "POST" && url.pathname === "/api/public/preview-responses") {
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        const action = cleanText(input.action, 80, true);
+        const allowedActions = new Set(["discuss_activation", "request_callback", "close_preview"]);
+        if (!allowedActions.has(action)) throw Object.assign(new Error("Choose a valid preview response."), { status: 400 });
+        const labels = { discuss_activation: "discuss activation", request_callback: "arrange callback", close_preview: "close preview" };
+        const record = await store.appendRecord("previewResponses", {
+          clientId: client.id, businessName: client.businessName, action, summary: `${client.businessName} response - ${labels[action]}`,
+          pageUrl: cleanText(input.pageUrl, 500), sessionId: cleanText(input.sessionId, 100), simulated: client.status === "demo"
+        });
+        await writeResponseLedger({ env, record });
+        return json(res, 201, { accepted: true, durable: true, record: { id: record.id, action: record.action, createdAt: record.createdAt }, simulated: record.simulated }, corsHeaders(req));
+      }
+
       if (req.method === "POST" && ["/api/public/leads", "/api/public/callbacks"].includes(url.pathname)) {
         const input = await bodyJson(req);
         const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
@@ -108,7 +194,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const isLead = url.pathname.endsWith("leads");
         const requiredModule = isLead ? "leadCapture" : "callback";
         if (!client.enabledModules.includes(requiredModule)) return json(res, 403, { error: "This module is not enabled." }, corsHeaders(req));
-        const record = await store.appendRecord(isLead ? "leads" : "callbacks", {
+        let record = await store.appendRecord(isLead ? "leads" : "callbacks", {
           clientId: client.id,
           name: cleanText(input.name, 120, true),
           telephone: cleanText(input.telephone, 40, true),
@@ -116,10 +202,36 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           preferredTime: cleanText(input.preferredTime, 120),
           service: cleanText(input.service, 160),
           reason: cleanText(input.reason || input.notes, 1000),
-          simulated: client.status === "demo"
+          simulated: client.status === "demo",
+          convertedAt: null,
+          convertedVia: null,
+          followupStatus: "none",
+          followupScheduledAt: null,
+          followupSentAt: null
         });
         const notification = await notify({ env, client, kind: isLead ? "lead" : "callback", record });
+        if (isLead && client.enabledModules.includes("leadFollowup")) {
+          record = await store.updateRecord("leads", record.id, { followupStatus: "scheduled", followupScheduledAt: new Date().toISOString() });
+          scheduleLeadFollowup({ store, env, client, leadId: record.id, delayMs: client.leadFollowupDelayMs });
+        }
         return json(res, 201, { accepted: true, simulated: record.simulated, notification }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/events") {
+        // Batched, first-party visitor analytics. Fire-and-forget from the page
+        // (navigator.sendBeacon), so we always answer 202 and never block.
+        const input = await bodyJson(req, 32 * 1024);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        // Per-site on/off switch (owner-controlled). When off, accept-and-drop.
+        if (client.analyticsEnabled === false) return json(res, 202, { accepted: true, stored: 0, disabled: true }, corsHeaders(req));
+        const sessionId = cleanText(input.sessionId, 100);
+        const rawEvents = Array.isArray(input.events) ? input.events.slice(0, 50) : [];
+        const events = rawEvents
+          .filter((event) => event && ALLOWED_EVENT_TYPES.has(String(event.type)))
+          .map((event) => sanitizeEvent(event, { clientId: client.id, sessionId }));
+        if (events.length) await store.appendRecords("events", events);
+        return json(res, 202, { accepted: true, stored: events.length }, corsHeaders(req));
       }
 
       const demoMatch = url.pathname.match(/^\/api\/public\/demo\/(booking|payment|email|crm)$/);
@@ -192,6 +304,34 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         if (req.method === "PUT" && updateMatch) {
           const client = await store.updateClient(decodeURIComponent(updateMatch[1]), await bodyJson(req));
           return client ? json(res, 200, { client }) : json(res, 404, { error: "Client not found." });
+        }
+        const convertMatch = url.pathname.match(/^\/api\/admin\/leads\/([^/]+)\/convert$/);
+        if (req.method === "POST" && convertMatch) {
+          const leadId = decodeURIComponent(convertMatch[1]);
+          const lead = store.getRecord("leads", leadId);
+          if (!lead) return json(res, 404, { error: "Lead not found." });
+          if (lead.convertedAt) return json(res, 200, { lead });
+          const convertedVia = lead.followupStatus === "sent" ? "after_followup" : "same_session";
+          const updated = await store.updateRecord("leads", leadId, { convertedAt: new Date().toISOString(), convertedVia });
+          return json(res, 200, { lead: updated });
+        }
+        if (req.method === "GET" && url.pathname === "/api/admin/roi") {
+          const clientId = url.searchParams.get("clientId");
+          const client = clientId ? store.getClientById(clientId) : null;
+          if (!client) return json(res, 404, { error: "Client not found." });
+          const leads = store.listRecords().leads.filter((item) => item.clientId === clientId);
+          const totalLeads = leads.length;
+          const followupsSent = leads.filter((item) => item.followupStatus === "sent").length;
+          const converted = leads.filter((item) => item.convertedAt).length;
+          const convertedSameSession = leads.filter((item) => item.convertedVia === "same_session").length;
+          const convertedAfterFollowup = leads.filter((item) => item.convertedVia === "after_followup").length;
+          const recoveryRate = followupsSent ? convertedAfterFollowup / followupsSent : 0;
+          const estimatedRecoveredRevenue = convertedAfterFollowup * client.averageJobValue;
+          return json(res, 200, {
+            clientId, businessName: client.businessName, averageJobValue: client.averageJobValue,
+            totalLeads, followupsSent, converted, convertedSameSession, convertedAfterFollowup,
+            recoveryRate, estimatedRecoveredRevenue
+          });
         }
       }
 

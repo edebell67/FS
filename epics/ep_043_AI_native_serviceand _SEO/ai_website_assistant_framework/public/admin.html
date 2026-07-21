@@ -10,7 +10,7 @@
   <div class="shell">
     <aside>
       <a class="product" href="/admin"><span>AP</span><strong>Assistant<br>Platform</strong></a>
-      <nav><button class="nav-active" data-view="clients">Client profiles <b id="client-count">—</b></button><button data-view="activity">Activity <b id="activity-count">—</b></button></nav>
+      <nav><button class="nav-active" data-view="clients">Client profiles <b id="client-count">—</b></button><button data-view="activity">Activity <b id="activity-count">—</b></button><button data-view="insights">Visitor insights</button><button data-view="roi">Lead ROI</button></nav>
       <div class="connection"><i></i><span>Central service<br><b id="connection-label">Connecting</b></span></div>
     </aside>
     <main>
@@ -20,15 +20,30 @@
         <form id="client-form" class="editor" hidden>
           <div class="editor-head"><div><p class="kicker" id="client-key"></p><h2 id="editor-title"></h2></div><div class="actions"><button type="button" id="duplicate">Duplicate</button><button class="primary" type="submit">Save changes</button></div></div>
           <div class="section"><h3>Identity & activation</h3><div class="fields two"><label>Business name<input name="businessName" required maxlength="120"></label><label>Tagline<input name="tagline" maxlength="160"></label><label>Website hosts<input name="allowedHosts" placeholder="example.com, www.example.com"></label><label>Status<select name="status"><option value="demo">Demo</option><option value="live">Live</option></select></label></div></div>
+          <div class="section"><h3>Assistant engagement</h3><p class="hint">On-demand: the assistant waits for the visitor to open the widget (current default). Proactive: the assistant opens itself and offers help on every page visit. If a visitor declines the proactive prompt, it automatically falls back to on-demand for the rest of that visit.</p><div class="fields two"><label>Engagement mode<select name="engagementMode"><option value="on_demand">On-demand (visitor opens widget)</option><option value="proactive">Proactive (assistant greets automatically)</option></select></label><label>Proactive greeting delay (ms)<input name="proactiveDelayMs" type="number" min="0" max="60000" step="250" placeholder="2500"></label></div></div>
+          <div class="section"><h3>Visitor analytics</h3><p class="hint">Log anonymous visitor behaviour (unique visits and timing, pages, clicks) for the Visitor insights view. No visitor is identified — an ephemeral per-visit id only, no persistent tracking or PII. Switch off per site to stop logging entirely.</p><div class="fields two"><label>Analytics logging<select name="analyticsEnabled"><option value="true">On</option><option value="false">Off</option></select></label></div></div>
           <div class="section"><h3>Brand system</h3><div class="fields four"><label>Mark<input name="logoText" maxlength="4"></label><label>Accent<input name="accent" type="color"></label><label>Ink<input name="ink" type="color"></label><label>Surface<input name="surface" type="color"></label></div></div>
           <div class="section"><h3>Enabled modules</h3><p class="hint">The core assistant is always enabled. Every other capability can operate independently.</p><div id="module-grid" class="module-grid"></div></div>
+          <div class="section"><h3>Lead follow-up (retention)</h3><p class="hint">When Lead follow-up is enabled above, any lead that doesn't convert in the same chat gets an automatic re-notification to your team after this delay, so it doesn't go cold. Average job value is used only to estimate recovered revenue on the ROI page.</p><div class="fields two"><label>Follow-up delay (ms)<input name="leadFollowupDelayMs" type="number" min="1000" max="604800000" step="1000" placeholder="7200000"></label><label>Average job value (£)<input name="averageJobValue" type="number" min="0" step="1" placeholder="180"></label></div></div>
           <div class="section"><h3>Contact & booking</h3><div class="fields two"><label>Telephone<input name="telephone"></label><label>Email<input name="email" type="email"></label><label>Address<input name="address"></label><label>Opening hours<input name="openingHours"></label><label>Booking provider<input name="bookingProvider"></label><label>Booking URL<input name="bookingUrl" type="url"></label></div></div>
+          <div class="section"><div class="section-title"><h3>Deployment instances</h3><button type="button" id="add-deployment">+ Add instance</button></div><p class="hint">A client can have more than one live instance (e.g. current site + AI, redesigned site + AI). For internal tracking only, not shown to visitors.</p><div id="deployment-list"></div></div>
+          <div class="section"><h3>Outreach workflow</h3><p class="hint">Every prospect follows these gates before outreach. Record blockers here rather than treating a hosted demo as ready by default.</p><div class="fields two"><label>Workflow status<select name="workflowStatus"><option value="not_started">Not started</option><option value="in_progress">In progress</option><option value="ready_for_outreach">Ready for outreach</option><option value="blocked">Blocked</option><option value="outreach_sent">Outreach sent</option><option value="replied">Replied</option><option value="closed_do_not_contact">Closed / do not contact</option></select></label><label>Blocker / reason not ready<textarea name="workflowBlocker" maxlength="1500" placeholder="What must happen before this prospect can proceed?"></textarea></label></div><div id="workflow-stage-list" class="workflow-stage-list"></div></div>
           <div class="section"><div class="section-title"><h3>Approved knowledge</h3><button type="button" id="add-knowledge">Add entry</button></div><div id="knowledge-list"></div></div>
           <div class="save-bar"><span id="save-state">Changes are saved to the central client profile.</span><button class="primary" type="submit">Save changes</button></div>
         </form>
         <div id="empty-state" class="empty"><span>↖</span><h2>Select a client profile</h2><p>Review branding, modules and approved business knowledge.</p></div>
       </section>
-      <section id="activity-view" class="activity" hidden><div class="activity-filter"><button class="active" data-type="conversations">Conversations</button><button data-type="leads">Leads</button><button data-type="callbacks">Callbacks</button><button data-type="bookings">Bookings</button><button data-type="payments">Payments</button><button data-type="emails">Email previews</button><button data-type="crmLeads">CRM leads</button></div><div id="activity-table"></div></section>
+      <section id="activity-view" class="activity" hidden><div class="activity-filter"><button data-type="conversations">Conversations</button><button class="active" data-type="previewResponses">Preview responses</button><button data-type="leads">Leads</button><button data-type="callbacks">Callbacks</button><button data-type="bookings">Bookings</button><button data-type="payments">Payments</button><button data-type="emails">Email previews</button><button data-type="crmLeads">CRM leads</button><button data-type="events">Visitor events</button></div><div id="activity-table"></div></section>
+      <section id="insights-view" class="activity" hidden>
+        <div class="roi-client-picker"><label>Client<select id="insights-client-select"></select></label></div>
+        <div id="insights-stats" class="roi-stats"></div>
+        <div class="insights-grid"><div><h3 class="insights-h">Top pages</h3><div id="insights-pages"></div></div><div><h3 class="insights-h">Event breakdown</h3><div id="insights-events"></div></div></div>
+      </section>
+      <section id="roi-view" class="activity" hidden>
+        <div class="roi-client-picker"><label>Client<select id="roi-client-select"></select></label></div>
+        <div id="roi-stats" class="roi-stats"></div>
+        <div id="roi-leads"></div>
+      </section>
     </main>
   </div>
   <script src="/admin.js" defer></script>

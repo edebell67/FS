@@ -94,6 +94,41 @@ test("engagement mode defaults to on_demand and can be switched to proactive by 
   await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "on_demand", proactiveDelayMs: 2500 } });
 });
 
+test("public config exposes blueprint assistant actions resolved from pages, modules, and knowledge", async () => {
+  const config = await request("/api/public/config?clientKey=hoxtans_n1&host=localhost");
+  const actions = config.body.client.assistantActions;
+  assert.ok(Array.isArray(actions) && actions.length > 0);
+
+  // A blueprint-tagged page becomes a navigate action pointing at the real page.
+  const gallery = actions.find((item) => item.key === "gallery");
+  assert.equal(gallery.type, "navigate");
+  assert.equal(gallery.url, "gallery.html");
+
+  // An enabled module becomes a prompt action.
+  const contact = actions.find((item) => item.key === "contact");
+  assert.equal(contact.type, "prompt");
+
+  // Every action key belongs to the canonical blueprint vocabulary, and there
+  // are no duplicates or dead ends.
+  const keys = actions.map((item) => item.key);
+  assert.equal(new Set(keys).size, keys.length);
+
+  // Platform demo workflows are surfaced separately, not mixed into blueprint actions.
+  assert.equal(actions.some((item) => item.key.startsWith("demo")), false);
+  assert.ok(config.body.client.demoActions.some((item) => item.key === "demoBooking"));
+
+  // An unrecognised blueprint tag on a page must not produce a button.
+  const list = await request("/api/admin/clients", { token: "test-secret" });
+  const hoxtans = list.body.clients.find((item) => item.id === "hoxtans");
+  const badPages = hoxtans.pages.map((page) => ({ ...page, blueprint: page.blueprint === "gallery" ? "not-a-real-key" : page.blueprint }));
+  await request(`/api/admin/clients/${hoxtans.id}`, { method: "PUT", token: "test-secret", body: { pages: badPages } });
+  const afterBad = await request("/api/public/config?clientKey=hoxtans_n1&host=localhost");
+  const galleryAction = afterBad.body.client.assistantActions.find((item) => item.key === "gallery");
+  assert.equal(galleryAction, undefined);
+  // Restore the valid tag so later tests see the seeded state.
+  await request(`/api/admin/clients/${hoxtans.id}`, { method: "PUT", token: "test-secret", body: { pages: hoxtans.pages } });
+});
+
 test("assistant answers from approved knowledge and records the conversation", async () => {
   const response = await request("/api/public/chat", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", sessionId: "test-session", message: "How much is an annual boiler service?" } });
   assert.equal(response.status, 200);
@@ -124,6 +159,49 @@ test("demo lead and callback modules validate, persist, and suppress notificatio
   assert.equal(callback.body.simulated, true);
   const invalid = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Missing phone" } });
   assert.equal(invalid.status, 400);
+});
+
+test("visitor events are tenant-scoped, anonymous, sanitized, whitelisted, and stored in a batch", async () => {
+  const res = await request("/api/public/events", { method: "POST", body: {
+    clientKey: "demo_northstar", host: "localhost", sessionId: "sess-1",
+    events: [
+      { type: "pageview", path: "/", device: "mobile", ts: "2026-07-21T00:00:00Z" },
+      { type: "cta_click", label: "cta:quote", path: "/", scrollPct: 250 },
+      { type: "not_a_real_event", path: "/", label: "should be dropped" },
+      { type: "page_exit", dwellMs: 12000, scrollPct: 80 }
+    ]
+  } });
+  assert.equal(res.status, 202);
+  assert.equal(res.body.stored, 3); // the unknown type is filtered out
+
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  const events = records.body.records.events.filter((e) => e.sessionId === "sess-1");
+  assert.equal(events.length, 3);
+  assert.equal(events.some((e) => e.type === "not_a_real_event"), false);
+  const cta = events.find((e) => e.type === "cta_click");
+  assert.equal(cta.label, "cta:quote");
+  assert.equal(cta.scrollPct, 100); // clamped 0..100
+  assert.equal(cta.clientId, "northstar-heating");
+  assert.equal("visitorId" in cta, false); // anonymous: no persistent visitor id stored
+
+  const denied = await request("/api/public/events", { method: "POST", body: { clientKey: "demo_northstar", host: "attacker.example", events: [{ type: "pageview" }] } });
+  assert.equal(denied.status, 404);
+});
+
+test("visitor analytics can be switched off per site", async () => {
+  const off = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: false } });
+  assert.equal(off.body.client.analyticsEnabled, false);
+  const config = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
+  assert.equal(config.body.client.analyticsEnabled, false);
+
+  const res = await request("/api/public/events", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", sessionId: "sess-off", events: [{ type: "pageview", path: "/" }] } });
+  assert.equal(res.status, 202);
+  assert.equal(res.body.stored, 0);
+  assert.equal(res.body.disabled, true);
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  assert.equal(records.body.records.events.some((e) => e.sessionId === "sess-off"), false);
+
+  await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: true } });
 });
 
 test("lead follow-up recovers cold leads and feeds the ROI report", async () => {
