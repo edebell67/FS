@@ -19,7 +19,7 @@
       "email": "hello@northstar.example",
       "address": "18 Meridian Yard, London SE19",
       "mapUrl": "https://maps.google.com/?q=London+SE19",
-      "openingHours": "Mon–Fri 08:00–18:00; Sat 09:00–14:00"
+      "openingHours": "Mon\u2013Fri 08:00\u201318:00; Sat 09:00\u201314:00"
     },
     "booking": {
       "provider": "Calendly",
@@ -97,7 +97,7 @@
       {
         "id": "pricing",
         "title": "Pricing",
-        "content": "A standard annual boiler service starts from £95. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
+        "content": "A standard annual boiler service starts from \u00a395. Repair pricing depends on diagnosis; the team confirms any charge before work begins."
       },
       {
         "id": "payment",
@@ -188,14 +188,14 @@
           }
         ],
         "slots": [
-          "Today · 14:30",
-          "Tomorrow · 10:00",
-          "Saturday · 12:15"
+          "Today \u00b7 14:30",
+          "Tomorrow \u00b7 10:00",
+          "Saturday \u00b7 12:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Hoxtans Demo Concierge",
@@ -292,7 +292,7 @@
       {
         "id": "pricing",
         "title": "Treatment prices",
-        "content": "Full-body spray tans start from £25, express spray tans from £18, sunbed sessions from £6, brow shape and tint from £15, lash lift and tint from £35, and manicures and pedicures from £20."
+        "content": "Full-body spray tans start from \u00a325, express spray tans from \u00a318, sunbed sessions from \u00a36, brow shape and tint from \u00a315, lash lift and tint from \u00a335, and manicures and pedicures from \u00a320."
       },
       {
         "id": "appointments",
@@ -330,7 +330,7 @@
     "contact": {
       "telephone": "020 7515 9099",
       "email": "",
-      "address": "E3 3LT — see the preview contact section",
+      "address": "E3 3LT \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -371,14 +371,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Docklands Vehicle Centre Demo Service Desk",
@@ -475,7 +475,7 @@
     "contact": {
       "telephone": "07956 824262",
       "email": "",
-      "address": "E3 4AG — see the preview contact section",
+      "address": "E3 4AG \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -516,14 +516,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "AA Autos Demo Service Desk",
@@ -620,7 +620,7 @@
     "contact": {
       "telephone": "020 8852 3652",
       "email": "",
-      "address": "SE13 6HE — see the preview contact section",
+      "address": "SE13 6HE \u2014 see the preview contact section",
       "mapUrl": "",
       "openingHours": "Owner confirmation required"
     },
@@ -661,14 +661,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "Abbey Auto Services Demo Service Desk",
@@ -765,9 +765,9 @@
     "contact": {
       "telephone": "020 8741 9993",
       "email": "",
-      "address": "247–251 Goldhawk Road, London",
+      "address": "247\u2013251 Goldhawk Road, London",
       "mapUrl": "",
-      "openingHours": "Monday–Friday 08:00–18:00; Saturday 08:30–13:00"
+      "openingHours": "Monday\u2013Friday 08:00\u201318:00; Saturday 08:30\u201313:00"
     },
     "booking": {
       "provider": "Demo",
@@ -806,14 +806,14 @@
           }
         ],
         "slots": [
-          "Demo slot · Monday 09:00",
-          "Demo slot · Wednesday 13:30",
-          "Demo slot · Saturday 10:15"
+          "Demo slot \u00b7 Monday 09:00",
+          "Demo slot \u00b7 Wednesday 13:30",
+          "Demo slot \u00b7 Saturday 10:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242 — no charge"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242 \u2014 no charge"
       },
       "email": {
         "fromName": "A C Automotive Engineering Demo Service Desk",
@@ -961,14 +961,14 @@
           }
         ],
         "slots": [
-          "Today · 16:00",
-          "Tomorrow · 10:30",
-          "Saturday · 11:15"
+          "Today \u00b7 16:00",
+          "Tomorrow \u00b7 10:30",
+          "Saturday \u00b7 11:15"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Fun Cuts Demo Concierge",
@@ -1045,7 +1045,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "Cuts and finishing start from £15, colour and care from £45, family sessions from £12, and styling and events from £25."
+        "content": "Cuts and finishing start from \u00a315, colour and care from \u00a345, family sessions from \u00a312, and styling and events from \u00a325."
       },
       {
         "id": "offer",
@@ -1083,7 +1083,7 @@
       "edebell67.github.io"
     ],
     "businessName": "A Team Auto",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ATA",
     "theme": {
       "accent": "#38bdf8",
@@ -1179,7 +1179,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Battersea Motors Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BML",
     "theme": {
       "accent": "#38bdf8",
@@ -1275,7 +1275,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Belgravia Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BG",
     "theme": {
       "accent": "#38bdf8",
@@ -1371,7 +1371,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Bennett & Barnes",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BB",
     "theme": {
       "accent": "#38bdf8",
@@ -1467,7 +1467,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Boundary Autos",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "BA",
     "theme": {
       "accent": "#38bdf8",
@@ -1563,7 +1563,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C & H Taxi's",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CHT",
     "theme": {
       "accent": "#38bdf8",
@@ -1659,7 +1659,7 @@
       "edebell67.github.io"
     ],
     "businessName": "C B Motors",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CBM",
     "theme": {
       "accent": "#38bdf8",
@@ -1755,7 +1755,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Chequers Autos Ltd.",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CAL",
     "theme": {
       "accent": "#38bdf8",
@@ -1851,7 +1851,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Clee Brothers",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "CB",
     "theme": {
       "accent": "#38bdf8",
@@ -1947,7 +1947,7 @@
       "edebell67.github.io"
     ],
     "businessName": "D&T Wise",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "DTW",
     "theme": {
       "accent": "#38bdf8",
@@ -2043,7 +2043,7 @@
       "edebell67.github.io"
     ],
     "businessName": "E3 Motoring",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "EM",
     "theme": {
       "accent": "#38bdf8",
@@ -2139,7 +2139,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Eagle's Garage",
-    "tagline": "Private owner preview — vehicle repair enquiries",
+    "tagline": "Private owner preview \u2014 vehicle repair enquiries",
     "logoText": "ESG",
     "theme": {
       "accent": "#38bdf8",
@@ -2235,7 +2235,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2315,7 +2315,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Blessed Autos",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2395,7 +2395,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Cosar Motors Body Work",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2475,7 +2475,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Domen Garage",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2555,7 +2555,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Martins Auto Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2635,7 +2635,7 @@
       "edebell67.github.io"
     ],
     "businessName": "NB Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2715,7 +2715,7 @@
       "edebell67.github.io"
     ],
     "businessName": "Mobile Mechanics Finchley",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2795,7 +2795,7 @@
       "edebell67.github.io"
     ],
     "businessName": "CEM Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2875,7 +2875,7 @@
       "edebell67.github.io"
     ],
     "businessName": "A-Jax Mobile Car Services",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -2955,7 +2955,7 @@
       "edebell67.github.io"
     ],
     "businessName": "L K Mobile Mechanic",
-    "tagline": "Private owner preview — mobile mechanic enquiries",
+    "tagline": "Private owner preview \u2014 mobile mechanic enquiries",
     "logoText": "MM",
     "theme": {
       "accent": "#38bdf8",
@@ -3047,7 +3047,7 @@
       "email": "hello@fixandfinish.co.uk",
       "address": "8 Victoria Road, Surbiton, Surrey KT6 4JS",
       "mapUrl": "https://maps.google.com/?q=8+Victoria+Road+Surbiton+Surrey+KT6+4JS",
-      "openingHours": "Sample placeholder business — replace with real details per client"
+      "openingHours": "Sample placeholder business \u2014 replace with real details per client"
     },
     "booking": {
       "provider": "Telephone",
@@ -3090,14 +3090,14 @@
           }
         ],
         "slots": [
-          "Today · 15:00",
-          "Tomorrow · 09:30",
-          "Saturday · 11:00"
+          "Today \u00b7 15:00",
+          "Tomorrow \u00b7 09:30",
+          "Saturday \u00b7 11:00"
         ]
       },
       "payment": {
         "currency": "GBP",
-        "testCardLabel": "Demo card •••• 4242"
+        "testCardLabel": "Demo card \u2022\u2022\u2022\u2022 4242"
       },
       "email": {
         "fromName": "Fix & Finish Demo Concierge",
@@ -3199,7 +3199,7 @@
       {
         "id": "pricing",
         "title": "Prices",
-        "content": "General handyman work starts from £35/hr, plumbing and drains from £45/hr, electrical works from £50/hr, gardening from £30/hr. Painting and decorating and kitchen fitting are quoted for free based on the job."
+        "content": "General handyman work starts from \u00a335/hr, plumbing and drains from \u00a345/hr, electrical works from \u00a350/hr, gardening from \u00a330/hr. Painting and decorating and kitchen fitting are quoted for free based on the job."
       },
       {
         "id": "trust",
@@ -3746,7 +3746,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -3867,7 +3867,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -3988,7 +3988,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4109,7 +4109,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4230,7 +4230,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4351,7 +4351,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4472,7 +4472,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4593,7 +4593,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4714,7 +4714,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4835,7 +4835,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -4956,7 +4956,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -5077,7 +5077,7 @@
       "email": "",
       "address": "See the current public website",
       "mapUrl": "",
-      "openingHours": "Not recorded — use the current public website"
+      "openingHours": "Not recorded \u2014 use the current public website"
     },
     "booking": {
       "provider": "Not enabled",
@@ -5188,7 +5188,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "Barber Shop Limited Edition",
-    "tagline": "Barbering · private website + assistant preview",
+    "tagline": "Barbering \u00b7 private website + assistant preview",
     "logoText": "BSL",
     "theme": {
       "accent": "#AF3E52",
@@ -5212,23 +5212,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Book appointment",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5289,7 +5334,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "Bath Sorts Ltd",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "BS",
     "theme": {
       "accent": "#8B5E2B",
@@ -5313,23 +5358,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5390,7 +5480,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "Donovan Design Studio Limited",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "DDS",
     "theme": {
       "accent": "#624C9A",
@@ -5414,23 +5504,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5491,7 +5626,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "11th Hour Building Solutions Ltd",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "THB",
     "theme": {
       "accent": "#1D7A78",
@@ -5515,23 +5650,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5592,7 +5772,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "W & W Builders Limited",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "WWB",
     "theme": {
       "accent": "#8A5C16",
@@ -5616,23 +5796,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5693,7 +5918,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "t J r Bathrooms Ltd",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "TJR",
     "theme": {
       "accent": "#2C6DA4",
@@ -5703,7 +5928,7 @@
     "contact": {
       "telephone": "020 8553 2658",
       "email": "tjrbathrooms@btconnect.com",
-      "address": "662–666 Romford Road, Manor Park, London, E12 5AQ",
+      "address": "662\u2013666 Romford Road, Manor Park, London, E12 5AQ",
       "mapUrl": "",
       "openingHours": "Owner confirmation required before publication."
     },
@@ -5717,23 +5942,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5750,7 +6020,7 @@
       {
         "id": "contact",
         "title": "Public recognition details",
-        "content": "Public source details for owner recognition: telephone 020 8553 2658; email tjrbathrooms@btconnect.com; address 662–666 Romford Road, Manor Park, London, E12 5AQ."
+        "content": "Public source details for owner recognition: telephone 020 8553 2658; email tjrbathrooms@btconnect.com; address 662\u2013666 Romford Road, Manor Park, London, E12 5AQ."
       }
     ],
     "demoWorkflows": {},
@@ -5794,7 +6064,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "Marble and Bathroom World Ltd",
-    "tagline": "Bathroom fitting · private website + assistant preview",
+    "tagline": "Bathroom fitting \u00b7 private website + assistant preview",
     "logoText": "MAB",
     "theme": {
       "accent": "#526E4E",
@@ -5818,23 +6088,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Request a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5895,7 +6210,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "Muswell Hill Joinery Ltd",
-    "tagline": "Joinery · private website + assistant preview",
+    "tagline": "Joinery \u00b7 private website + assistant preview",
     "logoText": "MHJ",
     "theme": {
       "accent": "#9A4F38",
@@ -5919,23 +6234,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Get a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -5996,7 +6356,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "AdWood Joinery Ltd",
-    "tagline": "Joinery · private website + assistant preview",
+    "tagline": "Joinery \u00b7 private website + assistant preview",
     "logoText": "AJL",
     "theme": {
       "accent": "#376A68",
@@ -6020,23 +6380,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Get a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -6097,7 +6502,7 @@
       "www.thetechprinciple.com"
     ],
     "businessName": "SLSW INTERIORS LIMITED",
-    "tagline": "Joinery · private website + assistant preview",
+    "tagline": "Joinery \u00b7 private website + assistant preview",
     "logoText": "SIL",
     "theme": {
       "accent": "#665A86",
@@ -6121,23 +6526,68 @@
     ],
     "pages": [
       {
-        "title": "Private preview overview",
-        "url": "#top",
+        "title": "Services",
+        "url": "services.html",
         "keywords": [
-          "website",
-          "preview",
-          "information"
-        ]
+          "services"
+        ],
+        "blueprint": "services"
       },
       {
-        "title": "Recognition details",
-        "url": "#contact",
+        "title": "Gallery",
+        "url": "gallery.html",
         "keywords": [
-          "contact",
-          "telephone",
-          "email",
-          "address"
-        ]
+          "gallery"
+        ],
+        "blueprint": "gallery"
+      },
+      {
+        "title": "Reviews",
+        "url": "reviews.html",
+        "keywords": [
+          "reviews"
+        ],
+        "blueprint": "reviews"
+      },
+      {
+        "title": "Pricing Guide",
+        "url": "pricing.html",
+        "keywords": [
+          "pricing"
+        ],
+        "blueprint": "pricing"
+      },
+      {
+        "title": "Areas Covered",
+        "url": "areas.html",
+        "keywords": [
+          "areas"
+        ],
+        "blueprint": "areas"
+      },
+      {
+        "title": "Guides",
+        "url": "guides.html",
+        "keywords": [
+          "guides"
+        ],
+        "blueprint": "knowledge"
+      },
+      {
+        "title": "FAQ",
+        "url": "faq.html",
+        "keywords": [
+          "faq"
+        ],
+        "blueprint": "faq"
+      },
+      {
+        "title": "Get a quote",
+        "url": "quote.html",
+        "keywords": [
+          "quote"
+        ],
+        "blueprint": "quote"
       }
     ],
     "knowledge": [
@@ -6191,7 +6641,7 @@
     "id": "batch02-silva-building-services-ltd",
     "publicKey": "batch02_silva_building_services_ltd",
     "businessName": "SILVA BUILDING SERVICES LTD",
-    "tagline": "Bathroom Fitters · private website + assistant concept",
+    "tagline": "Bathroom Fitters \u00b7 private website + assistant concept",
     "logoText": "SBS",
     "theme": {
       "accent": "#d49852",
@@ -6361,7 +6811,7 @@
     "id": "batch02-heron-property-services-limited",
     "publicKey": "batch02_heron_property_services_limited",
     "businessName": "Heron Property Services Limited",
-    "tagline": "Carpenters · private website + assistant concept",
+    "tagline": "Carpenters \u00b7 private website + assistant concept",
     "logoText": "HPS",
     "theme": {
       "accent": "#b9824d",
@@ -6531,7 +6981,7 @@
     "id": "batch02-kng-professional-services-ltd",
     "publicKey": "batch02_kng_professional_services_ltd",
     "businessName": "KNG PROFESSIONAL SERVICES LTD",
-    "tagline": "Carpet Cleaners · private website + assistant concept",
+    "tagline": "Carpet Cleaners \u00b7 private website + assistant concept",
     "logoText": "KPS",
     "theme": {
       "accent": "#5db5ab",
@@ -6701,7 +7151,7 @@
     "id": "batch02-pgs-stone-cleaning-restoration-ltd",
     "publicKey": "batch02_pgs_stone_cleaning_restoration_ltd",
     "businessName": "PGS Stone Cleaning & Restoration Ltd",
-    "tagline": "Carpet Cleaners · private website + assistant concept",
+    "tagline": "Carpet Cleaners \u00b7 private website + assistant concept",
     "logoText": "PSC",
     "theme": {
       "accent": "#5db5ab",
@@ -6871,7 +7321,7 @@
     "id": "batch02-ats-steam-cleaning-ltd",
     "publicKey": "batch02_ats_steam_cleaning_ltd",
     "businessName": "Ats Steam Cleaning Ltd",
-    "tagline": "Carpet Cleaners · private website + assistant concept",
+    "tagline": "Carpet Cleaners \u00b7 private website + assistant concept",
     "logoText": "ASC",
     "theme": {
       "accent": "#5db5ab",
@@ -7041,7 +7491,7 @@
     "id": "batch02-making-space-below-ground-ltd",
     "publicKey": "batch02_making_space_below_ground_ltd",
     "businessName": "Making space below ground ltd",
-    "tagline": "Damp Proofing · private website + assistant concept",
+    "tagline": "Damp Proofing \u00b7 private website + assistant concept",
     "logoText": "MSB",
     "theme": {
       "accent": "#7196a7",
@@ -7211,7 +7661,7 @@
     "id": "batch02-zuzi-s-grooming-ltd-london",
     "publicKey": "batch02_zuzi_s_grooming_ltd_london",
     "businessName": "Zuzi's Grooming Ltd London",
-    "tagline": "Dog Grooming · private website + assistant concept",
+    "tagline": "Dog Grooming \u00b7 private website + assistant concept",
     "logoText": "ZGL",
     "theme": {
       "accent": "#d98286",
@@ -7381,7 +7831,7 @@
     "id": "batch02-msj-drain-clearance-ltd",
     "publicKey": "batch02_msj_drain_clearance_ltd",
     "businessName": "MSJ Drain Clearance Ltd",
-    "tagline": "Domestic Cleaners · private website + assistant concept",
+    "tagline": "Domestic Cleaners \u00b7 private website + assistant concept",
     "logoText": "MDC",
     "theme": {
       "accent": "#78b8ad",
@@ -7551,7 +8001,7 @@
     "id": "batch02-berkshire-fencing-ltd",
     "publicKey": "batch02_berkshire_fencing_ltd",
     "businessName": "Berkshire Fencing Ltd",
-    "tagline": "Fencing · private website + assistant concept",
+    "tagline": "Fencing \u00b7 private website + assistant concept",
     "logoText": "BFL",
     "theme": {
       "accent": "#b7975b",
@@ -7721,7 +8171,7 @@
     "id": "batch02-fencet-ltd",
     "publicKey": "batch02_fencet_ltd",
     "businessName": "Fencet Ltd",
-    "tagline": "Fencing · private website + assistant concept",
+    "tagline": "Fencing \u00b7 private website + assistant concept",
     "logoText": "FL",
     "theme": {
       "accent": "#b7975b",
@@ -7891,7 +8341,7 @@
     "id": "batch02-selby-contract-flooring-limited",
     "publicKey": "batch02_selby_contract_flooring_limited",
     "businessName": "SELBY CONTRACT FLOORING LIMITED",
-    "tagline": "Flooring · private website + assistant concept",
+    "tagline": "Flooring \u00b7 private website + assistant concept",
     "logoText": "SCF",
     "theme": {
       "accent": "#c78f58",
@@ -8061,7 +8511,7 @@
     "id": "batch02-edward-davies-design-limited",
     "publicKey": "batch02_edward_davies_design_limited",
     "businessName": "Edward Davies Design Limited",
-    "tagline": "Gardeners · private website + assistant concept",
+    "tagline": "Gardeners \u00b7 private website + assistant concept",
     "logoText": "EDD",
     "theme": {
       "accent": "#91b860",
@@ -8231,7 +8681,7 @@
     "id": "batch02-stevens-and-sons-complete-property-solut",
     "publicKey": "batch02_stevens_and_sons_complete_property_solutions_limited",
     "businessName": "Stevens And Sons Complete Property Solutions Limited",
-    "tagline": "Guttering · private website + assistant concept",
+    "tagline": "Guttering \u00b7 private website + assistant concept",
     "logoText": "SAS",
     "theme": {
       "accent": "#7ba8c6",
@@ -8401,7 +8851,7 @@
     "id": "batch02-n-e-cleaning-services-ltd",
     "publicKey": "batch02_n_e_cleaning_services_ltd",
     "businessName": "N&E Cleaning Services Ltd",
-    "tagline": "Guttering · private website + assistant concept",
+    "tagline": "Guttering \u00b7 private website + assistant concept",
     "logoText": "NCS",
     "theme": {
       "accent": "#7ba8c6",
@@ -8571,7 +9021,7 @@
     "id": "batch02-global-waste-commodities-limited-gwc",
     "publicKey": "batch02_global_waste_commodities_limited_gwc",
     "businessName": "Global Waste Commodities Limited (GWC)",
-    "tagline": "Guttering · private website + assistant concept",
+    "tagline": "Guttering \u00b7 private website + assistant concept",
     "logoText": "GWC",
     "theme": {
       "accent": "#7ba8c6",
@@ -8741,7 +9191,7 @@
     "id": "batch02-daniel-s-home-improvements-ltd",
     "publicKey": "batch02_daniel_s_home_improvements_ltd",
     "businessName": "Daniel's Home Improvements Ltd",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "DHI",
     "theme": {
       "accent": "#d69b51",
@@ -8911,7 +9361,7 @@
     "id": "batch02-north-london-handyman-ltd",
     "publicKey": "batch02_north_london_handyman_ltd",
     "businessName": "NORTH LONDON HANDYMAN LTD",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "NLH",
     "theme": {
       "accent": "#d69b51",
@@ -9081,7 +9531,7 @@
     "id": "batch02-oytics-removals-ltd",
     "publicKey": "batch02_oytics_removals_ltd",
     "businessName": "Oytics Removals Ltd",
-    "tagline": "Man And Van · private website + assistant concept",
+    "tagline": "Man And Van \u00b7 private website + assistant concept",
     "logoText": "ORL",
     "theme": {
       "accent": "#cf8b48",
@@ -9251,7 +9701,7 @@
     "id": "batch02-flexible-contractors-ltd",
     "publicKey": "batch02_flexible_contractors_ltd",
     "businessName": "Flexible Contractors Ltd",
-    "tagline": "Painters Decorators · private website + assistant concept",
+    "tagline": "Painters Decorators \u00b7 private website + assistant concept",
     "logoText": "FCL",
     "theme": {
       "accent": "#a590d2",
@@ -9421,7 +9871,7 @@
     "id": "batch02-dg-maintenance-uk-ltd",
     "publicKey": "batch02_dg_maintenance_uk_ltd",
     "businessName": "DG Maintenance UK Ltd",
-    "tagline": "Painters Decorators · private website + assistant concept",
+    "tagline": "Painters Decorators \u00b7 private website + assistant concept",
     "logoText": "DMU",
     "theme": {
       "accent": "#a590d2",
@@ -9591,7 +10041,7 @@
     "id": "batch02-interline-roofing-general-building-ltd",
     "publicKey": "batch02_interline_roofing_general_building_ltd",
     "businessName": "Interline Roofing & General Building Ltd",
-    "tagline": "Roofers · private website + assistant concept",
+    "tagline": "Roofers \u00b7 private website + assistant concept",
     "logoText": "IR&",
     "theme": {
       "accent": "#d98b4b",
@@ -9761,7 +10211,7 @@
     "id": "batch02-exall-roofing-ltd",
     "publicKey": "batch02_exall_roofing_ltd",
     "businessName": "EXALL ROOFING LTD",
-    "tagline": "Roofers · private website + assistant concept",
+    "tagline": "Roofers \u00b7 private website + assistant concept",
     "logoText": "ERL",
     "theme": {
       "accent": "#d98b4b",
@@ -9931,7 +10381,7 @@
     "id": "batch02-race-team-cleaning-ltd",
     "publicKey": "batch02_race_team_cleaning_ltd",
     "businessName": "Race Team Cleaning Ltd",
-    "tagline": "Window Cleaners · private website + assistant concept",
+    "tagline": "Window Cleaners \u00b7 private website + assistant concept",
     "logoText": "RTC",
     "theme": {
       "accent": "#67afc7",
@@ -10101,7 +10551,7 @@
     "id": "batch02-olympus-cleaning-ltd",
     "publicKey": "batch02_olympus_cleaning_ltd",
     "businessName": "OLYMPUS CLEANING LTD",
-    "tagline": "Carpet Cleaners · private website + assistant concept",
+    "tagline": "Carpet Cleaners \u00b7 private website + assistant concept",
     "logoText": "OCL",
     "theme": {
       "accent": "#5db5ab",
@@ -10271,7 +10721,7 @@
     "id": "batch02-maison-dog-limited",
     "publicKey": "batch02_maison_dog_limited",
     "businessName": "MAISON DOG LIMITED",
-    "tagline": "Dog Grooming · private website + assistant concept",
+    "tagline": "Dog Grooming \u00b7 private website + assistant concept",
     "logoText": "MDL",
     "theme": {
       "accent": "#d98286",
@@ -10441,7 +10891,7 @@
     "id": "batch02-9tails-dog-grooming-ltd",
     "publicKey": "batch02_9tails_dog_grooming_ltd",
     "businessName": "9Tails Dog Grooming LTD",
-    "tagline": "Dog Grooming · private website + assistant concept",
+    "tagline": "Dog Grooming \u00b7 private website + assistant concept",
     "logoText": "9DG",
     "theme": {
       "accent": "#d98286",
@@ -10611,7 +11061,7 @@
     "id": "batch02-e-d-cleaning-services-ltd",
     "publicKey": "batch02_e_d_cleaning_services_ltd",
     "businessName": "E&d Cleaning Services Ltd",
-    "tagline": "Domestic Cleaners · private website + assistant concept",
+    "tagline": "Domestic Cleaners \u00b7 private website + assistant concept",
     "logoText": "ECS",
     "theme": {
       "accent": "#78b8ad",
@@ -10781,7 +11231,7 @@
     "id": "batch02-serenity-therapeutic-massage-and-beauty-",
     "publicKey": "batch02_serenity_therapeutic_massage_and_beauty_ltd",
     "businessName": "SERENITY THERAPEUTIC MASSAGE AND BEAUTY LTD",
-    "tagline": "Eyelash · private website + assistant concept",
+    "tagline": "Eyelash \u00b7 private website + assistant concept",
     "logoText": "STM",
     "theme": {
       "accent": "#cc8ca3",
@@ -10951,7 +11401,7 @@
     "id": "batch02-alkemist-build-and-decorate-ltd",
     "publicKey": "batch02_alkemist_build_and_decorate_ltd",
     "businessName": "ALKEMIST BUILD AND DECORATE LTD",
-    "tagline": "Flooring · private website + assistant concept",
+    "tagline": "Flooring \u00b7 private website + assistant concept",
     "logoText": "ABA",
     "theme": {
       "accent": "#c78f58",
@@ -11121,7 +11571,7 @@
     "id": "batch02-west-seven-reclamation-ltd",
     "publicKey": "batch02_west_seven_reclamation_ltd",
     "businessName": "West Seven Reclamation Ltd",
-    "tagline": "Flooring · private website + assistant concept",
+    "tagline": "Flooring \u00b7 private website + assistant concept",
     "logoText": "WSR",
     "theme": {
       "accent": "#c78f58",
@@ -11291,7 +11741,7 @@
     "id": "batch02-discount-warehouse-totton-limited",
     "publicKey": "batch02_discount_warehouse_totton_limited",
     "businessName": "Discount Warehouse (Totton) Limited",
-    "tagline": "Flooring · private website + assistant concept",
+    "tagline": "Flooring \u00b7 private website + assistant concept",
     "logoText": "DW(",
     "theme": {
       "accent": "#c78f58",
@@ -11461,7 +11911,7 @@
     "id": "batch02-rooted-in-science-ltd",
     "publicKey": "batch02_rooted_in_science_ltd",
     "businessName": "Rooted In Science Ltd.",
-    "tagline": "Gardeners · private website + assistant concept",
+    "tagline": "Gardeners \u00b7 private website + assistant concept",
     "logoText": "RIS",
     "theme": {
       "accent": "#91b860",
@@ -11631,7 +12081,7 @@
     "id": "batch02-mps-handyman-services-ltd",
     "publicKey": "batch02_mps_handyman_services_ltd",
     "businessName": "MPS Handyman Services Ltd.",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "MHS",
     "theme": {
       "accent": "#d69b51",
@@ -11801,7 +12251,7 @@
     "id": "batch02-home-solutions-west-london-ltd",
     "publicKey": "batch02_home_solutions_west_london_ltd",
     "businessName": "Home Solutions West London Ltd",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "HSW",
     "theme": {
       "accent": "#d69b51",
@@ -11971,7 +12421,7 @@
     "id": "batch02-acton-handyman-services-ltd",
     "publicKey": "batch02_acton_handyman_services_ltd",
     "businessName": "Acton Handyman Services Ltd",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "AHS",
     "theme": {
       "accent": "#d69b51",
@@ -12141,7 +12591,7 @@
     "id": "batch02-yourshandyman-ltd",
     "publicKey": "batch02_yourshandyman_ltd",
     "businessName": "YoursHandyMan Ltd.",
-    "tagline": "Handyman · private website + assistant concept",
+    "tagline": "Handyman \u00b7 private website + assistant concept",
     "logoText": "YL",
     "theme": {
       "accent": "#d69b51",
@@ -12311,7 +12761,7 @@
     "id": "batch02-stone-street-developments-limited",
     "publicKey": "batch02_stone_street_developments_limited",
     "businessName": "STONE STREET DEVELOPMENTS LIMITED",
-    "tagline": "Kitchen Fitters · private website + assistant concept",
+    "tagline": "Kitchen Fitters \u00b7 private website + assistant concept",
     "logoText": "SSD",
     "theme": {
       "accent": "#c49a6c",
@@ -12481,7 +12931,7 @@
     "id": "batch02-best-van-man-ltd",
     "publicKey": "batch02_best_van_man_ltd",
     "businessName": "Best Van & Man Ltd",
-    "tagline": "Man And Van · private website + assistant concept",
+    "tagline": "Man And Van \u00b7 private website + assistant concept",
     "logoText": "BV&",
     "theme": {
       "accent": "#cf8b48",
@@ -12651,7 +13101,7 @@
     "id": "batch02-s-h-nail-ltd",
     "publicKey": "batch02_s_h_nail_ltd",
     "businessName": "S&H NAIL LTD",
-    "tagline": "Nail Technicians · private website + assistant concept",
+    "tagline": "Nail Technicians \u00b7 private website + assistant concept",
     "logoText": "SNL",
     "theme": {
       "accent": "#cc8ca3",
@@ -12821,7 +13271,7 @@
     "id": "batch02-finchley-road-builders-ltd",
     "publicKey": "batch02_finchley_road_builders_ltd",
     "businessName": "Finchley Road Builders Ltd",
-    "tagline": "Painters Decorators · private website + assistant concept",
+    "tagline": "Painters Decorators \u00b7 private website + assistant concept",
     "logoText": "FRB",
     "theme": {
       "accent": "#a590d2",
@@ -12991,7 +13441,7 @@
     "id": "batch02-dream-decor-limited",
     "publicKey": "batch02_dream_decor_limited",
     "businessName": "Dream Decor Limited",
-    "tagline": "Painters Decorators · private website + assistant concept",
+    "tagline": "Painters Decorators \u00b7 private website + assistant concept",
     "logoText": "DDL",
     "theme": {
       "accent": "#a590d2",
@@ -13161,7 +13611,7 @@
     "id": "batch02-mc-electrician-ltd",
     "publicKey": "batch02_mc_electrician_ltd",
     "businessName": "MC Electrician LTD",
-    "tagline": "Painters Decorators · private website + assistant concept",
+    "tagline": "Painters Decorators \u00b7 private website + assistant concept",
     "logoText": "MEL",
     "theme": {
       "accent": "#a590d2",
@@ -13331,7 +13781,7 @@
     "id": "batch02-sterling-albion-roofing-services-ltd",
     "publicKey": "batch02_sterling_albion_roofing_services_ltd",
     "businessName": "Sterling Albion roofing services ltd",
-    "tagline": "Roofers · private website + assistant concept",
+    "tagline": "Roofers \u00b7 private website + assistant concept",
     "logoText": "SAR",
     "theme": {
       "accent": "#d98b4b",
@@ -13501,7 +13951,7 @@
     "id": "batch02-nfrc-harding-roofing-ltd-kensal-rise-lon",
     "publicKey": "batch02_nfrc_harding_roofing_ltd_kensal_rise_london",
     "businessName": "Nfrc Harding Roofing Ltd - Kensal Rise London",
-    "tagline": "Roofers · private website + assistant concept",
+    "tagline": "Roofers \u00b7 private website + assistant concept",
     "logoText": "NHR",
     "theme": {
       "accent": "#d98b4b",
@@ -13671,7 +14121,7 @@
     "id": "batch02-weatherarmour-roofing-ltd",
     "publicKey": "batch02_weatherarmour_roofing_ltd",
     "businessName": "WeatherArmour Roofing LTD",
-    "tagline": "Roofers · private website + assistant concept",
+    "tagline": "Roofers \u00b7 private website + assistant concept",
     "logoText": "WRL",
     "theme": {
       "accent": "#d98b4b",
