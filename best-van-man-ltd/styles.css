@@ -7,3 +7,8 @@ header,.home-hero,main>.hero,main>.cards,main>.copy{max-width:var(--site-max);ma
 main>.form{width:min(56.25rem,calc(100% - (2 * var(--site-gutter))));margin-left:max(var(--site-gutter),calc((100% - var(--site-max))/2 + var(--site-gutter)));margin-right:var(--site-gutter)}
 footer{padding-left:var(--site-gutter);padding-right:var(--site-gutter)}
 @media(max-width:42rem){main>.form{margin-left:var(--site-gutter);margin-right:var(--site-gutter)}}
+
+/* Keep the footer at the viewport bottom on short pages without fixing it over content. */
+body{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+main{flex:1 0 auto}
+footer{margin-top:auto;flex:none}
