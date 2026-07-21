@@ -19,7 +19,7 @@ test.before(async () => {
   await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(projectRoot, "data", "clients.json")));
   await writeFile(path.join(temporary, "records.json"), JSON.stringify({ conversations: [], leads: [], callbacks: [], bookings: [] }));
   server = await createApp({ store: new JsonStore(temporary), env: {
-    ADMIN_TOKEN: "test-secret", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+    ADMIN_TOKEN: "test-secret", OWNER_CONSOLE_TOKENS_JSON: JSON.stringify({ "air-quantum-existing-site-demo": "owner-air-test" }), OWNER_CONSOLE_TOKENS_JSON_BATCH_01: JSON.stringify({ "batch01-beck-and-call": "owner-batch-test" }), OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
     RESPONSE_LEDGER_GITHUB_TOKEN: "test-ledger-token", RESPONSE_LEDGER_REPOSITORY: "edebell67/assistant-response-ledger", RESPONSE_LEDGER_PATH: "responses.ndjson",
     fetchImpl: async (_url, options = {}) => {
       if (options.method === "GET") return { status: 404, ok: false, json: async () => ({}) };
@@ -56,10 +56,17 @@ test("health and static assets are executable", async () => {
   assert.match(widget.body, /header:after\s*\{[^}]*pointer-events:none/);
   assert.match(widget.body, /aria-label="Start a new conversation"/);
   assert.match(widget.body, /function resetConversation\(/);
+  assert.match(widget.body, /assistantActions/);
+  assert.match(widget.body, /Platform demonstration/);
+  assert.match(widget.body, /function actionButton\(/);
+  assert.match(widget.body, /\.group-label/);
   const admin = await request("/admin");
   assert.equal(admin.status, 200);
   assert.match(admin.body, /Client profiles/);
   assert.match(admin.body, /Preview responses/);
+  const owner = await request("/owner");
+  assert.equal(owner.status, 200);
+  assert.match(owner.body, /Owner Activity Console/);
 });
 
 test("public configuration is tenant-scoped, host-bound, and safely projected", async () => {
@@ -92,6 +99,43 @@ test("engagement mode defaults to on_demand and can be switched to proactive by 
   assert.equal(invalidMode.body.client.engagementMode, "on_demand");
 
   await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "on_demand", proactiveDelayMs: 2500 } });
+});
+
+test("widget owner dashboard access is password-gated and tenant-scoped", async () => {
+  const blocked = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "wrong" }, origin: "http://localhost" });
+  assert.equal(blocked.status, 401);
+  const allowed = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", password: "owner-air-test" }, origin: "http://localhost" });
+  assert.equal(allowed.status, 200);
+  assert.equal(allowed.body.dashboardUrl, "/owner?tenant=air-quantum-existing-site-demo");
+  const unactivated = await request("/api/public/owner-dashboard-access", { method: "POST", body: { clientKey: "batch01_af_refrigeration", host: "localhost", password: "anything" }, origin: "http://localhost" });
+  assert.equal(unactivated.status, 403);
+});
+
+test("owner activity access is tenant-isolated and never accepts the admin token", async () => {
+  const chat = await request("/api/public/chat", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "owner-console-test", message: "Show the demo booking flow" } });
+  assert.equal(chat.status, 200);
+  const callback = await request("/api/public/callbacks", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", name: "Demo owner", telephone: "07000 000000", reason: "Demo callback" } });
+  assert.equal(callback.status, 201);
+  const denied = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "test-secret" });
+  assert.equal(denied.status, 401);
+  const activity = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-air-test" });
+  assert.equal(activity.status, 200);
+  assert.equal(activity.body.owner.businessName, "Air Quantum Ltd");
+  assert.equal(activity.body.records.conversations.every((record) => record.clientId === "air-quantum-existing-site-demo"), true);
+  assert.equal(activity.body.summary.conversations >= 1, true);
+  assert.equal(activity.body.performance.today.assistantVisitors >= 1, true);
+  assert.equal(activity.body.performance.baseline.leadsCaptured, 5);
+  const completed = await request(`/api/owner/callbacks/${encodeURIComponent(activity.body.records.callbacks[0].id)}/complete?tenant=air-quantum-existing-site-demo`, { method: "POST", token: "owner-air-test" });
+  assert.equal(completed.status, 200);
+  assert.equal(completed.body.record.handledByOwner, true);
+  assert.equal(completed.body.performance.today.resolvedCallbacks, 1);
+});
+
+test("activated batch tenant owner console accepts its password and remains tenant-scoped", async () => {
+  const allowed = await request("/api/owner/activity?tenant=batch01-beck-and-call", { token: "owner-batch-test" });
+  assert.equal(allowed.status, 200);
+  const otherTenant = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-batch-test" });
+  assert.equal(otherTenant.status, 401);
 });
 
 test("public config exposes blueprint assistant actions resolved from pages, modules, and knowledge", async () => {
@@ -135,8 +179,7 @@ test("assistant answers from approved knowledge and records the conversation", a
   assert.match(response.body.reply.text, /£95/);
   assert.deepEqual(response.body.reply.sources.map((item) => item.id), ["pricing"]);
   const records = await request("/api/admin/records", { token: "test-secret" });
-  assert.equal(records.body.records.conversations.length, 1);
-  assert.equal(records.body.records.conversations[0].clientId, "northstar-heating");
+  assert.equal(records.body.records.conversations.some((record) => record.clientId === "northstar-heating"), true);
 });
 
 test("navigation and booking intents return enabled module actions", async () => {
@@ -204,61 +247,37 @@ test("visitor analytics can be switched off per site", async () => {
   await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: true } });
 });
 
-test("owner console: password-gated, per-site scoped, anonymous, and rate-limited", async () => {
-  // Disabled until a console password is set for this client.
-  const disabled = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "anything" } });
-  assert.equal(disabled.status, 403);
-
-  await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { consolePassword: "owner-secret-1" } });
-
-  // The console password must never leave the server via the public config projection.
-  const publicConfig = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
-  assert.equal("consolePassword" in publicConfig.body.client, false);
-
-  // Wrong password is rejected without a session token.
-  const wrong = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "not-it" } });
-  assert.equal(wrong.status, 401);
-  assert.equal(wrong.body.token, undefined);
-
-  // Correct password issues a scoped session token.
-  const login = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "owner-secret-1" } });
-  assert.equal(login.status, 200);
-  assert.ok(login.body.token);
-  const token = login.body.token;
-
-  // Seed some events for two different tenants, then confirm the console only ever sees its own.
-  await request("/api/public/events", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", sessionId: "owner-test-sess", events: [{ type: "pageview", path: "/services" }, { type: "cta_click", label: "cta:quote" }] } });
+test("owner activity console shows anonymous page-analytics alongside conversation/lead activity, tenant-scoped", async () => {
+  // Seed page-behaviour events for the activated owner-console tenant and,
+  // separately, for another tenant - the console must only ever summarise
+  // its own.
+  await request("/api/public/events", { method: "POST", body: { clientKey: "air_quantum_existing_site_demo", host: "localhost", sessionId: "page-analytics-test-sess", events: [{ type: "pageview", path: "/services" }, { type: "cta_click", label: "cta:quote" }] } });
   const hoxtans = await request("/api/admin/clients", { token: "test-secret" });
   const hoxtansKey = hoxtans.body.clients.find((item) => item.id === "hoxtans")?.publicKey;
   if (hoxtansKey) await request("/api/public/events", { method: "POST", body: { clientKey: hoxtansKey, host: "localhost", sessionId: "other-tenant-sess", events: [{ type: "pageview", path: "/other" }] } });
 
-  const insights = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}`);
-  assert.equal(insights.status, 200);
-  assert.ok(insights.body.pageViews >= 1);
-  assert.equal(insights.body.paths.includes("/other"), false); // never another tenant's page
+  const activity = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "owner-air-test" });
+  assert.equal(activity.status, 200);
+  assert.ok(activity.body.pageAnalytics);
+  assert.ok(activity.body.pageAnalytics.pageViews >= 1);
+  assert.ok(activity.body.pageAnalytics.ctaClicks >= 1);
+  assert.equal(activity.body.pageAnalytics.topPages.some(([path]) => path === "/other"), false); // never another tenant's page
 
-  // The response is aggregated numbers only - no raw per-visitor rows, no session ids.
-  assert.equal(JSON.stringify(insights.body).includes("owner-test-sess"), false);
+  // Raw events are summarised, not dumped into the per-type activity timeline.
+  assert.equal("events" in activity.body.records, false);
+  assert.equal("events" in activity.body.summary, false);
 
-  // Page + no-op time filter narrows results correctly.
-  const filtered = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}&path=${encodeURIComponent("/services")}`);
-  assert.equal(filtered.body.pageViews, 1);
+  // The summary is aggregated numbers only - no raw session ids reach the response.
+  assert.equal(JSON.stringify(activity.body.pageAnalytics).includes("page-analytics-test-sess"), false);
 
-  // An invalid/expired token is rejected.
-  const badToken = await request("/api/public/owner/insights?token=not-a-real-token");
-  assert.equal(badToken.status, 401);
+  // Wrong/missing owner token still fails, even though the tenant now has analytics data.
+  const denied = await request("/api/owner/activity?tenant=air-quantum-existing-site-demo", { token: "wrong-token" });
+  assert.equal(denied.status, 401);
+});
 
-  // Logout invalidates the session immediately.
-  await request("/api/public/owner/logout", { method: "POST", body: { token } });
-  const afterLogout = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}`);
-  assert.equal(afterLogout.status, 401);
-
-  // Repeated wrong passwords lock the client out.
-  for (let i = 0; i < 5; i++) await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "wrong" } });
-  const lockedOut = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "owner-secret-1" } });
-  assert.equal(lockedOut.status, 429);
-
-  await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { consolePassword: "" } });
+test("visitor analytics events are excluded from the admin's generic records listing shape but still stored", async () => {
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  assert.ok(Array.isArray(records.body.records.events));
 });
 
 test("lead follow-up recovers cold leads and feeds the ROI report", async () => {

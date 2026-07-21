@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hartley's Barber &amp; Hair Studio | Barbering &amp; Hair Styling</title>
+  <meta name="description" content="Sample demo template for a barbershop and hair studio — classic cuts, fades, hot towel shaves, colour and styling.">
+  <meta name="robots" content="noindex,nofollow">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="site-wrapper">
+    <header class="navbar" role="banner">
+      <div class="container">
+        <a href="index.html" class="brand">
+          <span class="brand-name">Hartley's</span>
+          <span class="brand-tagline">Barber &amp; Hair Studio</span>
+        </a>
+        <nav class="nav" aria-label="Main Navigation">
+          <a href="#services">Services</a>
+          <a href="#barbering">Barbering</a>
+          <a href="#styling">Hair Styling</a>
+          <a href="gallery.html">Gallery</a>
+          <a href="#contact" class="nav-button">Book Now</a>
+        </nav>
+        <button class="nav-toggle" id="navToggle" aria-label="Open menu">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+      </div>
+    </header>
+
+    <div class="mobile-drawer" id="mobileDrawer">
+      <div class="mobile-drawer-top">
+        <span class="brand-name" style="color:var(--stone)">Hartley's</span>
+        <button class="drawer-close" id="drawerClose" aria-label="Close menu">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </button>
+      </div>
+      <nav>
+        <a href="#services">Services</a>
+        <a href="#barbering">Barbering</a>
+        <a href="#styling">Hair Styling</a>
+        <a href="gallery.html">Gallery</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <div class="mobile-drawer-footer">
+        <a href="#contact" class="button button-primary" style="width:100%;justify-content:center">Book Now</a>
+      </div>
+    </div>
+
+    <main>
+      <!-- Hero -->
+      <section class="hero reveal">
+        <div class="container hero-grid">
+          <div class="hero-content">
+            <span class="eyebrow">Clapham, London · Sample Template</span>
+            <h1>Sharp Cuts, <span class="accent">Every Chair</span>.</h1>
+            <p class="hero-description">
+              Classic barbering and modern hair styling under one roof — fades, hot towel shaves,
+              colour and blow-dry, for every walk of the high street.
+            </p>
+            <div class="hero-actions">
+              <a href="tel:02079245581" class="button button-primary">Call 020 7924 5581</a>
+              <a href="#services" class="button button-secondary">View Services</a>
+            </div>
+            <div class="hero-trust">
+              <span class="trust-pill">Walk-ins welcome</span>
+              <span class="trust-pill">Evening appointments</span>
+              <span class="trust-pill">Local to Clapham</span>
+            </div>
+          </div>
+          <div class="hero-image-wrapper">
+            <img src="https://images.unsplash.com/photo-1621645582931-d1d3e6564943?auto=format&fit=crop&q=80&w=900" alt="Black and silver barber chair">
+          </div>
+        </div>
+      </section>
+
+      <!-- Services menu -->
+      <section id="services" class="section section--surface">
+        <div class="container">
+          <div class="section-header reveal">
+            <span class="eyebrow">What We Offer</span>
+            <h2>Barbering &amp; Styling, One Studio</h2>
+            <p>Every chair booked in minutes, walk-ins fitted in where we can.</p>
+          </div>
+          <div class="service-menu">
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Classic Haircut</h3>
+                <p>A clean, classic cut for any style, finished with a wash and dry.</p>
+              </div>
+              <span class="service-price">From £22</span>
+            </article>
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Skin Fade &amp; Tidy-Up</h3>
+                <p>Precision skin or scissor fade, edged and finished sharp.</p>
+              </div>
+              <span class="service-price">From £26</span>
+            </article>
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Beard Trim &amp; Hot Towel Shave</h3>
+                <p>Traditional hot towel shave and beard shaping with a straight razor finish.</p>
+              </div>
+              <span class="service-price">From £18</span>
+            </article>
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Cut &amp; Blow-Dry</h3>
+                <p>Full consultation, cut and professional blow-dry finish.</p>
+              </div>
+              <span class="service-price">From £35</span>
+            </article>
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Colour &amp; Highlights</h3>
+                <p>Full colour, root touch-up or highlights with a senior colourist.</p>
+              </div>
+              <span class="service-price">From £65</span>
+            </article>
+            <article class="service-item reveal">
+              <div class="service-info">
+                <h3>Kids' Cut</h3>
+                <p>Relaxed, friendly cuts for younger clients, any style.</p>
+              </div>
+              <span class="service-price">From £16</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Barbering / Styling split -->
+      <section class="section section--dim">
+        <div class="container">
+          <div class="split-grid">
+            <article id="barbering" class="split-item">
+              <div class="split-copy">
+                <span class="eyebrow">Classic Barbering</span>
+                <h2>Fades, Shaves &amp; Beard Work</h2>
+                <p>Traditional barbering with modern precision — every fade edged clean and every shave finished with a hot towel.</p>
+                <ul class="feature-list">
+                  <li>Skin &amp; Scissor Fades</li>
+                  <li>Hot Towel Shaves</li>
+                  <li>Beard Shaping &amp; Trims</li>
+                  <li>Walk-Ins Welcome</li>
+                </ul>
+              </div>
+              <div class="split-image">
+                <img src="https://images.unsplash.com/photo-1517832606299-7ae9b720a186?auto=format&fit=crop&q=80&w=900" alt="Barber clipping a client's beard">
+              </div>
+            </article>
+
+            <article id="styling" class="split-item reverse">
+              <div class="split-copy">
+                <span class="eyebrow">Hair Styling</span>
+                <h2>Cut, Colour &amp; Style</h2>
+                <p>From a quick blow-dry to a full colour transformation, our stylists work with every hair type and occasion.</p>
+                <ul class="feature-list">
+                  <li>Cut &amp; Blow-Dry</li>
+                  <li>Colour &amp; Highlights</li>
+                  <li>Special Occasion Styling</li>
+                  <li>Consultation Included</li>
+                </ul>
+              </div>
+              <div class="split-image">
+                <img src="https://images.unsplash.com/photo-1695527081848-1e46c06e6458?auto=format&fit=crop&q=80&w=900" alt="Woman getting her hair styled in a salon">
+              </div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- Gallery preview -->
+      <section class="section section--surface">
+        <div class="container">
+          <div class="section-header reveal">
+            <span class="eyebrow">The Studio</span>
+            <h2>Take A Look Inside</h2>
+          </div>
+          <div class="gallery-strip">
+            <div class="gallery-strip-item reveal">
+              <img src="https://images.unsplash.com/photo-1536520002442-39764a41e987?auto=format&fit=crop&q=80&w=700" alt="Salon interior with pendant lamps">
+            </div>
+            <div class="gallery-strip-item reveal">
+              <img src="https://images.unsplash.com/photo-1626383137804-ff908d2753a2?auto=format&fit=crop&q=80&w=700" alt="Woman standing near black leather salon chairs">
+            </div>
+            <div class="gallery-strip-item reveal">
+              <img src="https://images.unsplash.com/photo-1637777277337-f114350fb088?auto=format&fit=crop&q=80&w=700" alt="Hair salon with neon signage">
+            </div>
+            <div class="gallery-strip-item reveal">
+              <img src="https://images.unsplash.com/photo-1776850476481-2bccba2e35c7?auto=format&fit=crop&q=80&w=700" alt="Barbers cutting hair in a modern salon">
+            </div>
+          </div>
+          <div class="gallery-cta-row reveal">
+            <a href="gallery.html" class="button button-secondary">View Full Gallery</a>
+          </div>
+        </div>
+      </section>
+
+      <!-- Why -->
+      <section class="section section--dark">
+        <div class="container">
+          <div class="section-header reveal">
+            <span class="eyebrow">Why Hartley's</span>
+            <h2>One Studio, Every Style</h2>
+          </div>
+          <div class="why-grid">
+            <div class="why-card reveal">
+              <span class="why-mark">01</span>
+              <h3>Walk-ins welcome</h3>
+              <p>No booking needed for most cuts — just come in.</p>
+            </div>
+            <div class="why-card reveal">
+              <span class="why-mark">02</span>
+              <h3>Fully qualified stylists</h3>
+              <p>Every barber and stylist trained and experienced.</p>
+            </div>
+            <div class="why-card reveal">
+              <span class="why-mark">03</span>
+              <h3>Evening appointments</h3>
+              <p>Open late for anyone who can't make a daytime slot.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Contact -->
+      <section id="contact" class="contact-cta">
+        <div class="container cta-box reveal">
+          <h2>Ready for your next cut?</h2>
+          <p>Call ahead to book, or walk in and we'll fit you in where we can.</p>
+          <div class="cta-actions">
+            <a href="tel:02079245581" class="button button-primary large">Call 020 7924 5581</a>
+            <a href="mailto:book@hartleyshair.co.uk" class="button button-secondary large">Email Us</a>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer" role="contentinfo">
+      <div class="container footer-grid">
+        <div class="footer-brand">
+          <span class="brand-name">Hartley's Barber &amp; Hair Studio</span>
+          <p style="margin-top:8px">68 Venn Street<br>Clapham, London SW4 0AT</p>
+        </div>
+        <div class="footer-col">
+          <h4>Get In Touch</h4>
+          <p><a href="tel:02079245581">020 7924 5581</a></p>
+          <p><a href="mailto:book@hartleyshair.co.uk">book@hartleyshair.co.uk</a></p>
+        </div>
+        <div class="footer-col">
+          <div class="tech-badge">
+            <span class="tech-icon">✓</span>
+            <div class="tech-text">
+              <strong>Modern Web Standard</strong>
+              <span>Optimized for Speed &amp; Mobile</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="container">
+          <p>&copy; 2026 Hartley's Barber &amp; Hair Studio. Sample template — barber &amp; hair demo.</p>
+        </div>
+      </div>
+      <p class="sample-note">Business name, address, phone and prices are sample placeholders for this reusable template — replace with real details per client.</p>
+    </footer>
+  </div>
+
+  <div class="mobile-actionbar">
+    <a href="tel:02079245581" class="primary">Call</a>
+    <a href="#contact">Book</a>
+    <a href="gallery.html">Gallery</a>
+    <a href="mailto:book@hartleyshair.co.uk">Email</a>
+  </div>
+
+  <script src="reveal.js"></script>
+  <script src="assistant-embed.js?v=20260716-hartleys-autostart2"></script>
+  <script>
+    (function () {
+      const toggle = document.getElementById('navToggle');
+      const drawer = document.getElementById('mobileDrawer');
+      const close = document.getElementById('drawerClose');
+      toggle?.addEventListener('click', () => drawer.classList.add('open'));
+      close?.addEventListener('click', () => drawer.classList.remove('open'));
+      drawer?.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => drawer.classList.remove('open')));
+    })();
+  </script>
+</body>
+</html>

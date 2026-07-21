@@ -25,7 +25,6 @@ tokenInput.value = sessionStorage.getItem("assistant_admin_token") || "change-me
 $("#connect").addEventListener("click", connect);
 $("#client-form").addEventListener("submit", saveClient);
 $("#duplicate").addEventListener("click", duplicateClient);
-$("#set-console-password").addEventListener("click", setConsolePassword);
 $("#new-client").addEventListener("click", createClient);
 $("#add-knowledge").addEventListener("click", () => addKnowledgeRow({ title: "", content: "" }));
 $("#add-deployment").addEventListener("click", () => addDeploymentRow({}));
@@ -74,8 +73,6 @@ function selectClient(id) {
   setValue(form, "businessName", client.businessName); setValue(form, "tagline", client.tagline); setValue(form, "allowedHosts", client.allowedHosts.join(", ")); setValue(form, "status", client.status);
   setValue(form, "engagementMode", client.engagementMode || "on_demand"); setValue(form, "proactiveDelayMs", client.proactiveDelayMs ?? 2500);
   setValue(form, "analyticsEnabled", String(client.analyticsEnabled !== false));
-  $("#console-status").textContent = client.consolePassword ? "Enabled" : "Disabled";
-  $("#console-status").classList.toggle("on", Boolean(client.consolePassword));
   setValue(form, "leadFollowupDelayMs", client.leadFollowupDelayMs ?? 7200000); setValue(form, "averageJobValue", client.averageJobValue ?? 0);
   setValue(form, "logoText", client.logoText); setValue(form, "accent", client.theme?.accent || "#e85d3f"); setValue(form, "ink", client.theme?.ink || "#17211f"); setValue(form, "surface", client.theme?.surface || "#f5f0e7");
   setValue(form, "telephone", client.contact?.telephone); setValue(form, "email", client.contact?.email); setValue(form, "address", client.contact?.address); setValue(form, "openingHours", client.contact?.openingHours);
@@ -166,20 +163,6 @@ async function duplicateClient() {
   if (!state.selected) return;
   try { const { client } = await api(`/api/admin/clients/${encodeURIComponent(state.selected.id)}/duplicate`, { method:"POST" }); state.clients.push(client); $("#client-count").textContent = state.clients.length; selectClient(client.id); toast("Demo copy created"); }
   catch (error) { toast(error.message); }
-}
-
-async function setConsolePassword() {
-  if (!state.selected) return;
-  const current = state.selected.consolePassword ? "enabled" : "disabled";
-  const value = prompt(`New console password for ${state.selected.businessName} (currently ${current}).\nLeave blank to disable the owner console for this site.`);
-  if (value === null) return; // cancelled
-  try {
-    const { client } = await api(`/api/admin/clients/${encodeURIComponent(state.selected.id)}`, { method: "PUT", body: JSON.stringify({ consolePassword: value }) });
-    const index = state.clients.findIndex((item) => item.id === client.id); state.clients[index] = client; state.selected = client;
-    $("#console-status").textContent = client.consolePassword ? "Enabled" : "Disabled";
-    $("#console-status").classList.toggle("on", Boolean(client.consolePassword));
-    toast(value ? "Console password set" : "Console disabled for this site");
-  } catch (error) { toast(error.message); }
 }
 
 async function createClient() {
