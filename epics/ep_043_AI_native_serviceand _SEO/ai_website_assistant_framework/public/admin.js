@@ -25,6 +25,7 @@ tokenInput.value = sessionStorage.getItem("assistant_admin_token") || "change-me
 $("#connect").addEventListener("click", connect);
 $("#client-form").addEventListener("submit", saveClient);
 $("#duplicate").addEventListener("click", duplicateClient);
+$("#set-console-password").addEventListener("click", setConsolePassword);
 $("#new-client").addEventListener("click", createClient);
 $("#add-knowledge").addEventListener("click", () => addKnowledgeRow({ title: "", content: "" }));
 $("#add-deployment").addEventListener("click", () => addDeploymentRow({}));
@@ -73,6 +74,8 @@ function selectClient(id) {
   setValue(form, "businessName", client.businessName); setValue(form, "tagline", client.tagline); setValue(form, "allowedHosts", client.allowedHosts.join(", ")); setValue(form, "status", client.status);
   setValue(form, "engagementMode", client.engagementMode || "on_demand"); setValue(form, "proactiveDelayMs", client.proactiveDelayMs ?? 2500);
   setValue(form, "analyticsEnabled", String(client.analyticsEnabled !== false));
+  $("#console-status").textContent = client.consolePassword ? "Enabled" : "Disabled";
+  $("#console-status").classList.toggle("on", Boolean(client.consolePassword));
   setValue(form, "leadFollowupDelayMs", client.leadFollowupDelayMs ?? 7200000); setValue(form, "averageJobValue", client.averageJobValue ?? 0);
   setValue(form, "logoText", client.logoText); setValue(form, "accent", client.theme?.accent || "#e85d3f"); setValue(form, "ink", client.theme?.ink || "#17211f"); setValue(form, "surface", client.theme?.surface || "#f5f0e7");
   setValue(form, "telephone", client.contact?.telephone); setValue(form, "email", client.contact?.email); setValue(form, "address", client.contact?.address); setValue(form, "openingHours", client.contact?.openingHours);
@@ -165,6 +168,20 @@ async function duplicateClient() {
   catch (error) { toast(error.message); }
 }
 
+async function setConsolePassword() {
+  if (!state.selected) return;
+  const current = state.selected.consolePassword ? "enabled" : "disabled";
+  const value = prompt(`New console password for ${state.selected.businessName} (currently ${current}).\nLeave blank to disable the owner console for this site.`);
+  if (value === null) return; // cancelled
+  try {
+    const { client } = await api(`/api/admin/clients/${encodeURIComponent(state.selected.id)}`, { method: "PUT", body: JSON.stringify({ consolePassword: value }) });
+    const index = state.clients.findIndex((item) => item.id === client.id); state.clients[index] = client; state.selected = client;
+    $("#console-status").textContent = client.consolePassword ? "Enabled" : "Disabled";
+    $("#console-status").classList.toggle("on", Boolean(client.consolePassword));
+    toast(value ? "Console password set" : "Console disabled for this site");
+  } catch (error) { toast(error.message); }
+}
+
 async function createClient() {
   const businessName = prompt("Business name"); if (!businessName) return;
   try {
@@ -187,14 +204,58 @@ function renderInsightsPicker() {
   select.replaceChildren();
   for (const client of state.clients) { const option = document.createElement("option"); option.value = client.id; option.textContent = client.businessName; select.append(option); }
   if (current) select.value = current;
-  select.onchange = renderInsights;
-  if (select.value) renderInsights();
+  select.onchange = () => { populateInsightsPageFilter(); renderInsights(); };
+  $("#insights-from").onchange = renderInsights;
+  $("#insights-to").onchange = renderInsights;
+  $("#insights-page-filter").onchange = renderInsights;
+  $("#insights-clear-filter").onclick = () => {
+    $("#insights-from").value = ""; $("#insights-to").value = ""; $("#insights-page-filter").value = "";
+    renderInsights();
+  };
+  if (select.value) { populateInsightsPageFilter(); renderInsights(); }
+}
+
+function populateInsightsPageFilter() {
+  const clientId = $("#insights-client-select").value;
+  const paths = [...new Set((state.records.events || [])
+    .filter((e) => e.clientId === clientId && e.type === "pageview" && e.path)
+    .map((e) => e.path))].sort();
+  const select = $("#insights-page-filter");
+  const current = select.value;
+  select.replaceChildren();
+  const all = document.createElement("option"); all.value = ""; all.textContent = "All pages"; select.append(all);
+  for (const path of paths) { const option = document.createElement("option"); option.value = path; option.textContent = path; select.append(option); }
+  if (paths.includes(current)) select.value = current;
 }
 
 function renderInsights() {
   const clientId = $("#insights-client-select").value;
-  const events = (state.records.events || []).filter((e) => e.clientId === clientId);
-  const enquiries = [...(state.records.leads || []), ...(state.records.callbacks || [])].filter((r) => r.clientId === clientId);
+  const fromValue = $("#insights-from").value;   // "" or "YYYY-MM-DDTHH:mm" (local time)
+  const toValue = $("#insights-to").value;
+  const pageFilter = $("#insights-page-filter").value;
+  const fromMs = fromValue ? new Date(fromValue).getTime() : null;
+  const toMs = toValue ? new Date(toValue).getTime() : null;
+  const inRange = (record) => {
+    const t = new Date(record.createdAt).getTime();
+    if (fromMs !== null && t < fromMs) return false;
+    if (toMs !== null && t > toMs) return false;
+    return true;
+  };
+
+  let events = (state.records.events || []).filter((e) => e.clientId === clientId).filter(inRange);
+  if (pageFilter) events = events.filter((e) => e.path === pageFilter);
+  const enquiries = [...(state.records.leads || []), ...(state.records.callbacks || [])].filter((r) => r.clientId === clientId).filter(inRange);
+
+  const summary = $("#insights-filter-summary");
+  if (pageFilter || fromValue || toValue) {
+    const views = events.filter((e) => e.type === "pageview").length;
+    const label = pageFilter || "All pages";
+    const fromLabel = fromValue ? new Date(fromValue).toLocaleString() : "the earliest record";
+    const toLabel = toValue ? new Date(toValue).toLocaleString() : "now";
+    summary.textContent = `${label}: ${views} page view${views === 1 ? "" : "s"} between ${fromLabel} and ${toLabel}.`;
+  } else {
+    summary.textContent = "";
+  }
 
   const sessions = new Set(events.map((e) => e.sessionId).filter(Boolean));
   const pageviews = events.filter((e) => e.type === "pageview").length;

@@ -18,7 +18,7 @@
       return id;
     } catch { return crypto.randomUUID(); }
   })();
-  const state = { client: null, open: false, sessionId: sharedSessionId, history: [], proactive: false };
+  const state = { client: null, open: false, sessionId: sharedSessionId, history: [], proactive: false, owner: null };
   const declinedKey = `aiw-declined-${clientKey}`;
   const NEGATIVE_REPLY = /^(no|nah|nope|no\s*thanks?|no\s*thank\s*you|not\s*now|not\s*interested|not\s*right\s*now|i'?m\s*(good|fine|ok|okay)|no\s*need|leave\s*me\s*alone|go\s*away|maybe\s*later|later)\b/i;
 
@@ -40,6 +40,8 @@
     .mark { width:40px;height:40px;border-radius:12px;background:var(--accent);display:grid;place-items:center;font-family:Georgia,serif;font-weight:700;letter-spacing:-1px; }
     h2 { margin:0;font:700 17px/1.1 Georgia,serif;letter-spacing:-.2px; }
     .status { margin:4px 0 0;font-size:11px;color:#d8dfdc;letter-spacing:.03em; }
+    .console-toggle { position:absolute;right:112px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:#ffffffb0;font-size:13px;line-height:1; }
+    .console-toggle:hover { background:#ffffff2b;color:white; }
     .home { position:absolute;right:54px;top:14px;border:1px solid #ffffff42;border-radius:999px;background:#ffffff12;color:white;padding:7px 10px;font-size:10px;font-weight:700; }
     .home:hover { background:#ffffff2b; }
     .close { position:absolute;right:14px;top:14px;width:32px;height:32px;border:0;border-radius:50%;background:#ffffff12;color:white;font-size:22px;line-height:1; }
@@ -74,6 +76,33 @@
     .demo-receipt code { font:700 10px/1.2 monospace;color:var(--accent); }
     .demo-receipt span { font-size:10px;line-height:1.45;color:#655f56; }
     .error { color:#a63224;font-size:11px; }
+    .console-login { padding:6px 3px 4px;display:grid;gap:12px; }
+    .console-login strong { font:700 15px Georgia,serif; }
+    .console-login label { display:grid;gap:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#6e6a62; }
+    .console-login input { border:1px solid #17211f24;border-radius:9px;padding:11px;font-size:13px;background:#fffdf8;color:var(--ink); }
+    .console-login button.primary { border:0;border-radius:9px;background:var(--ink);color:white;padding:11px;font-weight:700;font-size:12px; }
+    .console-back { background:transparent;border:0;color:var(--accent);font-size:11px;font-weight:700;text-align:left;padding:0;justify-self:start; }
+    .console { padding:2px 1px 4px; }
+    .console-filter { display:grid;gap:8px;margin-bottom:10px; }
+    .console-filter label { display:grid;gap:4px;font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:#6e6a62; }
+    .console-filter input,.console-filter select { border:1px solid #17211f24;border-radius:8px;padding:8px;font-size:11px;background:#fffdf8;color:var(--ink);width:100%; }
+    .console-filter-actions { display:flex;gap:8px; }
+    .console-filter-actions button { flex:1;border:1px solid #17211f24;background:#fffdf8;border-radius:8px;padding:8px;font-size:10px;font-weight:700;color:var(--ink); }
+    .console-filter-actions button.primary { background:var(--ink);color:white;border-color:var(--ink); }
+    .console-summary { font-size:10px;color:#6e6a62;margin:0 0 12px;min-height:12px; }
+    .console-stats { display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px; }
+    .console-stat { border:1px solid #17211f18;border-radius:10px;padding:10px;background:#fbfaf6; }
+    .console-stat strong { display:block;font:700 18px Georgia,serif; }
+    .console-stat span { font-size:8px;text-transform:uppercase;letter-spacing:.05em;color:#8a837a; }
+    .console-section-h { font:700 11px Georgia,serif;margin:14px 0 8px;text-transform:uppercase;letter-spacing:.04em;color:#6e6a62; }
+    .console-bar-row { display:grid;grid-template-columns:88px 1fr 24px;align-items:center;gap:6px;margin-bottom:5px;font-size:9px; }
+    .console-bar-label { white-space:nowrap;overflow:hidden;text-overflow:ellipsis; }
+    .console-bar-track { height:6px;background:#ece8de;border-radius:100px;overflow:hidden; }
+    .console-bar-fill { height:100%;background:var(--accent);border-radius:100px; }
+    .console-bar-val { text-align:right;color:#8a837a;font-family:monospace; }
+    .console-actions { display:flex;gap:8px;margin-top:12px; }
+    .console-actions button { flex:1;border:1px solid #17211f24;background:#fffdf8;border-radius:9px;padding:10px;font-size:11px;font-weight:700;color:var(--ink); }
+    .console-actions button.primary { background:var(--ink);color:white;border-color:var(--ink); }
     @media(max-width:520px){ :host{right:12px;bottom:12px}.panel{position:fixed;inset:10px;width:auto;height:auto;border-radius:22px}.launcher{width:58px;height:58px}.panel header{padding-top:18px} }
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   `;
@@ -142,9 +171,10 @@
     const panel = element("section", "panel");
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-label", `${client.businessName} assistant`);
-    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
+    panel.innerHTML = `<div><header><div class="brand"><div class="mark"></div><div><h2></h2><p class="status">Online · answers from approved business information</p></div></div><button class="console-toggle" aria-label="Site owner console" title="Site owner console">⚙</button><button class="home" aria-label="Start a new conversation">Home</button><button class="close" aria-label="Close assistant">×</button></header>${client.status === "demo" ? '<div class="demo">DEMONSTRATION · no live notifications are sent</div>' : ""}</div><main class="messages" aria-live="polite"></main>`;
     panel.querySelector(".mark").textContent = client.logoText || client.businessName.slice(0, 2);
     panel.querySelector("h2").textContent = client.businessName;
+    panel.querySelector(".console-toggle").addEventListener("click", () => openConsoleLogin(panel));
     panel.querySelector(".home").addEventListener("click", resetConversation);
     panel.querySelector(".close").addEventListener("click", toggle);
     const messages = panel.querySelector(".messages");
@@ -191,6 +221,185 @@
       button.addEventListener("click", () => send(action.prompt, panel));
     }
     return button;
+  }
+
+  // --- Site owner console -----------------------------------------------
+  // A hidden, password-gated view reachable from this site's own widget
+  // only. Because the widget already knows just its own clientKey, the
+  // console can never show another tenant's data - unlike the shared admin
+  // panel, no separate per-site login system had to be built for that
+  // guarantee. Shows anonymous, aggregated visitor behaviour only.
+
+  function hideComposer(panel) {
+    const form = panel.querySelector("form.composer");
+    if (form) form.style.display = "none";
+  }
+
+  function returnToChat(panel) {
+    const fresh = buildPanel();
+    panel.replaceWith(fresh);
+    fresh.querySelector("input")?.focus();
+  }
+
+  function openConsoleLogin(panel, errorMessage) {
+    hideComposer(panel);
+    const messages = panel.querySelector(".messages");
+    messages.replaceChildren();
+    const wrap = element("div", "console-login");
+    wrap.append(
+      textElement("strong", "", "Site owner console"),
+      textElement("p", "demo-note", "Enter the console password for this site to see an anonymous summary of visitor activity — no visitor is ever identified.")
+    );
+    const label = element("label"); label.append(element("span", "", "Console password"));
+    const input = document.createElement("input");
+    input.type = "password"; input.autocomplete = "off"; input.maxLength = 200;
+    label.append(input);
+    wrap.append(label);
+    const error = element("span", "error");
+    if (errorMessage) error.textContent = errorMessage;
+    wrap.append(error);
+    const submit = element("button", "primary", "Unlock console"); submit.type = "button";
+    submit.addEventListener("click", () => submitConsoleLogin(panel, input.value, submit, error));
+    input.addEventListener("keydown", (event) => { if (event.key === "Enter") submitConsoleLogin(panel, input.value, submit, error); });
+    wrap.append(submit);
+    const back = element("button", "console-back", "← Back to chat"); back.type = "button";
+    back.addEventListener("click", () => returnToChat(panel));
+    wrap.append(back);
+    messages.append(wrap);
+    input.focus();
+  }
+
+  async function submitConsoleLogin(panel, password, submit, error) {
+    if (!password) { error.textContent = "Enter the console password."; return; }
+    submit.disabled = true; error.textContent = "";
+    try {
+      const response = await fetch(`${apiBase}/api/public/owner/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientKey, host: location.hostname, password }) });
+      const payload = await response.json();
+      if (!response.ok) throw new Error(payload.error || "Incorrect password.");
+      state.owner = { token: payload.token, expiresAt: payload.expiresAt };
+      renderConsole(panel);
+    } catch (failure) {
+      error.textContent = failure.message || "Could not connect.";
+      submit.disabled = false;
+    }
+  }
+
+  async function fetchConsoleInsights(filters = {}) {
+    const params = new URLSearchParams({ clientKey, host: location.hostname, token: state.owner.token });
+    if (filters.from) params.set("from", filters.from);
+    if (filters.to) params.set("to", filters.to);
+    if (filters.path) params.set("path", filters.path);
+    const response = await fetch(`${apiBase}/api/public/owner/insights?${params.toString()}`);
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Could not load insights.");
+    return payload;
+  }
+
+  async function renderConsole(panel) {
+    hideComposer(panel);
+    const messages = panel.querySelector(".messages");
+    messages.replaceChildren(textElement("p", "demo-note", "Loading…"));
+    let data;
+    try { data = await fetchConsoleInsights(); }
+    catch (failure) {
+      if (/session|log in/i.test(failure.message || "")) { state.owner = null; openConsoleLogin(panel, failure.message); return; }
+      messages.replaceChildren(textElement("span", "error", failure.message)); return;
+    }
+    drawConsole(panel, data, {});
+  }
+
+  function consoleSummaryText(data, filters) {
+    if (!filters.from && !filters.to && !filters.path) return "";
+    const label = filters.path || "All pages";
+    const fromLabel = filters.from ? new Date(filters.from).toLocaleString() : "the earliest record";
+    const toLabel = filters.to ? new Date(filters.to).toLocaleString() : "now";
+    return `${label}: ${data.pageViews} page view${data.pageViews === 1 ? "" : "s"} between ${fromLabel} and ${toLabel}.`;
+  }
+
+  function renderBarList(rows) {
+    const el = element("div");
+    if (!rows || !rows.length) { el.append(textElement("p", "demo-note", "No data yet.")); return el; }
+    const max = rows[0][1] || 1;
+    for (const [name, n] of rows) {
+      const row = element("div", "console-bar-row");
+      row.append(textElement("span", "console-bar-label", name));
+      const track = element("div", "console-bar-track");
+      const fill = element("div", "console-bar-fill"); fill.style.width = `${Math.round((n / max) * 100)}%`;
+      track.append(fill);
+      row.append(track, textElement("span", "console-bar-val", String(n)));
+      el.append(row);
+    }
+    return el;
+  }
+
+  function drawConsole(panel, data, filters) {
+    const messages = panel.querySelector(".messages");
+    messages.replaceChildren();
+    const wrap = element("div", "console");
+
+    const filterBox = element("div", "console-filter");
+    const fromLabel = element("label"); fromLabel.append(element("span", "", "From"));
+    const fromInput = document.createElement("input"); fromInput.type = "datetime-local"; fromInput.value = filters.from || "";
+    fromLabel.append(fromInput);
+    const toLabel = element("label"); toLabel.append(element("span", "", "To"));
+    const toInput = document.createElement("input"); toInput.type = "datetime-local"; toInput.value = filters.to || "";
+    toLabel.append(toInput);
+    const pageLabel = element("label"); pageLabel.append(element("span", "", "Page"));
+    const pageSelect = document.createElement("select");
+    const allOption = document.createElement("option"); allOption.value = ""; allOption.textContent = "All pages"; pageSelect.append(allOption);
+    for (const path of data.paths || []) { const option = document.createElement("option"); option.value = path; option.textContent = path; pageSelect.append(option); }
+    pageSelect.value = filters.path || "";
+    pageLabel.append(pageSelect);
+    filterBox.append(fromLabel, toLabel, pageLabel);
+    const filterActions = element("div", "console-filter-actions");
+    const apply = element("button", "primary", "Apply"); apply.type = "button";
+    const clear = element("button", "", "Clear"); clear.type = "button";
+    filterActions.append(apply, clear);
+    filterBox.append(filterActions);
+    wrap.append(filterBox);
+
+    wrap.append(textElement("p", "console-summary", consoleSummaryText(data, filters)));
+
+    const statGrid = element("div", "console-stats");
+    const stats = [
+      ["Unique visits", data.uniqueVisits], ["Page views", data.pageViews],
+      ["Engaged visits", `${data.engagedVisits} (${data.engagedPct}%)`], ["Enquiries", data.enquiries],
+      ["Phone taps", data.phoneTaps], ["Email taps", data.emailTaps],
+      ["CTA clicks", data.ctaClicks], ["Assistant opens", data.assistantOpens],
+      ["Assistant handoffs", data.assistantHandoffs], ["Avg time on page", `${data.avgDwellSeconds}s`],
+      ["Avg scroll depth", `${data.avgScrollPct}%`]
+    ];
+    for (const [label, value] of stats) {
+      const card = element("div", "console-stat");
+      card.append(textElement("strong", "", String(value)), textElement("span", "", label));
+      statGrid.append(card);
+    }
+    wrap.append(statGrid);
+
+    wrap.append(textElement("h3", "console-section-h", "Top pages"), renderBarList(data.topPages));
+    wrap.append(textElement("h3", "console-section-h", "Event breakdown"), renderBarList(data.eventBreakdown));
+
+    const footerActions = element("div", "console-actions");
+    const logout = element("button", "", "Log out"); logout.type = "button";
+    const back = element("button", "primary", "Back to chat"); back.type = "button";
+    footerActions.append(logout, back);
+    wrap.append(footerActions);
+    messages.append(wrap);
+
+    apply.addEventListener("click", async () => {
+      const newFilters = { from: fromInput.value, to: toInput.value, path: pageSelect.value };
+      try { drawConsole(panel, await fetchConsoleInsights(newFilters), newFilters); }
+      catch (failure) { if (/session|log in/i.test(failure.message || "")) { state.owner = null; openConsoleLogin(panel, failure.message); } }
+    });
+    clear.addEventListener("click", async () => {
+      try { drawConsole(panel, await fetchConsoleInsights({}), {}); } catch { /* keep current view on transient failure */ }
+    });
+    logout.addEventListener("click", async () => {
+      try { await fetch(`${apiBase}/api/public/owner/logout`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ token: state.owner.token }) }); } catch { /* best effort */ }
+      state.owner = null;
+      returnToChat(panel);
+    });
+    back.addEventListener("click", () => returnToChat(panel));
   }
 
   async function send(message, panel) {

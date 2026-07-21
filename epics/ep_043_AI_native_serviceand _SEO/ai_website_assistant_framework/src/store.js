@@ -202,6 +202,11 @@ function normalizeClient(client) {
     demoWorkflows: client.demoWorkflows && typeof client.demoWorkflows === "object" ? client.demoWorkflows : {},
     engagementMode: ENGAGEMENT_MODES.has(client.engagementMode) ? client.engagementMode : "on_demand",
     analyticsEnabled: client.analyticsEnabled !== false,
+    // Password that unlocks the anonymous-insights console inside this
+    // client's own chat widget. Deliberately never included in
+    // publicClient()'s projection - only server.js's owner-login route may
+    // read it, so it never reaches the browser.
+    consolePassword: String(client.consolePassword || "").slice(0, 200),
     leadFollowupDelayMs: clampLeadFollowupDelay(client.leadFollowupDelayMs),
     averageJobValue: Number.isFinite(Number(client.averageJobValue)) ? Math.max(0, Number(client.averageJobValue)) : 0,
     proactiveDelayMs: clampProactiveDelay(client.proactiveDelayMs)

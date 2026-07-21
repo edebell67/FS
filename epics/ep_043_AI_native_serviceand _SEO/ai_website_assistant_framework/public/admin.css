@@ -9,3 +9,11 @@
 .insights-bar-fill{height:100%;background:var(--accent);border-radius:100px}
 .insights-bar-val{text-align:right;color:var(--muted);font-family:monospace}
 @media(max-width:760px){.insights-grid{grid-template-columns:1fr}}
+.insights-filter{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-bottom:10px}
+.insights-filter label{display:grid;gap:5px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.insights-filter input,.insights-filter select{height:39px;border:1px solid var(--line);border-radius:7px;background:#fbfaf6;padding:0 11px;font-size:12px}
+.insights-filter button{height:39px;border:1px solid var(--line);background:transparent;border-radius:7px;padding:0 14px;font-size:11px;color:var(--ink)}
+.insights-filter button:hover{background:#fbfaf6}
+#insights-filter-summary{margin:-4px 0 18px;min-height:14px}
+.console-status{display:inline-flex;align-items:center;height:39px;font-size:12px;color:var(--muted)}
+.console-status.on{color:#3d7a4f;font-weight:700}

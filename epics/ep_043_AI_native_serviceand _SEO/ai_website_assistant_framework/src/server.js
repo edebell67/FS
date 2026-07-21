@@ -140,8 +140,57 @@ function scheduleLeadFollowup({ store, env, client, leadId, delayMs }) {
   return timer;
 }
 
+// Owner-console session/rate-limit state, scoped per createApp() instance
+// (fresh per test run, cleared on process restart - acceptable since a
+// site owner just re-enters the console password, nothing is lost).
+const OWNER_SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
+const OWNER_MAX_ATTEMPTS = 5;
+const OWNER_LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
+
+// Aggregate a client's already-filtered events/enquiries into the same
+// summary shape the admin "Visitor insights" view computes client-side -
+// computed server-side here so the browser only ever receives numbers, not
+// the underlying raw event rows, for the anonymous owner-console case.
+function computeOwnerInsights(events, enquiries) {
+  const sessions = new Set(events.map((e) => e.sessionId).filter(Boolean));
+  const pageviews = events.filter((e) => e.type === "pageview").length;
+  const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "form_start", "form_submit", "assistant_open", "gallery_open"]);
+  const engagedSessions = new Set(events.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).map((e) => e.sessionId));
+  const count = (t) => events.filter((e) => e.type === t).length;
+  const exits = events.filter((e) => e.type === "page_exit");
+  const avg = (arr, key) => arr.length ? Math.round(arr.reduce((s, e) => s + (Number(e[key]) || 0), 0) / arr.length) : 0;
+  const topN = (key, type) => {
+    const counts = {};
+    for (const e of events) {
+      if (type && e.type !== type) continue;
+      const k = e[key] || "—";
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  };
+  const sess = sessions.size;
+  return {
+    uniqueVisits: sess,
+    pageViews: pageviews,
+    engagedVisits: engagedSessions.size,
+    engagedPct: sess ? Math.round((engagedSessions.size / sess) * 100) : 0,
+    enquiries: enquiries.length,
+    phoneTaps: count("phone_click"),
+    emailTaps: count("email_click"),
+    ctaClicks: count("cta_click"),
+    assistantOpens: count("assistant_open"),
+    assistantHandoffs: count("assistant_handoff"),
+    avgDwellSeconds: Math.round(avg(exits, "dwellMs") / 1000),
+    avgScrollPct: avg(exits, "scrollPct"),
+    topPages: topN("path", "pageview"),
+    eventBreakdown: topN("type")
+  };
+}
+
 export async function createApp({ store = new JsonStore(dataDir), env = runtimeEnv } = {}) {
   await store.init();
+  const ownerSessions = new Map();       // token -> { clientId, expiresAt }
+  const ownerLoginAttempts = new Map();  // clientId -> { count, lockedUntil }
   return createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     try {
@@ -232,6 +281,60 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           .map((event) => sanitizeEvent(event, { clientId: client.id, sessionId }));
         if (events.length) await store.appendRecords("events", events);
         return json(res, 202, { accepted: true, stored: events.length }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/owner/login") {
+        // Unlocks the anonymous-insights console inside this one client's own
+        // chat widget. Scoped entirely to the resolved client - the token
+        // this issues can never see another tenant's data.
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        if (!client.consolePassword) return json(res, 403, { error: "The owner console is not enabled for this site." }, corsHeaders(req));
+        const attempt = ownerLoginAttempts.get(client.id) || { count: 0, lockedUntil: 0 };
+        if (attempt.lockedUntil > Date.now()) return json(res, 429, { error: "Too many attempts. Try again in a few minutes." }, corsHeaders(req));
+        const password = String(input.password || "").slice(0, 200);
+        if (!password || !safeEqual(password, client.consolePassword)) {
+          attempt.count += 1;
+          if (attempt.count >= OWNER_MAX_ATTEMPTS) { attempt.lockedUntil = Date.now() + OWNER_LOCKOUT_MS; attempt.count = 0; }
+          ownerLoginAttempts.set(client.id, attempt);
+          return json(res, 401, { error: "Incorrect password." }, corsHeaders(req));
+        }
+        ownerLoginAttempts.delete(client.id);
+        const token = randomUUID();
+        const expiresAt = Date.now() + OWNER_SESSION_TTL_MS;
+        ownerSessions.set(token, { clientId: client.id, expiresAt });
+        return json(res, 200, { ok: true, token, expiresAt }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/owner/logout") {
+        const input = await bodyJson(req);
+        ownerSessions.delete(String(input.token || ""));
+        return json(res, 200, { ok: true }, corsHeaders(req));
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/public/owner/insights") {
+        const token = url.searchParams.get("token") || "";
+        const session = ownerSessions.get(token);
+        if (!session || session.expiresAt < Date.now()) {
+          ownerSessions.delete(token);
+          return json(res, 401, { error: "Your console session has expired. Please log in again." }, corsHeaders(req));
+        }
+        const clientId = session.clientId;
+        const fromMs = url.searchParams.get("from") ? Date.parse(url.searchParams.get("from")) : null;
+        const toMs = url.searchParams.get("to") ? Date.parse(url.searchParams.get("to")) : null;
+        const pathFilter = cleanText(url.searchParams.get("path") || "", 300);
+        const records = store.listRecords();
+        const allClientEvents = (records.events || []).filter((e) => e.clientId === clientId);
+        let events = allClientEvents;
+        if (Number.isFinite(fromMs)) events = events.filter((e) => new Date(e.createdAt).getTime() >= fromMs);
+        if (Number.isFinite(toMs)) events = events.filter((e) => new Date(e.createdAt).getTime() <= toMs);
+        if (pathFilter) events = events.filter((e) => e.path === pathFilter);
+        let enquiries = [...(records.leads || []), ...(records.callbacks || [])].filter((r) => r.clientId === clientId);
+        if (Number.isFinite(fromMs)) enquiries = enquiries.filter((r) => new Date(r.createdAt).getTime() >= fromMs);
+        if (Number.isFinite(toMs)) enquiries = enquiries.filter((r) => new Date(r.createdAt).getTime() <= toMs);
+        const paths = [...new Set(allClientEvents.filter((e) => e.type === "pageview" && e.path).map((e) => e.path))].sort();
+        return json(res, 200, { ...computeOwnerInsights(events, enquiries), paths }, corsHeaders(req));
       }
 
       const demoMatch = url.pathname.match(/^\/api\/public\/demo\/(booking|payment|email|crm)$/);

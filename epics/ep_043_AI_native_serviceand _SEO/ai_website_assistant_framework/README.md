@@ -98,7 +98,16 @@ Every embedded site can log **anonymous** visitor behaviour through the same ser
 - **Auto-captured events**: page view, scroll depth, dwell/exit, CTA clicks (`data-ev="cta:quote"` attributes), phone/email/WhatsApp taps, outbound clicks, form start/submit, gallery opens, and assistant open/handoff.
 - **Joined to chat within a visit**: the tracker shares its ephemeral `sessionId` with `widget.js` (same `aiw-session` key), so page behaviour and the assistant conversation join into one visit — without any durable identity.
 - **Ingestion**: batched via `navigator.sendBeacon` to `POST /api/public/events` — tenant-resolved and host-allow-listed like every other public route, event types whitelisted server-side, stored in a larger ring buffer (`events`, cap 20k) than the lead/conversation records.
-- **Reporting**: the admin **Visitor insights** view aggregates per client — unique visits, page views, engaged-visit rate, enquiries, phone/email/CTA taps, assistant opens/handoffs, average dwell and scroll, top pages, and an event breakdown. Raw events are also browsable under Activity → Visitor events.
+- **Reporting**: the admin **Visitor insights** view aggregates per client — unique visits, page views, engaged-visit rate, enquiries, phone/email/CTA taps, assistant opens/handoffs, average dwell and scroll, top pages, and an event breakdown. Raw events are also browsable under Activity → Visitor events. A **From / To / Page** filter narrows every stat to an exact window (e.g. "page views of `/services` between 10am and 12pm").
+
+## Site owner console
+
+The visitor-insights aggregates above are also reachable **directly by the site owner**, without giving them access to the shared admin panel (which spans every tenant). A small ⚙ icon in the widget's own header — visible only once the widget is open — unlocks a compact, in-widget version of Visitor insights (same stats, same From/To/Page filter) after the owner enters a per-client console password.
+
+- **Inherently single-tenant**: the widget only ever knows its own `clientKey`, so the console can never show another client's data — no separate per-site authorization model had to be built to guarantee that.
+- **Opt-in per client**: set (or clear) a client's console password in the admin editor's "Site owner console" section. No password set = the console login always answers 403, so nothing changes for clients who don't want it.
+- **Session-scoped, rate-limited**: a correct password issues a 2-hour bearer token (in-memory only, not persisted); 5 wrong attempts locks that client out for 5 minutes. Passwords are compared with a timing-safe check and are never included in the public config projection the browser can read.
+- **Same anonymity contract as Visitor analytics**: the console only ever receives pre-aggregated numbers (`GET /api/public/owner/insights`) — no raw session ids or individual event rows reach the browser.
 
 For production traffic, point the `events` sink at a managed store rather than the JSON ring buffer (same caveat as the rest of persistence, below).
 
