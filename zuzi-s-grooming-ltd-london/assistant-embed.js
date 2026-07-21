@@ -1,1 +1,14 @@
-(()=>{const $=(q,r=document)=>r.querySelector(q);const category=($('.brand small')?.textContent||'your category').split('·')[0].trim().toLowerCase();const name=($('.brand span')?.childNodes[0]?.textContent||'this site').trim();const launch=document.createElement('button');launch.className='tp-launcher';launch.setAttribute('aria-label','Open website guide');launch.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 4h16v11H8l-4 4V4Zm3 4v2h10V8H7Zm0 4v1h7v-1H7Z"/></svg><span>Open website guide</span>';const panel=document.createElement('aside');panel.className='tp-panel';panel.hidden=true;panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Website guide');panel.innerHTML=`<div class="tp-head"><div><strong>Website guide</strong><p>PRIVATE CONCEPT · NO DATA IS SENT</p></div><button class="tp-close" aria-label="Close website guide">×</button></div><div class="tp-body"><div class="tp-message">Hi — I can help you explore this ${category} concept, explain how the demonstration quote route works, or take you to a useful page.</div><div class="tp-quick"><button data-go="services.html">Explore services</button><button data-go="process.html">How it works</button><button data-go="quote.html">Quote-route demo</button></div><form class="tp-form"><input aria-label="Ask the website guide" placeholder="Ask about this concept"><button class="tp-send">Send</button></form><p class="tp-note">This is a bounded private-review demonstration. It does not book, collect, store or send information.</p></div>`;document.body.append(launch,panel);const close=()=>{panel.hidden=true;launch.focus()};launch.onclick=()=>{panel.hidden=false;$('.tp-close',panel).focus()};$('.tp-close',panel).onclick=close;panel.addEventListener('click',e=>{const go=e.target.closest('[data-go]');if(go)location.href=go.dataset.go});$('.tp-form',panel).onsubmit=e=>{e.preventDefault();const input=$('input',e.currentTarget);const q=input.value.trim();if(!q)return;$('.tp-message',panel).textContent=`Thanks. This private concept can direct you to approved information about ${category}, but it cannot make claims about live availability, prices or bookings. Use the Services, Process or Quote-route demo links for the next step.`;input.value=''};document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!panel.hidden)close()})})()
+(() => {
+  const ASSISTANT_ENABLED = true;
+  if (!ASSISTANT_ENABLED) return;
+  const local = ["localhost", "127.0.0.1"].includes(location.hostname);
+  const apiBase = String(window.THE_TECH_PRINCIPLE_AI_API_BASE || (local ? "http://127.0.0.1:4310" : "https://shared-website-assistant-api.onrender.com")).replace(/\/$/, "");
+  const widget = document.createElement("script");
+  widget.src = `${apiBase}/widget.js?v=a31871e-zuzi-s-grooming-ltd-london`;
+  widget.dataset.client = "batch02_zuzi_s_grooming_ltd_london";
+  widget.dataset.apiBase = apiBase;
+  widget.dataset.autoOpen = "false";
+  widget.defer = true;
+  widget.onerror = () => console.warn("Zuzi's Grooming Ltd London private-review assistant is currently unavailable.");
+  document.head.append(widget);
+})();
