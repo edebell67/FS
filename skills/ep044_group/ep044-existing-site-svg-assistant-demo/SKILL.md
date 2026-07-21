@@ -12,6 +12,12 @@ metadata:
 
 # EP044 Existing-Site SVG Assistant Demo
 
+## Relationship to the master blueprint
+
+This skill is the one deliberate exception to the ep044 family's "build from the blueprint" rule: its job is to **recreate the owner's *existing* site's visual language**, so it does **not** impose the master blueprint's page architecture, font pairing, or type scale — fidelity to the real site comes first.
+
+Consistency still applies to everything this skill originates itself. Any surface it authors — the assistant overlay/launcher/panel, private-preview framing, disclosure banners, and any net-new UI not lifted from the real site — must meet the same premium quality and internal-consistency bar defined in `../ep044_common_site_blueprint/000_site_blueprint.md` Section 6 (a coherent type hierarchy in relative units, deliberate spacing, accessible contrast, no thin/placeholder feel) and Section 9 (accessibility). In short: **mirror the client's site faithfully, but anything you add must look and feel premium and consistent, never bolted-on.**
+
 ## Overview
 
 Create a private product experiment that helps a business owner recognise their current website while showing the **AI assistant as an added front door**, not a website-replacement pitch.
@@ -376,3 +382,7 @@ Do not promise installation, bookings, callbacks, results, pricing, availability
 - [ ] Public Pages runtime contains only intended visitor assets and returns HTTP 200.
 - [ ] Render health, widget, tenant config, and browser widget journey are verified.
 - [ ] No external outreach was sent; any draft remains pending approval.
+
+## Required shared layout invariant
+
+Apply §6.4 **Mandatory page-edge and footer contract**, §6.1 **Inner-page editorial hierarchy**, and §6.2 **Gallery relevance** from `ep044_common_site_blueprint/000_site_blueprint.md` without exception. The business identity/logo block, header navigation, hero copy, page content, card/form outer edges and footer content must share one responsive left gutter. Use the normal-flow sticky-footer shell for short pages; never independently centre the header or use a fixed footer. The home hero remains the largest display moment; inner-page headings require an explicitly styled, distinct premium serif face at a smaller scale, with a compact mono kicker and restrained sans-serif lede—never browser-default inner-page text. Every gallery must contain real category-relevant visual assets, never empty cards, generic decoration or “images coming later” copy. When owner work is unavailable, use provenance-recorded, clearly labelled illustrative category imagery that does not claim work by the named business. Verify live geometry, type and image loads after cache-busting production CSS.
