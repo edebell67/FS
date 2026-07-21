@@ -53,6 +53,32 @@ Administrator → bearer-protected API → client and operational record store
 
 The included JSON repositories make the MVP immediately runnable. `ClientStore` is isolated behind a small interface so a managed SQL/document database can replace it without changing the widget or API contract. Writes use an atomic temporary-file rename and are serialized in process.
 
+## Engagement modes
+
+Each client profile chooses how the assistant introduces itself, set in the admin editor's "Assistant engagement" section:
+
+- **On-demand** (default) — the visitor opens the widget themselves; behavior is unchanged from before this feature.
+- **Proactive** — the widget opens itself shortly after the page loads (delay configurable, default 2500ms) and offers help, on every page visit. If the visitor responds negatively — clicking "No thanks" or typing a decline such as "no thanks" / "not interested" — the assistant collapses back to the launcher icon and behaves like on-demand mode for the rest of that browser session (tracked client-side via `sessionStorage`), rather than re-prompting on subsequent page loads.
+
+The mode and delay are served in the public config projection (`engagementMode`, `proactiveDelayMs`) and enforced entirely in `widget.js`; no per-page integration code is required.
+
+## Assistant quick actions (blueprint functions)
+
+The assistant's quick-action buttons expose the canonical visitor functions defined by the common site blueprint (`skills/ep044_group/ep044_common_site_blueprint`, sections 2 and 4): Services, Our Work (Gallery), Before & After, Reviews, About Us, Pricing Guide, Areas Covered, Knowledge Centre, FAQ, Contact, Request a Quote, Book, and Request a Callback. The vocabulary and ordering live in `src/blueprint.js` and follow the blueprint's conversion hierarchy.
+
+Buttons are resolved per client, server-side, and only appear when the function actually leads somewhere — so there are no dead ends (blueprint sections 5 and 13):
+
+1. If the client has a page tagged with that blueprint function (`"blueprint": "gallery"` on a page, with the `navigation` module enabled), the button **navigates** straight to that real page.
+2. Otherwise, if the function maps to an enabled module (FAQ, Contact, Request a Quote → `leadCapture`, Book → `booking`, Request a Callback → `callback`), the button **prompts** the assistant, which answers or offers that module.
+3. Otherwise, if the function is answerable from approved knowledge (Services, About Us, Pricing, Areas) **and the retriever actually matches** knowledge for it, the button prompts the assistant.
+4. Otherwise the button is hidden.
+
+An unrecognised `blueprint` tag on a page is dropped during normalisation, so a typo can never surface a button that navigates nowhere.
+
+Platform demonstration workflows (Demo booking / payment / email / CRM) are **not** blueprint visitor functions; in demo-mode clients they are resolved separately (`demoActions`) and rendered under a distinct "Platform demonstration" divider so a genuine visitor is not confused. The resolved lists are exposed in the public config as `assistantActions` and `demoActions`.
+
+Not yet in this feature (planned as a follow-up): the blueprint section 4 assistant *behaviours* — consent before storing personal data, a structured lead summary for the business, escalate-to-human, and explicit AI self-identification.
+
 ## AI behavior
 
 Without `OPENAI_API_KEY`, the assistant uses the approved knowledge retriever and deterministic response composer. This is intentional: demo mode remains fully reviewable and never invents business facts.

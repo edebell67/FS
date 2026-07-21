@@ -29,27 +29,6 @@ function adminAuthorized(req, env) {
   return Boolean(env.ADMIN_TOKEN && safeEqual(token, env.ADMIN_TOKEN));
 }
 
-function ownerConsoleActivated(client) {
-  return client.ownerConsole?.activated !== false;
-}
-
-function ownerTokenFor(env, clientId) {
-  try {
-    const maps = ["OWNER_CONSOLE_TOKENS_JSON", "OWNER_CONSOLE_TOKENS_JSON_BATCH_01"].map((key) => JSON.parse(String(env[key] || "{}")));
-    return maps.find((tokens) => tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId])?.[clientId] || "";
-  } catch { return ""; }
-}
-
-function ownerPasswordAuthorized(password, env, clientId) {
-  const expected = ownerTokenFor(env, clientId);
-  return Boolean(expected && safeEqual(password, expected));
-}
-
-function ownerAuthorized(req, env, clientId) {
-  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
-  return ownerPasswordAuthorized(token, env, clientId);
-}
-
 async function bodyJson(req, maxBytes = 64 * 1024) {
   let raw = "";
   for await (const chunk of req) {
@@ -79,22 +58,6 @@ function demoReference(prefix) {
 
 function validEmail(value) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
-}
-
-function ownerPerformance(records, client, now = new Date()) {
-  const day = now.toISOString().slice(0, 10);
-  const today = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.filter((entry) => String(entry.createdAt || "").slice(0, 10) === day)]));
-  const sessions = new Set((today.conversations || []).map((entry) => entry.sessionId).filter(Boolean));
-  const callbacks = today.callbacks || [];
-  const handled = callbacks.filter((entry) => entry.handledAt && Date.parse(entry.handledAt) >= Date.parse(entry.createdAt));
-  const callbackMinutes = handled.map((entry) => Math.round((Date.parse(entry.handledAt) - Date.parse(entry.createdAt)) / 60000));
-  const averageCallbackMinutes = callbackMinutes.length ? Math.round(callbackMinutes.reduce((sum, value) => sum + value, 0) / callbackMinutes.length) : null;
-  const visitorCount = sessions.size;
-  const leadCount = (today.leads || []).length;
-  return {
-    today: { date: day, assistantVisitors: visitorCount, leadsCaptured: leadCount, leadRate: visitorCount ? Math.round((leadCount / visitorCount) * 100) : null, callbacks: callbacks.length, averageCallbackMinutes, resolvedCallbacks: handled.length },
-    baseline: client.ownerReporting?.baseline || { assistantVisitors: null, leadsCaptured: null, callbacks: null, averageCallbackMinutes: null, source: "No previous baseline supplied." }
-  };
 }
 
 async function writeResponseLedger({ env, record }) {
@@ -130,6 +93,21 @@ async function notify({ env, client, kind, record }) {
   return { delivered: response.ok, reason: response.ok ? "sent" : `webhook_${response.status}` };
 }
 
+// Recovers a lead that didn't convert in-session: after leadFollowupDelayMs,
+// re-notify the client's destinations so they can chase it up. Skips leads
+// that already converted in the meantime (checked at send time, not just at
+// schedule time, since the delay can be hours).
+function scheduleLeadFollowup({ store, env, client, leadId, delayMs }) {
+  const timer = setTimeout(async () => {
+    const current = store.getRecord("leads", leadId);
+    if (!current || current.convertedAt || current.followupStatus !== "scheduled") return;
+    await notify({ env, client, kind: "lead_followup", record: current });
+    await store.updateRecord("leads", leadId, { followupStatus: "sent", followupSentAt: new Date().toISOString() });
+  }, delayMs);
+  if (typeof timer.unref === "function") timer.unref();
+  return timer;
+}
+
 export async function createApp({ store = new JsonStore(dataDir), env = runtimeEnv } = {}) {
   await store.init();
   return createServer(async (req, res) => {
@@ -146,16 +124,6 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const client = store.resolveClient({ publicKey: url.searchParams.get("clientKey"), host: requestHost(req, url.searchParams.get("host")) });
         if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
         return json(res, 200, { client: store.publicClient(client) }, corsHeaders(req));
-      }
-
-      if (req.method === "POST" && url.pathname === "/api/public/owner-dashboard-access") {
-        const input = await bodyJson(req);
-        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
-        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
-        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner dashboard is available after assistant activation only." }, corsHeaders(req));
-        const password = cleanText(input.password, 512, true);
-        if (!ownerPasswordAuthorized(password, env, client.id)) return json(res, 401, { error: "Owner password was not accepted." }, corsHeaders(req));
-        return json(res, 200, { dashboardUrl: `/owner?tenant=${encodeURIComponent(client.id)}` }, corsHeaders(req));
       }
 
       if (req.method === "POST" && url.pathname === "/api/public/chat") {
@@ -194,7 +162,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const isLead = url.pathname.endsWith("leads");
         const requiredModule = isLead ? "leadCapture" : "callback";
         if (!client.enabledModules.includes(requiredModule)) return json(res, 403, { error: "This module is not enabled." }, corsHeaders(req));
-        const record = await store.appendRecord(isLead ? "leads" : "callbacks", {
+        let record = await store.appendRecord(isLead ? "leads" : "callbacks", {
           clientId: client.id,
           name: cleanText(input.name, 120, true),
           telephone: cleanText(input.telephone, 40, true),
@@ -202,9 +170,18 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           preferredTime: cleanText(input.preferredTime, 120),
           service: cleanText(input.service, 160),
           reason: cleanText(input.reason || input.notes, 1000),
-          simulated: client.status === "demo"
+          simulated: client.status === "demo",
+          convertedAt: null,
+          convertedVia: null,
+          followupStatus: "none",
+          followupScheduledAt: null,
+          followupSentAt: null
         });
         const notification = await notify({ env, client, kind: isLead ? "lead" : "callback", record });
+        if (isLead && client.enabledModules.includes("leadFollowup")) {
+          record = await store.updateRecord("leads", record.id, { followupStatus: "scheduled", followupScheduledAt: new Date().toISOString() });
+          scheduleLeadFollowup({ store, env, client, leadId: record.id, delayMs: client.leadFollowupDelayMs });
+        }
         return json(res, 201, { accepted: true, simulated: record.simulated, notification }, corsHeaders(req));
       }
 
@@ -264,33 +241,6 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 201, { accepted: true, simulated: true, workflow, record }, corsHeaders(req));
       }
 
-      const completeCallbackMatch = url.pathname.match(/^\/api\/owner\/callbacks\/([^/]+)\/complete$/);
-      if (req.method === "POST" && completeCallbackMatch) {
-        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
-        if (!client) return json(res, 404, { error: "Owner console was not found." });
-        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
-        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
-        const callbackId = cleanText(decodeURIComponent(completeCallbackMatch[1]), 120, true);
-        const callback = (store.listRecords().callbacks || []).find((record) => record.id === callbackId && record.clientId === client.id);
-        if (!callback) return json(res, 404, { error: "Callback activity was not found." });
-        const record = await store.updateRecord("callbacks", callbackId, { handledAt: new Date().toISOString(), handledByOwner: true });
-        return json(res, 200, { record, performance: ownerPerformance(Object.fromEntries(Object.entries(store.listRecords()).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)])), client) });
-      }
-
-      if (req.method === "GET" && url.pathname === "/api/owner/activity") {
-        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
-        if (!client) return json(res, 404, { error: "Owner console was not found." });
-        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
-        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
-        const allRecords = store.listRecords();
-        const records = Object.fromEntries(Object.entries(allRecords).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)]));
-        const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
-        return json(res, 200, {
-          owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules, reportingVocabulary: client.ownerReporting?.vocabulary || {} },
-          records, summary, performance: ownerPerformance(records, client)
-        });
-      }
-
       if (url.pathname.startsWith("/api/admin/")) {
         if (!adminAuthorized(req, env)) return json(res, 401, { error: "Administrator authorization is required." });
         if (req.method === "GET" && url.pathname === "/api/admin/clients") return json(res, 200, { clients: store.listClients() });
@@ -306,6 +256,34 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           const client = await store.updateClient(decodeURIComponent(updateMatch[1]), await bodyJson(req));
           return client ? json(res, 200, { client }) : json(res, 404, { error: "Client not found." });
         }
+        const convertMatch = url.pathname.match(/^\/api\/admin\/leads\/([^/]+)\/convert$/);
+        if (req.method === "POST" && convertMatch) {
+          const leadId = decodeURIComponent(convertMatch[1]);
+          const lead = store.getRecord("leads", leadId);
+          if (!lead) return json(res, 404, { error: "Lead not found." });
+          if (lead.convertedAt) return json(res, 200, { lead });
+          const convertedVia = lead.followupStatus === "sent" ? "after_followup" : "same_session";
+          const updated = await store.updateRecord("leads", leadId, { convertedAt: new Date().toISOString(), convertedVia });
+          return json(res, 200, { lead: updated });
+        }
+        if (req.method === "GET" && url.pathname === "/api/admin/roi") {
+          const clientId = url.searchParams.get("clientId");
+          const client = clientId ? store.getClientById(clientId) : null;
+          if (!client) return json(res, 404, { error: "Client not found." });
+          const leads = store.listRecords().leads.filter((item) => item.clientId === clientId);
+          const totalLeads = leads.length;
+          const followupsSent = leads.filter((item) => item.followupStatus === "sent").length;
+          const converted = leads.filter((item) => item.convertedAt).length;
+          const convertedSameSession = leads.filter((item) => item.convertedVia === "same_session").length;
+          const convertedAfterFollowup = leads.filter((item) => item.convertedVia === "after_followup").length;
+          const recoveryRate = followupsSent ? convertedAfterFollowup / followupsSent : 0;
+          const estimatedRecoveredRevenue = convertedAfterFollowup * client.averageJobValue;
+          return json(res, 200, {
+            clientId, businessName: client.businessName, averageJobValue: client.averageJobValue,
+            totalLeads, followupsSent, converted, convertedSameSession, convertedAfterFollowup,
+            recoveryRate, estimatedRecoveredRevenue
+          });
+        }
       }
 
       if (req.method === "GET") return serveStatic(url.pathname, res);
@@ -317,7 +295,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
 }
 
 async function serveStatic(pathname, res) {
-  const routes = { "/": "index.html", "/admin": "admin.html", "/owner": "owner.html", "/widget.js": "widget.js" };
+  const routes = { "/": "index.html", "/admin": "admin.html", "/widget.js": "widget.js" };
   const relative = routes[pathname] || pathname.replace(/^\//, "");
   const file = path.resolve(publicDir, relative);
   if (!file.startsWith(`${publicDir}${path.sep}`)) return json(res, 403, { error: "Forbidden." });
