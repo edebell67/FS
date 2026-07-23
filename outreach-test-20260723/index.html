@@ -12,18 +12,26 @@
     <p><strong>THE TECH PRINCIPLE</strong></p>
     <h1>Tracking test</h1>
     <p>This is a user-owned follow-up tracking test. No prospect data is present and no appointment is being created.</p>
+    <p id="status" aria-live="polite">Confirming the test event…</p>
     <p><a id="request" href="mailto:edward.bell@thetechprinciple.com?subject=TEST%20ONLY%20%E2%80%94%2015-minute%20review%20request">Open an email appointment-request test →</a></p>
   </main>
   <script>
     const endpoint = 'https://shared-website-assistant-api.onrender.com/api/public/events';
     const clientKey = 'batch02_heron_property_services_limited';
     const sessionId = crypto.randomUUID();
-    function track(type, label) {
+    async function track(type, label) {
       const payload = {clientKey, host:'thetechprinciple.com', sessionId, events:[{type,label,path:'/outreach-test-20260723/',referrerHost:'',device:'desktop',ts:new Date().toISOString()}]};
-      navigator.sendBeacon(endpoint, new Blob([JSON.stringify(payload)], {type:'text/plain'}));
+      try {
+        const response = await fetch(endpoint, {method:'POST', headers:{'Content-Type':'text/plain'}, body:JSON.stringify(payload)});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const result = await response.json();
+        document.getElementById('status').textContent = result.stored === 1 ? 'Tracking test confirmed.' : 'Tracking endpoint accepted the test, but did not store an event.';
+      } catch {
+        document.getElementById('status').textContent = 'Tracking could not be confirmed. Please reload the test page.';
+      }
     }
     track('pageview', 'followup:test_only');
-    document.getElementById('request').addEventListener('click', () => track('cta_click', 'followup:appointment_email_test'));
+    document.getElementById('request').addEventListener('click', () => { navigator.sendBeacon(endpoint, new Blob([JSON.stringify({clientKey, host:'thetechprinciple.com', sessionId, events:[{type:'cta_click',label:'followup:appointment_email_test',path:'/outreach-test-20260723/',referrerHost:'',device:'desktop',ts:new Date().toISOString()}]})], {type:'text/plain'})); });
   </script>
 </body>
 </html>
