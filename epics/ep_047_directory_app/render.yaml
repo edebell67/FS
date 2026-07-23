@@ -1,0 +1,32 @@
+# Render Blueprint for the Business Activation Directory Platform.
+# Deploy: connect this repo in Render's dashboard and point it at this file,
+# or `render blueprint launch` from the CLI. Secrets are never set here —
+# they're filled in through Render's encrypted environment settings after
+# first deploy (sync: false below marks exactly which ones).
+
+databases:
+  - name: ep047-directory-db
+    plan: starter
+    postgresMajorVersion: "16"
+
+services:
+  - type: web
+    name: ep047-directory-app
+    runtime: node
+    plan: starter
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ep047-directory-db
+          property: connectionString
+      - key: AUTH_SECRET
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
+      - key: EMAIL_PROVIDER_API_KEY
+        sync: false

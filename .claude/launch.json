@@ -6,6 +6,18 @@
       "runtimeExecutable": "python",
       "runtimeArgs": ["-m", "http.server", "8130", "--directory", "epics/ep_046_thetechprinciple/site"],
       "port": 8130
+    },
+    {
+      "name": "ai-website-assistant-framework",
+      "runtimeExecutable": "C:\\Users\\edebe\\eds\\scripts\\start-ai-assistant.cmd",
+      "runtimeArgs": [],
+      "port": 4310
+    },
+    {
+      "name": "ep047-directory-app",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--prefix", "epics/ep_047_directory_app"],
+      "port": 8140
     }
   ]
 }
