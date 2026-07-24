@@ -1,4 +1,8 @@
-import { githubPagesResponseHeaders, githubPagesUrl } from "@/lib/github-pages-proxy";
+import {
+  githubPagesRedirectLocation,
+  githubPagesResponseHeaders,
+  githubPagesUrl,
+} from "@/lib/github-pages-proxy";
 
 /**
  * Serves the existing static website from GitHub Pages while the same Render
@@ -11,17 +15,29 @@ export async function proxyGitHubPagesRequest(request: Request): Promise<Respons
 
   try {
     const upstream = await fetch(upstreamUrl, {
+      method: request.method,
       headers: {
         accept: request.headers.get("accept") ?? "*/*",
         "accept-language": request.headers.get("accept-language") ?? "",
       },
-      // Follow GitHub Pages' directory canonicalisation (for example /blog →
-      // /blog/) inside the server, so visitors remain on the public domain.
-      redirect: "follow",
+      // Preserve GitHub Pages directory redirects in the visitor's browser so
+      // relative links keep their original directory base URL.
+      redirect: "manual",
       cache: "no-store",
     });
 
     const headers = githubPagesResponseHeaders(upstream.headers);
+    const upstreamLocation = upstream.headers.get("location");
+    if (upstreamLocation) {
+      const publicLocation = githubPagesRedirectLocation(upstreamLocation);
+      if (!publicLocation) {
+        return new Response("The public site returned an unsupported redirect.", {
+          status: 502,
+          headers: { "content-type": "text/plain; charset=utf-8", "cache-control": "no-store" },
+        });
+      }
+      headers.set("location", publicLocation);
+    }
 
     return new Response(request.method === "HEAD" ? null : upstream.body, {
       status: upstream.status,

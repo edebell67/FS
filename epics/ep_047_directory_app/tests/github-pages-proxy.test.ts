@@ -17,3 +17,16 @@ test("githubPagesUrl preserves a public site path and query string", () => {
 test("githubPagesUrl rejects traversal-like paths", () => {
   assert.throws(() => githubPagesUrl("/../../private"), /Invalid public-site path/);
 });
+
+test("githubPagesRedirectLocation keeps GitHub Pages directory redirects on the public path", async () => {
+  const { githubPagesRedirectLocation } = await import("../lib/github-pages-proxy");
+  assert.equal(
+    githubPagesRedirectLocation("https://edebell67.github.io/FS/blog/"),
+    "/blog/"
+  );
+});
+
+test("githubPagesRedirectLocation refuses external redirect locations", async () => {
+  const { githubPagesRedirectLocation } = await import("../lib/github-pages-proxy");
+  assert.equal(githubPagesRedirectLocation("https://example.com/next"), null);
+});
