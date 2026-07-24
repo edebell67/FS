@@ -32,14 +32,10 @@ function getDb(): NodePgDatabase<typeof schema> {
   if (globalThis.__ep047Db) return globalThis.__ep047Db;
 
   const pool = globalThis.__ep047Pool ?? createPool();
-  if (process.env.NODE_ENV !== "production") {
-    globalThis.__ep047Pool = pool;
-  }
+  globalThis.__ep047Pool = pool;
 
   const instance = drizzle(pool, { schema });
-  if (process.env.NODE_ENV !== "production") {
-    globalThis.__ep047Db = instance;
-  }
+  globalThis.__ep047Db = instance;
   return instance;
 }
 
