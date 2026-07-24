@@ -61,7 +61,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Businesses</p>
       <div className="mt-1 flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Businesses</h1>
-        <Link href="/admin/import" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+        <Link href="/directoryadmin/import" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Import more →
         </Link>
       </div>
@@ -72,7 +72,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
           <>
             {" "}
             Filtered to stage <span className="font-medium">{params.stage}</span> —{" "}
-            <Link href="/admin/businesses" className="text-brand-600 hover:underline">
+            <Link href="/directoryadmin/businesses" className="text-brand-600 hover:underline">
               clear
             </Link>
             .
@@ -82,7 +82,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
           <>
             {" "}
             Filtered to board column <span className="font-medium">{params.column}</span> —{" "}
-            <Link href="/admin/businesses" className="text-brand-600 hover:underline">
+            <Link href="/directoryadmin/businesses" className="text-brand-600 hover:underline">
               clear
             </Link>
             .
@@ -90,7 +90,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
         )}
       </p>
 
-      <form className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4" action="/admin/businesses">
+      <form className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4" action="/directoryadmin/businesses">
         <input
           type="text"
           name="q"
@@ -130,7 +130,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
             Filter
           </button>
           {hasFilters && (
-            <Link href="/admin/businesses" className="text-sm font-medium text-slate-500 hover:text-slate-700">
+            <Link href="/directoryadmin/businesses" className="text-sm font-medium text-slate-500 hover:text-slate-700">
               Clear filters
             </Link>
           )}
@@ -165,7 +165,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
                     {row.businessRef}
                   </td>
                   <td className="whitespace-nowrap px-4 py-2 font-medium text-slate-900">
-                    <Link href={`/admin/businesses/${row.businessRef}`} className="hover:text-brand-600 hover:underline">
+                    <Link href={`/directoryadmin/businesses/${row.businessRef}`} className="hover:text-brand-600 hover:underline">
                       {row.businessName}
                     </Link>
                   </td>
@@ -196,7 +196,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
           <div className="flex gap-2">
             {page > 1 && (
               <Link
-                href={`/admin/businesses${buildQueryString(params, { page: page - 1 })}`}
+                href={`/directoryadmin/businesses${buildQueryString(params, { page: page - 1 })}`}
                 className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50"
               >
                 ← Previous
@@ -204,7 +204,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
             )}
             {page < pageCount && (
               <Link
-                href={`/admin/businesses${buildQueryString(params, { page: page + 1 })}`}
+                href={`/directoryadmin/businesses${buildQueryString(params, { page: page + 1 })}`}
                 className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50"
               >
                 Next →

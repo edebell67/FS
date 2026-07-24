@@ -59,7 +59,7 @@ function uploadFile(
 
     xhr.addEventListener("error", () => reject(new Error("Network error during upload.")));
 
-    xhr.open("POST", "/api/import");
+    xhr.open("POST", "/directoryadmin/api/import");
     xhr.send(formData);
   });
 }
@@ -98,7 +98,7 @@ export default function ImportPage() {
       </p>
       <div className="mt-1 flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Import businesses</h1>
-        <Link href="/admin/businesses" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+        <Link href="/directoryadmin/businesses" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Browse businesses →
         </Link>
       </div>

@@ -3,7 +3,7 @@ import Link from "next/link";
 export interface PaginationProps {
   page: number;
   pageCount: number;
-  /** Base path plus any filters to preserve, e.g. "/category/plumbing?sort=name". Page gets appended/merged. */
+  /** Base path plus any filters to preserve, e.g. "/directory/category/plumbing?sort=name". Page gets appended/merged. */
   basePath: string;
   searchParams?: Record<string, string | undefined>;
 }

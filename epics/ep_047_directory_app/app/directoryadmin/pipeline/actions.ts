@@ -9,6 +9,6 @@ export async function moveStageAction(formData: FormData): Promise<void> {
   if (!businessId || !toStageKey) return;
 
   await moveBusinessToStage(businessId, toStageKey, "admin", "Moved manually from the pipeline board");
-  revalidatePath("/admin/pipeline");
-  revalidatePath("/admin/businesses");
+  revalidatePath("/directoryadmin/pipeline");
+  revalidatePath("/directoryadmin/businesses");
 }

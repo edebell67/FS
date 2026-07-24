@@ -61,7 +61,7 @@ export default async function PipelinePage() {
                 column.businesses.map((business) => (
                   <div key={business.id} className="rounded-lg border border-slate-200 bg-white p-3 text-sm shadow-sm">
                     <Link
-                      href={`/admin/businesses/${business.businessRef}`}
+                      href={`/directoryadmin/businesses/${business.businessRef}`}
                       className="font-medium text-slate-900 hover:text-brand-600"
                     >
                       {business.businessName}
@@ -107,7 +107,7 @@ export default async function PipelinePage() {
 
             {column.count > column.businesses.length && (
               <Link
-                href={`/admin/businesses?column=${encodeURIComponent(column.name)}`}
+                href={`/directoryadmin/businesses?column=${encodeURIComponent(column.name)}`}
                 className="border-t border-slate-200 p-3 text-center text-xs font-medium text-brand-600 hover:bg-brand-50"
               >
                 View all {column.count} →

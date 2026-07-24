@@ -31,7 +31,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: business.businessName,
     description,
-    alternates: { canonical: `${SITE_URL}/business/${business.slug}` },
+    alternates: { canonical: `${SITE_URL}/directory/business/${business.slug}` },
   };
 }
 
@@ -53,7 +53,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
     "@context": "https://schema.org",
     "@type": "LocalBusiness",
     name: business.businessName,
-    url: `${SITE_URL}/business/${business.slug}`,
+    url: `${SITE_URL}/directory/business/${business.slug}`,
     ...(business.phone ? { telephone: business.phone } : {}),
     ...(business.email ? { email: business.email } : {}),
     ...(business.website ? { sameAs: [normalizeWebsiteHref(business.website)] } : {}),
@@ -90,8 +90,8 @@ export default async function BusinessProfilePage({ params }: PageProps) {
       <Breadcrumbs
         baseUrl={SITE_URL}
         items={[
-          { label: "Home", href: "/" },
-          { label: business.category, href: `/category/${toSlug(business.category)}` },
+          { label: "Home", href: "/directory" },
+          { label: business.category, href: `/directory/category/${toSlug(business.category)}` },
           { label: business.businessName },
         ]}
       />
@@ -240,7 +240,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
 
       <p className="mt-10 text-xs text-slate-400">
         Ref {business.businessRef} ·{" "}
-        <Link href="/search" className="hover:underline">
+        <Link href="/directory/search" className="hover:underline">
           Back to search
         </Link>
       </p>

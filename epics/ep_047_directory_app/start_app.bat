@@ -32,6 +32,6 @@ if errorlevel 1 (
     echo.
 )
 
-echo [*] Starting dev server at http://localhost:8140 ...
-start "" http://localhost:8140
+echo [*] Starting dev server at http://localhost:8140/directory ...
+start "" http://localhost:8140/directory
 call npm run dev

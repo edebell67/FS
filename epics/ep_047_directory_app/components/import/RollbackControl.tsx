@@ -29,7 +29,7 @@ export function RollbackControl({ batchId, acceptedCount }: RollbackControlProps
     setState("rolling-back");
     setErrorMessage(null);
     try {
-      const res = await fetch(`/api/import/${batchId}/rollback`, { method: "POST" });
+      const res = await fetch(`/directoryadmin/api/import/${batchId}/rollback`, { method: "POST" });
       if (!res.ok) throw new Error(`Rollback failed (${res.status})`);
       const data = (await res.json()) as { deletedCount: number };
       setDeletedCount(data.deletedCount);

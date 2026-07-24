@@ -35,7 +35,7 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           </p>
         </div>
         <Link
-          href={`/business/${business.slug}`}
+          href={`/directory/business/${business.slug}`}
           className="whitespace-nowrap text-sm font-medium text-brand-600 hover:text-brand-700"
         >
           View public page →

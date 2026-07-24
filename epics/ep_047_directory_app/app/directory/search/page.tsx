@@ -48,7 +48,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
         {hasFilters ? " match your search." : " in the directory."}
       </p>
 
-      <form className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4" action="/search">
+      <form className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-4" action="/directory/search">
         <input
           type="text"
           name="q"
@@ -77,7 +77,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
             Search
           </button>
           {hasFilters && (
-            <Link href="/search" className="text-sm font-medium text-slate-500 hover:text-slate-700">
+            <Link href="/directory/search" className="text-sm font-medium text-slate-500 hover:text-slate-700">
               Clear filters
             </Link>
           )}
@@ -102,7 +102,7 @@ export default async function SearchPage({ searchParams }: PageProps) {
       <Pagination
         page={page}
         pageCount={pageCount}
-        basePath="/search"
+        basePath="/directory/search"
         searchParams={{ q: params.q, category: params.category, town: params.town, letter: params.letter }}
       />
     </main>

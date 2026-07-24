@@ -14,7 +14,7 @@ Created 2026-07-23.
 |---|---|
 | `PROJECT_PROMPT.md` | The source brief, stored verbatim. Objectives, stack, data model, pipeline stages, admin console scope, design philosophy. |
 | `PLAN.md` | Implementation plan. Architecture decisions, schema, 8 build phases with completion tests, repo layout, open questions. |
-| `app/` | Next.js App Router. Public: `/` (homepage), `/search`, `/category/[category]`, `/town/[town]`, `/business/[slug]`. Admin: `/admin/dashboard`, `/admin/pipeline` (Kanban board), `/admin/businesses` (+ `[businessRef]` detail/timeline), `/admin/import`, `/api/import*`, `/api/health`. Not yet built: auth/roles, events/audit_log, analytics (Phases 5+). |
+| `app/` | Next.js App Router, mounted at `/directory` (public) and `/directoryadmin` (admin) — see "URL structure" below. `/` itself just redirects to `/directory`. Not yet built: auth/roles, events/audit_log, analytics (Phases 5+). |
 | `lib/db/` | Drizzle client and schema — `businesses`, `pipeline_stages`, `stage_transitions`, `import_batches`, `import_row_errors`, `category_sequences`. Still to come: `events`, `audit_log`, users/roles, notifications, jobs, metrics_daily (PLAN.md §2). |
 | `lib/db/queries/businesses.ts` | Shared read-side query: filtered/paginated/sortable `listBusinesses` (keyword across name/category/town/county/email/phone/ref/postcode, category/town/status/stage/board-column/A-Z-letter filters), `listDistinctCategories`/`listDistinctTowns`. Used by the admin businesses list, every public listing page, and the pipeline board's "View all" links — one query layer, not duplicated. |
 | `lib/db/queries/directory.ts` | Public-directory-only queries: category/town counts, A-Z index, newest listings, a business by slug or by `business_ref` plus its related/nearby businesses, the `toSlug`/`fromSlug` category-URL scheme. |
@@ -29,6 +29,40 @@ Created 2026-07-23.
 | `render.yaml` | Render Blueprint — one Postgres 16 instance, one Node web service, health check wired to `/api/health`. |
 | `tests/import.test.ts` | 13 tests covering parsing, validators, ref generation, dedup (in-batch and against-existing), rollback — run against the in-memory repository, no DB needed. |
 | `.env.example` | Env template — `DATABASE_URL`, `AUTH_SECRET`, email provider vars reserved for later phases. |
+
+## URL structure
+
+This app is meant to live at **`thetechprinciple.com/directory`** (public) and
+**`thetechprinciple.com/directoryadmin`** (admin) — `thetechprinciple.com/` itself stays the
+existing ep_046 site (`epics/ep_046_thetechprinciple`), untouched. Since Next.js can't give two
+different route groups two independent path prefixes via `basePath` (that's one global setting
+per app), the routes are just literal folders instead: `app/directory/*` and
+`app/directoryadmin/*`. The bare app root (`/`) redirects to `/directory` — that only matters
+for direct access to this app's own URL (its Render domain, or localhost in dev); the
+`thetechprinciple.com` mount points are what real traffic uses.
+
+| Path | Page |
+|---|---|
+| `/directory` | Homepage |
+| `/directory/search` | Search |
+| `/directory/category/[slug]` | Category listing |
+| `/directory/town/[slug]` | Town listing |
+| `/directory/business/[slug]` | Business profile |
+| `/directoryadmin/dashboard` | Admin dashboard |
+| `/directoryadmin/pipeline` | Kanban pipeline board |
+| `/directoryadmin/businesses` | Admin businesses list |
+| `/directoryadmin/businesses/[businessRef]` | Business detail + timeline |
+| `/directoryadmin/import` | CSV/JSON upload |
+| `/directoryadmin/api/import`, `/directoryadmin/api/import/[batchId]/rollback` | Import API (admin-only, so nested under `directoryadmin`) |
+| `/api/health` | Health check — deliberately NOT nested, since Render's own health check hits this app's own domain directly, not through the `thetechprinciple.com` proxy |
+
+**Everything below this point describes the build history** and was written/tested against the
+*previous* flat URLs (`/`, `/admin/*`, `/search`, etc.) before this restructure — the content
+and behavior described is still accurate, just mentally substitute the old path for its
+`/directory` or `/directoryadmin` equivalent from the table above. Re-verified live against all
+832 real businesses after the restructure: every route above returns 200, old paths correctly
+404, a real import + rollback round-tripped through the new `/directoryadmin/api/import` path,
+and a business profile's JSON-LD/canonical URL correctly resolved to `/directory/business/...`.
 
 ## Status
 
@@ -68,6 +102,11 @@ analytics, operations layer, 500k-row load test).
 project — both write to the same `.next/` directory and the dev server's webpack module cache
 gets corrupted (`Cannot find module './NNN.js'`, blank/unstyled pages). Fix is `rm -rf .next`
 and restart `npm run dev`. Stop the dev server first if you need to run a production build.
+
+**Second gotcha, same root cause:** on Windows, renaming/moving a route folder (e.g. `git mv
+app/admin app/directoryadmin`) fails with `Permission denied` while the dev server is running —
+it holds file handles on everything under `app/`. Stop the dev server before any file-system
+restructuring, not just before builds.
 
 ## Real-data test: `UK_Ltd_email_no_website_VERIFIED_410.csv`
 

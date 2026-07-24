@@ -171,6 +171,23 @@ to stage" instead — functionally equivalent, no DnD library needed), multi-sel
 and the events/audit_log tables (Phase 5). The 1s-at-100k-businesses load target is untested —
 current data is 410 rows.
 
+### Deployment target restructure — done, verified live
+Real requirement, not in the original brief: this app needs to live at
+`thetechprinciple.com/directory` (public) and `thetechprinciple.com/directoryadmin` (admin),
+alongside the existing unrelated ep_046 site at `thetechprinciple.com/`. Next.js only supports
+one `basePath` per app, which can't give two route groups two independent prefixes — so every
+route folder was physically moved: `app/*` → `app/directory/*`, `app/admin/*` →
+`app/directoryadmin/*`, `app/api/import*` → `app/directoryadmin/api/import*` (admin-only, so
+nested with it), `app/api/health` stayed at the root (Render's own health check hits this app
+directly, not through the `thetechprinciple.com` proxy). Every internal link, form action,
+fetch/XHR target, canonical URL, and JSON-LD field was updated to match. `/` now redirects to
+`/directory`. See the epic README's "URL structure" section for the full path table.
+**Test:** met, live — all routes return 200, the old flat paths correctly 404, a real
+import+rollback round-tripped through `/directoryadmin/api/import`, and a business profile's
+`LocalBusiness`/`BreadcrumbList` JSON-LD and `<link rel=canonical>` all resolved to the new
+`/directory/business/...` URL. Re-verified against the live dataset (832 businesses at the time
+of this change, up from 410 — a second real import had happened between sessions).
+
 ### Phase 5 — Events, audit and analytics
 Event emission across every action in the brief's list, nightly rollup job, the 12 analytics
 charts, conversion funnel, pipeline velocity, geographic distribution.

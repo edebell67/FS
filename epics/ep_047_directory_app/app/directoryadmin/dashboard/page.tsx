@@ -29,7 +29,7 @@ export default async function DashboardPage() {
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Dashboard</p>
       <div className="mt-1 flex items-baseline justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
-        <Link href="/admin/pipeline" className="text-sm font-medium text-brand-600 hover:text-brand-700">
+        <Link href="/directoryadmin/pipeline" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Pipeline board →
         </Link>
       </div>
@@ -51,7 +51,7 @@ export default async function DashboardPage() {
       <h2 className="mb-3 mt-10 text-lg font-semibold text-slate-900">Needs attention</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link
-          href="/admin/pipeline"
+          href="/directoryadmin/pipeline"
           className="block rounded-xl border border-slate-200 p-4 hover:border-red-300 hover:bg-red-50/40"
         >
           <p className={`text-2xl font-semibold tabular-nums ${metrics.stalledCount > 0 ? "text-red-600" : "text-slate-900"}`}>
@@ -62,7 +62,7 @@ export default async function DashboardPage() {
           </p>
         </Link>
         <Link
-          href="/admin/import"
+          href="/directoryadmin/import"
           className="block rounded-xl border border-dashed border-slate-300 p-4 text-sm text-slate-600 hover:border-brand-300 hover:bg-brand-50/40"
         >
           Import a new CSV or JSON file →
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
                 <tr key={`${row.businessId}-${index}`}>
                   <td className="whitespace-nowrap px-4 py-2">
                     <Link
-                      href={`/admin/businesses/${row.businessRef}`}
+                      href={`/directoryadmin/businesses/${row.businessRef}`}
                       className="font-medium text-slate-900 hover:text-brand-600"
                     >
                       {row.businessName}
