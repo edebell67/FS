@@ -6,7 +6,7 @@
 
 databases:
   - name: ep047-directory-db
-    plan: starter
+    plan: basic_256mb
     postgresMajorVersion: "16"
 
 services:
