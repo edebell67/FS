@@ -20,7 +20,7 @@ services:
     # buildCommand/startCommand from the repo root, which would build the
     # wrong project entirely.
     rootDir: epics/ep_047_directory_app
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --include=dev && npm run build
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
