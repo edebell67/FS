@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { importFile, CsvParseError, JsonParseError } from "@/lib/import/import-file";
 import { DrizzleImportRepository } from "@/lib/import/repository";
 import type { ImportSource } from "@/lib/import/types";
+import { requireAdminUserForApi } from "@/lib/auth/require";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,10 @@ export const dynamic = "force-dynamic";
 // regularly exceed a few thousand rows; for now this is synchronous and
 // returns the full summary in the response.
 export async function POST(request: Request) {
+  // Middleware only checks cookie presence; this is the real check.
+  const auth = await requireAdminUserForApi();
+  if (auth instanceof NextResponse) return auth;
+
   let formData: FormData;
   try {
     formData = await request.formData();

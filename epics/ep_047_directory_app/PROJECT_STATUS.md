@@ -18,13 +18,14 @@ app on Postgres/Drizzle: a CSV/JSON business importer with real-time validation,
 detection, and rollback; a public business directory (homepage, category/town listings,
 keyword search, business profile pages with schema.org JSON-LD); and an admin console
 (dashboard, an 8-column Kanban pipeline board with a working stage-move action, business
-detail/timeline pages). Every phase was verified against a **live** local Postgres database and
-a **live** browser, not just unit tests — including two real bugs that were only found because
-real (messy) data was used instead of synthetic test fixtures. The app was then restructured so
-its public and admin routes can later be mounted at `thetechprinciple.com/directory` and
+detail/timeline pages) that now sits behind a real login. Every phase was verified against a
+**live** local Postgres database and a **live** browser, not just unit tests — including
+several real bugs that were only found because real (messy) data, and real browser sessions,
+were used instead of synthetic fixtures. The app was then restructured so its public and admin
+routes can later be mounted at `thetechprinciple.com/directory` and
 `thetechprinciple.com/directoryadmin` respectively, without touching the existing live site at
 `thetechprinciple.com/`. Everything is committed and pushed to GitHub. **Nothing is deployed to
-the public internet yet** — that's the next task (see §7).
+the public internet yet** — that's the next task, now updated for auth (see §7).
 
 ---
 
@@ -39,7 +40,8 @@ the public internet yet** — that's the next task (see §7).
 | Local dev server | `epics/ep_047_directory_app/start_app.bat` — installs deps, checks Postgres, starts `npm run dev` on port 8140 |
 | Local data as of last check | 832 real businesses (imported from `UK_Ltd_email_no_website_VERIFIED_410.csv` at the repo root, plus a second real import of a larger file during the session), 31 categories, 39 towns |
 | Full build/decision history | `epics/ep_047_directory_app/PLAN.md` (architecture decisions + phase-by-phase completion tests) and `README.md` (what's built, what's verified, gotchas found) |
-| Deployment task | `workstream/100_backlog/general/20260724_072234_ep047_997_render_production_deployment.md` |
+| Deployment task | `workstream/100_backlog/Hold/20260724_135904_ep047_997_render_production_deployment_v2.md` — **v2, post-auth**. The v1 task auto-ran into an unrelated worker crash and ended up in `workstream/400_failed/codex/`; v2 supersedes it and adds the now-required "create the first admin user" step. |
+| Auth task | `workstream/100_backlog/Hold/20260724_121418_ep047_997_admin_authentication.md` — **done**, kept for its design rationale and the still-open role-enforcement follow-up. |
 
 ---
 
@@ -155,8 +157,14 @@ the exact 14-route output documented in the deployment task file.
 
 ## 5. What's explicitly NOT built (don't be surprised by this)
 
-- **Authentication/roles.** The entire admin console is reachable by anyone with the URL — no
-  login exists. This is the single most important thing to flag before this goes anywhere public.
+- ~~Authentication/roles~~ **Login is now implemented (2026-07-24)** — see the epic README's
+  "Admin authentication" section for full detail. Every `/directoryadmin/*` page and API route
+  requires a session; verified live (login, logout, session persistence, rate limiting, a real
+  stage move recording the correct `actor_user_id`). What's still NOT done: the six roles from
+  the brief are stored (`users.role`) but not enforced — every authenticated user gets full
+  access regardless of role. That permission-matrix work, plus the original auth design
+  rationale, is at
+  `workstream/100_backlog/Hold/20260724_121418_ep047_997_admin_authentication.md`.
 - **`events` and `audit_log` tables**, the 12 analytics charts, notifications, verification
   email sending — all Phase 5/6 in `PLAN.md`, not started.
 - **True drag-and-drop** on the pipeline board (a select dropdown is used instead — functionally
@@ -171,16 +179,16 @@ the exact 14-route output documented in the deployment task file.
 
 ---
 
-## 6. Two things to tell the user, unprompted, the next time you talk to them
+## 6. Things to tell the user, unprompted, the next time you talk to them
 
-1. **The admin console has no authentication.** If this gets deployed and especially if it gets
-   linked from `thetechprinciple.com`, anyone who finds `/directoryadmin/*` can import data, roll
-   back imports, and move businesses through the pipeline. Worth deciding whether that's
-   acceptable short-term or whether auth needs to come first.
-2. **`thetechprinciple.com` routing is still an open question.** The user was asked how that
+1. **`thetechprinciple.com` routing is still an open question.** The user was asked how that
    domain is currently hosted (Render? Vercel? something else?) so the eventual reverse-proxy/
    rewrite rules for `/directory*` and `/directoryadmin*` could be planned — that question
    hadn't been answered as of this document. Ask again before attempting the domain connection.
+2. **Role-based permissions aren't enforced yet.** Login exists and is verified working, but
+   every authenticated user has full admin access regardless of their stored `role`. If the plan
+   is to give non-admin staff (Sales, Support, etc.) actual restricted access, that's still
+   unbuilt — see the follow-up task referenced in §5.
 
 ---
 

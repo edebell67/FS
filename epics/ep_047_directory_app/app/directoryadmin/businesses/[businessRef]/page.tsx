@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { getBusinessByRef } from "@/lib/db/queries/directory";
 import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipeline";
+import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ interface PageProps {
 
 export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const { businessRef } = await params;
+  await requireAdminUserForPage(`/directoryadmin/businesses/${businessRef}`);
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 

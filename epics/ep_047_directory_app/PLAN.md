@@ -151,7 +151,7 @@ coordinates exist. Also not built: ISR/ISG caching (everything is `force-dynamic
 fine at 410 rows, revisit before Phase 7's 500k-row target), sitemap.xml, ownership/claim flow
 (needs Phase 4 auth first).
 
-### Phase 4 — Admin console — **dashboard + pipeline board done, verified live; auth deferred**
+### Phase 4 — Admin console — **dashboard + pipeline board + auth done, verified live**
 Dashboard (businesses/categories/towns, avg time in pipeline, imports today/week/month, stalled
 count, recent activity feed). Kanban pipeline board — all 8 columns (count / movement today /
 avg time / blocked), a capped preview of businesses per column with a manual "move to stage"
@@ -165,11 +165,20 @@ dropdown, confirmed in `psql` that `current_stage_id` updated and exactly one ne
 confirmed 3 total transitions and the detail page's timeline rendering all of them correctly;
 board-column filter (`/admin/businesses?column=Validated`) correctly returned exactly the 1
 business now in that column.
-**Deliberately deferred:** Auth.js + the six roles (everything here is unauthenticated — same
-gap as the rest of the site so far), true drag-and-drop (the board uses a select+button "move
-to stage" instead — functionally equivalent, no DnD library needed), multi-select bulk update,
-and the events/audit_log tables (Phase 5). The 1s-at-100k-businesses load target is untested —
-current data is 410 rows.
+**Auth added 2026-07-24**, hand-rolled rather than the originally-planned Auth.js (§1 amended —
+credentials-only login for internal staff doesn't need Auth.js's OAuth-provider ecosystem, and
+v5 is still beta on the App Router). Every `/directoryadmin/*` page and API route now requires a
+login — two-layer protection (`middleware.ts` Edge cookie-presence pre-filter +
+`lib/auth/require.ts`'s DB-backed authoritative check, split because Edge can't run `pg`/
+`node:crypto`). Full detail in the epic README's "Admin authentication" section. Verified live:
+login/logout, session persistence across reload, rate limiting (including blocking a *correct*
+password during lockout), `stage_transitions.actor_user_id` now populated with the real user.
+
+**Deliberately deferred:** the six roles are stored (`users.role`) but not enforced — every
+authenticated user gets full access regardless of role. True drag-and-drop (the board uses a
+select+button "move to stage" instead — functionally equivalent, no DnD library needed),
+multi-select bulk update, and the events/audit_log tables (Phase 5). The 1s-at-100k-businesses
+load target is untested — current data is 832 rows.
 
 ### Deployment target restructure — done, verified live
 Real requirement, not in the original brief: this app needs to live at

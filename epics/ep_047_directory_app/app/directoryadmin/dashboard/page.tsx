@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { getDashboardMetrics, getRecentActivity } from "@/lib/db/queries/pipeline";
+import { requireAdminUserForPage } from "@/lib/auth/require";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,7 @@ function formatHours(hours: number | null): string {
 }
 
 export default async function DashboardPage() {
+  await requireAdminUserForPage("/directoryadmin/dashboard");
   const [metrics, activity] = await Promise.all([getDashboardMetrics(), getRecentActivity(15)]);
 
   return (

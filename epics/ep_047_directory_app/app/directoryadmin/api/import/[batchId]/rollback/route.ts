@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { DrizzleImportRepository } from "@/lib/import/repository";
+import { requireAdminUserForApi } from "@/lib/auth/require";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,10 @@ export async function POST(
   _request: Request,
   { params }: { params: Promise<{ batchId: string }> }
 ) {
+  // Middleware only checks cookie presence; this is the real check.
+  const auth = await requireAdminUserForApi();
+  if (auth instanceof NextResponse) return auth;
+
   const { batchId } = await params;
   const repository = new DrizzleImportRepository();
   try {

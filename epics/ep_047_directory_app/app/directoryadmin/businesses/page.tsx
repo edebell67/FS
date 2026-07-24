@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { format } from "date-fns";
+import { requireAdminUserForPage } from "@/lib/auth/require";
 import {
   listBusinesses,
   listDistinctCategories,
@@ -35,6 +36,7 @@ function buildQueryString(
 }
 
 export default async function BusinessesPage({ searchParams }: PageProps) {
+  await requireAdminUserForPage("/directoryadmin/businesses");
   const params = await searchParams;
   const page = parsePage(params.page);
 

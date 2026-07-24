@@ -30,6 +30,47 @@ export const schemaMigrations = pgTable("schema_migrations", {
   appliedAt: timestamp("applied_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// --- Admin auth -------------------------------------------------------------
+
+// The brief's six roles (Super Admin, Admin, Sales, Operations, Support,
+// Read Only) are stored here but NOT yet enforced per-permission — every
+// authenticated user currently gets full /directoryadmin access regardless
+// of role. Role is recorded now so a later pass can add the permission
+// matrix without a schema change. See lib/auth/roles.ts for the fixed list.
+export const users = pgTable("users", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  email: text("email").notNull().unique(),
+  // "scrypt$salt$hash" — see lib/auth/password.ts. Never a plain password,
+  // never logged, never returned from any query used by the UI.
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("admin"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+});
+
+// Session tokens are random (256 bits), never signed/decoded — the cookie
+// value is looked up here by its hash. AUTH_SECRET is NOT used for sessions;
+// nothing here depends on it. Deleting a user cascades to their sessions,
+// so revoking access is one DELETE.
+export const sessions = pgTable(
+  "sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    // SHA-256 hex of the raw cookie token — the raw token is never stored,
+    // so a DB leak alone doesn't hand out usable sessions.
+    tokenHash: text("token_hash").notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byUser: index("sessions_user_idx").on(table.userId),
+    byExpiry: index("sessions_expiry_idx").on(table.expiresAt),
+  })
+);
+
 // --- Pipeline -------------------------------------------------------------
 
 export const pipelineStages = pgTable("pipeline_stages", {

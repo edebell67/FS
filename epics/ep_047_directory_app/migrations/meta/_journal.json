@@ -15,6 +15,13 @@
       "when": 1784816983612,
       "tag": "0001_pipeline_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1784892158805,
+      "tag": "0002_acoustic_jackpot",
+      "breakpoints": true
     }
   ]
 }

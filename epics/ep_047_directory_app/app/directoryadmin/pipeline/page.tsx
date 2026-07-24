@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { getBoardColumns } from "@/lib/db/queries/pipeline";
+import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -13,6 +14,7 @@ function formatHours(hours: number | null): string {
 }
 
 export default async function PipelinePage() {
+  await requireAdminUserForPage("/directoryadmin/pipeline");
   const columns = await getBoardColumns();
 
   return (
