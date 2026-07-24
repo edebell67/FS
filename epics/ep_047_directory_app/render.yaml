@@ -14,6 +14,12 @@ services:
     name: ep047-directory-app
     runtime: node
     plan: starter
+    # This is a monorepo (github.com/edebell67/FS) — the app lives in a
+    # subfolder, not the repo root, and the repo root has its own unrelated
+    # package.json. Without rootDir, Render clones the whole repo and runs
+    # buildCommand/startCommand from the repo root, which would build the
+    # wrong project entirely.
+    rootDir: epics/ep_047_directory_app
     buildCommand: npm install && npm run build
     startCommand: npm start
     healthCheckPath: /api/health

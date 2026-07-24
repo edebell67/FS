@@ -14,6 +14,7 @@ Created 2026-07-23.
 |---|---|
 | `PROJECT_PROMPT.md` | The source brief, stored verbatim. Objectives, stack, data model, pipeline stages, admin console scope, design philosophy. |
 | `PLAN.md` | Implementation plan. Architecture decisions, schema, 8 build phases with completion tests, repo layout, open questions. |
+| `PROJECT_STATUS.md` | Handoff-style summary of everything built so far — written for a fresh AI/engineer with zero prior context. Points to the Render deployment task next. |
 | `app/` | Next.js App Router, mounted at `/directory` (public) and `/directoryadmin` (admin) — see "URL structure" below. `/` itself just redirects to `/directory`. Not yet built: auth/roles, events/audit_log, analytics (Phases 5+). |
 | `lib/db/` | Drizzle client and schema — `businesses`, `pipeline_stages`, `stage_transitions`, `import_batches`, `import_row_errors`, `category_sequences`. Still to come: `events`, `audit_log`, users/roles, notifications, jobs, metrics_daily (PLAN.md §2). |
 | `lib/db/queries/businesses.ts` | Shared read-side query: filtered/paginated/sortable `listBusinesses` (keyword across name/category/town/county/email/phone/ref/postcode, category/town/status/stage/board-column/A-Z-letter filters), `listDistinctCategories`/`listDistinctTowns`. Used by the admin businesses list, every public listing page, and the pipeline board's "View all" links — one query layer, not duplicated. |
