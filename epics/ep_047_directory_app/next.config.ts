@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   // `eds` workspace, which otherwise makes Next guess the wrong root for
   // file tracing during build.
   outputFileTracingRoot: __dirname,
+  // GitHub Pages uses directory-style URLs such as /blog/. Preserve the
+  // incoming slash so the public-site proxy can forward them unchanged.
+  skipTrailingSlashRedirect: true,
 };
 
 export default nextConfig;
