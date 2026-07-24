@@ -48,14 +48,15 @@ function makeLineReader(rl: ReturnType<typeof createInterface>) {
 }
 
 /**
- * Reads a line with each keystroke echoed as '*' instead of the real
- * character. Falls back to the shared line-queue reader (unmasked) when
- * stdin isn't a real TTY (piped input, CI, etc.) — raw mode requires an
- * actual terminal.
+ * Reads a single terminal line without a concurrent readline listener. In a
+ * TTY this is the only stdin reader, preventing password input from being
+ * buffered and misinterpreted as the later role answer (as happened in Render
+ * Shell). Non-TTY callers retain the queued readline fallback for CI/pipes.
  */
-function readMaskedLine(
+function readTerminalLine(
   prompt: string,
-  nextLine: () => Promise<string>
+  nextLine: () => Promise<string>,
+  masked: boolean
 ): Promise<string> {
   if (!stdin.isTTY) {
     stdout.write(`${prompt}(no TTY detected, input will be visible) `);
@@ -89,7 +90,7 @@ function readMaskedLine(
           continue;
         }
         value += char;
-        stdout.write("*");
+        stdout.write(masked ? "*" : char);
       }
     };
 
@@ -101,26 +102,32 @@ function readMaskedLine(
 
 async function main() {
   const reset = process.argv.includes("--reset");
-  const rl = createInterface({ input: stdin, output: stdout });
-  const nextLine = makeLineReader(rl);
+  // A TTY uses one raw-mode reader per prompt. Creating readline in that case
+  // would leave a second listener on stdin and can corrupt the next answer.
+  const rl = stdin.isTTY ? null : createInterface({ input: stdin, output: stdout });
+  const nextLine = rl
+    ? makeLineReader(rl)
+    : () => Promise.reject(new Error("nextLine is only available without a TTY"));
 
   let email: string;
   let password: string;
   let role: string;
   try {
-    stdout.write("Admin email: ");
-    email = (await nextLine()).trim().toLowerCase();
-    password = await readMaskedLine("Password (min 12 characters): ", nextLine);
-    const confirmPassword = await readMaskedLine("Confirm password: ", nextLine);
+    email = (await readTerminalLine("Admin email: ", nextLine, false)).trim().toLowerCase();
+    password = await readTerminalLine("Password (min 12 characters): ", nextLine, true);
+    const confirmPassword = await readTerminalLine("Confirm password: ", nextLine, true);
     if (password !== confirmPassword) {
       console.error("Passwords did not match.");
       process.exit(1);
     }
-    stdout.write(`Role [${ROLES.join(" | ")}] (default: admin): `);
-    const roleInput = (await nextLine()).trim();
+    const roleInput = (await readTerminalLine(
+      `Role [${ROLES.join(" | ")}] (default: admin): `,
+      nextLine,
+      false
+    )).trim();
     role = roleInput || "admin";
   } finally {
-    rl.close();
+    rl?.close();
   }
 
   if (!email || !email.includes("@")) {
