@@ -4,10 +4,10 @@ import {
   businesses, fieldValidationOutcomes, pipelineStages, stageTransitions, validationPolicy,
   verificationBatchItems, verificationBatches, verificationDeliveries, verificationLinks,
 } from "@/lib/db/schema";
-import { SITE_URL } from "@/lib/site-config";
 import { VERIFICATION_TEMPLATE_VERSION } from "./email-template";
 import { getDeliveryPolicy } from "./delivery";
 import { generateVerificationToken, hashVerificationToken, normalizeExpiryDays } from "./tokens";
+import { verificationCapabilityUrl } from "./urls";
 
 const MAX_BATCH_SIZE = 250;
 
@@ -119,7 +119,7 @@ export async function prepareVerificationBatch(
         itemId: item.id, businessRef: row.business_ref, businessName: row.business_name,
         recipientChannel: "email", recipientAddress: recipient, readiness,
         readinessReason: item.readinessReason, status: item.status, expiresAt: expiresAt.toISOString(),
-        url: `${SITE_URL.replace(/\/$/, "")}/verify/${rawToken}`,
+        url: verificationCapabilityUrl(rawToken),
       });
     }
     return { batchId: batch.id, status: batch.status, readyCount, totalCount: rows.length,
