@@ -6,6 +6,7 @@ import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipelin
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
+import { canManageVerification } from "@/lib/verification/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -15,7 +16,7 @@ interface PageProps {
 
 export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const { businessRef } = await params;
-  await requireAdminUserForPage(`/directoryadmin/businesses/${businessRef}`);
+  const user = await requireAdminUserForPage(`/directoryadmin/businesses/${businessRef}`);
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
@@ -69,7 +70,7 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           </button>
         </form>
       </div>
-      <VerificationLinkPanel businessRef={business.businessRef} />
+      {canManageVerification(user.role) && <VerificationLinkPanel businessRef={business.businessRef} />}
 
       <div className="mt-8 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div className="rounded-lg border border-slate-200 p-4">

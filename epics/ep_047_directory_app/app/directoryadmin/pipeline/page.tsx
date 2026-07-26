@@ -27,6 +27,10 @@ export default async function PipelinePage() {
         Every business, wherever it is between discovery and subscriber. Move a business between
         stages with the dropdown on its card.
       </p>
+      <Link href="/directoryadmin/verification-batches"
+        className="mt-4 inline-block rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+        Select validated businesses for batch verification
+      </Link>
 
       <div className="mt-8 grid grid-cols-1 gap-4 overflow-x-auto pb-4 md:grid-cols-none md:grid-flow-col md:auto-cols-[280px]">
         {columns.map((column) => (

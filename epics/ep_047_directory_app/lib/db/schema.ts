@@ -237,6 +237,40 @@ export const verificationLinks = pgTable(
   })
 );
 
+export const verificationBatches = pgTable(
+  "verification_batches",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    status: text("status").notNull().default("prepared"),
+    expiresInDays: integer("expires_in_days").notNull().default(5),
+    totalCount: integer("total_count").notNull(),
+    readyCount: integer("ready_count").notNull().default(0),
+    createdByUserId: uuid("created_by_user_id").notNull().references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ byCreatedAt: index("verification_batches_created_idx").on(table.createdAt) })
+);
+
+export const verificationBatchItems = pgTable(
+  "verification_batch_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    batchId: uuid("batch_id").notNull().references(() => verificationBatches.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "restrict" }),
+    verificationLinkId: uuid("verification_link_id").notNull().unique().references(() => verificationLinks.id),
+    recipientChannel: text("recipient_channel").notNull().default("email"),
+    recipientAddress: text("recipient_address"),
+    status: text("status").notNull().default("prepared"),
+    readiness: text("readiness").notNull(),
+    readinessReason: text("readiness_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byBatch: index("verification_batch_items_batch_idx").on(table.batchId, table.createdAt),
+    oneBusinessPerBatch: uniqueIndex("verification_batch_items_business_uidx").on(table.batchId, table.businessId),
+  })
+);
+
 export const verificationSubmissions = pgTable(
   "verification_submissions",
   {
@@ -284,15 +318,21 @@ export const verificationDeliveries = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     claimRequestId: uuid("claim_request_id").references(() => claimRequests.id),
     verificationLinkId: uuid("verification_link_id").notNull().references(() => verificationLinks.id),
+    batchItemId: uuid("batch_item_id").references(() => verificationBatchItems.id),
     channel: text("channel").notNull().default("email"),
     recipientAddress: text("recipient_address").notNull(),
     templateVersion: text("template_version").notNull(),
     actorUserId: uuid("actor_user_id").references(() => users.id),
+    status: text("status").notNull().default("prepared"),
+    deliveryMode: text("delivery_mode").notNull().default("disabled"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     sentAt: timestamp("sent_at", { withTimezone: true }),
     failedAt: timestamp("failed_at", { withTimezone: true }),
     providerMessageId: text("provider_message_id"),
     failureReason: text("failure_reason"),
   },
-  (table) => ({ byLink: index("verification_deliveries_link_idx").on(table.verificationLinkId) })
+  (table) => ({
+    byLink: index("verification_deliveries_link_idx").on(table.verificationLinkId),
+    byBatchItem: index("verification_deliveries_batch_item_idx").on(table.batchItemId),
+  })
 );
