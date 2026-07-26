@@ -16,6 +16,8 @@ function formatHours(hours: number | null): string {
 export default async function PipelinePage() {
   await requireAdminUserForPage("/directoryadmin/pipeline");
   const columns = await getBoardColumns();
+  const importedColumn = columns.find((column) => column.name === "Imported");
+  const importedCount = importedColumn?.count ?? 0;
 
   return (
     <main className="mx-auto max-w-[1400px] px-6 py-12">
@@ -27,10 +29,18 @@ export default async function PipelinePage() {
         Every business, wherever it is between discovery and subscriber. Move a business between
         stages with the dropdown on its card.
       </p>
-      <Link href="/directoryadmin/verification-batches"
-        className="mt-4 inline-block rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white">
-        Select validated businesses for batch verification
-      </Link>
+      <div className="mt-4 flex flex-wrap gap-3">
+        {importedCount > 0 && (
+          <Link href="/directoryadmin/validation"
+            className="inline-block rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white">
+            Run field validation for {importedCount.toLocaleString()} imported {importedCount === 1 ? "business" : "businesses"}
+          </Link>
+        )}
+        <Link href="/directoryadmin/verification-batches"
+          className="inline-block rounded border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
+          Select validated businesses for batch verification
+        </Link>
+      </div>
 
       <div className="mt-8 grid grid-cols-1 gap-4 overflow-x-auto pb-4 md:grid-cols-none md:grid-flow-col md:auto-cols-[280px]">
         {columns.map((column) => (

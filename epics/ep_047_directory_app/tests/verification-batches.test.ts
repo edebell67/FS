@@ -38,12 +38,15 @@ test("batch selections reject empty, duplicate, malformed, and over-limit IDs", 
     `00000000-0000-4000-8000-${String(index).padStart(12, "0")}`)));
 });
 
-test("batch preparation enforces Validated eligibility inside its locking transaction", async () => {
+test("batch preparation enforces calculated validation eligibility and partial policy inside its locking transaction", async () => {
   const source = await readFile(new URL("../lib/verification/batches.ts", import.meta.url), "utf8");
-  assert.match(source, /p\.board_column = 'Validated'/);
+  assert.match(source, /b\.validation_status IN \('validated', 'partially_validated'\)/);
+  assert.doesNotMatch(source, /p\.board_column = 'Validated'/);
   assert.match(source, /b\.status = 'active'/);
   assert.match(source, /FOR UPDATE OF b/);
   assert.match(source, /locked\.rows\.length !== businessIds\.length/);
+  assert.match(source, /allowPartialVerification/);
+  assert.match(source, /requestPartial/);
 });
 
 test("batch and single verification routes use role authorization", async () => {

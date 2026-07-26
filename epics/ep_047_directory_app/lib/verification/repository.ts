@@ -2,7 +2,7 @@ import { and, desc, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   businesses, claimRequests, pipelineStages, stageTransitions,
-  verificationLinks, verificationSubmissions,
+  fieldValidationOutcomes, verificationLinks, verificationSubmissions,
 } from "@/lib/db/schema";
 import {
   generateVerificationToken, hashVerificationToken, isValidRawToken, normalizeExpiryDays,
@@ -28,12 +28,20 @@ export async function issueVerificationLink(businessId: string, actorUserId: str
   const link = await db.transaction(async (tx) => {
     const [business] = await tx.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
     if (!business) throw new Error("Business not found.");
+    const outstanding = business.lastValidationRunId ? await tx.select({
+      fieldName: fieldValidationOutcomes.fieldName,
+    }).from(fieldValidationOutcomes).where(and(
+      eq(fieldValidationOutcomes.runId, business.lastValidationRunId),
+      eq(fieldValidationOutcomes.passed, false),
+    )) : [];
     await tx.update(verificationLinks).set({ revokedAt: new Date() }).where(and(
       eq(verificationLinks.businessId, businessId), isNull(verificationLinks.revokedAt),
       isNull(verificationLinks.submittedAt), gt(verificationLinks.expiresAt, new Date()),
     ));
     const [created] = await tx.insert(verificationLinks).values({
       businessId, tokenHash, expiresAt, expiresInDays, createdByUserId: actorUserId,
+      validationStatusAtIssue: business.validationStatus, validationRunId: business.lastValidationRunId,
+      outstandingFields: [...new Set(outstanding.map((item) => item.fieldName))],
     }).returning();
     if (!created) throw new Error("Unable to create verification link.");
     const [stage] = await tx.select().from(pipelineStages)
@@ -60,7 +68,8 @@ export async function getVerificationByRawToken(rawToken: string, markOpened = t
     businessName: businesses.businessName, tradingName: businesses.tradingName,
     phone: businesses.phone, email: businesses.email, website: businesses.website,
     address: businesses.address, town: businesses.town, postcode: businesses.postcode,
-    category: businesses.category,
+    category: businesses.category, validationStatusAtIssue: verificationLinks.validationStatusAtIssue,
+    outstandingFields: verificationLinks.outstandingFields,
   }).from(verificationLinks).innerJoin(businesses, eq(verificationLinks.businessId, businesses.id))
     .where(and(eq(verificationLinks.tokenHash, tokenHash), isNull(verificationLinks.revokedAt),
       isNull(verificationLinks.submittedAt), gt(verificationLinks.expiresAt, new Date()))).limit(1);

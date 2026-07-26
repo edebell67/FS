@@ -1,8 +1,8 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
-  businesses, pipelineStages, stageTransitions, verificationBatchItems,
-  verificationBatches, verificationDeliveries, verificationLinks,
+  businesses, fieldValidationOutcomes, pipelineStages, stageTransitions, validationPolicy,
+  verificationBatchItems, verificationBatches, verificationDeliveries, verificationLinks,
 } from "@/lib/db/schema";
 import { SITE_URL } from "@/lib/site-config";
 import { VERIFICATION_TEMPLATE_VERSION } from "./email-template";
@@ -24,14 +24,14 @@ export function normalizeBusinessIds(input: unknown): string[] {
 export async function getEligibleVerificationBusinesses() {
   return db.select({
     id: businesses.id, businessRef: businesses.businessRef, businessName: businesses.businessName,
-    email: businesses.email, town: businesses.town, stageLabel: pipelineStages.label,
-  }).from(businesses).innerJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
-    .where(and(eq(pipelineStages.boardColumn, "Validated"), eq(businesses.status, "active")))
+    email: businesses.email, town: businesses.town, validationStatus: businesses.validationStatus,
+  }).from(businesses)
+    .where(and(inArray(businesses.validationStatus, ["validated", "partially_validated"]), eq(businesses.status, "active")))
     .orderBy(businesses.businessName);
 }
 
 export async function prepareVerificationBatch(
-  rawIds: unknown, actorUserId: string, rawExpiry: unknown,
+  rawIds: unknown, actorUserId: string, rawExpiry: unknown, requestPartial = false,
 ) {
   const businessIds = normalizeBusinessIds(rawIds);
   const expiresInDays = normalizeExpiryDays(rawExpiry);
@@ -40,20 +40,26 @@ export async function prepareVerificationBatch(
 
   return db.transaction(async (tx) => {
     const locked = await tx.execute(sql`
-      SELECT b.id, b.business_ref, b.business_name, b.email, b.current_stage_id
+      SELECT b.id, b.business_ref, b.business_name, b.email, b.current_stage_id,
+             b.validation_status, b.last_validation_run_id
       FROM businesses b
-      JOIN pipeline_stages p ON p.id = b.current_stage_id
       WHERE b.id IN (${sql.join(businessIds.map((id) => sql`${id}::uuid`), sql`, `)})
-        AND b.status = 'active' AND p.board_column = 'Validated'
+        AND b.status = 'active'
+        AND b.validation_status IN ('validated', 'partially_validated')
       ORDER BY b.id FOR UPDATE OF b`);
     if (locked.rows.length !== businessIds.length) {
-      throw new Error("Every selected business must still be active and in the Validated pipeline column.");
+      throw new Error("Every selected business must still be active and validation-eligible.");
     }
 
     const rows = locked.rows as Array<{
       id: string; business_ref: string; business_name: string; email: string | null;
-      current_stage_id: number | null;
+      current_stage_id: number | null; validation_status: string; last_validation_run_id: string | null;
     }>;
+    const [storedPolicy] = await tx.select().from(validationPolicy).where(eq(validationPolicy.id, 1)).limit(1);
+    const partialRows = rows.filter((row) => row.validation_status === "partially_validated");
+    if (partialRows.length && (!storedPolicy?.allowPartialVerification || !requestPartial)) {
+      throw new Error("Partially validated businesses require the protected partial-verification policy and explicit batch confirmation.");
+    }
     const readyCount = rows.filter((row) => Boolean(row.email?.trim())).length;
     const batchStatus = readyCount === rows.length ? "ready" : readyCount === 0 ? "prepared" : "partially_ready";
     const [batch] = await tx.insert(verificationBatches).values({
@@ -68,6 +74,13 @@ export async function prepareVerificationBatch(
     const prepared = [];
     for (const row of rows) {
       const rawToken = generateVerificationToken();
+      const outstanding = row.last_validation_run_id ? await tx.select({
+        fieldName: fieldValidationOutcomes.fieldName,
+      }).from(fieldValidationOutcomes).where(and(
+        eq(fieldValidationOutcomes.runId, row.last_validation_run_id),
+        eq(fieldValidationOutcomes.passed, false),
+      )) : [];
+      const outstandingFields = [...new Set(outstanding.map((item) => item.fieldName))];
       await tx.update(verificationLinks).set({ revokedAt: new Date() }).where(and(
         eq(verificationLinks.businessId, row.id),
         sql`${verificationLinks.revokedAt} IS NULL`,
@@ -76,7 +89,8 @@ export async function prepareVerificationBatch(
       ));
       const [link] = await tx.insert(verificationLinks).values({
         businessId: row.id, tokenHash: hashVerificationToken(rawToken), expiresAt,
-        expiresInDays, createdByUserId: actorUserId,
+        expiresInDays, createdByUserId: actorUserId, validationStatusAtIssue: row.validation_status,
+        validationRunId: row.last_validation_run_id, outstandingFields,
       }).returning();
       if (!link) throw new Error("Unable to create a verification link.");
       const recipient = row.email?.trim() || null;

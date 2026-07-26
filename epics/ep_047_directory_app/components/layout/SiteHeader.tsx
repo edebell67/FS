@@ -36,6 +36,9 @@ export async function SiteHeader() {
               <Link href="/directoryadmin/businesses" className="hover:text-slate-900">
                 Businesses
               </Link>
+              {["super_admin", "admin", "operations"].includes(user.role) && <Link href="/directoryadmin/validation" className="hover:text-slate-900">
+                Validation
+              </Link>}
               <Link
                 href="/directoryadmin/import"
                 className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"

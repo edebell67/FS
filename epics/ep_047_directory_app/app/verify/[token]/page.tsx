@@ -18,15 +18,22 @@ export default async function VerifyPage({ params, searchParams }: {
     ["email", "Listing email"], ["website", "Website"], ["address", "Address"],
     ["town", "Town"], ["postcode", "Postcode"], ["category", "Category"],
   ] as const;
+  const outstanding = record.validationStatusAtIssue === "partially_validated"
+    ? new Set(Array.isArray(record.outstandingFields) ? record.outstandingFields.filter((field): field is string => typeof field === "string") : [])
+    : new Set<string>();
   return (
     <main className="mx-auto max-w-xl px-5 py-10">
       <p className="text-sm font-medium text-brand-600">Verify your listing</p>
       <h1 className="mt-2 text-2xl font-semibold">We have a listing for {record.businessName}.</h1>
       <p className="mt-2 text-slate-600">Help us make sure local customers see the right details.</p>
+      {outstanding.size > 0 && <p className="mt-4 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
+        Fields marked “Needs confirmation” are the only outstanding data-quality items for this listing.
+      </p>}
       {error && <p role="alert" className="mt-4 rounded bg-red-50 p-3 text-sm text-red-700">Please complete every required confirmation.</p>}
       <form action={action} className="mt-6 space-y-4">
         {fields.map(([name, label]) => (
-          <label key={name} className="block text-sm font-medium text-slate-700">{label}
+          <label key={name} className={`block rounded text-sm font-medium text-slate-700 ${outstanding.has(name) ? "border border-amber-300 bg-amber-50 p-3" : ""}`}>
+            {label} {outstanding.has(name) && <span className="ml-2 rounded bg-amber-200 px-2 py-0.5 text-xs text-amber-900">Needs confirmation</span>}
             <input name={name} defaultValue={record[name] ?? ""} maxLength={300}
               className="mt-1 block w-full rounded-md border border-slate-300 px-3 py-2" />
           </label>

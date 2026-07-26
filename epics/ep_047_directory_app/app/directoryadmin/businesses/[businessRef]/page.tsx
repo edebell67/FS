@@ -7,6 +7,7 @@ import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
 import { canManageVerification } from "@/lib/verification/repository";
+import { getBusinessValidationDetail } from "@/lib/validation/repository";
 
 export const dynamic = "force-dynamic";
 
@@ -20,7 +21,9 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
-  const [timeline, stages] = await Promise.all([getBusinessTimeline(business.id), getPipelineStages()]);
+  const [timeline, stages, validation] = await Promise.all([
+    getBusinessTimeline(business.id), getPipelineStages(), getBusinessValidationDetail(business.id),
+  ]);
 
   return (
     <main className="mx-auto max-w-4xl px-6 py-12">
@@ -44,6 +47,12 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
         >
           View public page →
         </Link>
+      </div>
+      <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 p-4 text-sm">
+        <div>Calculated validation: <strong>{validation?.validationStatus ?? "non_valid"}</strong>
+          {validation?.outcomes.some((outcome) => !outcome.passed) &&
+            <span className="ml-2 text-amber-700">{validation.outcomes.filter((outcome) => !outcome.passed).length} outstanding field(s)</span>}</div>
+        {canManageVerification(user.role) && <Link href="/directoryadmin/validation" className="font-medium text-brand-700">Open validation & repair →</Link>}
       </div>
 
       <div className="mt-6 flex items-center gap-3 rounded-lg border border-slate-200 p-4">

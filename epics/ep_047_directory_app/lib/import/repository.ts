@@ -7,15 +7,20 @@ import { and, eq, or, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   businesses,
+  businessValidationRuns,
   categorySequences,
+  fieldValidationOutcomes,
   importBatches,
   importRowErrors,
   pipelineStages,
   stageTransitions,
+  validationFieldRules,
 } from "@/lib/db/schema";
 import type { DedupeKeys } from "./duplicates";
 import type { AcceptedRow, ImportSource, RowIssue } from "./types";
 import { slugify } from "./slug";
+import { validateBusiness } from "@/lib/validation/engine";
+import type { RuleType, ValidatableField, ValidationRule } from "@/lib/validation/types";
 
 export interface ImportRepository {
   createBatch(filename: string, source: ImportSource, uploadedBy?: string): Promise<string>;
@@ -106,6 +111,14 @@ export class DrizzleImportRepository implements ImportRepository {
     }
 
     await db.transaction(async (tx) => {
+      const configuredRules = await tx.select().from(validationFieldRules)
+        .where(eq(validationFieldRules.active, true));
+      const rules: ValidationRule[] = configuredRules.map((rule) => ({
+        id: rule.id, fieldName: rule.fieldName as ValidatableField, label: rule.label,
+        ruleType: rule.ruleType as RuleType, mandatory: rule.mandatory,
+        blocksVerification: rule.blocksVerification,
+        parameters: (rule.parameters ?? {}) as ValidationRule["parameters"],
+      }));
       for (const row of rows) {
         if (!row.businessRef) continue;
         const now = new Date();
@@ -154,6 +167,25 @@ export class DrizzleImportRepository implements ImportRepository {
           source: "import",
           notes: `Imported in batch ${batchId}`,
         });
+        const result = validateBusiness(row.input, rules);
+        const [run] = await tx.insert(businessValidationRuns).values({
+          businessId: inserted.id, status: result.status, trigger: "import",
+          rulesSnapshot: rules, startedAt: now, completedAt: now,
+        }).returning({ id: businessValidationRuns.id });
+        if (!run) throw new Error(`Failed to persist validation for row ${row.rowNumber}.`);
+        if (result.outcomes.length) {
+          await tx.insert(fieldValidationOutcomes).values(result.outcomes.map((outcome) => ({
+            runId: run.id, businessId: inserted.id, ruleId: outcome.ruleId || null,
+            fieldName: outcome.fieldName, sourceValue: outcome.sourceValue,
+            normalizedValue: outcome.normalizedValue, passed: outcome.passed,
+            outcomeCode: outcome.outcomeCode, message: outcome.message,
+            mandatory: outcome.mandatory, blocksVerification: outcome.blocksVerification,
+          })));
+        }
+        await tx.update(businesses).set({
+          validationStatus: result.status, lastValidationRunId: run.id,
+          validatedAt: result.status === "validated" ? now : null,
+        }).where(eq(businesses.id, inserted.id));
       }
     });
   }

@@ -24,6 +24,7 @@ import {
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 
 export const schemaMigrations = pgTable("schema_migrations", {
   id: serial("id").primaryKey(),
@@ -177,6 +178,9 @@ export const businesses = pgTable(
     notes: text("notes"),
     internalNotes: text("internal_notes"),
     tags: text("tags").array(),
+    validationStatus: text("validation_status").notNull().default("non_valid"),
+    lastValidationRunId: uuid("last_validation_run_id"),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
   },
   (table) => ({
     byCategory: index("businesses_category_idx").on(table.category),
@@ -186,6 +190,149 @@ export const businesses = pgTable(
     // (see lib/import/duplicates.ts) — no single field is an absolute identity key.
     byEmail: index("businesses_email_idx").on(table.email),
     byStage: index("businesses_stage_idx").on(table.currentStageId),
+  })
+);
+
+// Data-quality rules are versioned by replacement/deactivation. Validation
+// runs and their field outcomes are immutable evidence; businesses carries
+// only the latest projection used for filtering and batch eligibility.
+export const validationFieldRules = pgTable(
+  "validation_field_rules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fieldName: text("field_name").notNull(),
+    label: text("label").notNull(),
+    ruleType: text("rule_type").notNull(),
+    mandatory: boolean("mandatory").notNull().default(false),
+    blocksVerification: boolean("blocks_verification").notNull().default(false),
+    parameters: jsonb("parameters").notNull().default({}),
+    active: boolean("active").notNull().default(true),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    supersededAt: timestamp("superseded_at", { withTimezone: true }),
+  },
+  (table) => ({
+    activeFieldRule: uniqueIndex("validation_field_rules_active_uidx")
+      .on(table.fieldName, table.ruleType)
+      .where(sql`${table.active} = true`),
+  })
+);
+
+export const businessValidationRuns = pgTable(
+  "business_validation_runs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    status: text("status").notNull(),
+    trigger: text("trigger").notNull(),
+    rulesSnapshot: jsonb("rules_snapshot").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    // Idempotency key for durable bulk work. It intentionally has no FK here
+    // because the job-item table is declared later in this schema.
+    validationJobItemId: uuid("validation_job_item_id").unique(),
+    startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+    completedAt: timestamp("completed_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ byBusiness: index("business_validation_runs_business_idx").on(table.businessId, table.completedAt) })
+);
+
+export const fieldValidationOutcomes = pgTable(
+  "field_validation_outcomes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    runId: uuid("run_id").notNull().references(() => businessValidationRuns.id, { onDelete: "cascade" }),
+    // Keep the snapshot even if the business is deleted mid-run; processing
+    // then records a visible "Business not found" error instead of losing count.
+    businessId: uuid("business_id").notNull(),
+    ruleId: uuid("rule_id").references(() => validationFieldRules.id),
+    fieldName: text("field_name").notNull(),
+    sourceValue: text("source_value"),
+    normalizedValue: text("normalized_value"),
+    passed: boolean("passed").notNull(),
+    outcomeCode: text("outcome_code").notNull(),
+    message: text("message"),
+    mandatory: boolean("mandatory").notNull(),
+    blocksVerification: boolean("blocks_verification").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byBusinessRun: index("field_validation_outcomes_business_run_idx").on(table.businessId, table.runId),
+    repairQueue: index("field_validation_outcomes_repair_idx").on(table.fieldName, table.passed),
+  })
+);
+
+export const fieldRepairHistory = pgTable(
+  "field_repair_history",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    fieldName: text("field_name").notNull(),
+    sourceOutcomeId: uuid("source_outcome_id").notNull().references(() => fieldValidationOutcomes.id),
+    sourceValue: text("source_value"),
+    proposedValue: text("proposed_value").notNull(),
+    replacementValue: text("replacement_value"),
+    evidence: text("evidence").notNull(),
+    actorUserId: uuid("actor_user_id").notNull().references(() => users.id),
+    status: text("status").notNull().default("proposed"),
+    revalidationRunId: uuid("revalidation_run_id").references(() => businessValidationRuns.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    appliedAt: timestamp("applied_at", { withTimezone: true }),
+  },
+  (table) => ({ byBusiness: index("field_repair_history_business_idx").on(table.businessId, table.createdAt) })
+);
+
+export const validationPolicy = pgTable("validation_policy", {
+  id: integer("id").primaryKey().default(1),
+  allowPartialVerification: boolean("allow_partial_verification").notNull().default(false),
+  updatedByUserId: uuid("updated_by_user_id").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Durable orchestration for validating the active-business population. The
+// per-business tables remain the immutable evidence; these rows only track
+// bounded, resumable bulk work.
+export const validationJobs = pgTable(
+  "validation_jobs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    status: text("status").notNull().default("pending"),
+    totalCount: integer("total_count").notNull().default(0),
+    processedCount: integer("processed_count").notNull().default(0),
+    errorCount: integer("error_count").notNull().default(0),
+    rulesSnapshot: jsonb("rules_snapshot").notNull(),
+    createdByUserId: uuid("created_by_user_id").notNull().references(() => users.id),
+    leaseToken: uuid("lease_token"),
+    leaseExpiresAt: timestamp("lease_expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byCreatedAt: index("validation_jobs_created_idx").on(table.createdAt),
+    oneActiveJob: uniqueIndex("validation_jobs_one_active_uidx")
+      .on(sql`(true)`)
+      .where(sql`${table.status} IN ('pending', 'running')`),
+  })
+);
+
+export const validationJobItems = pgTable(
+  "validation_job_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    jobId: uuid("job_id").notNull().references(() => validationJobs.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    status: text("status").notNull().default("pending"),
+    attemptCount: integer("attempt_count").notNull().default(0),
+    claimToken: uuid("claim_token"),
+    validationRunId: uuid("validation_run_id").references(() => businessValidationRuns.id, { onDelete: "set null" }),
+    errorMessage: text("error_message"),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+  },
+  (table) => ({
+    byJobStatus: index("validation_job_items_job_status_idx").on(table.jobId, table.status),
+    oneBusinessPerJob: uniqueIndex("validation_job_items_business_uidx").on(table.jobId, table.businessId),
   })
 );
 
@@ -230,6 +377,9 @@ export const verificationLinks = pgTable(
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
     createdByUserId: uuid("created_by_user_id").references(() => users.id),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    validationStatusAtIssue: text("validation_status_at_issue"),
+    validationRunId: uuid("validation_run_id").references(() => businessValidationRuns.id),
+    outstandingFields: jsonb("outstanding_fields").notNull().default([]),
   },
   (table) => ({
     token: uniqueIndex("verification_links_token_hash_uidx").on(table.tokenHash),
