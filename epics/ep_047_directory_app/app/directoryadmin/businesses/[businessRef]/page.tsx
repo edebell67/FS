@@ -5,6 +5,7 @@ import { getBusinessByRef } from "@/lib/db/queries/directory";
 import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipeline";
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
+import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -54,7 +55,7 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
             <option value="" disabled>
               Move to a different stage…
             </option>
-            {stages.map((s) => (
+            {stages.filter((s) => !["Verification", "Claimed"].includes(s.boardColumn)).map((s) => (
               <option key={s.key} value={s.key}>
                 {s.label}
               </option>
@@ -68,6 +69,7 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           </button>
         </form>
       </div>
+      <VerificationLinkPanel businessRef={business.businessRef} />
 
       <div className="mt-8 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
         <div className="rounded-lg border border-slate-200 p-4">

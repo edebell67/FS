@@ -22,6 +22,7 @@ import {
   jsonb,
   doublePrecision,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 
 export const schemaMigrations = pgTable("schema_migrations", {
@@ -212,4 +213,86 @@ export const stageTransitions = pgTable(
     byBusiness: index("stage_transitions_business_idx").on(table.businessId, table.occurredAt),
     byStage: index("stage_transitions_stage_idx").on(table.toStageId, table.occurredAt),
   })
+);
+
+// Owner verification is intentionally separate from businesses.status. Capability
+// tokens are stored only as SHA-256 hashes and recipient submissions are snapshots.
+export const verificationLinks = pgTable(
+  "verification_links",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    tokenHash: text("token_hash").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    expiresInDays: integer("expires_in_days").notNull().default(5),
+    openedAt: timestamp("opened_at", { withTimezone: true }),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    token: uniqueIndex("verification_links_token_hash_uidx").on(table.tokenHash),
+    byBusiness: index("verification_links_business_idx").on(table.businessId, table.createdAt),
+  })
+);
+
+export const verificationSubmissions = pgTable(
+  "verification_submissions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    linkId: uuid("link_id").notNull().unique().references(() => verificationLinks.id),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    submittedFields: jsonb("submitted_fields").notNull(),
+    relationshipToBusiness: text("relationship_to_business").notNull(),
+    accuracyConfirmedAt: timestamp("accuracy_confirmed_at", { withTimezone: true }).notNull(),
+    privacyNoticeVersion: text("privacy_notice_version").notNull(),
+    requesterEmail: text("requester_email"),
+    requesterPhone: text("requester_phone"),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ byBusiness: index("verification_submissions_business_idx").on(table.businessId) })
+);
+
+export const claimRequests = pgTable(
+  "claim_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    submissionId: uuid("submission_id").unique().references(() => verificationSubmissions.id),
+    status: text("status").notNull().default("pending"),
+    requesterName: text("requester_name").notNull(),
+    relationship: text("relationship").notNull(),
+    contactEmail: text("contact_email"),
+    contactPhone: text("contact_phone"),
+    contactFingerprint: text("contact_fingerprint"),
+    reviewerUserId: uuid("reviewer_user_id").references(() => users.id),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    decisionNote: text("decision_note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byBusiness: index("claim_requests_business_idx").on(table.businessId, table.status),
+    byContact: index("claim_requests_contact_idx").on(table.contactFingerprint, table.createdAt),
+  })
+);
+
+export const verificationDeliveries = pgTable(
+  "verification_deliveries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    claimRequestId: uuid("claim_request_id").references(() => claimRequests.id),
+    verificationLinkId: uuid("verification_link_id").notNull().references(() => verificationLinks.id),
+    channel: text("channel").notNull().default("email"),
+    recipientAddress: text("recipient_address").notNull(),
+    templateVersion: text("template_version").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    providerMessageId: text("provider_message_id"),
+    failureReason: text("failure_reason"),
+  },
+  (table) => ({ byLink: index("verification_deliveries_link_idx").on(table.verificationLinkId) })
 );

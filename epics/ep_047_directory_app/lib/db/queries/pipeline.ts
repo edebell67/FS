@@ -275,6 +275,9 @@ export async function moveBusinessToStage(
 ): Promise<MoveStageResult> {
   const [toStage] = await db.select().from(pipelineStages).where(eq(pipelineStages.key, toStageKey)).limit(1);
   if (!toStage) return { ok: false, error: `Unknown stage "${toStageKey}".` };
+  if (toStage.boardColumn === "Verification" || toStage.boardColumn === "Claimed") {
+    return { ok: false, error: "Verification and Claimed require their controlled workflow." };
+  }
 
   const [business] = await db.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
   if (!business) return { ok: false, error: "Business not found." };

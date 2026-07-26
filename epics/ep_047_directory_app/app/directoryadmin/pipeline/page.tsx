@@ -88,7 +88,7 @@ export default async function PipelinePage() {
                           Move to…
                         </option>
                         {columns.flatMap((c) =>
-                          c.stages.map((s) => (
+                          c.stages.filter((s) => !["Verification", "Claimed"].includes(s.boardColumn)).map((s) => (
                             <option key={s.key} value={s.key}>
                               {s.label}
                             </option>

@@ -197,18 +197,11 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Is this your business?
           </h2>
-          <p className="text-sm text-slate-600">
-            Claiming isn&apos;t available yet — this listing was imported automatically and
-            hasn&apos;t been verified with the owner.
-          </p>
-          <button
-            type="button"
-            disabled
-            className="mt-4 w-full cursor-not-allowed rounded-md bg-slate-200 px-4 py-2 text-sm font-medium text-slate-500"
-            title="Business claiming lands in a later phase"
-          >
-            Claim this business (coming soon)
-          </button>
+          <p className="text-sm text-slate-600">Request a secure verification and manual ownership review.</p>
+          <Link href={`/claim?business=${encodeURIComponent(business.businessRef)}`}
+            className="mt-4 block w-full rounded-md bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white">
+            Claim my listing
+          </Link>
         </section>
       </div>
 
