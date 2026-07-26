@@ -1,6 +1,4 @@
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
-import nodemailer from "nodemailer";
-import type SMTPTransport from "nodemailer/lib/smtp-transport";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
@@ -15,12 +13,12 @@ import { trackingClickUrl, trackingPixelUrl } from "./urls";
 
 export const VERIFICATION_FROM = "edward.bell@thetechprinciple.com";
 export const INITIAL_ALLOWED_RECIPIENT = "edebell@gmail.com";
-export type DeliveryMode = "disabled" | "smtp";
+export type DeliveryMode = "disabled" | "gmail-api";
 
-type DeliveryEnvironment = Partial<Record<
+export type DeliveryEnvironment = Partial<Record<
   | "VERIFICATION_DELIVERY_MODE" | "VERIFICATION_DELIVERY_APPROVED"
-  | "VERIFICATION_RECIPIENT_ALLOWLIST" | "EMAIL_FROM"
-  | "SMTP_HOST" | "SMTP_PORT" | "SMTP_SECURE" | "SMTP_USERNAME" | "SMTP_PASSWORD"
+  | "VERIFICATION_RECIPIENT_ALLOWLIST"
+  | "GMAIL_OAUTH_CLIENT_ID" | "GMAIL_OAUTH_CLIENT_SECRET" | "GMAIL_OAUTH_REFRESH_TOKEN"
   | "NODE_ENV" | "NEXT_PUBLIC_SITE_URL",
   string | undefined
 >>;
@@ -35,7 +33,8 @@ export function getDeliveryPolicy(
 ) {
   const recipient = typeof recipientOrEnv === "string" ? recipientOrEnv : undefined;
   const env = typeof recipientOrEnv === "object" ? recipientOrEnv : providedEnv;
-  const mode: DeliveryMode = env.VERIFICATION_DELIVERY_MODE === "smtp" ? "smtp" : "disabled";
+  const mode: DeliveryMode =
+    env.VERIFICATION_DELIVERY_MODE === "gmail-api" ? "gmail-api" : "disabled";
   const approved = env.VERIFICATION_DELIVERY_APPROVED === "true";
   const configuredAllowlist = (env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
     .split(",").map(normaliseAddress).filter(Boolean);
@@ -43,19 +42,16 @@ export function getDeliveryPolicy(
     configuredAllowlist.length === 1 && configuredAllowlist[0] === INITIAL_ALLOWED_RECIPIENT;
   const recipientAllowed = Boolean(recipient) &&
     allowlistIsStrict && configuredAllowlist.includes(normaliseAddress(recipient!));
-  const port = Number(env.SMTP_PORT);
-  const senderValid = normaliseAddress(env.EMAIL_FROM ?? "") === VERIFICATION_FROM;
-  const smtpConfigured = Boolean(
-    env.SMTP_HOST?.trim() && Number.isInteger(port) && port > 0 && port <= 65535 &&
-    env.SMTP_USERNAME?.trim() && env.SMTP_PASSWORD &&
-    (env.SMTP_SECURE === "true" || env.SMTP_SECURE === "false"),
+  const oauthConfigured = Boolean(
+    env.GMAIL_OAUTH_CLIENT_ID?.trim() &&
+    env.GMAIL_OAUTH_CLIENT_SECRET?.trim() &&
+    env.GMAIL_OAUTH_REFRESH_TOKEN?.trim(),
   );
   const publicOriginReady = env.NODE_ENV === "production";
   const reasons = [
-    mode !== "smtp" && "Delivery mode is disabled.",
-    !approved && "SMTP delivery has not been explicitly approved.",
-    !senderValid && `EMAIL_FROM must be exactly ${VERIFICATION_FROM}.`,
-    !smtpConfigured && "Approved SMTP configuration is incomplete.",
+    mode !== "gmail-api" && "Delivery mode is disabled.",
+    !approved && "Gmail API delivery has not been explicitly approved.",
+    !oauthConfigured && "Gmail OAuth configuration is incomplete.",
     !publicOriginReady && "Sending requires the canonical production origin.",
     !allowlistIsStrict && `Recipient allowlist must contain only ${INITIAL_ALLOWED_RECIPIENT}.`,
     recipient !== undefined && !recipientAllowed && "Recipient is not allowlisted.",
@@ -63,7 +59,7 @@ export function getDeliveryPolicy(
   return {
     mode, approved, sender: VERIFICATION_FROM, recipientAllowed,
     canSend: reasons.length === 0,
-    reason: reasons[0] ?? "Approved single-recipient SMTP delivery is configured.",
+    reason: reasons[0] ?? "Approved single-recipient Gmail API delivery is configured.",
   };
 }
 
@@ -114,41 +110,118 @@ export async function prepareDeliveryPreview(input: {
   };
 }
 
-export type MailTransport = {
-  sendMail(message: {
+export type GmailTransport = {
+  sendMessage(message: {
     from: string; to: string; subject: string; text: string; html: string;
-  }): Promise<{ messageId?: string; accepted?: Array<string | { address?: string }> }>;
+  }): Promise<{ messageId: string }>;
 };
 
 export async function handoffVerificationEmail(input: {
-  transport: MailTransport; recipientAddress: string;
+  transport: GmailTransport; recipientAddress: string;
   subject: string; text: string; html: string;
 }) {
   const recipientAddress = normaliseAddress(input.recipientAddress);
-  const result = await input.transport.sendMail({
+  if (recipientAddress !== INITIAL_ALLOWED_RECIPIENT) {
+    throw new Error("Recipient is not allowlisted.");
+  }
+  const result = await input.transport.sendMessage({
     from: VERIFICATION_FROM, to: recipientAddress,
     subject: input.subject, text: input.text, html: input.html,
   });
-  const accepted = (result.accepted ?? []).some((entry) =>
-    normaliseAddress(typeof entry === "string" ? entry : entry.address ?? "") === recipientAddress,
-  );
-  if (!accepted) throw new Error("SMTP provider did not accept the allowlisted recipient.");
+  if (!result.messageId?.trim()) {
+    throw new Error("Gmail API did not return a message ID.");
+  }
   return result;
 }
 
-function createApprovedTransport(env: DeliveryEnvironment): MailTransport {
-  const options: SMTPTransport.Options = {
-    host: env.SMTP_HOST!,
-    port: Number(env.SMTP_PORT),
-    secure: env.SMTP_SECURE === "true",
-    auth: { user: env.SMTP_USERNAME!, pass: env.SMTP_PASSWORD! },
+type Fetch = typeof fetch;
+
+function encodeHeader(value: string): string {
+  return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
+}
+
+function buildRawMessage(message: {
+  from: string; to: string; subject: string; text: string; html: string;
+}): string {
+  const boundary = `ep047-${randomBytes(18).toString("hex")}`;
+  const lines = [
+    `From: ${message.from}`,
+    `To: ${message.to}`,
+    `Subject: ${encodeHeader(message.subject)}`,
+    "MIME-Version: 1.0",
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+    "",
+    `--${boundary}`,
+    'Content-Type: text/plain; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    Buffer.from(message.text, "utf8").toString("base64"),
+    `--${boundary}`,
+    'Content-Type: text/html; charset="UTF-8"',
+    "Content-Transfer-Encoding: base64",
+    "",
+    Buffer.from(message.html, "utf8").toString("base64"),
+    `--${boundary}--`,
+    "",
+  ];
+  return Buffer.from(lines.join("\r\n"), "utf8").toString("base64url");
+}
+
+export function createGmailApiTransport(
+  env: DeliveryEnvironment,
+  fetchImpl: Fetch = fetch,
+): GmailTransport {
+  const clientId = env.GMAIL_OAUTH_CLIENT_ID?.trim();
+  const clientSecret = env.GMAIL_OAUTH_CLIENT_SECRET?.trim();
+  const refreshToken = env.GMAIL_OAUTH_REFRESH_TOKEN?.trim();
+  if (!clientId || !clientSecret || !refreshToken) {
+    throw new Error("Gmail OAuth configuration is incomplete.");
+  }
+  return {
+    async sendMessage(message) {
+      if (message.from !== VERIFICATION_FROM ||
+          normaliseAddress(message.to) !== INITIAL_ALLOWED_RECIPIENT) {
+        throw new Error("Gmail message violates the fixed sender or recipient policy.");
+      }
+      const tokenResponse = await fetchImpl("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: clientId,
+          client_secret: clientSecret,
+          refresh_token: refreshToken,
+          grant_type: "refresh_token",
+        }),
+      });
+      if (!tokenResponse.ok) throw new Error("Gmail OAuth token refresh failed.");
+      const tokenPayload = await tokenResponse.json() as { access_token?: unknown };
+      if (typeof tokenPayload.access_token !== "string" || !tokenPayload.access_token) {
+        throw new Error("Gmail OAuth token refresh returned no access token.");
+      }
+      const sendResponse = await fetchImpl(
+        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+        {
+          method: "POST",
+          headers: {
+            authorization: `Bearer ${tokenPayload.access_token}`,
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({ raw: buildRawMessage(message) }),
+        },
+      );
+      if (!sendResponse.ok) throw new Error("Gmail API message handoff failed.");
+      const sendPayload = await sendResponse.json() as { id?: unknown };
+      if (typeof sendPayload.id !== "string" || !sendPayload.id) {
+        throw new Error("Gmail API did not return a message ID.");
+      }
+      return { messageId: sendPayload.id };
+    },
   };
-  return nodemailer.createTransport(options);
 }
 
 export async function sendPreparedDelivery(input: {
   deliveryId: string; rawToken: string; trackingKey: string; actorUserId: string;
-}, options: { env?: DeliveryEnvironment; transport?: MailTransport } = {}) {
+}, options: { env?: DeliveryEnvironment; transport?: GmailTransport } = {}) {
   const env = options.env ?? process.env;
   if (!isValidRawToken(input.rawToken)) throw new Error("Invalid verification capability.");
   const [record] = await db.select({
@@ -199,7 +272,7 @@ export async function sendPreparedDelivery(input: {
     trackingPixelUrl: pixelUrl, expiresAt: record.expiresAt,
   });
   try {
-    const transport = options.transport ?? createApprovedTransport(env);
+    const transport = options.transport ?? createGmailApiTransport(env);
     const result = await handoffVerificationEmail({
       transport, recipientAddress: record.recipientAddress,
       subject: message.subject, text: message.text, html: message.html,
@@ -217,7 +290,7 @@ export async function sendPreparedDelivery(input: {
     });
     return { status: "sent" as const, sentAt: now, providerMessageId: result.messageId ?? null };
   } catch (error) {
-    const reason = error instanceof Error ? error.message.slice(0, 500) : "SMTP handoff failed.";
+    const reason = error instanceof Error ? error.message.slice(0, 500) : "Gmail API handoff failed.";
     await db.transaction(async (tx) => {
       await tx.update(verificationDeliveries).set({
         status: "failed", failedAt: new Date(), failureReason: reason,
@@ -227,7 +300,7 @@ export async function sendPreparedDelivery(input: {
         metadata: { reason },
       });
     });
-    throw new Error("SMTP handoff failed; no sent status was recorded.");
+    throw new Error("Gmail API handoff failed; no sent status was recorded.");
   }
 }
 

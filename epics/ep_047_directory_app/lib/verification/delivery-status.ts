@@ -7,11 +7,11 @@ const PRESENTATION: Record<
   { label: string; explanation?: string }
 > = {
   prepared: { label: "Prepared", explanation: "Preview created; no email has been sent." },
-  sent: { label: "Sent", explanation: "The SMTP provider accepted handoff; delivery is not guaranteed." },
+  sent: { label: "Sent", explanation: "The Gmail API accepted handoff; delivery is not guaranteed." },
   opened: { label: "Opened (best effort)", explanation: "A tracking pixel was requested; this signal may be incomplete." },
   clicked: { label: "Clicked", explanation: "The tracked verification link was followed." },
   completed: { label: "Completed", explanation: "The recipient submitted the verification form." },
-  failed: { label: "Failed", explanation: "The SMTP provider did not accept handoff." },
+  failed: { label: "Failed", explanation: "The Gmail API did not accept handoff." },
   revoked: { label: "Revoked", explanation: "This verification capability can no longer be used." },
 };
 

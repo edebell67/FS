@@ -18,12 +18,12 @@ test("batch migration durably relates batch, item, link and delivery audits", as
 
 test("delivery policy is disabled without both explicit configuration and approval", () => {
   assert.deepEqual(getDeliveryPolicy({}).canSend, false);
-  assert.equal(getDeliveryPolicy({ VERIFICATION_DELIVERY_MODE: "smtp" }).approved, false);
+  assert.equal(getDeliveryPolicy({ VERIFICATION_DELIVERY_MODE: "gmail-api" }).approved, false);
   const approved = getDeliveryPolicy({
-    VERIFICATION_DELIVERY_MODE: "smtp",
+    VERIFICATION_DELIVERY_MODE: "gmail-api",
     VERIFICATION_DELIVERY_APPROVED: "true",
   });
-  assert.equal(approved.mode, "smtp");
+  assert.equal(approved.mode, "gmail-api");
   assert.equal(approved.approved, true);
   assert.equal(approved.canSend, false);
 });

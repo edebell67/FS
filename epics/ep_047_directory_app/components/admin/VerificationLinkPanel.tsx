@@ -56,7 +56,7 @@ export function VerificationLinkPanel({
       );
       const body = await response.json();
       if (!response.ok) {
-        setDeliveryState(body.error?.includes("SMTP handoff failed") ? "failed" : "prepared");
+        setDeliveryState(body.error?.includes("Gmail API handoff failed") ? "failed" : "prepared");
         return setError(body.error || "Unable to send email.");
       }
       setDeliveryState("sent"); setConfirmed(false);
@@ -111,7 +111,7 @@ export function VerificationLinkPanel({
       <pre className="mt-3 whitespace-pre-wrap rounded bg-white p-3 font-sans text-sm">{result.text}</pre>
       <p className="mt-2 text-xs text-slate-600">Expires {new Date(result.expiresAt).toLocaleString()}</p>
       <p className={`mt-3 text-sm font-medium ${result.deliveryEnabled ? "text-green-700" : "text-amber-800"}`}>
-        {result.deliveryEnabled ? "SMTP sending is enabled for this recipient." : `Preview only: ${result.policyReason}`}
+        {result.deliveryEnabled ? "Gmail API sending is enabled for this recipient." : `Preview only: ${result.policyReason}`}
       </p>
       {deliveryState === "prepared" && <>
         <label className="mt-4 flex gap-2 text-sm">

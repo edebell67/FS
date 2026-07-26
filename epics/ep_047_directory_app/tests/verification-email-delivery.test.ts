@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
-  getDeliveryPolicy, INITIAL_ALLOWED_RECIPIENT, VERIFICATION_FROM,
+  createGmailApiTransport, getDeliveryPolicy, INITIAL_ALLOWED_RECIPIENT, VERIFICATION_FROM,
   handoffVerificationEmail,
 } from "../lib/verification/delivery";
 import { renderVerificationEmail } from "../lib/verification/email-template";
@@ -10,29 +10,23 @@ import { trackingClickUrl, trackingPixelUrl } from "../lib/verification/urls";
 
 const enabledEnvironment = {
   NODE_ENV: "production",
-  VERIFICATION_DELIVERY_MODE: "smtp",
+  VERIFICATION_DELIVERY_MODE: "gmail-api",
   VERIFICATION_DELIVERY_APPROVED: "true",
   VERIFICATION_RECIPIENT_ALLOWLIST: INITIAL_ALLOWED_RECIPIENT,
-  EMAIL_FROM: VERIFICATION_FROM,
-  SMTP_HOST: "smtp.approved.example",
-  SMTP_PORT: "465",
-  SMTP_SECURE: "true",
-  SMTP_USERNAME: "approved-user",
-  SMTP_PASSWORD: "test-only-password",
+  GMAIL_OAUTH_CLIENT_ID: "test-client-id",
+  GMAIL_OAUTH_CLIENT_SECRET: "test-client-secret",
+  GMAIL_OAUTH_REFRESH_TOKEN: "test-refresh-token",
 };
 
-test("SMTP policy fails closed and enables only the exact initial recipient", () => {
+test("Gmail API policy fails closed and enables only the exact initial recipient", () => {
   assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, enabledEnvironment).canSend, true);
   assert.equal(getDeliveryPolicy("prospect@example.com", enabledEnvironment).canSend, false);
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
-    ...enabledEnvironment, EMAIL_FROM: "attacker@example.com",
-  }).canSend, false);
   assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
     ...enabledEnvironment, VERIFICATION_RECIPIENT_ALLOWLIST:
       `${INITIAL_ALLOWED_RECIPIENT},prospect@example.com`,
   }).canSend, false);
   assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
-    ...enabledEnvironment, SMTP_PASSWORD: "",
+    ...enabledEnvironment, GMAIL_OAUTH_REFRESH_TOKEN: "",
   }).canSend, false);
 });
 
@@ -42,9 +36,9 @@ test("controlled sender handoff uses the fixed From identity and no network tran
     recipientAddress: INITIAL_ALLOWED_RECIPIENT,
     subject: "Test verification", text: "test", html: "<p>test</p>",
     transport: {
-      async sendMail(message) {
+      async sendMessage(message) {
         messages.push(message);
-        return { messageId: "fake-provider-id", accepted: [INITIAL_ALLOWED_RECIPIENT] };
+        return { messageId: "fake-provider-id" };
       },
     },
   });
@@ -54,12 +48,61 @@ test("controlled sender handoff uses the fixed From identity and no network tran
   assert.equal(messages[0]?.to, INITIAL_ALLOWED_RECIPIENT);
 });
 
-test("controlled handoff rejects a provider response that did not accept the recipient", async () => {
+test("controlled handoff rejects a Gmail response without a message ID", async () => {
   await assert.rejects(() => handoffVerificationEmail({
     recipientAddress: INITIAL_ALLOWED_RECIPIENT,
     subject: "Test verification", text: "test", html: "<p>test</p>",
-    transport: { async sendMail() { return { accepted: [] }; } },
-  }), /did not accept/);
+    transport: { async sendMessage() { return { messageId: "" }; } },
+  }), /message ID/);
+});
+
+test("Gmail transport refreshes OAuth and sends an encoded fixed-identity message", async () => {
+  const requests: Array<{ url: string; init?: RequestInit }> = [];
+  const fakeFetch = async (url: string | URL | Request, init?: RequestInit) => {
+    requests.push({ url: String(url), init });
+    if (requests.length === 1) {
+      return Response.json({ access_token: "short-lived-access-token" });
+    }
+    return Response.json({ id: "gmail-message-id", threadId: "gmail-thread-id" });
+  };
+  const transport = createGmailApiTransport(enabledEnvironment, fakeFetch as typeof fetch);
+  const result = await transport.sendMessage({
+    from: VERIFICATION_FROM,
+    to: INITIAL_ALLOWED_RECIPIENT,
+    subject: "Test verification ✓",
+    text: "plain body",
+    html: "<p>html body</p>",
+  });
+  assert.equal(result.messageId, "gmail-message-id");
+  assert.equal(requests[0]?.url, "https://oauth2.googleapis.com/token");
+  assert.equal(requests[1]?.url,
+    "https://gmail.googleapis.com/gmail/v1/users/me/messages/send");
+  assert.equal(requests[1]?.init?.headers &&
+    (requests[1].init.headers as Record<string, string>).authorization,
+    "Bearer short-lived-access-token");
+  const tokenBody = requests[0]?.init?.body as URLSearchParams;
+  assert.equal(tokenBody.get("refresh_token"), "test-refresh-token");
+  const sendBody = JSON.parse(String(requests[1]?.init?.body)) as { raw: string };
+  const raw = Buffer.from(sendBody.raw, "base64url").toString("utf8");
+  assert.match(raw, new RegExp(`From: ${VERIFICATION_FROM}`));
+  assert.match(raw, new RegExp(`To: ${INITIAL_ALLOWED_RECIPIENT}`));
+  assert.match(raw, /Content-Type: multipart\/alternative/);
+  assert.doesNotMatch(raw, /refresh-token|access-token|client-secret/);
+});
+
+test("Gmail transport fails closed and never includes provider bodies in errors", async () => {
+  assert.throws(() => createGmailApiTransport({
+    ...enabledEnvironment, GMAIL_OAUTH_CLIENT_SECRET: "",
+  }), /configuration is incomplete/);
+  const transport = createGmailApiTransport(enabledEnvironment, (async () =>
+    new Response('{"error":"test-refresh-token"}', { status: 401 })) as typeof fetch);
+  await assert.rejects(() => transport.sendMessage({
+    from: VERIFICATION_FROM, to: INITIAL_ALLOWED_RECIPIENT,
+    subject: "Test", text: "test", html: "<p>test</p>",
+  }), (error: unknown) => {
+    assert.equal(error instanceof Error && error.message, "Gmail OAuth token refresh failed.");
+    return true;
+  });
 });
 
 test("tracked URLs have a fixed-origin redirect destination and email labels no delivery claim", () => {

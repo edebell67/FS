@@ -15,14 +15,15 @@ test("recipient projection omits internal and provenance fields", async () => {
   assert.doesNotMatch(lookup, /internalNotes|notes|importedSource|importBatchId/);
 });
 
-test("delivery implementation is explicit, SMTP-only, allowlisted, and hash-protected", async () => {
+test("delivery implementation is explicit, Gmail API-only, allowlisted, and hash-protected", async () => {
   const source = await readFile(new URL("../lib/verification/delivery.ts", import.meta.url), "utf8");
   assert.match(source, /VERIFICATION_DELIVERY_APPROVED/);
   assert.match(source, /INITIAL_ALLOWED_RECIPIENT = "edebell@gmail\.com"/);
   assert.match(source, /VERIFICATION_FROM = "edward\.bell@thetechprinciple\.com"/);
   assert.match(source, /trackingKeyHash: hashTrackingKey/);
-  assert.match(source, /SMTP provider did not accept/);
-  assert.equal(source.includes("fetch("), false);
-  assert.match(source, /sendMail/);
+  assert.match(source, /gmail\.googleapis\.com\/gmail\/v1\/users\/me\/messages\/send/);
+  assert.match(source, /oauth2\.googleapis\.com\/token/);
+  assert.match(source, /sendMessage/);
+  assert.doesNotMatch(source, /SMTP_|nodemailer|sendMail/);
   assert.doesNotMatch(source, /rawToken:\s*text|raw_token/);
 });
