@@ -57,6 +57,13 @@
       "when": 1785168000001,
       "tag": "0007_validation_pipeline_sync",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1785103200000,
+      "tag": "0008_verification_email_delivery",
+      "breakpoints": true
     }
   ]
 }

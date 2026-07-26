@@ -6,7 +6,8 @@ import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipelin
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
-import { canManageVerification, getLatestVerificationForBusiness } from "@/lib/verification/repository";
+import { canManageVerification, getLatestDeliveryForBusiness } from "@/lib/verification/repository";
+import type { VerificationDeliveryState } from "@/lib/verification/delivery-status";
 import { getBusinessValidationDetail } from "@/lib/validation/repository";
 
 export const dynamic = "force-dynamic";
@@ -21,9 +22,9 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
-  const [timeline, stages, validation, latestVerification] = await Promise.all([
+  const [timeline, stages, validation, latestDelivery] = await Promise.all([
     getBusinessTimeline(business.id), getPipelineStages(), getBusinessValidationDetail(business.id),
-    canManageVerification(user.role) ? getLatestVerificationForBusiness(business.id) : Promise.resolve(null),
+    canManageVerification(user.role) ? getLatestDeliveryForBusiness(business.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -82,7 +83,8 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
       </div>
       {canManageVerification(user.role) && <VerificationLinkPanel
         businessRef={business.businessRef}
-        initialDeliveryState={latestVerification?.revokedAt ? "revoked" : "not_sent"}
+        initialRecipient={business.email ?? ""}
+        initialDeliveryState={(latestDelivery?.status ?? "prepared") as VerificationDeliveryState}
       />}
 
       <div className="mt-8 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">

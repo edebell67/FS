@@ -1,4 +1,5 @@
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
+import { createHash, randomBytes } from "node:crypto";
 import { db } from "@/lib/db/client";
 import {
   businesses, fieldValidationOutcomes, pipelineStages, stageTransitions, validationPolicy,
@@ -106,6 +107,7 @@ export async function prepareVerificationBatch(
           verificationLinkId: link.id, batchItemId: item.id, channel: "email",
           recipientAddress: recipient, templateVersion: VERIFICATION_TEMPLATE_VERSION,
           actorUserId, status: "prepared", deliveryMode: policy.mode,
+          trackingKeyHash: createHash("sha256").update(randomBytes(32)).digest("hex"),
         });
       }
       await tx.update(businesses).set({

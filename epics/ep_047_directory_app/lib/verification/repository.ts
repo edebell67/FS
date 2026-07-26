@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import {
   businesses, claimRequests, pipelineStages, stageTransitions,
   fieldValidationOutcomes, verificationLinks, verificationSubmissions,
+  verificationDeliveries, verificationDeliveryEvents,
 } from "@/lib/db/schema";
 import {
   generateVerificationToken, hashVerificationToken, isValidRawToken, normalizeExpiryDays,
@@ -102,6 +103,18 @@ export async function submitVerification(rawToken: string, input: VerificationIn
     }).returning();
     if (!submission) throw new Error("Unable to save verification submission.");
     await tx.update(verificationLinks).set({ submittedAt: now }).where(eq(verificationLinks.id, link.id));
+    const deliveries = await tx.update(verificationDeliveries).set({
+      status: "completed", completedAt: now,
+    }).where(and(
+      eq(verificationDeliveries.verificationLinkId, link.id),
+      ne(verificationDeliveries.status, "revoked"),
+    )).returning({ id: verificationDeliveries.id });
+    if (deliveries.length) await tx.insert(verificationDeliveryEvents).values(
+      deliveries.map((delivery) => ({
+        deliveryId: delivery.id, eventType: "completed" as const,
+        metadata: { source: "verification_submission" },
+      })),
+    );
     const [claim] = await tx.insert(claimRequests).values({
       businessId: link.business_id, submissionId: submission.id, status: "pending",
       requesterName: input.requesterName.trim(), relationship: input.relationship,
@@ -130,10 +143,42 @@ export async function getLatestVerificationForBusiness(businessId: string) {
 }
 
 export async function revokeVerificationLink(linkId: string) {
-  const rows = await db.update(verificationLinks).set({ revokedAt: new Date() })
-    .where(and(eq(verificationLinks.id, linkId), isNull(verificationLinks.submittedAt)))
-    .returning({ id: verificationLinks.id });
-  return rows.length > 0;
+  return db.transaction(async (tx) => {
+    const now = new Date();
+    const rows = await tx.update(verificationLinks).set({ revokedAt: now })
+      .where(and(eq(verificationLinks.id, linkId), isNull(verificationLinks.submittedAt)))
+      .returning({ id: verificationLinks.id });
+    if (!rows.length) return false;
+    const deliveries = await tx.update(verificationDeliveries).set({
+      status: "revoked", revokedAt: now,
+    }).where(and(
+      eq(verificationDeliveries.verificationLinkId, linkId),
+      ne(verificationDeliveries.status, "completed"),
+      ne(verificationDeliveries.status, "revoked"),
+    ))
+      .returning({ id: verificationDeliveries.id });
+    if (deliveries.length) await tx.insert(verificationDeliveryEvents).values(
+      deliveries.map((delivery) => ({
+        deliveryId: delivery.id, eventType: "revoked" as const, metadata: {},
+      })),
+    );
+    return true;
+  });
+}
+
+export async function getLatestDeliveryForBusiness(businessId: string) {
+  const [row] = await db.select({
+    id: verificationDeliveries.id, status: verificationDeliveries.status,
+    recipientAddress: verificationDeliveries.recipientAddress,
+    createdAt: verificationDeliveries.createdAt, sentAt: verificationDeliveries.sentAt,
+    openedAt: verificationDeliveries.openedAt, clickedAt: verificationDeliveries.clickedAt,
+    completedAt: verificationDeliveries.completedAt, failedAt: verificationDeliveries.failedAt,
+    revokedAt: verificationDeliveries.revokedAt, failureReason: verificationDeliveries.failureReason,
+  }).from(verificationDeliveries)
+    .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
+    .where(eq(verificationLinks.businessId, businessId))
+    .orderBy(desc(verificationDeliveries.createdAt)).limit(1);
+  return row ?? null;
 }
 
 export async function approveClaim(claimRequestId: string, actorUserId: string, note?: string) {

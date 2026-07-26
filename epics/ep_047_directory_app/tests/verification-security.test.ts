@@ -15,9 +15,14 @@ test("recipient projection omits internal and provenance fields", async () => {
   assert.doesNotMatch(lookup, /internalNotes|notes|importedSource|importBatchId/);
 });
 
-test("delivery implementation is preview-only and contains no network send", async () => {
+test("delivery implementation is explicit, SMTP-only, allowlisted, and hash-protected", async () => {
   const source = await readFile(new URL("../lib/verification/delivery.ts", import.meta.url), "utf8");
-  assert.match(source, /deliveryEnabled: false/);
+  assert.match(source, /VERIFICATION_DELIVERY_APPROVED/);
+  assert.match(source, /INITIAL_ALLOWED_RECIPIENT = "edebell@gmail\.com"/);
+  assert.match(source, /VERIFICATION_FROM = "edward\.bell@thetechprinciple\.com"/);
+  assert.match(source, /trackingKeyHash: hashTrackingKey/);
+  assert.match(source, /SMTP provider did not accept/);
   assert.equal(source.includes("fetch("), false);
-  assert.doesNotMatch(source, /sendMail|providerMessageId/);
+  assert.match(source, /sendMail/);
+  assert.doesNotMatch(source, /rawToken:\s*text|raw_token/);
 });

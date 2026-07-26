@@ -475,8 +475,16 @@ export const verificationDeliveries = pgTable(
     actorUserId: uuid("actor_user_id").references(() => users.id),
     status: text("status").notNull().default("prepared"),
     deliveryMode: text("delivery_mode").notNull().default("disabled"),
+    // SHA-256 only. The raw tracking proof travels in the one-time admin
+    // preview and email URLs; it is never persisted.
+    trackingKeyHash: text("tracking_key_hash").notNull(),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    handoffStartedAt: timestamp("handoff_started_at", { withTimezone: true }),
     sentAt: timestamp("sent_at", { withTimezone: true }),
+    openedAt: timestamp("opened_at", { withTimezone: true }),
+    clickedAt: timestamp("clicked_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
     failedAt: timestamp("failed_at", { withTimezone: true }),
     providerMessageId: text("provider_message_id"),
     failureReason: text("failure_reason"),
@@ -484,5 +492,24 @@ export const verificationDeliveries = pgTable(
   (table) => ({
     byLink: index("verification_deliveries_link_idx").on(table.verificationLinkId),
     byBatchItem: index("verification_deliveries_batch_item_idx").on(table.batchItemId),
+  })
+);
+
+// Append-only, non-sensitive lifecycle evidence. Event metadata must never
+// contain verification or tracking capabilities.
+export const verificationDeliveryEvents = pgTable(
+  "verification_delivery_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    deliveryId: uuid("delivery_id").notNull()
+      .references(() => verificationDeliveries.id, { onDelete: "cascade" }),
+    eventType: text("event_type").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    metadata: jsonb("metadata").notNull().default({}),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byDelivery: index("verification_delivery_events_delivery_idx")
+      .on(table.deliveryId, table.occurredAt),
   })
 );

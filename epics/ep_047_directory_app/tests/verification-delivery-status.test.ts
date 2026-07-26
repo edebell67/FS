@@ -10,20 +10,20 @@ import {
   verificationCapabilityUrl,
 } from "../lib/verification/urls";
 
-test("preview delivery state explicitly says that nothing was sent", () => {
-  assert.deepEqual(getDeliveryStatePresentation("not_sent"), {
-    label: "Not sent — preview only",
-    explanation: "No external delivery is enabled.",
+test("prepared delivery state explicitly says that nothing was sent", () => {
+  assert.deepEqual(getDeliveryStatePresentation("prepared"), {
+    label: "Prepared",
+    explanation: "Preview created; no email has been sent.",
   });
 });
 
 test("every supported immutable delivery state has a visible label", () => {
   const states: VerificationDeliveryState[] = [
-    "not_sent", "queued", "sent", "delivered", "bounced", "failed", "revoked",
+    "prepared", "sent", "opened", "clicked", "completed", "failed", "revoked",
   ];
   assert.deepEqual(
     states.map((state) => getDeliveryStatePresentation(state).label),
-    ["Not sent — preview only", "Queued", "Sent", "Delivered", "Bounced", "Failed", "Revoked"],
+    ["Prepared", "Sent", "Opened (best effort)", "Clicked", "Completed", "Failed", "Revoked"],
   );
 });
 

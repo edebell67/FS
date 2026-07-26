@@ -35,3 +35,17 @@ export function verificationCapabilityUrl(
 ): string {
   return `${verificationCapabilityOrigin(env)}/verify/${encodeURIComponent(rawToken)}`;
 }
+
+export function trackingClickUrl(
+  deliveryId: string, trackingKey: string, rawToken: string,
+  env: VerificationUrlEnvironment = process.env,
+): string {
+  return `${verificationCapabilityOrigin(env)}/v/c/${encodeURIComponent(deliveryId)}/${encodeURIComponent(trackingKey)}/${encodeURIComponent(rawToken)}`;
+}
+
+export function trackingPixelUrl(
+  deliveryId: string, trackingKey: string,
+  env: VerificationUrlEnvironment = process.env,
+): string {
+  return `${verificationCapabilityOrigin(env)}/v/o/${encodeURIComponent(deliveryId)}/${encodeURIComponent(trackingKey)}.gif`;
+}
