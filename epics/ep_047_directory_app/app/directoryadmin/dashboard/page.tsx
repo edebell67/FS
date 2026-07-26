@@ -2,6 +2,8 @@ import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { getDashboardMetrics, getRecentActivity } from "@/lib/db/queries/pipeline";
 import { requireAdminUserForPage } from "@/lib/auth/require";
+import { getValidationOverview } from "@/lib/validation/repository";
+import { ValidationOverviewPanel } from "@/components/admin/ValidationOverviewPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,7 +26,9 @@ function formatHours(hours: number | null): string {
 
 export default async function DashboardPage() {
   await requireAdminUserForPage("/directoryadmin/dashboard");
-  const [metrics, activity] = await Promise.all([getDashboardMetrics(), getRecentActivity(15)]);
+  const [metrics, activity, validationOverview] = await Promise.all([
+    getDashboardMetrics(), getRecentActivity(15), getValidationOverview(),
+  ]);
 
   return (
     <main className="mx-auto max-w-6xl px-6 py-12">
@@ -50,6 +54,10 @@ export default async function DashboardPage() {
         <Stat label="This month" value={metrics.importsThisMonth} tone="brand" />
       </div>
 
+      <div className="mt-10">
+        <ValidationOverviewPanel overview={validationOverview} heading="Validation outcomes"/>
+      </div>
+
       <h2 className="mb-3 mt-10 text-lg font-semibold text-slate-900">Needs attention</h2>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Link
@@ -60,8 +68,9 @@ export default async function DashboardPage() {
             {metrics.stalledCount}
           </p>
           <p className="mt-1 text-xs font-medium uppercase tracking-wide text-slate-500">
-            Stalled (past stage SLA)
+            Stalled activation work (past stage SLA)
           </p>
+          <p className="mt-2 text-xs text-slate-500">Completed field validation is not treated as a stalled Imported record.</p>
         </Link>
         <Link
           href="/directoryadmin/import"

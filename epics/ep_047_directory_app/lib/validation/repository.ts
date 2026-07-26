@@ -135,6 +135,18 @@ export type ValidationJobProgress = {
   errors: Array<{ businessId: string; message: string }>;
 };
 
+export type ValidationStatusSummary = {
+  validated: number;
+  partiallyValidated: number;
+  nonValid: number;
+  awaitingValidation: number;
+};
+
+export type ValidationOverview = {
+  counts: ValidationStatusSummary;
+  latestJob: ValidationJobProgress | null;
+};
+
 async function validationJobProgress(jobId: string, busy = false): Promise<ValidationJobProgress> {
   const [job] = await db.select().from(validationJobs).where(eq(validationJobs.id, jobId)).limit(1);
   if (!job) throw new Error("Validation run not found.");
@@ -159,6 +171,35 @@ export async function getLatestValidationJob(): Promise<ValidationJobProgress | 
   const [job] = await db.select({ id: validationJobs.id }).from(validationJobs)
     .orderBy(desc(validationJobs.createdAt)).limit(1);
   return job ? validationJobProgress(job.id) : null;
+}
+
+export async function getValidationOverview(): Promise<ValidationOverview> {
+  const [counts, latestJob] = await Promise.all([
+    db.select({
+      validated: sql<number>`count(*) FILTER (
+        WHERE ${businesses.lastValidationRunId} IS NOT NULL
+          AND ${businesses.validationStatus} = 'validated'
+      )::int`,
+      partiallyValidated: sql<number>`count(*) FILTER (
+        WHERE ${businesses.lastValidationRunId} IS NOT NULL
+          AND ${businesses.validationStatus} = 'partially_validated'
+      )::int`,
+      nonValid: sql<number>`count(*) FILTER (
+        WHERE ${businesses.lastValidationRunId} IS NOT NULL
+          AND ${businesses.validationStatus} = 'non_valid'
+      )::int`,
+      awaitingValidation: sql<number>`count(*) FILTER (
+        WHERE ${businesses.lastValidationRunId} IS NULL
+      )::int`,
+    }).from(businesses).where(eq(businesses.status, "active")),
+    getLatestValidationJob(),
+  ]);
+  return {
+    counts: counts[0] ?? {
+      validated: 0, partiallyValidated: 0, nonValid: 0, awaitingValidation: 0,
+    },
+    latestJob,
+  };
 }
 
 export async function startBusinessValidationJob(actorUserId: string): Promise<ValidationJobProgress> {

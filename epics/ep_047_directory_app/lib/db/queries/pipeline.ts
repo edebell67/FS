@@ -78,7 +78,7 @@ export async function getBoardColumns(): Promise<BoardColumn[]> {
 
     const stageIdList = sql.join(stageIds.map((id) => sql`${id}`), sql`, `);
 
-    const [countRows, movementRows, avgRows, previewRows] = await Promise.all([
+    const [countRows, movementRows, avgRows, blockedRows, previewRows] = await Promise.all([
       db.select({ count: sql<number>`count(*)::int` }).from(businesses).where(sql`current_stage_id IN (${stageIdList})`),
       db
         .select({ movementToday: sql<number>`count(*)::int` })
@@ -88,6 +88,19 @@ export async function getBoardColumns(): Promise<BoardColumn[]> {
         .select({ avgHours: sql<number | null>`avg(extract(epoch from (now() - stage_entered_at)) / 3600)` })
         .from(businesses)
         .where(sql`current_stage_id IN (${stageIdList})`),
+      db
+        .select({ blocked: sql<number>`count(*)::int` })
+        .from(businesses)
+        .innerJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
+        .where(and(
+          sql`${businesses.currentStageId} IN (${stageIdList})`,
+          sql`${pipelineStages.slaHours} IS NOT NULL`,
+          sql`${businesses.stageEnteredAt} < now() - (${pipelineStages.slaHours} || ' hours')::interval`,
+          // Field validation is an independent projection. A completed run means an
+          // Imported record is no longer waiting for validation even if its historic
+          // activation stage has deliberately not been advanced.
+          sql`(${pipelineStages.key} <> 'imported' OR ${businesses.lastValidationRunId} IS NULL)`,
+        )),
       db
         .select({
           id: businesses.id,
@@ -106,17 +119,7 @@ export async function getBoardColumns(): Promise<BoardColumn[]> {
     const movementToday = movementRows[0]?.movementToday ?? 0;
     const avgHours = avgRows[0]?.avgHours ?? null;
 
-    // "Blocked" = sitting past this stage's SLA. Stages with no sla_hours (most of them,
-    // currently) never count as blocked — that's a config gap, not a business one.
-    const slaHours = stagesInColumn.find((s) => s.slaHours !== null)?.slaHours;
-    const blockedCount =
-      slaHours != null
-        ? previewRows.filter((b) => {
-            if (!b.stageEnteredAt) return false;
-            const hours = (Date.now() - b.stageEnteredAt.getTime()) / 3_600_000;
-            return hours > slaHours;
-          }).length
-        : 0;
+    const blockedCount = blockedRows[0]?.blocked ?? 0;
 
     columns.push({
       name,
@@ -170,7 +173,8 @@ export async function getDashboardMetrics(): Promise<DashboardMetrics> {
           and(
             eq(pipelineStages.isTerminal, false),
             sql`${pipelineStages.slaHours} IS NOT NULL`,
-            sql`${businesses.stageEnteredAt} < now() - (${pipelineStages.slaHours} || ' hours')::interval`
+            sql`${businesses.stageEnteredAt} < now() - (${pipelineStages.slaHours} || ' hours')::interval`,
+            sql`(${pipelineStages.key} <> 'imported' OR ${businesses.lastValidationRunId} IS NULL)`
           )
         ),
     ]);
