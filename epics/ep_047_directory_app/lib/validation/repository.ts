@@ -6,6 +6,7 @@ import {
   validationFieldRules, validationJobItems, validationJobs, validationPolicy,
 } from "@/lib/db/schema";
 import { validateBusiness } from "./engine";
+import { synchroniseValidatedPipelineStage } from "./pipeline-sync";
 import {
   RULE_TYPES, VALIDATABLE_FIELDS, type RuleType, type ValidatableField, type ValidationRule,
 } from "./types";
@@ -115,6 +116,9 @@ export async function runBusinessValidation(
       validationStatus: result.status, lastValidationRunId: run.id,
       validatedAt: result.status === "validated" ? now : null,
     }).where(eq(businesses.id, businessId));
+    if (result.status === "validated") {
+      await synchroniseValidatedPipelineStage(tx, businessId, now);
+    }
     return { ...result, runId: run.id };
   });
 }

@@ -20,6 +20,7 @@ import type { DedupeKeys } from "./duplicates";
 import type { AcceptedRow, ImportSource, RowIssue } from "./types";
 import { slugify } from "./slug";
 import { validateBusiness } from "@/lib/validation/engine";
+import { synchroniseValidatedPipelineStage } from "@/lib/validation/pipeline-sync";
 import type { RuleType, ValidatableField, ValidationRule } from "@/lib/validation/types";
 
 export interface ImportRepository {
@@ -186,6 +187,9 @@ export class DrizzleImportRepository implements ImportRepository {
           validationStatus: result.status, lastValidationRunId: run.id,
           validatedAt: result.status === "validated" ? now : null,
         }).where(eq(businesses.id, inserted.id));
+        if (result.status === "validated") {
+          await synchroniseValidatedPipelineStage(tx, inserted.id, now);
+        }
       }
     });
   }
