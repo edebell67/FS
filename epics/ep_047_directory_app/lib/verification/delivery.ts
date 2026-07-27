@@ -9,7 +9,7 @@ import {
 } from "@/lib/db/schema";
 import { VERIFICATION_TEMPLATE_VERSION, renderVerificationEmail } from "./email-template";
 import { isValidRawToken, hashVerificationToken } from "./tokens";
-import { trackingClickUrl, trackingPixelUrl } from "./urls";
+import { trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from "./urls";
 
 export const VERIFICATION_FROM = "edward.bell@thetechprinciple.com";
 export const INITIAL_ALLOWED_RECIPIENT = "edebell@gmail.com";
@@ -292,15 +292,12 @@ export async function sendPreparedDelivery(input: {
   )).returning({ id: verificationDeliveries.id });
   if (!claimed.length) throw new Error("Prepared delivery is already being processed.");
 
-  const clickUrl = trackingClickUrl(
-    // The link ID is deliberately not needed for authorization; delivery UUID
-    // is used by tracking. Retain the delivery ID in the public routes.
-    input.deliveryId, input.trackingKey, input.rawToken, env,
-  );
-  const pixelUrl = trackingPixelUrl(input.deliveryId, input.trackingKey, env);
+  // The controlled Gmail test uses the direct capability URL without a tracking
+  // redirect or remote tracking pixel, eliminating those automated-message
+  // components from the deliverability path.
+  const verificationUrl = verificationCapabilityUrl(input.rawToken, env);
   const message = renderVerificationEmail({
-    businessName: record.businessName, verificationUrl: clickUrl,
-    trackingPixelUrl: pixelUrl, expiresAt: record.expiresAt,
+    businessName: record.businessName, verificationUrl, expiresAt: record.expiresAt,
   });
   try {
     const transport = options.transport ?? createGmailApiTransport(env);
