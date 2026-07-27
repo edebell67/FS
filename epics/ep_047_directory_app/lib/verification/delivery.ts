@@ -206,6 +206,14 @@ export function createGmailApiTransport(
       if (typeof tokenPayload.access_token !== "string" || !tokenPayload.access_token) {
         throw new Error("Gmail OAuth token refresh returned no access token.");
       }
+      const profileResponse = await fetchImpl("https://gmail.googleapis.com/gmail/v1/users/me/profile", {
+        headers: { authorization: `Bearer ${tokenPayload.access_token}` },
+      });
+      if (!profileResponse.ok) throw new Error("Gmail profile verification failed.");
+      const profile = await profileResponse.json() as { emailAddress?: unknown };
+      if (typeof profile.emailAddress !== "string" || normaliseAddress(profile.emailAddress) !== normaliseAddress(VERIFICATION_FROM)) {
+        throw new Error("Gmail OAuth account does not match the approved sender identity.");
+      }
       const sendResponse = await fetchImpl(
         "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
         {
@@ -221,6 +229,21 @@ export function createGmailApiTransport(
       const sendPayload = await sendResponse.json() as { id?: unknown };
       if (typeof sendPayload.id !== "string" || !sendPayload.id) {
         throw new Error("Gmail API did not return a message ID.");
+      }
+      const sentResponse = await fetchImpl(
+        `https://gmail.googleapis.com/gmail/v1/users/me/messages/${encodeURIComponent(sendPayload.id)}?format=metadata&metadataHeaders=From&metadataHeaders=To`,
+        { headers: { authorization: `Bearer ${tokenPayload.access_token}` } },
+      );
+      if (!sentResponse.ok) throw new Error("Gmail sent-message readback failed.");
+      const sentMessage = await sentResponse.json() as {
+        labelIds?: unknown; payload?: { headers?: Array<{ name?: unknown; value?: unknown }> };
+      };
+      const labels = Array.isArray(sentMessage.labelIds) ? sentMessage.labelIds : [];
+      const headers = sentMessage.payload?.headers ?? [];
+      const header = (name: string) => headers.find((item) => String(item.name).toLowerCase() === name)?.value;
+      if (!labels.includes("SENT") || normaliseAddress(String(header("from") ?? "")) !== normaliseAddress(VERIFICATION_FROM) ||
+          normaliseAddress(String(header("to") ?? "")) !== normaliseAddress(message.to)) {
+        throw new Error("Gmail sent-message readback did not verify the required sender, recipient, and SENT label.");
       }
       return { messageId: sendPayload.id };
     },

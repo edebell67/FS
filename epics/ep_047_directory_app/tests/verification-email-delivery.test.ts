@@ -60,10 +60,13 @@ test("Gmail transport refreshes OAuth and sends an encoded fixed-identity messag
   const requests: Array<{ url: string; init?: RequestInit }> = [];
   const fakeFetch = async (url: string | URL | Request, init?: RequestInit) => {
     requests.push({ url: String(url), init });
-    if (requests.length === 1) {
-      return Response.json({ access_token: "short-lived-access-token" });
-    }
-    return Response.json({ id: "gmail-message-id", threadId: "gmail-thread-id" });
+    if (requests.length === 1) return Response.json({ access_token: "short-lived-access-token" });
+    if (requests.length === 2) return Response.json({ emailAddress: VERIFICATION_FROM });
+    if (requests.length === 3) return Response.json({ id: "gmail-message-id", threadId: "gmail-thread-id" });
+    return Response.json({
+      id: "gmail-message-id", labelIds: ["SENT"],
+      payload: { headers: [{ name: "From", value: VERIFICATION_FROM }, { name: "To", value: INITIAL_ALLOWED_RECIPIENT }] },
+    });
   };
   const transport = createGmailApiTransport(enabledEnvironment, fakeFetch as typeof fetch);
   const result = await transport.sendMessage({
@@ -75,14 +78,16 @@ test("Gmail transport refreshes OAuth and sends an encoded fixed-identity messag
   });
   assert.equal(result.messageId, "gmail-message-id");
   assert.equal(requests[0]?.url, "https://oauth2.googleapis.com/token");
-  assert.equal(requests[1]?.url,
+  assert.equal(requests[1]?.url, "https://gmail.googleapis.com/gmail/v1/users/me/profile");
+  assert.equal(requests[2]?.url,
     "https://gmail.googleapis.com/gmail/v1/users/me/messages/send");
-  assert.equal(requests[1]?.init?.headers &&
-    (requests[1].init.headers as Record<string, string>).authorization,
+  assert.match(String(requests[3]?.url), /gmail-message-id.*format=metadata/);
+  assert.equal(requests[2]?.init?.headers &&
+    (requests[2].init.headers as Record<string, string>).authorization,
     "Bearer short-lived-access-token");
   const tokenBody = requests[0]?.init?.body as URLSearchParams;
   assert.equal(tokenBody.get("refresh_token"), "test-refresh-token");
-  const sendBody = JSON.parse(String(requests[1]?.init?.body)) as { raw: string };
+  const sendBody = JSON.parse(String(requests[2]?.init?.body)) as { raw: string };
   const raw = Buffer.from(sendBody.raw, "base64url").toString("utf8");
   assert.match(raw, new RegExp(`From: ${VERIFICATION_FROM}`));
   assert.match(raw, new RegExp(`To: ${INITIAL_ALLOWED_RECIPIENT}`));
