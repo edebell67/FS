@@ -140,6 +140,10 @@ function encodeHeader(value: string): string {
   return `=?UTF-8?B?${Buffer.from(value, "utf8").toString("base64")}?=`;
 }
 
+function wrapBase64(value: string): string {
+  return value.match(/.{1,76}/g)?.join("\r\n") ?? "";
+}
+
 function buildRawMessage(message: {
   from: string; to: string; subject: string; text: string; html: string;
 }): string {
@@ -147,6 +151,9 @@ function buildRawMessage(message: {
   const lines = [
     `From: ${message.from}`,
     `To: ${message.to}`,
+    `Reply-To: ${message.from}`,
+    `Date: ${new Date().toUTCString()}`,
+    `Message-ID: <${randomBytes(18).toString("hex")}@thetechprinciple.com>`,
     `Subject: ${encodeHeader(message.subject)}`,
     "MIME-Version: 1.0",
     `Content-Type: multipart/alternative; boundary="${boundary}"`,
@@ -155,12 +162,12 @@ function buildRawMessage(message: {
     'Content-Type: text/plain; charset="UTF-8"',
     "Content-Transfer-Encoding: base64",
     "",
-    Buffer.from(message.text, "utf8").toString("base64"),
+    wrapBase64(Buffer.from(message.text, "utf8").toString("base64")),
     `--${boundary}`,
     'Content-Type: text/html; charset="UTF-8"',
     "Content-Transfer-Encoding: base64",
     "",
-    Buffer.from(message.html, "utf8").toString("base64"),
+    wrapBase64(Buffer.from(message.html, "utf8").toString("base64")),
     `--${boundary}--`,
     "",
   ];
