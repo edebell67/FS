@@ -71,6 +71,13 @@
       "when": 1785114294000,
       "tag": "0009_repair_verification_delivery_tracking",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785200000000,
+      "tag": "0010_apply_delivery_tracking_schema",
+      "breakpoints": true
     }
   ]
 }

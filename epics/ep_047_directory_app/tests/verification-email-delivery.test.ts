@@ -142,6 +142,16 @@ test("forward repair migration restores every delivery-tracking column used by t
   ]) assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${column}\\b`, "i"));
 });
 
+test("high-water migration applies the delivery tracking table and columns", async () => {
+  const [sql, journal] = await Promise.all([
+    readFile(new URL("../migrations/0010_apply_delivery_tracking_schema.sql", import.meta.url), "utf8"),
+    readFile(new URL("../migrations/meta/_journal.json", import.meta.url), "utf8"),
+  ]);
+  assert.match(journal, /0010_apply_delivery_tracking_schema/);
+  assert.match(sql, /tracking_key_hash text/i);
+  assert.match(sql, /CREATE TABLE IF NOT EXISTS verification_delivery_events/i);
+});
+
 test("business-detail delivery lookup reads only its required durable status", async () => {
   const repository = await readFile(new URL("../lib/verification/repository.ts", import.meta.url), "utf8");
   const lookup = repository.slice(
