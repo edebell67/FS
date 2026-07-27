@@ -167,13 +167,12 @@ export async function revokeVerificationLink(linkId: string) {
 }
 
 export async function getLatestDeliveryForBusiness(businessId: string) {
+  // The business detail only renders the immutable delivery state. Keep this
+  // projection to columns introduced before the tracking extension so a
+  // partially migrated audit schema cannot prevent an operator opening a
+  // business record. Tracking routes retain their own detailed queries.
   const [row] = await db.select({
-    id: verificationDeliveries.id, status: verificationDeliveries.status,
-    recipientAddress: verificationDeliveries.recipientAddress,
-    createdAt: verificationDeliveries.createdAt, sentAt: verificationDeliveries.sentAt,
-    openedAt: verificationDeliveries.openedAt, clickedAt: verificationDeliveries.clickedAt,
-    completedAt: verificationDeliveries.completedAt, failedAt: verificationDeliveries.failedAt,
-    revokedAt: verificationDeliveries.revokedAt, failureReason: verificationDeliveries.failureReason,
+    status: verificationDeliveries.status,
   }).from(verificationDeliveries)
     .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
     .where(eq(verificationLinks.businessId, businessId))

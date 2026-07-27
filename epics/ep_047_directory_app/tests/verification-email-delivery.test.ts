@@ -142,6 +142,16 @@ test("forward repair migration restores every delivery-tracking column used by t
   ]) assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${column}\\b`, "i"));
 });
 
+test("business-detail delivery lookup reads only its required durable status", async () => {
+  const repository = await readFile(new URL("../lib/verification/repository.ts", import.meta.url), "utf8");
+  const lookup = repository.slice(
+    repository.indexOf("export async function getLatestDeliveryForBusiness"),
+    repository.indexOf("export async function approveClaim"),
+  );
+  assert.match(lookup, /status: verificationDeliveries\.status/);
+  assert.doesNotMatch(lookup, /verificationDeliveries\.(?:openedAt|clickedAt|completedAt|revokedAt|handoffStartedAt)/);
+});
+
 test("send endpoint requires explicit confirmation and tracking redirect is fixed", async () => {
   const sendRoute = await readFile(new URL(
     "../app/directoryadmin/api/businesses/[businessRef]/verification-email/route.ts",
