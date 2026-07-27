@@ -95,6 +95,9 @@ export async function submitVerification(rawToken: string, input: VerificationIn
     const link = locked.rows[0] as { id: string; business_id: string } | undefined;
     if (!link) return null;
     const now = new Date();
+    // Preferred contact is optional. If it is omitted, the supplied listing
+    // email remains the fallback route for the post-approval owner message.
+    const claimContactEmail = input.contactEmail?.trim() || input.fields.email?.trim() || null;
     const [submission] = await tx.insert(verificationSubmissions).values({
       linkId: link.id, businessId: link.business_id, submittedFields: input.fields,
       relationshipToBusiness: input.relationship, accuracyConfirmedAt: now,
@@ -118,7 +121,7 @@ export async function submitVerification(rawToken: string, input: VerificationIn
     const [claim] = await tx.insert(claimRequests).values({
       businessId: link.business_id, submissionId: submission.id, status: "pending",
       requesterName: input.requesterName.trim(), relationship: input.relationship,
-      contactEmail: input.contactEmail || null, contactPhone: input.contactPhone || null,
+      contactEmail: claimContactEmail, contactPhone: input.contactPhone || null,
     }).returning();
     if (!claim) throw new Error("Unable to create claim request.");
     await tx.update(businesses).set({ status: "claims_pending", lastUpdated: now })

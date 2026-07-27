@@ -20,14 +20,17 @@ test("claim intake records a Claims pending status and approval workflow is disc
 });
 
 test("selected claim approval atomically projects claimed status and prepares a truthful owner message", async () => {
-  const [repository, migration] = await Promise.all([
-    source("lib/verification/claims-approval.ts"), source("migrations/0011_claims_pending_bulk_approval.sql"),
+  const [repository, claimSubmissionRepository, migration] = await Promise.all([
+    source("lib/verification/claims-approval.ts"), source("lib/verification/repository.ts"),
+    source("migrations/0011_claims_pending_bulk_approval.sql"),
   ]);
   assert.match(repository, /status: "approved"/);
   assert.match(repository, /status: "claimed"/);
   assert.match(repository, /Claim approved from Claims pending queue/);
   assert.match(repository, /claimSuccessMessages/);
   assert.match(repository, /status: recipient \? "prepared" : "not_ready"/);
+  assert.match(claimSubmissionRepository, /contactEmail: claimContactEmail/);
+  assert.match(claimSubmissionRepository, /input\.fields\.email/);
   assert.match(repository, /You have successfully claimed this business listing/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS claim_success_messages/);
 });
