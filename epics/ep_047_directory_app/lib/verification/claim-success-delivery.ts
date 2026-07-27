@@ -32,3 +32,9 @@ export async function sendPreparedClaimSuccessMessages(messageIds: string[]) {
   }
   return { sent, prepared: rows.length - sent };
 }
+
+export async function sendAllPreparedClaimSuccessMessages() {
+  const rows = await db.select({ id: claimSuccessMessages.id }).from(claimSuccessMessages)
+    .where(eq(claimSuccessMessages.status, "prepared")).limit(100);
+  return sendPreparedClaimSuccessMessages(rows.map((row) => row.id));
+}
