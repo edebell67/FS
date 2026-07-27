@@ -1,7 +1,7 @@
 import { and, desc, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
-  businesses, claimRequests, pipelineStages, stageTransitions,
+  businesses, claimRequests, claimSuccessMessages, pipelineStages, stageTransitions,
   fieldValidationOutcomes, verificationLinks, verificationSubmissions,
   verificationDeliveries, verificationDeliveryEvents,
 } from "@/lib/db/schema";
@@ -201,6 +201,26 @@ export async function approveClaim(claimRequestId: string, actorUserId: string, 
     await tx.insert(stageTransitions).values({ businessId: claim.business_id,
       fromStageId: business.currentStageId, toStageId: claimedStage.id, occurredAt: now,
       source: "admin", actorUserId, reason: "Owner claim manually approved", notes: note });
+    return true;
+  });
+}
+
+/** Admin-only recovery for a mistaken test approval: restores the claim queue
+ * state and removes the unsent message snapshot so a new approval can test
+ * the ordinary prepare/send path. */
+export async function reopenApprovedClaimForTest(claimRequestId: string, actorUserId: string) {
+  return db.transaction(async (tx) => {
+    const rows = await tx.execute(sql`SELECT * FROM claim_requests WHERE id=${claimRequestId} FOR UPDATE`);
+    const claim = rows.rows[0] as { id: string; business_id: string; status: string } | undefined;
+    if (!claim || claim.status !== "approved") return false;
+    const [reviewStage] = await tx.select().from(pipelineStages).where(eq(pipelineStages.key, "verification_completed")).limit(1);
+    const [business] = await tx.select().from(businesses).where(eq(businesses.id, claim.business_id)).limit(1);
+    if (!reviewStage || !business) return false;
+    const now = new Date();
+    await tx.delete(claimSuccessMessages).where(eq(claimSuccessMessages.claimRequestId, claim.id));
+    await tx.update(claimRequests).set({ status: "pending", reviewerUserId: null, reviewedAt: null, decisionNote: null, updatedAt: now }).where(eq(claimRequests.id, claim.id));
+    await tx.update(businesses).set({ status: "claims_pending", currentStageId: reviewStage.id, stageEnteredAt: now, lastUpdated: now }).where(eq(businesses.id, claim.business_id));
+    await tx.insert(stageTransitions).values({ businessId: claim.business_id, fromStageId: business.currentStageId, toStageId: reviewStage.id, occurredAt: now, source: "admin", actorUserId, reason: "Claim reopened for controlled email test" });
     return true;
   });
 }
