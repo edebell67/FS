@@ -129,6 +129,19 @@ test("migration stores hashes and append-only event metadata, never raw capabili
   assert.doesNotMatch(sql, /raw_token|tracking_key text/i);
 });
 
+test("forward repair migration restores every delivery-tracking column used by the business detail", async () => {
+  const [sql, journal] = await Promise.all([
+    readFile(new URL("../migrations/0009_repair_verification_delivery_tracking.sql", import.meta.url), "utf8"),
+    readFile(new URL("../migrations/meta/_journal.json", import.meta.url), "utf8"),
+  ]);
+  assert.match(journal, /0009_repair_verification_delivery_tracking/);
+  assert.match(sql, /ALTER TABLE verification_deliveries/i);
+  for (const column of [
+    "status", "delivery_mode", "tracking_key_hash", "handoff_started_at", "opened_at",
+    "clicked_at", "completed_at", "revoked_at",
+  ]) assert.match(sql, new RegExp(`ADD COLUMN IF NOT EXISTS ${column}\\b`, "i"));
+});
+
 test("send endpoint requires explicit confirmation and tracking redirect is fixed", async () => {
   const sendRoute = await readFile(new URL(
     "../app/directoryadmin/api/businesses/[businessRef]/verification-email/route.ts",
