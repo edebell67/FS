@@ -58,7 +58,7 @@ export default async function VerifyPage({ params, searchParams }: {
           </label>
           <p className="mt-3 text-xs text-slate-500">Your submission is sent for review and will not automatically change the public listing.</p>
         </div>
-        <button className="w-full rounded-md bg-brand-600 px-4 py-3 font-medium text-white">Submit verification</button>
+        <button className="w-full rounded-md bg-brand-600 px-4 py-3 font-medium text-white">Verify listing and submit claim request</button>
       </form>
     </main>
   );
