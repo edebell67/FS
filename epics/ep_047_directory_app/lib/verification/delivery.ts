@@ -170,6 +170,7 @@ function buildRawMessage(message: {
 export function createGmailApiTransport(
   env: DeliveryEnvironment,
   fetchImpl: Fetch = fetch,
+  allowedRecipients: string[] = [INITIAL_ALLOWED_RECIPIENT],
 ): GmailTransport {
   const clientId = env.GMAIL_OAUTH_CLIENT_ID?.trim();
   const clientSecret = env.GMAIL_OAUTH_CLIENT_SECRET?.trim();
@@ -180,7 +181,7 @@ export function createGmailApiTransport(
   return {
     async sendMessage(message) {
       if (message.from !== VERIFICATION_FROM ||
-          normaliseAddress(message.to) !== INITIAL_ALLOWED_RECIPIENT) {
+          !allowedRecipients.includes(normaliseAddress(message.to))) {
         throw new Error("Gmail message violates the fixed sender or recipient policy.");
       }
       const tokenResponse = await fetchImpl("https://oauth2.googleapis.com/token", {

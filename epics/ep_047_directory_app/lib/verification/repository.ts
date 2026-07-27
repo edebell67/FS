@@ -121,11 +121,13 @@ export async function submitVerification(rawToken: string, input: VerificationIn
       contactEmail: input.contactEmail || null, contactPhone: input.contactPhone || null,
     }).returning();
     if (!claim) throw new Error("Unable to create claim request.");
+    await tx.update(businesses).set({ status: "claims_pending", lastUpdated: now })
+      .where(eq(businesses.id, link.business_id));
     const [stage] = await tx.select().from(pipelineStages)
       .where(eq(pipelineStages.key, "verification_completed")).limit(1);
     const [business] = await tx.select().from(businesses).where(eq(businesses.id, link.business_id)).limit(1);
     if (stage && business && business.currentStageId !== stage.id) {
-      await tx.update(businesses).set({ currentStageId: stage.id, stageEnteredAt: now, lastUpdated: now })
+      await tx.update(businesses).set({ status: "claims_pending", currentStageId: stage.id, stageEnteredAt: now, lastUpdated: now })
         .where(eq(businesses.id, link.business_id));
       await tx.insert(stageTransitions).values({
         businessId: link.business_id, fromStageId: business.currentStageId, toStageId: stage.id,

@@ -462,6 +462,31 @@ export const claimRequests = pgTable(
   })
 );
 
+// Claim-approval messages are deliberately separate from the claim decision.
+// An approved business is Claimed even if its optional owner notification is
+// still prepared or fails delivery; the two states remain visible and auditable.
+export const claimSuccessMessages = pgTable(
+  "claim_success_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    claimRequestId: uuid("claim_request_id").notNull().unique().references(() => claimRequests.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    recipientAddress: text("recipient_address"),
+    status: text("status").notNull().default("prepared"), // prepared | sent | failed | not_ready
+    subject: text("subject").notNull(),
+    textBody: text("text_body").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    providerMessageId: text("provider_message_id"),
+    failureReason: text("failure_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+  },
+  (table) => ({
+    byStatus: index("claim_success_messages_status_idx").on(table.status, table.createdAt),
+  })
+);
+
 export const verificationDeliveries = pgTable(
   "verification_deliveries",
   {

@@ -36,6 +36,9 @@ export async function SiteHeader() {
               <Link href="/directoryadmin/businesses" className="hover:text-slate-900">
                 Businesses
               </Link>
+              {["super_admin", "admin", "operations"].includes(user.role) && <Link href="/directoryadmin/claims" className="hover:text-slate-900">
+                Claims
+              </Link>}
               {["super_admin", "admin", "operations"].includes(user.role) && <Link href="/directoryadmin/validation" className="hover:text-slate-900">
                 Validation
               </Link>}
