@@ -12,7 +12,8 @@ import { isValidRawToken, hashVerificationToken } from "./tokens";
 import { trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from "./urls";
 
 export const VERIFICATION_FROM = "edward.bell@thetechprinciple.com";
-export const INITIAL_ALLOWED_RECIPIENT = "edebell@gmail.com";
+export const INITIAL_ALLOWED_RECIPIENT =
+  process.env.VERIFICATION_RECIPIENT_ALLOWLIST?.split(",")[0]?.trim().toLowerCase() ?? "";
 export type DeliveryMode = "disabled" | "gmail-api";
 
 export type DeliveryEnvironment = Partial<Record<

@@ -16,7 +16,7 @@
     "db:migrate": "tsx scripts/migrate.ts",
     "db:seed": "tsx scripts/seed.ts",
     "auth:create-admin": "tsx scripts/create-admin.ts",
-    "test": "tsx --test tests/*.test.ts",
+    "test": "tsx --env-file=.env.local --test tests/*.test.ts",
     "verify": "npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {
