@@ -538,3 +538,90 @@ export const verificationDeliveryEvents = pgTable(
       .on(table.deliveryId, table.occurredAt),
   })
 );
+
+// --- Public directory visibility and hyperlocal news -----------------------
+//
+// Public scope is a publication control, not a deletion mechanism.  The
+// singleton settings row chooses whether every imported value is public or
+// whether the explicitly enabled values form the public allow-list.  This
+// means that newly imported towns/categories work naturally in "all" mode,
+// while a focused launch (for example, Birmingham + hairdressers) can be
+// deliberately limited without losing the underlying records.
+export const publicDirectorySettings = pgTable("public_directory_settings", {
+  id: text("id").primaryKey().default("default"),
+  townMode: text("town_mode").notNull().default("all"), // all | selected
+  categoryMode: text("category_mode").notNull().default("all"), // all | selected
+  updatedByUserId: uuid("updated_by_user_id").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const publicTownVisibility = pgTable(
+  "public_town_visibility",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    // A lower-case, trimmed key keeps comparisons stable while retaining the
+    // original display label used by the directory import.
+    townKey: text("town_key").notNull().unique(),
+    townLabel: text("town_label").notNull(),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    updatedByUserId: uuid("updated_by_user_id").references(() => users.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ byEnabled: index("public_town_visibility_enabled_idx").on(table.isEnabled) })
+);
+
+export const publicCategoryVisibility = pgTable(
+  "public_category_visibility",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    categoryKey: text("category_key").notNull().unique(),
+    categoryLabel: text("category_label").notNull(),
+    isEnabled: boolean("is_enabled").notNull().default(true),
+    updatedByUserId: uuid("updated_by_user_id").references(() => users.id),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({ byEnabled: index("public_category_visibility_enabled_idx").on(table.isEnabled) })
+);
+
+// The three editorial fields deliberately mirror the agreed reading model:
+// verified reporting, a clearly separate newsroom interpretation, and only
+// real attributed business voices.  Responses/moderation will be introduced
+// in a later task rather than treating generated opinion as evidence.
+export const newsArticles = pgTable(
+  "news_articles",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    slug: text("slug").notNull().unique(),
+    headline: text("headline").notNull(),
+    town: text("town").notNull(),
+    sourceName: text("source_name").notNull(),
+    sourceUrl: text("source_url").notNull(),
+    verifiedUpdate: text("verified_update").notNull(),
+    localReading: text("local_reading").notNull(),
+    businessVoices: text("business_voices"),
+    status: text("status").notNull().default("draft"), // draft | published | archived
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byTownStatus: index("news_articles_town_status_idx").on(table.town, table.status, table.publishedAt),
+    byPublished: index("news_articles_published_idx").on(table.status, table.publishedAt),
+  })
+);
+
+export const newsArticleCategories = pgTable(
+  "news_article_categories",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    articleId: uuid("article_id").notNull().references(() => newsArticles.id, { onDelete: "cascade" }),
+    categoryKey: text("category_key").notNull(),
+    categoryLabel: text("category_label").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    articleCategory: uniqueIndex("news_article_categories_article_category_uidx").on(table.articleId, table.categoryKey),
+    byCategory: index("news_article_categories_category_idx").on(table.categoryKey),
+  })
+);
