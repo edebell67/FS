@@ -14,11 +14,13 @@ import { trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from ".
 export const VERIFICATION_FROM = "edward.bell@thetechprinciple.com";
 export const INITIAL_ALLOWED_RECIPIENT =
   process.env.VERIFICATION_RECIPIENT_ALLOWLIST?.split(",")[0]?.trim().toLowerCase() ?? "";
+export const ALLOWED_RECIPIENTS = (process.env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
+  .split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
 export type DeliveryMode = "disabled" | "gmail-api";
 
 export type DeliveryEnvironment = Partial<Record<
   | "VERIFICATION_DELIVERY_MODE" | "VERIFICATION_DELIVERY_APPROVED"
-  | "VERIFICATION_RECIPIENT_ALLOWLIST"
+  | "VERIFICATION_RECIPIENT_ALLOWLIST" | "VERIFICATION_EMAIL_TEST_PLAINTEXT"
   | "GMAIL_OAUTH_CLIENT_ID" | "GMAIL_OAUTH_CLIENT_SECRET" | "GMAIL_OAUTH_REFRESH_TOKEN"
   | "NODE_ENV" | "NEXT_PUBLIC_SITE_URL",
   string | undefined
@@ -39,10 +41,9 @@ export function getDeliveryPolicy(
   const approved = env.VERIFICATION_DELIVERY_APPROVED === "true";
   const configuredAllowlist = (env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
     .split(",").map(normaliseAddress).filter(Boolean);
-  const allowlistIsStrict =
-    configuredAllowlist.length === 1 && configuredAllowlist[0] === INITIAL_ALLOWED_RECIPIENT;
+  const allowlistConfigured = configuredAllowlist.length > 0;
   const recipientAllowed = Boolean(recipient) &&
-    allowlistIsStrict && configuredAllowlist.includes(normaliseAddress(recipient!));
+    allowlistConfigured && configuredAllowlist.includes(normaliseAddress(recipient!));
   const oauthConfigured = Boolean(
     env.GMAIL_OAUTH_CLIENT_ID?.trim() &&
     env.GMAIL_OAUTH_CLIENT_SECRET?.trim() &&
@@ -54,13 +55,13 @@ export function getDeliveryPolicy(
     !approved && "Gmail API delivery has not been explicitly approved.",
     !oauthConfigured && "Gmail OAuth configuration is incomplete.",
     !publicOriginReady && "Sending requires the canonical production origin.",
-    !allowlistIsStrict && `Recipient allowlist must contain only ${INITIAL_ALLOWED_RECIPIENT}.`,
+    !allowlistConfigured && "Recipient allowlist is not configured.",
     recipient !== undefined && !recipientAllowed && "Recipient is not allowlisted.",
   ].filter(Boolean) as string[];
   return {
     mode, approved, sender: VERIFICATION_FROM, recipientAllowed,
     canSend: reasons.length === 0,
-    reason: reasons[0] ?? "Approved single-recipient Gmail API delivery is configured.",
+    reason: reasons[0] ?? "Approved allowlisted-recipient Gmail API delivery is configured.",
   };
 }
 
@@ -122,7 +123,7 @@ export async function handoffVerificationEmail(input: {
   subject: string; text: string; html: string;
 }) {
   const recipientAddress = normaliseAddress(input.recipientAddress);
-  if (recipientAddress !== INITIAL_ALLOWED_RECIPIENT) {
+  if (!ALLOWED_RECIPIENTS.includes(recipientAddress)) {
     throw new Error("Recipient is not allowlisted.");
   }
   const result = await input.transport.sendMessage({
@@ -178,8 +179,10 @@ function buildRawMessage(message: {
 export function createGmailApiTransport(
   env: DeliveryEnvironment,
   fetchImpl: Fetch = fetch,
-  allowedRecipients: string[] = [INITIAL_ALLOWED_RECIPIENT],
+  allowedRecipients?: string[],
 ): GmailTransport {
+  const recipients = allowedRecipients ?? (env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
+    .split(",").map(normaliseAddress).filter(Boolean);
   const clientId = env.GMAIL_OAUTH_CLIENT_ID?.trim();
   const clientSecret = env.GMAIL_OAUTH_CLIENT_SECRET?.trim();
   const refreshToken = env.GMAIL_OAUTH_REFRESH_TOKEN?.trim();
@@ -189,7 +192,7 @@ export function createGmailApiTransport(
   return {
     async sendMessage(message) {
       if (message.from !== VERIFICATION_FROM ||
-          !allowedRecipients.includes(normaliseAddress(message.to))) {
+          !recipients.includes(normaliseAddress(message.to))) {
         throw new Error("Gmail message violates the fixed sender or recipient policy.");
       }
       const tokenResponse = await fetchImpl("https://oauth2.googleapis.com/token", {
@@ -297,9 +300,18 @@ export async function sendPreparedDelivery(input: {
   // redirect or remote tracking pixel, eliminating those automated-message
   // components from the deliverability path.
   const verificationUrl = verificationCapabilityUrl(input.rawToken, env);
-  const message = renderVerificationEmail({
-    businessName: record.businessName, verificationUrl, expiresAt: record.expiresAt,
-  });
+  // Diagnostic-only: isolates whether the Gmail API transport itself is
+  // blocked, independent of the verification link/CTA content pattern.
+  // Off unless explicitly enabled; never affects real verification content.
+  const message = env.VERIFICATION_EMAIL_TEST_PLAINTEXT === "true"
+    ? {
+        subject: "Delivery test - plain text",
+        text: "This is a plain text test message with no links or attachments, sent to confirm mail delivery between these two addresses.\n\nNo action is needed.",
+        html: "<p>This is a plain text test message with no links or attachments, sent to confirm mail delivery between these two addresses.</p><p>No action is needed.</p>",
+      }
+    : renderVerificationEmail({
+        businessName: record.businessName, verificationUrl, expiresAt: record.expiresAt,
+      });
   try {
     const transport = options.transport ?? createGmailApiTransport(env);
     const result = await handoffVerificationEmail({

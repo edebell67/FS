@@ -18,12 +18,18 @@ const enabledEnvironment = {
   GMAIL_OAUTH_REFRESH_TOKEN: "test-refresh-token",
 };
 
-test("Gmail API policy fails closed and enables only the exact initial recipient", () => {
+test("Gmail API policy fails closed and enables only explicitly configured recipients", () => {
   assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, enabledEnvironment).canSend, true);
   assert.equal(getDeliveryPolicy("prospect@example.com", enabledEnvironment).canSend, false);
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
+  const multiRecipientEnvironment = {
     ...enabledEnvironment, VERIFICATION_RECIPIENT_ALLOWLIST:
-      `${INITIAL_ALLOWED_RECIPIENT},prospect@example.com`,
+      `${INITIAL_ALLOWED_RECIPIENT},second-allowed@example.com`,
+  };
+  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, multiRecipientEnvironment).canSend, true);
+  assert.equal(getDeliveryPolicy("second-allowed@example.com", multiRecipientEnvironment).canSend, true);
+  assert.equal(getDeliveryPolicy("prospect@example.com", multiRecipientEnvironment).canSend, false);
+  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
+    ...enabledEnvironment, VERIFICATION_RECIPIENT_ALLOWLIST: "",
   }).canSend, false);
   assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
     ...enabledEnvironment, GMAIL_OAUTH_REFRESH_TOKEN: "",
