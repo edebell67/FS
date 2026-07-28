@@ -21,6 +21,9 @@ export async function SiteHeader() {
           The <span className="text-brand-600">Directory</span>
         </Link>
         <nav className="flex items-center gap-6 text-sm font-medium text-[#4c5657]">
+          <a href="https://thetechprinciple.com/" className="hover:text-brand-700">
+            Main site
+          </a>
           <Link href="/directory/search" className="hover:text-brand-700">
             Search
           </Link>
