@@ -2,10 +2,11 @@ export const VERIFICATION_TEMPLATE_VERSION = "verification-v4-legitimate-sender"
 
 const SENDER_NAME = "The Tech Principle";
 const SENDER_CONTACT_EMAIL = "edward.bell@thetechprinciple.com";
-// TODO: replace with the real registered business address before sending to
-// any real (non-test) recipient. A placeholder here is a legitimacy signal
-// only once it is truthful.
-const SENDER_PHYSICAL_ADDRESS = "[Registered business address — to be added]";
+// Sourced from config, not hardcoded, so no physical address is ever a
+// literal in tracked source. Falls back to a visible placeholder if unset,
+// which is itself a signal that this must be configured before real sending.
+const SENDER_PHYSICAL_ADDRESS =
+  process.env.VERIFICATION_SENDER_ADDRESS?.trim() || "[Registered business address — to be added]";
 
 export function renderVerificationEmail(input: {
   businessName: string; verificationUrl: string; trackingPixelUrl?: string; expiresAt: Date;
