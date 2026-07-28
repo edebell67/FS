@@ -15,18 +15,18 @@ export async function SiteHeader() {
   const user = await getCurrentUser();
 
   return (
-    <header className="border-b border-slate-200">
+    <header className="border-b border-[#152022] bg-[#f6f3ed]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/directory" className="text-lg font-semibold tracking-tight text-slate-900">
-          The Directory
+        <Link href="/directory" className="font-display text-2xl font-semibold tracking-[-0.04em] text-[#152022]">
+          The <span className="text-brand-600">Directory</span>
         </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-slate-600">
-          <Link href="/directory/search" className="hover:text-slate-900">
+        <nav className="flex items-center gap-6 text-sm font-medium text-[#4c5657]">
+          <Link href="/directory/search" className="hover:text-brand-700">
             Search
           </Link>
           {user ? (
             <>
-              <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
+              <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
               <Link href="/directoryadmin/dashboard" className="hover:text-slate-900">
                 Dashboard
               </Link>
@@ -44,12 +44,12 @@ export async function SiteHeader() {
               </Link>}
               <Link
                 href="/directoryadmin/import"
-                className="rounded-md bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
+                className="rounded-sm bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
               >
                 Import
               </Link>
               <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
-              <span className="text-slate-400">{user.email}</span>
+              <span className="text-[#7a8587]">{user.email}</span>
               <form action={logoutAction}>
                 <button type="submit" className="hover:text-slate-900">
                   Sign out
@@ -58,7 +58,7 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
-              <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
+              <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
               <Link href="/directoryadmin/login" className="hover:text-slate-900">
                 Admin sign in
               </Link>

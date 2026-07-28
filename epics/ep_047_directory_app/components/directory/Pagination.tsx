@@ -21,7 +21,7 @@ export function Pagination({ page, pageCount, basePath, searchParams }: Paginati
   if (pageCount <= 1) return null;
 
   return (
-    <div className="mt-6 flex items-center justify-between text-sm text-slate-600">
+    <div className="mt-6 flex items-center justify-between border-t border-[#d6d2c9] pt-5 text-sm text-[#667174]">
       <span>
         Page {page} of {pageCount}
       </span>
@@ -29,7 +29,7 @@ export function Pagination({ page, pageCount, basePath, searchParams }: Paginati
         {page > 1 && (
           <Link
             href={hrefFor(basePath, searchParams, page - 1)}
-            className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50"
+            className="rounded-sm border border-[#b9b6ad] bg-[#fffdf8] px-3 py-1.5 font-medium hover:border-brand-600 hover:bg-brand-50"
           >
             ← Previous
           </Link>
@@ -37,7 +37,7 @@ export function Pagination({ page, pageCount, basePath, searchParams }: Paginati
         {page < pageCount && (
           <Link
             href={hrefFor(basePath, searchParams, page + 1)}
-            className="rounded-md border border-slate-300 px-3 py-1.5 font-medium hover:bg-slate-50"
+            className="rounded-sm border border-[#b9b6ad] bg-[#fffdf8] px-3 py-1.5 font-medium hover:border-brand-600 hover:bg-brand-50"
           >
             Next →
           </Link>

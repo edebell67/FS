@@ -18,18 +18,18 @@ export function Breadcrumbs({ items, baseUrl }: { items: Crumb[]; baseUrl: strin
   };
 
   return (
-    <nav aria-label="Breadcrumb" className="mb-6 text-sm text-slate-500">
+    <nav aria-label="Breadcrumb" className="mb-6 font-mono text-[11px] uppercase tracking-[0.08em] text-[#667174]">
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <ol className="flex flex-wrap items-center gap-1">
         {items.map((item, index) => (
           <li key={index} className="flex items-center gap-1">
             {index > 0 && <span aria-hidden="true">/</span>}
             {item.href ? (
-              <Link href={item.href} className="capitalize hover:text-slate-900 hover:underline">
+              <Link href={item.href} className="capitalize hover:text-brand-700 hover:underline">
                 {item.label}
               </Link>
             ) : (
-              <span className="capitalize text-slate-700">{item.label}</span>
+              <span className="capitalize text-[#152022]">{item.label}</span>
             )}
           </li>
         ))}
