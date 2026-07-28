@@ -24,6 +24,9 @@ export async function SiteHeader() {
           <Link href="/directory/search" className="hover:text-brand-700">
             Search
           </Link>
+          <a href="https://thetechprinciple.com/news/" className="hover:text-brand-700">
+            News
+          </a>
           {user ? (
             <>
               <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
