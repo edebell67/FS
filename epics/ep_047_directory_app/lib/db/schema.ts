@@ -181,6 +181,18 @@ export const businesses = pgTable(
     validationStatus: text("validation_status").notNull().default("non_valid"),
     lastValidationRunId: uuid("last_validation_run_id"),
     validatedAt: timestamp("validated_at", { withTimezone: true }),
+
+    // Preview delivery and review (EP047 preview-delivery-and-review workflow).
+    // generatedSiteUrl points at the ep044_group-generated static site once
+    // the background watcher has produced it; awaitingOwnerResponseSince
+    // drives the intake/review reminder nudges (absence of a submission,
+    // not partial view data, is what a reminder fires on).
+    generatedSiteUrl: text("generated_site_url"),
+    websiteGeneratedAt: timestamp("website_generated_at", { withTimezone: true }),
+    awaitingOwnerResponseSince: timestamp("awaiting_owner_response_since", { withTimezone: true }),
+    readyForActivationSetAt: timestamp("ready_for_activation_set_at", { withTimezone: true }),
+    readyForActivationDate: timestamp("ready_for_activation_date", { withTimezone: true }),
+    nextServiceDate: timestamp("next_service_date", { withTimezone: true }),
   },
   (table) => ({
     byCategory: index("businesses_category_idx").on(table.category),
@@ -484,6 +496,35 @@ export const claimSuccessMessages = pgTable(
   },
   (table) => ({
     byStatus: index("claim_success_messages_status_idx").on(table.status, table.createdAt),
+  })
+);
+
+// Preview-ready / ETA / ready-for-activation messages, plus their reminder
+// nudges, share one table distinguished by messageType. A reminder is its
+// own record, never a resend of the message it nudges — this is what keeps
+// "was the owner reminded" answerable without re-deriving it from timestamps.
+export const previewDeliveryMessages = pgTable(
+  "preview_delivery_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    messageType: text("message_type").notNull(),
+    // preview_ready | eta | ready_for_activation |
+    // reminder_intake | reminder_review | reminder_activation
+    recipientAddress: text("recipient_address"),
+    status: text("status").notNull().default("prepared"), // prepared | sent | failed
+    subject: text("subject").notNull(),
+    textBody: text("text_body").notNull(),
+    actorUserId: uuid("actor_user_id").references(() => users.id),
+    providerMessageId: text("provider_message_id"),
+    failureReason: text("failure_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+  },
+  (table) => ({
+    byBusinessAndType: index("preview_delivery_messages_business_type_idx")
+      .on(table.businessId, table.messageType, table.createdAt),
   })
 );
 

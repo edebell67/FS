@@ -92,6 +92,20 @@
       "when": 1785400000000,
       "tag": "0012_backfill_claim_contact_email",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1785500000000,
+      "tag": "0013_public_visibility_and_news_storage",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1785600000000,
+      "tag": "0014_preview_delivery_and_review",
+      "breakpoints": true
     }
   ]
 }
