@@ -40,6 +40,11 @@ export default async function DashboardPage() {
         </Link>
       </div>
 
+      <div className="mt-8 flex flex-wrap gap-3 text-sm font-medium">
+        <Link href="/directoryadmin/visibility" className="rounded border px-4 py-2 hover:border-brand-400">Public visibility controls →</Link>
+        <Link href="/directoryadmin/news" className="rounded border px-4 py-2 hover:border-brand-400">News drafts & publishing →</Link>
+      </div>
+
       <div className="mt-8 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Stat label="Businesses" value={metrics.totalBusinesses} />
         <Stat label="Categories" value={metrics.categoryCount} />

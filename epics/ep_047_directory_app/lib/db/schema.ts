@@ -624,6 +624,25 @@ export const publicCategoryVisibility = pgTable(
   (table) => ({ byEnabled: index("public_category_visibility_enabled_idx").on(table.isEnabled) })
 );
 
+export const publicBusinessVisibility = pgTable("public_business_visibility", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }).unique(),
+  decision: text("decision").notNull().default("inherit"), // inherit | show | hide
+  reason: text("reason").notNull(),
+  updatedByUserId: uuid("updated_by_user_id").references(() => users.id),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const publicVisibilityAudit = pgTable("public_visibility_audit", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  entityType: text("entity_type").notNull(),
+  entityKey: text("entity_key").notNull(),
+  action: text("action").notNull(),
+  reason: text("reason").notNull(),
+  actorUserId: uuid("actor_user_id").references(() => users.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // The three editorial fields deliberately mirror the agreed reading model:
 // verified reporting, a clearly separate newsroom interpretation, and only
 // real attributed business voices.  Responses/moderation will be introduced
