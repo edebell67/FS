@@ -113,6 +113,13 @@
       "when": 1786150000000,
       "tag": "0015_public_visibility_overrides_and_audit",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1786200000000,
+      "tag": "0016_site_generation_queue_stage",
+      "breakpoints": true
     }
   ]
 }

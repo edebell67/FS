@@ -49,6 +49,9 @@ export async function approveSelectedClaims(input: { claimIds: string[]; actorUs
     const [claimedStage] = await tx.select().from(pipelineStages)
       .where(eq(pipelineStages.key, "business_claimed")).limit(1);
     if (!claimedStage) throw new Error("The Claimed pipeline stage is unavailable.");
+    const [queueStage] = await tx.select().from(pipelineStages)
+      .where(eq(pipelineStages.key, "awaiting_site_generation")).limit(1);
+    if (!queueStage) throw new Error("The Awaiting Site Generation pipeline stage is unavailable.");
     const claims = await tx.select({
       id: claimRequests.id, businessId: claimRequests.businessId, status: claimRequests.status,
       contactEmail: claimRequests.contactEmail, businessName: businesses.businessName,
@@ -69,6 +72,14 @@ export async function approveSelectedClaims(input: { claimIds: string[]; actorUs
       await tx.insert(stageTransitions).values({ businessId: claim.businessId, fromStageId: claim.currentStageId,
         toStageId: claimedStage.id, occurredAt: now, source: "admin", actorUserId: input.actorUserId,
         reason: "Claim approved from Claims pending queue", notes: input.note?.trim() || null });
+      // Immediately queues the business for automated site generation --
+      // Claimed remains a real, audited transition, not a lingering visible
+      // state; the business's actual current stage becomes the queue signal.
+      await tx.update(businesses).set({ currentStageId: queueStage.id, stageEnteredAt: now, lastUpdated: now })
+        .where(eq(businesses.id, claim.businessId));
+      await tx.insert(stageTransitions).values({ businessId: claim.businessId, fromStageId: claimedStage.id,
+        toStageId: queueStage.id, occurredAt: now, source: "automation", actorUserId: input.actorUserId,
+        reason: "Claim approved; queued for automated site generation" });
       const [messageRecord] = await tx.insert(claimSuccessMessages).values({ claimRequestId: claim.id, businessId: claim.businessId,
         recipientAddress: recipient, status: recipient ? "prepared" : "not_ready", subject: message.subject,
         textBody: message.text, actorUserId: input.actorUserId,
