@@ -7,7 +7,7 @@
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages } from "@/lib/db/schema";
-import { publicScopeWhere } from "./public-scope";
+import { publicScopeWhere } from "@/ep047_visibility_news/lib/public-scope";
 
 /**
  * Slugs for category/town URL segments. Source data (scraped, see

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
+import { APP_VERSION } from "@/lib/app-version";
 
 // Must run per-request, not be statically collected at build time — there is
 // no DATABASE_URL available during `next build`, only at runtime on Render.
@@ -14,7 +15,7 @@ export async function GET() {
   try {
     await db.execute(sql`SELECT 1`);
     return NextResponse.json(
-      { status: "ok", db: "connected", timestamp: new Date().toISOString() },
+      { status: "ok", db: "connected", version: APP_VERSION, timestamp: new Date().toISOString() },
       { status: 200 }
     );
   } catch (error) {
@@ -22,6 +23,7 @@ export async function GET() {
     return NextResponse.json(
       {
         status: "error",
+        version: APP_VERSION,
         db: "unreachable",
         timestamp: new Date().toISOString(),
       },

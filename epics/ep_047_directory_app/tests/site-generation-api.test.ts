@@ -1,0 +1,49 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { readFile } from "node:fs/promises";
+import { requireInternalApiKey } from "../lib/auth/require-internal-api";
+
+const root = new URL("..", import.meta.url);
+async function source(path: string) { return readFile(new URL(path, root), "utf8"); }
+
+function makeRequest(headers: Record<string, string> = {}) {
+  return new Request("https://example.com/internal", { headers });
+}
+
+test("internal API key auth fails closed when unconfigured", () => {
+  delete process.env.INTERNAL_API_KEY;
+  const result = requireInternalApiKey(makeRequest({ authorization: "Bearer anything" }));
+  assert.notEqual(result, null);
+});
+
+test("internal API key auth rejects a missing or wrong bearer token", () => {
+  process.env.INTERNAL_API_KEY = "test-internal-key";
+  assert.notEqual(requireInternalApiKey(makeRequest()), null);
+  assert.notEqual(requireInternalApiKey(makeRequest({ authorization: "Bearer wrong" })), null);
+  assert.equal(requireInternalApiKey(makeRequest({ authorization: "Bearer test-internal-key" })), null);
+  delete process.env.INTERNAL_API_KEY;
+});
+
+test("queue endpoint requires internal API auth and is read-only", async () => {
+  const route = await source("app/api/internal/site-generation/queue/route.ts");
+  assert.match(route, /requireInternalApiKey\(request\)/);
+  assert.match(route, /export async function GET/);
+  assert.doesNotMatch(route, /export async function POST/);
+  assert.match(route, /getBusinessesAwaitingSiteGeneration/);
+});
+
+test("complete endpoint requires businessId and siteUrl, never speculative", async () => {
+  const route = await source("app/api/internal/site-generation/complete/route.ts");
+  assert.match(route, /requireInternalApiKey\(request\)/);
+  assert.match(route, /businessId and siteUrl are required/);
+  assert.match(route, /recordSiteGenerated/);
+});
+
+test("notify endpoint is fail-closed and idempotent by design", async () => {
+  const route = await source("app/api/internal/site-generation/notify/route.ts");
+  assert.match(route, /requireInternalApiKey\(request\)/);
+  assert.match(route, /previewDeliveryEnabled\(\)/);
+  assert.match(route, /getBusinessesReadyForPreviewNotification/);
+  assert.match(route, /preparePreviewMessage/);
+  assert.match(route, /sendPreparedPreviewMessage/);
+});
