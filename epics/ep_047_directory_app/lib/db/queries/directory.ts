@@ -57,7 +57,7 @@ export async function getTownCounts(): Promise<CountedGroup[]> {
 /** Which first letters of business_name actually have at least one business — drives the A-Z index. */
 export async function getAvailableLetters(): Promise<string[]> {
     const rows = await db.execute<{ letter: string }>(
-    sql`SELECT DISTINCT upper(left(business_name, 1)) AS letter FROM businesses b WHERE ${publicScopeWhere()} ORDER BY letter`
+    sql`SELECT DISTINCT upper(left(business_name, 1)) AS letter FROM businesses WHERE ${publicScopeWhere()} ORDER BY letter`
   );
   const result = rows as unknown as { rows: Array<{ letter: string }> };
   return result.rows.map((r) => r.letter);
