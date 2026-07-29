@@ -8,6 +8,21 @@
 <meta name="robots" content="noindex">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2220%22 fill=%22%2314171A%22/><text x=%2250%22 y=%2265%22 font-size=%2244%22 font-family=%22sans-serif%22 font-weight=%22800%22 fill=%22%23FF7A1A%22 text-anchor=%22middle%22>R</text></svg>">
 <link rel="stylesheet" href="assets/css/styles.css">
+<style>
+  .owner-review-list{display:grid;gap:14px;max-width:760px;margin:0 auto}
+  .owner-review-card{border:1px solid var(--paper-dim);border-radius:var(--radius-m);background:var(--white);padding:16px 20px}
+  .owner-review-card summary{cursor:pointer;font-family:var(--font-display);font-weight:700;color:var(--graphite);list-style:none}
+  .owner-review-card summary::-webkit-details-marker{display:none}
+  .owner-review-card summary::before{content:"▸ ";color:var(--amber)}
+  .owner-review-card[open] summary::before{content:"▾ "}
+  .owner-review-no-action{display:flex;gap:8px;align-items:center;margin:12px 0;font-size:0.92rem;color:var(--graphite)}
+  .owner-review-questions{display:grid;gap:14px;margin:10px 0}
+  .owner-review-questions fieldset{border:none;padding:0;margin:0}
+  .owner-review-questions legend{font-weight:600;font-size:0.92rem;color:var(--graphite);padding:0 0 6px}
+  .owner-review-option{display:flex;gap:8px;align-items:center;font-size:0.88rem;color:var(--steel);padding:2px 0}
+  .owner-review-anything-else{display:block;font-size:0.88rem;color:var(--graphite);margin-top:8px}
+  .owner-review-anything-else textarea{display:block;width:100%;margin-top:6px;border:1px solid var(--paper-dim);border-radius:var(--radius-s);padding:8px;font:inherit}
+</style>
 </head>
 <body data-page="owner">
 
@@ -66,6 +81,17 @@
   </div>
 </section>
 
+<section class="section section--white" id="owner-review">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">Your review</div>
+      <h2>Tell us what to change, page by page</h2>
+      <p>Open each page below and pick an option for each question, or mark it "No action required" if you're happy with it as-is.</p>
+    </div>
+    <div id="owner-review-root"></div>
+  </div>
+</section>
+
 <section class="section section--dim">
   <div class="container">
     <div class="section-head reveal">
@@ -120,6 +146,8 @@
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/main.js"></script>
+<script src="assets/js/owner-review-config.js"></script>
+<script src="owner-review-embed.js"></script>
 <script>
   document.addEventListener("DOMContentLoaded", () => {
     const done = [
