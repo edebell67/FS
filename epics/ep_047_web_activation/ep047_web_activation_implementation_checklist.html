@@ -1,0 +1,105 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EP047 web activation implementation checklist</title><style>
+:root{--ink:#17221e;--muted:#66736b;--green:#146442;--soft:#e8f5eb;--amber:#8a5b0b;--amberbg:#fff4dc;--gray:#f3f6f3;--line:#d9e4db;--red:#a33830;--redbg:#fff0ef;--outstanding:#c0132b}*{box-sizing:border-box}body{margin:0;background:#f0f4f0;color:var(--ink);font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.shell{max-width:1180px;margin:auto;padding:34px 26px 60px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:800}.top h1{font:500 36px/1.05 Georgia,serif;letter-spacing:-.035em;margin:7px 0}.top p{margin:0;color:var(--muted);max-width:700px}.stamp{font-size:12px;border:1px solid #bbd9c3;border-radius:999px;padding:8px 12px;color:#286342;background:#f8fcf8;white-space:nowrap}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin:28px 0}.metric{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px}.metric b{font:500 25px/1 Georgia,serif;display:block}.metric span{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}.metric.overall{background:#f8fcf8;border-color:#bbd9c3}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.section{border-bottom:1px solid var(--line)}.section:last-child{border:0}.sectionhead{padding:16px 20px;background:#f8faf8;display:flex;justify-content:space-between;align-items:center;gap:12px}.sectionhead h2{font-size:14px;margin:0}.sectionhead span{font-size:11px;color:var(--muted);white-space:nowrap}.item{display:grid;grid-template-columns:28px 1fr 74px 116px 200px;padding:16px 20px;gap:13px;align-items:center;border-top:1px solid #edf1ee}.item:first-of-type{border-top:0}.tick{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900}.done .tick{background:var(--soft);color:var(--green)}.active .tick{background:var(--amberbg);color:var(--amber);animation:pulse 1.8s infinite}.pending .tick{border:1px solid #cbd7ce;color:#9aa69f}.blocked .tick{background:var(--redbg);color:var(--red)}.item.outstanding{border-left:4px solid var(--outstanding);background:#fffafa}.item.outstanding .tick{background:#ffe1e5;color:var(--outstanding);border:0}@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(236,194,93,.15)}}.title b{display:block;font-size:14px}.title small{display:block;color:var(--muted);margin-top:2px;font-size:12px}.pct{font:700 15px/1 ui-sans-serif;text-align:right;color:var(--ink)}.bar{height:4px;background:#e7ece8;border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}.item.outstanding .bar i{background:var(--outstanding)}.active .bar i{background:var(--amber)}.pill{font-size:11px;font-weight:800;border-radius:999px;padding:5px 8px;text-align:center}.done .pill{background:var(--soft);color:#236343}.active .pill{background:var(--amberbg);color:#78500c}.pending .pill{background:var(--gray);color:#657168}.blocked .pill{background:var(--redbg);color:#8c332c}.item.outstanding .pill{background:#ffe1e5;color:var(--outstanding)}.evidence{font-size:11px;color:var(--muted);text-align:right}.footer{margin-top:16px;color:var(--muted);font-size:12px}.footer b{color:var(--ink)}.footer.out{border-left:4px solid var(--outstanding);background:#fffafa;padding:11px 13px;border-radius:0 8px 8px 0}@media(max-width:860px){.shell{padding:22px 13px}.top{display:block}.stamp{display:inline-block;margin-top:14px}.summary{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:28px 1fr 64px}.pill,.evidence{grid-column:2/-1;justify-self:start;text-align:left}.top h1{font-size:30px}}</style></head><body><main class="shell">
+
+<header class="top"><div><div class="kicker">EP047 · web activation tracker</div><h1>Web activation implementation checklist</h1><p>Claim approval → automated site generation → owner preview &amp; structured review → activation. Statuses are evidence-led: nothing is marked complete without stated proof, and percentages reflect what is actually verified, not what is written.</p></div><div class="stamp" id="stamp">Updated: 2026-07-29 14:05 BST</div></header>
+
+<section class="summary">
+<div class="metric overall"><b id="overallPct">—</b><span>Overall complete</span></div>
+<div class="metric"><b id="doneCount">—</b><span>Complete</span></div>
+<div class="metric"><b id="activeCount">—</b><span>In progress</span></div>
+<div class="metric"><b id="pendingCount">—</b><span>Pending</span></div>
+<div class="metric"><b id="outCount">—</b><span>Outstanding</span></div>
+</section>
+
+<section class="panel" id="panel"></section>
+
+<p class="footer out"><b>Two areas are formally outstanding</b> and deliberately excluded from this pass: the <b>site generation module</b> (black box — must be model-agnostic, reused for both first build and applying owner-requested changes) and the <b>payment module</b> (activation is a payment event, needs a provider, checkout links and a signature-verified webhook). Everything on either side of both has been built against a fixed interface so neither blocks the rest.</p>
+<p class="footer"><b>Evidence standard used here:</b> "Complete" means live-verified — a real database query, a real HTTP call, or a real email received. Code that only typechecks and passes source-assertion tests is capped below 100%.</p>
+
+</main><script>
+const sections=[
+ ["1. Pipeline &amp; data model",[
+  ["Add awaiting_site_generation and ready_for_preview stages","Explicit queue stage between Claimed and preview-ready; renames the old website_generated stage.",100,"done","migration 0016 · verified in live pipeline_stages"],
+  ["Queue the business automatically on claim approval","Same transaction as the Claimed transition; Claimed stays a real audited row.",100,"done","claims-approval.ts · commit fa6ab0cd"],
+  ["Businesses columns: site URL, generation + reminder timestamps, service date","6 new columns supporting generation, reminders, ETA and post-delivery service.",100,"done","migration 0014 · information_schema verified"],
+  ["preview_delivery_messages table for all 6 message types","One table keyed by message_type; reminders are their own rows, never resends.",100,"done","migration 0014 · live insert verified"],
+  ["Apply all migrations to the local database","Blocked earlier by a stale postmaster.pid from an unclean shutdown.",100,"done","16 migrations applied · root cause fixed"],
+  ["Apply migrations to the production database","0014 and 0016 have not been run against Render Postgres.",0,"pending","Needs production migration run"]
+ ]],
+ ["2. Generation queue &amp; handoff APIs",[
+  ["Queue query: businesses awaiting generation","getBusinessesAwaitingSiteGeneration(), oldest-claimed first.",100,"done","live DB test · returns/clears correctly"],
+  ["Record generation complete + advance stage","recordSiteGenerated() sets URL, timestamp, stage and audit row.",100,"done","live DB + HTTP test · stage → ready_for_preview"],
+  ["Notification guard (no duplicate sends)","ready_for_preview AND no prior preview_ready message exists.",100,"done","live DB test · correctly listed once"],
+  ["Internal server-to-server API auth","Bearer key for infrastructure callers; fails closed when unconfigured.",100,"done","401 unauth · 401 wrong key · 200 valid"],
+  ["GET /api/internal/site-generation/queue","Read-only queue endpoint for the cron job.",100,"done","live HTTP · returned real queued business"],
+  ["POST /api/internal/site-generation/complete","The single seam the generation black box must call.",100,"done","live HTTP · {recorded:true} + DB confirmed"],
+  ["POST /api/internal/site-generation/notify","Idempotent; sends any outstanding preview-ready notifications.",90,"active","live HTTP · fail-closed path proven; send path proven separately"],
+  ["Concurrency guard on the queue","No in-progress lock, so two overlapping runs could double-pick a business.",0,"pending","Needs a claim/lock field"]
+ ]],
+ ["3. Owner messaging",[
+  ["Preview-ready message (benefits, site link, news link)","Real send received in Inbox within one minute.",100,"done","production send · confirmed at recipient"],
+  ["Fail-closed sending gate (mode + approval + allowlist)","Mirrors the verification/claim-success gating exactly.",100,"done","live production run · {sent:true}"],
+  ["Prepare and send as distinct explicit actions","Preparing never implies sending; status stays truthful.",100,"done","live DB row: status=prepared, sent_at=null"],
+  ["ETA message template","States the date without implying automatic activation.",85,"active","unit-tested; never sent with real data"],
+  ["Ready-for-activation message template","Does not itself claim the site is live.",85,"active","unit-tested; awaits payment link"],
+  ["Three reminder templates (intake / review / activation)","Distinct content per trigger condition.",85,"active","unit-tested; scheduler not built"],
+  ["Reminder scheduler","Fires on absence of a submission within an expected window.",0,"pending","Depends on timestamp fields (built)"]
+ ]],
+ ["4. Owner review experience (ep044 skill)",[
+  ["Embedded per-page review UI (N×M options + free text)","Point-and-click per screen, plus a \"no action required\" default.",100,"done","browser-verified · 6 cards render + wire up"],
+  ["page_open_date_time captured client-side","No tracking beacon; the record travels with the submission.",100,"done","browser-verified · opened vs not-opened"],
+  ["Structured mailto submission format","business_name → {screen_name, timestamp, 1:opt…, anything_else}.",100,"done","live-DOM test reproduced agreed format"],
+  ["Owner review skill documented for reuse","New ep044_group skill so every template inherits the review UI.",100,"done","000_owner_review_skill.md · commit fd255e0b"],
+  ["Deepen skills + expand image library","Separate quality track to improve generated output.",0,"pending","Own workstream"]
+ ]],
+ ["5. Site generation module",[
+  ["Cloud trigger decision (Render Cron Job)","Rules out laptop-bound options: Hermes, Claude Code scheduler.",100,"done","design settled + diagrammed"],
+  ["Interface contract fixed on both sides","Given business data → produce a real site, return its URL.",100,"done","queue + complete endpoints live-tested"],
+  ["Generation module itself","OUTSTANDING. Must be model-agnostic and reused for applying owner changes.",0,"outstanding","Deferred by design — own unit"],
+  ["Render Cron Job service + orchestration script","Provision the service and the script that calls the three endpoints.",0,"pending","Depends on generation module"],
+  ["Apply owner-requested changes (2nd call mode)","Same module, \"apply changes\" mode rather than fresh build.",0,"outstanding","Same deferred module"]
+ ]],
+ ["6. Payment &amp; activation",[
+  ["Payment provider integration","OUTSTANDING. Activation is a payment, not a click.",0,"outstanding","Deferred by design — own unit"],
+  ["Per-business checkout link in the ready message","Included in the ready-for-activation email.",0,"outstanding","Depends on provider choice"],
+  ["Signature-verified payment webhook → website_published","Must verify the signature before trusting any event.",0,"outstanding","Security-critical"],
+  ["Admin visibility of payment status","Distinct from message delivery status.",0,"outstanding","Depends on provider choice"],
+  ["Replace the template's mailto \"Activate\" link","Currently still a mailto in owner-preview.html.",0,"outstanding","Depends on checkout link"]
+ ]],
+ ["7. Admin UI",[
+  ["Generated site link + generation status on business detail","Alongside the existing verification delivery panel.",0,"pending","Backend ready"],
+  ["Ready-for-activation date + next-service-date editors","Same explicit-confirmation discipline as claim approval.",0,"pending","Columns exist"],
+  ["Delivery-status display for all preview messages","Truthful Prepared/Sent, never assumed Delivered.",0,"pending","Data model ready"]
+ ]],
+ ["8. Validation, deployment &amp; review",[
+  ["Automated test suite","Covers stages, gating, guards, API auth and message content.",100,"done","97 / 97 passing"],
+  ["Typecheck","Clean across all new modules and routes.",100,"done","tsc --noEmit clean"],
+  ["Interactive workflow diagrams (3)","Watcher, preview-delivery-and-review, plus this checklist.",100,"done","browser-verified, no console errors"],
+  ["Workstream skill rule: diagram before code","Binding on every model working under the skill.",100,"done","SKILL.md updated"],
+  ["Lint and production build","Not yet run for this batch.",0,"pending","npm run verify"],
+  ["Deploy this batch to Render","Handoff APIs are committed but not yet deployed.",0,"pending","Needs deploy + prod migration"],
+  ["Full live end-to-end run with a real business","Claim → generate → preview → review → ETA → activation.",0,"pending","Blocked by outstanding modules"]
+ ]]
+];
+
+const labels={done:["✓","Complete"],active:["…","In progress"],pending:["○","Pending"],outstanding:["!","Outstanding"],blocked:["!","Blocked"]};
+let counts={done:0,active:0,pending:0,outstanding:0},total=0,sum=0;
+document.getElementById("panel").innerHTML=sections.map(([name,items])=>{
+  const secSum=items.reduce((a,i)=>a+i[2],0), secPct=Math.round(secSum/items.length);
+  return `<div class="section"><div class="sectionhead"><h2>${name}</h2><span>${secPct}% · ${items.filter(i=>i[2]===100).length} / ${items.length} complete</span></div>`+
+  items.map(([t,d,pct,state,ev])=>{
+    counts[state]=(counts[state]||0)+1; total++; sum+=pct;
+    const [tick,pill]=labels[state];
+    return `<div class="item ${state==="outstanding"?"pending outstanding":state}"><div class="tick">${tick}</div>`+
+    `<div class="title"><b>${t}</b><small>${d}</small></div>`+
+    `<div><div class="pct">${pct}%</div><div class="bar"><i style="width:${pct}%"></i></div></div>`+
+    `<div class="pill">${pill}</div><div class="evidence">${ev}</div></div>`;
+  }).join("")+`</div>`;
+}).join("");
+
+document.getElementById("overallPct").textContent=Math.round(sum/total)+"%";
+document.getElementById("doneCount").textContent=counts.done||0;
+document.getElementById("activeCount").textContent=counts.active||0;
+document.getElementById("pendingCount").textContent=counts.pending||0;
+document.getElementById("outCount").textContent=counts.outstanding||0;
+</script></body></html>

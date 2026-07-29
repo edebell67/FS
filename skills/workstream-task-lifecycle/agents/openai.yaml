@@ -1,0 +1,3 @@
+display_name: Workstream Task Lifecycle
+short_description: Track task docs across todo, in-progress, and complete.
+default_prompt: Create timestamped task documents, keep them updated during execution, and move them through workstream lifecycle folders.
