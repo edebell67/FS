@@ -7,6 +7,7 @@
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages } from "@/lib/db/schema";
+import { publicScopeWhere } from "./public-scope";
 
 export const PAGE_SIZE = 25;
 
@@ -57,6 +58,7 @@ export function parsePage(raw: string | string[] | undefined): number {
 
 function buildWhere(filters: BusinessListFilters): SQL | undefined {
   const conditions: SQL[] = [];
+  conditions.push(publicScopeWhere());
 
   if (filters.q) {
     const pattern = `%${filters.q}%`;

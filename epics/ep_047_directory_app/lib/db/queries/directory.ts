@@ -7,6 +7,7 @@
 import { and, asc, desc, eq, ne, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages } from "@/lib/db/schema";
+import { publicScopeWhere } from "./public-scope";
 
 /**
  * Slugs for category/town URL segments. Source data (scraped, see
@@ -35,6 +36,7 @@ export async function getCategoryCounts(): Promise<CountedGroup[]> {
   const rows = await db
     .select({ category: businesses.category, count: sql<number>`count(*)::int` })
     .from(businesses)
+    .where(publicScopeWhere())
     .groupBy(businesses.category)
     .orderBy(desc(sql`count(*)`));
   return rows.map((r) => ({ label: r.category, slug: toSlug(r.category), count: r.count }));
@@ -44,7 +46,7 @@ export async function getTownCounts(): Promise<CountedGroup[]> {
   const rows = await db
     .select({ town: businesses.town, count: sql<number>`count(*)::int` })
     .from(businesses)
-    .where(sql`${businesses.town} IS NOT NULL`)
+    .where(and(publicScopeWhere(), sql`${businesses.town} IS NOT NULL`))
     .groupBy(businesses.town)
     .orderBy(desc(sql`count(*)`));
   return rows
@@ -54,8 +56,8 @@ export async function getTownCounts(): Promise<CountedGroup[]> {
 
 /** Which first letters of business_name actually have at least one business — drives the A-Z index. */
 export async function getAvailableLetters(): Promise<string[]> {
-  const rows = await db.execute<{ letter: string }>(
-    sql`SELECT DISTINCT upper(left(business_name, 1)) AS letter FROM businesses ORDER BY letter`
+    const rows = await db.execute<{ letter: string }>(
+    sql`SELECT DISTINCT upper(left(business_name, 1)) AS letter FROM businesses b WHERE ${publicScopeWhere()} ORDER BY letter`
   );
   const result = rows as unknown as { rows: Array<{ letter: string }> };
   return result.rows.map((r) => r.letter);
@@ -72,6 +74,7 @@ export async function getNewestBusinesses(limit: number) {
       importDate: businesses.importDate,
     })
     .from(businesses)
+    .where(publicScopeWhere())
     .orderBy(desc(businesses.importDate))
     .limit(limit);
 }
@@ -148,7 +151,7 @@ export async function getBusinessBySlug(slug: string): Promise<BusinessProfile |
     })
     .from(businesses)
     .leftJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
-    .where(eq(businesses.slug, slug))
+    .where(and(eq(businesses.slug, slug), publicScopeWhere()))
     .limit(1);
   return row ?? null;
 }
@@ -185,7 +188,7 @@ export async function getBusinessByRef(businessRef: string): Promise<BusinessPro
     })
     .from(businesses)
     .leftJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
-    .where(eq(businesses.businessRef, businessRef))
+    .where(and(eq(businesses.businessRef, businessRef), publicScopeWhere()))
     .limit(1);
   return row ?? null;
 }
@@ -210,7 +213,7 @@ export async function getRelatedBusinesses(
       town: businesses.town,
     })
     .from(businesses)
-    .where(and(eq(businesses.category, category), ne(businesses.id, excludeId)))
+    .where(and(eq(businesses.category, category), ne(businesses.id, excludeId), publicScopeWhere()))
     .orderBy(asc(businesses.businessName))
     .limit(limit);
 }
@@ -228,7 +231,7 @@ export async function getNearbyBusinesses(
       town: businesses.town,
     })
     .from(businesses)
-    .where(and(eq(businesses.town, town), ne(businesses.id, excludeId)))
+    .where(and(eq(businesses.town, town), ne(businesses.id, excludeId), publicScopeWhere()))
     .orderBy(asc(businesses.businessName))
     .limit(limit);
 }
