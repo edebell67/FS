@@ -144,6 +144,7 @@ export async function listDistinctCategories(): Promise<string[]> {
   const rows = await db
     .selectDistinct({ category: businesses.category })
     .from(businesses)
+    .where(publicScopeWhere())
     .orderBy(asc(businesses.category));
   return rows.map((r) => r.category);
 }
@@ -152,7 +153,7 @@ export async function listDistinctTowns(): Promise<string[]> {
   const rows = await db
     .selectDistinct({ town: businesses.town })
     .from(businesses)
-    .where(sql`${businesses.town} IS NOT NULL`)
+    .where(and(publicScopeWhere(), sql`${businesses.town} IS NOT NULL`))
     .orderBy(asc(businesses.town));
   return rows.map((r) => r.town).filter((t): t is string => Boolean(t));
 }
