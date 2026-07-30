@@ -1,20 +1,37 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EP047 web activation implementation checklist</title><style>
-:root{--ink:#17221e;--muted:#66736b;--green:#146442;--soft:#e8f5eb;--amber:#8a5b0b;--amberbg:#fff4dc;--gray:#f3f6f3;--line:#d9e4db;--red:#a33830;--redbg:#fff0ef;--outstanding:#c0132b}*{box-sizing:border-box}body{margin:0;background:#f0f4f0;color:var(--ink);font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.shell{max-width:1180px;margin:auto;padding:34px 26px 60px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:800}.top h1{font:500 36px/1.05 Georgia,serif;letter-spacing:-.035em;margin:7px 0}.top p{margin:0;color:var(--muted);max-width:700px}.stamp{font-size:12px;border:1px solid #bbd9c3;border-radius:999px;padding:8px 12px;color:#286342;background:#f8fcf8;white-space:nowrap}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin:28px 0}.metric{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px}.metric b{font:500 25px/1 Georgia,serif;display:block}.metric span{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}.metric.overall{background:#f8fcf8;border-color:#bbd9c3}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.section{border-bottom:1px solid var(--line)}.section:last-child{border:0}.sectionhead{padding:16px 20px;background:#f8faf8;display:flex;justify-content:space-between;align-items:center;gap:12px}.sectionhead h2{font-size:14px;margin:0}.sectionhead span{font-size:11px;color:var(--muted);white-space:nowrap}.item{display:grid;grid-template-columns:28px 1fr 74px 116px 200px;padding:16px 20px;gap:13px;align-items:center;border-top:1px solid #edf1ee}.item:first-of-type{border-top:0}.tick{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900}.done .tick{background:var(--soft);color:var(--green)}.active .tick{background:var(--amberbg);color:var(--amber);animation:pulse 1.8s infinite}.pending .tick{border:1px solid #cbd7ce;color:#9aa69f}.blocked .tick{background:var(--redbg);color:var(--red)}.item.outstanding{border-left:4px solid var(--outstanding);background:#fffafa}.item.outstanding .tick{background:#ffe1e5;color:var(--outstanding);border:0}@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(236,194,93,.15)}}.title b{display:block;font-size:14px}.title small{display:block;color:var(--muted);margin-top:2px;font-size:12px}.pct{font:700 15px/1 ui-sans-serif;text-align:right;color:var(--ink)}.bar{height:4px;background:#e7ece8;border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}.item.outstanding .bar i{background:var(--outstanding)}.active .bar i{background:var(--amber)}.pill{font-size:11px;font-weight:800;border-radius:999px;padding:5px 8px;text-align:center}.done .pill{background:var(--soft);color:#236343}.active .pill{background:var(--amberbg);color:#78500c}.pending .pill{background:var(--gray);color:#657168}.blocked .pill{background:var(--redbg);color:#8c332c}.item.outstanding .pill{background:#ffe1e5;color:var(--outstanding)}.evidence{font-size:11px;color:var(--muted);text-align:right}.footer{margin-top:16px;color:var(--muted);font-size:12px}.footer b{color:var(--ink)}.footer.out{border-left:4px solid var(--outstanding);background:#fffafa;padding:11px 13px;border-radius:0 8px 8px 0}@media(max-width:860px){.shell{padding:22px 13px}.top{display:block}.stamp{display:inline-block;margin-top:14px}.summary{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:28px 1fr 64px}.pill,.evidence{grid-column:2/-1;justify-self:start;text-align:left}.top h1{font-size:30px}}</style></head><body><main class="shell">
+<!doctype html>
+<!--
+  ep047_web_activation_implementation_checklist.html — evidence-led delivery status
+  for the EP047 web-activation pipeline, with per-item percent complete.
 
-<header class="top"><div><div class="kicker">EP047 · web activation tracker</div><h1>Web activation implementation checklist</h1><p>Claim approval → automated site generation → owner preview &amp; structured review → activation. Statuses are evidence-led: nothing is marked complete without stated proof, and percentages reflect what is actually verified, not what is written.</p></div><div class="stamp" id="stamp">Updated: 2026-07-29 14:05 BST</div></header>
+  VERSION HISTORY
+  v1.1.0 · 2026-07-30 · Expands the generation-module section with the four
+    prerequisites found by inspecting the repo (image library absent from git,
+    no skill fetch path, no LLM provider/key, no chat-widget opt-in column);
+    records the generation workflow specification as complete; adds the in-file
+    version-history convention; notes that workstream/ is gitignored so only the
+    tracked copies of the diagrams persist.
+  v1.0.0 · 2026-07-29 · Initial version: 46 items across 8 sections, percent
+    complete per item, red-bordered Outstanding treatment for site generation and
+    payment.
+-->
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>EP047 web activation implementation checklist</title><style>
+:root{--ink:#17221e;--muted:#66736b;--green:#146442;--soft:#e8f5eb;--amber:#8a5b0b;--amberbg:#fff4dc;--gray:#f3f6f3;--line:#d9e4db;--red:#a33830;--redbg:#fff0ef;--outstanding:#c0132b}*{box-sizing:border-box}body{margin:0;background:#f0f4f0;color:var(--ink);font:15px/1.45 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}.shell{max-width:1180px;margin:auto;padding:34px 26px 60px}.top{display:flex;justify-content:space-between;gap:24px;align-items:flex-start}.kicker{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--green);font-weight:800}.top h1{font:500 36px/1.05 Georgia,serif;letter-spacing:-.035em;margin:7px 0}.top p{margin:0;color:var(--muted);max-width:700px}.stamp{font-size:12px;border:1px solid #bbd9c3;border-radius:999px;padding:8px 12px;color:#286342;background:#f8fcf8;white-space:nowrap}.summary{display:grid;grid-template-columns:repeat(5,1fr);gap:11px;margin:28px 0}.metric{background:#fff;border:1px solid var(--line);border-radius:11px;padding:13px}.metric b{font:500 25px/1 Georgia,serif;display:block}.metric span{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:800}.metric.overall{background:#f8fcf8;border-color:#bbd9c3}.metric.out{background:#fffafa;border-color:#f0c2c8}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;overflow:hidden}.section{border-bottom:1px solid var(--line)}.section:last-child{border:0}.sectionhead{padding:16px 20px;background:#f8faf8;display:flex;justify-content:space-between;align-items:center;gap:12px}.sectionhead h2{font-size:14px;margin:0}.sectionhead span{font-size:11px;color:var(--muted);white-space:nowrap}.item{display:grid;grid-template-columns:28px 1fr 74px 116px 210px;padding:16px 20px;gap:13px;align-items:center;border-top:1px solid #edf1ee}.item:first-of-type{border-top:0}.tick{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:900}.done .tick{background:var(--soft);color:var(--green)}.active .tick{background:var(--amberbg);color:var(--amber);animation:pulse 1.8s infinite}.pending .tick{border:1px solid #cbd7ce;color:#9aa69f}.item.outstanding{border-left:4px solid var(--outstanding);background:#fffafa}.item.outstanding .tick{background:#ffe1e5;color:var(--outstanding);border:0}@keyframes pulse{50%{box-shadow:0 0 0 6px rgba(236,194,93,.15)}}.title b{display:block;font-size:14px}.title small{display:block;color:var(--muted);margin-top:2px;font-size:12px}.pct{font:700 15px/1 ui-sans-serif;text-align:right;color:var(--ink)}.bar{height:4px;background:#e7ece8;border-radius:3px;margin-top:5px;overflow:hidden}.bar i{display:block;height:100%;background:var(--green)}.item.outstanding .bar i{background:var(--outstanding)}.active .bar i{background:var(--amber)}.pill{font-size:11px;font-weight:800;border-radius:999px;padding:5px 8px;text-align:center}.done .pill{background:var(--soft);color:#236343}.active .pill{background:var(--amberbg);color:#78500c}.pending .pill{background:var(--gray);color:#657168}.item.outstanding .pill{background:#ffe1e5;color:var(--outstanding)}.evidence{font-size:11px;color:var(--muted);text-align:right}.footer{margin-top:16px;color:var(--muted);font-size:12px}.footer b{color:var(--ink)}.footer.out{border-left:4px solid var(--outstanding);background:#fffafa;padding:11px 13px;border-radius:0 8px 8px 0}@media(max-width:860px){.shell{padding:22px 13px}.top{display:block}.stamp{display:inline-block;margin-top:14px}.summary{grid-template-columns:repeat(2,1fr)}.item{grid-template-columns:28px 1fr 64px}.pill,.evidence{grid-column:2/-1;justify-self:start;text-align:left}.top h1{font-size:30px}}</style></head><body><main class="shell">
+
+<header class="top"><div><div class="kicker">EP047 · web activation tracker</div><h1>Web activation implementation checklist</h1><p>Claim approval → automated site generation → owner preview &amp; structured review → activation. Statuses are evidence-led: nothing is marked complete without stated proof, and percentages reflect what is actually verified, not what is written.</p></div><div class="stamp" id="stamp">Updated: 2026-07-30</div></header>
 
 <section class="summary">
 <div class="metric overall"><b id="overallPct">—</b><span>Overall complete</span></div>
 <div class="metric"><b id="doneCount">—</b><span>Complete</span></div>
 <div class="metric"><b id="activeCount">—</b><span>In progress</span></div>
 <div class="metric"><b id="pendingCount">—</b><span>Pending</span></div>
-<div class="metric"><b id="outCount">—</b><span>Outstanding</span></div>
+<div class="metric out"><b id="outCount">—</b><span>Outstanding</span></div>
 </section>
 
 <section class="panel" id="panel"></section>
 
-<p class="footer out"><b>Two areas are formally outstanding</b> and deliberately excluded from this pass: the <b>site generation module</b> (black box — must be model-agnostic, reused for both first build and applying owner-requested changes) and the <b>payment module</b> (activation is a payment event, needs a provider, checkout links and a signature-verified webhook). Everything on either side of both has been built against a fixed interface so neither blocks the rest.</p>
-<p class="footer"><b>Evidence standard used here:</b> "Complete" means live-verified — a real database query, a real HTTP call, or a real email received. Code that only typechecks and passes source-assertion tests is capped below 100%.</p>
+<p class="footer out"><b>Two areas remain formally outstanding:</b> the <b>site generation module</b> (now fully specified — a Render cron running a model-agnostic Python/LLM loop — but with four real prerequisites blocking a start, the hardest being that the 114 MB image library is not in git at all) and the <b>payment module</b> (activation is a payment event, needing a provider, checkout links and a signature-verified webhook). Everything on either side of both is built against a fixed interface so neither blocks the rest.</p>
+<p class="footer"><b>Evidence standard:</b> "Complete" means live-verified — a real database query, a real HTTP call, or a real email received. Code that only typechecks and passes source-assertion tests is capped below 100%.</p>
+<p class="footer"><b>Note on artefact location:</b> <code>workstream/</code> is gitignored in this repo, so the interactive diagrams only persist through their tracked copies in <code>epics/ep_047_web_activation/</code>. That folder is the durable home for all four artefacts.</p>
 
 </main><script>
 const sections=[
@@ -28,13 +45,13 @@ const sections=[
  ]],
  ["2. Generation queue &amp; handoff APIs",[
   ["Queue query: businesses awaiting generation","getBusinessesAwaitingSiteGeneration(), oldest-claimed first.",100,"done","live DB test · returns/clears correctly"],
-  ["Record generation complete + advance stage","recordSiteGenerated() sets URL, timestamp, stage and audit row.",100,"done","live DB + HTTP test · stage → ready_for_preview"],
+  ["Record generation complete + advance stage","recordSiteGenerated() sets URL, timestamp, stage and audit row.",100,"done","live DB + HTTP · stage → ready_for_preview"],
   ["Notification guard (no duplicate sends)","ready_for_preview AND no prior preview_ready message exists.",100,"done","live DB test · correctly listed once"],
   ["Internal server-to-server API auth","Bearer key for infrastructure callers; fails closed when unconfigured.",100,"done","401 unauth · 401 wrong key · 200 valid"],
   ["GET /api/internal/site-generation/queue","Read-only queue endpoint for the cron job.",100,"done","live HTTP · returned real queued business"],
-  ["POST /api/internal/site-generation/complete","The single seam the generation black box must call.",100,"done","live HTTP · {recorded:true} + DB confirmed"],
-  ["POST /api/internal/site-generation/notify","Idempotent; sends any outstanding preview-ready notifications.",90,"active","live HTTP · fail-closed path proven; send path proven separately"],
-  ["Concurrency guard on the queue","No in-progress lock, so two overlapping runs could double-pick a business.",0,"pending","Needs a claim/lock field"]
+  ["POST /api/internal/site-generation/complete","The single seam the generation module must call.",100,"done","live HTTP · {recorded:true} + DB confirmed"],
+  ["POST /api/internal/site-generation/notify","Idempotent; sends any outstanding preview-ready notifications.",90,"active","live HTTP fail-closed path; send path proven separately"],
+  ["Queue claim / lock for concurrent runs","A 5-min cadence with multi-minute generation means two runs can double-pick a business and both push.",0,"pending","Correctness risk — needs a lock field"]
  ]],
  ["3. Owner messaging",[
   ["Preview-ready message (benefits, site link, news link)","Real send received in Inbox within one minute.",100,"done","production send · confirmed at recipient"],
@@ -52,37 +69,48 @@ const sections=[
   ["Owner review skill documented for reuse","New ep044_group skill so every template inherits the review UI.",100,"done","000_owner_review_skill.md · commit fd255e0b"],
   ["Deepen skills + expand image library","Separate quality track to improve generated output.",0,"pending","Own workstream"]
  ]],
- ["5. Site generation module",[
-  ["Cloud trigger decision (Render Cron Job)","Rules out laptop-bound options: Hermes, Claude Code scheduler.",100,"done","design settled + diagrammed"],
+ ["5. Generation module — design &amp; prerequisites",[
+  ["Cloud trigger decision (Render Cron Job)","Rules out laptop-bound options: Hermes and the Claude Code scheduler both need a machine on.",100,"done","design settled + diagrammed"],
   ["Interface contract fixed on both sides","Given business data → produce a real site, return its URL.",100,"done","queue + complete endpoints live-tested"],
-  ["Generation module itself","OUTSTANDING. Must be model-agnostic and reused for applying owner changes.",0,"outstanding","Deferred by design — own unit"],
-  ["Render Cron Job service + orchestration script","Provision the service and the script that calls the three endpoints.",0,"pending","Depends on generation module"],
+  ["Full workflow specification","17 steps, 3 lanes: 5-min cron loop, inputs, generation and hand-back.",100,"done","ep047_generation_module_workflow.html · 4de6a5ca"],
+  ["PREREQ · Host the image library","Verified NOT in git: 0 files tracked, 114 MB / 103 files local-only, largest ~11 MB. \"Use the hosted version\" points at nothing today.",0,"outstanding","Decide: commit to git vs object storage"],
+  ["PREREQ · Skill library fetch path","Tracked in git (35 files), but the cron container has no mechanism to fetch it.",0,"outstanding","Decide: clone vs raw HTTPS"],
+  ["PREREQ · LLM provider + API key","Model-agnostic by requirement, so provider is config. Real recurring per-generation cost.",0,"outstanding","Needs provider choice + key + fallback rule"],
+  ["PREREQ · Chat-widget opt-in column","No businesses column records who asked for a widget; assistant-embed.js is itself untracked.",0,"outstanding","Needs migration + capture point"]
+ ]],
+ ["6. Generation module — build",[
+  ["Model-agnostic tool-calling adapter","One loop; provider swapped by config, not a vendor SDK as the whole solution.",0,"outstanding","Real engineering, not a config flag"],
+  ["Python loop + Render cron service","Runs every 5 min, exits early on an empty queue to avoid idle token spend.",0,"outstanding","Depends on adapter + prerequisites"],
+  ["Build the site from the skill blueprint","Writes files, sources and verifies images, meets per-page counts.",0,"outstanding","Depends on skill + image access"],
+  ["Include chat widget for opted-in businesses","Reuses the existing assistant-embed pattern.",0,"outstanding","Depends on opt-in column"],
+  ["Commit &amp; push to ep_044_web_apps/&lt;slug&gt;/","GitHub Pages then serves it at today's URL shape. Interim location by design.",0,"outstanding","Needs scoped push credentials"],
   ["Apply owner-requested changes (2nd call mode)","Same module, \"apply changes\" mode rather than fresh build.",0,"outstanding","Same deferred module"]
  ]],
- ["6. Payment &amp; activation",[
-  ["Payment provider integration","OUTSTANDING. Activation is a payment, not a click.",0,"outstanding","Deferred by design — own unit"],
+ ["7. Payment &amp; activation",[
+  ["Payment provider integration","Activation is a payment, not a click.",0,"outstanding","Deferred by design — own unit"],
   ["Per-business checkout link in the ready message","Included in the ready-for-activation email.",0,"outstanding","Depends on provider choice"],
   ["Signature-verified payment webhook → website_published","Must verify the signature before trusting any event.",0,"outstanding","Security-critical"],
   ["Admin visibility of payment status","Distinct from message delivery status.",0,"outstanding","Depends on provider choice"],
   ["Replace the template's mailto \"Activate\" link","Currently still a mailto in owner-preview.html.",0,"outstanding","Depends on checkout link"]
  ]],
- ["7. Admin UI",[
+ ["8. Admin UI",[
   ["Generated site link + generation status on business detail","Alongside the existing verification delivery panel.",0,"pending","Backend ready"],
   ["Ready-for-activation date + next-service-date editors","Same explicit-confirmation discipline as claim approval.",0,"pending","Columns exist"],
   ["Delivery-status display for all preview messages","Truthful Prepared/Sent, never assumed Delivered.",0,"pending","Data model ready"]
  ]],
- ["8. Validation, deployment &amp; review",[
+ ["9. Conventions, validation &amp; deployment",[
   ["Automated test suite","Covers stages, gating, guards, API auth and message content.",100,"done","97 / 97 passing"],
   ["Typecheck","Clean across all new modules and routes.",100,"done","tsc --noEmit clean"],
-  ["Interactive workflow diagrams (3)","Watcher, preview-delivery-and-review, plus this checklist.",100,"done","browser-verified, no console errors"],
-  ["Workstream skill rule: diagram before code","Binding on every model working under the skill.",100,"done","SKILL.md updated"],
+  ["Interactive workflow diagrams (3)","Generation module, watcher, and preview-delivery-and-review.",100,"done","browser-verified, no console errors"],
+  ["Workstream rule: diagram before code","Binding on every model working under the skill.",100,"done","SKILL.md · commit dc66f575"],
+  ["Workstream rule: in-file version history","Mandatory per-file version block on every code change; backfilled across 17 files.",100,"done","SKILL.md · commit 1ef945d2"],
   ["Lint and production build","Not yet run for this batch.",0,"pending","npm run verify"],
   ["Deploy this batch to Render","Handoff APIs are committed but not yet deployed.",0,"pending","Needs deploy + prod migration"],
   ["Full live end-to-end run with a real business","Claim → generate → preview → review → ETA → activation.",0,"pending","Blocked by outstanding modules"]
  ]]
 ];
 
-const labels={done:["✓","Complete"],active:["…","In progress"],pending:["○","Pending"],outstanding:["!","Outstanding"],blocked:["!","Blocked"]};
+const labels={done:["✓","Complete"],active:["…","In progress"],pending:["○","Pending"],outstanding:["!","Outstanding"]};
 let counts={done:0,active:0,pending:0,outstanding:0},total=0,sum=0;
 document.getElementById("panel").innerHTML=sections.map(([name,items])=>{
   const secSum=items.reduce((a,i)=>a+i[2],0), secPct=Math.round(secSum/items.length);
