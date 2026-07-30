@@ -9,12 +9,12 @@ export default async function VisibilityPage() {
   const settings = await db.execute(sql`SELECT town_mode, category_mode FROM public_directory_settings WHERE id='default'`);
   const row = (settings as any).rows?.[0] ?? { town_mode: "all", category_mode: "all" };
   const towns = await db.execute(sql`SELECT initcap(trim(b.town)) AS label, lower(trim(b.town)) AS key,
-    COALESCE(max(t.is_enabled), true) AS enabled, count(*)::int AS count
+    COALESCE(bool_or(t.is_enabled), true) AS enabled, count(*)::int AS count
     FROM businesses b LEFT JOIN public_town_visibility t ON t.town_key=lower(trim(b.town))
     WHERE b.town IS NOT NULL AND trim(b.town) <> ''
     GROUP BY initcap(trim(b.town)), lower(trim(b.town)) ORDER BY label`);
   const categories = await db.execute(sql`SELECT initcap(trim(b.category)) AS label, lower(trim(b.category)) AS key,
-    COALESCE(max(c.is_enabled), true) AS enabled, count(*)::int AS count
+    COALESCE(bool_or(c.is_enabled), true) AS enabled, count(*)::int AS count
     FROM businesses b LEFT JOIN public_category_visibility c ON c.category_key=lower(trim(b.category))
     WHERE b.category IS NOT NULL AND trim(b.category) <> ''
     GROUP BY initcap(trim(b.category)), lower(trim(b.category)) ORDER BY label`);
