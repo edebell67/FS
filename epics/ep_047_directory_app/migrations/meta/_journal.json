@@ -120,6 +120,13 @@
       "when": 1786200000000,
       "tag": "0016_site_generation_queue_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1786250000000,
+      "tag": "0017_chat_widget_opt_in",
+      "breakpoints": true
     }
   ]
 }

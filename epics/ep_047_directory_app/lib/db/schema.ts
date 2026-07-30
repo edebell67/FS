@@ -189,6 +189,10 @@ export const businesses = pgTable(
     // not partial view data, is what a reminder fires on).
     generatedSiteUrl: text("generated_site_url"),
     websiteGeneratedAt: timestamp("website_generated_at", { withTimezone: true }),
+    // Whether the generated site should wire in the shared AI chat widget
+    // (assistant-embed.js's ASSISTANT_ENABLED flag). Defaults to true to match
+    // the ep044_group skill's own default-on behaviour.
+    chatWidgetOptIn: boolean("chat_widget_opt_in").notNull().default(true),
     awaitingOwnerResponseSince: timestamp("awaiting_owner_response_since", { withTimezone: true }),
     readyForActivationSetAt: timestamp("ready_for_activation_set_at", { withTimezone: true }),
     readyForActivationDate: timestamp("ready_for_activation_date", { withTimezone: true }),
