@@ -39,3 +39,35 @@ services:
         sync: false
       - key: GMAIL_OAUTH_REFRESH_TOKEN
         sync: false
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: PUBLIC_APP_ORIGIN
+        sync: false
+
+  # Site-generation loop (lib/generation/). Safe to deploy before an LLM key
+  # exists -- runGenerationLoop() is a clean no-op whenever LLM_PROVIDER is
+  # unset, never a failed run. Once a key is added below the same job starts
+  # doing real work with no further deploy needed.
+  - type: cron
+    name: ep047-site-generation
+    runtime: node
+    plan: starter
+    rootDir: epics/ep_047_directory_app
+    schedule: "*/15 * * * *"
+    buildCommand: npm install --include=dev
+    startCommand: npm run generate:sites
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: INTERNAL_API_KEY
+        sync: false
+      - key: PUBLIC_APP_ORIGIN
+        sync: false
+      - key: LLM_PROVIDER
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
