@@ -1,3 +1,16 @@
+/**
+ * lib/verification/preview-delivery.ts — the six web-activation message templates
+ * plus fail-closed prepare/send for preview-ready, ETA, ready-for-activation and
+ * the three reminder nudges.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: six message builders, previewDeliveryEnabled()
+ *   gating (mode + explicit approval + non-empty allowlist, mirroring the existing
+ *   verification and claim-success paths), and preparePreviewMessage() /
+ *   sendPreparedPreviewMessage() kept as deliberately separate actions so preparing
+ *   a message never implies it was sent.
+ */
+
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, previewDeliveryMessages } from "@/lib/db/schema";

@@ -1,3 +1,16 @@
+/**
+ * lib/verification/site-generation.ts — generation queue, completion recording,
+ * and the preview-notification guard for the web-activation pipeline.
+ *
+ * VERSION HISTORY
+ * v1.1.0 · 2026-07-29 · Replaces the business_claimed + null-URL queue check with
+ *   the explicit awaiting_site_generation stage, renames the completion target to
+ *   ready_for_preview, and adds getBusinessesReadyForPreviewNotification() so the
+ *   cron job can find businesses still owed their preview email.
+ * v1.0.0 · 2026-07-29 · Initial version: queue query and recordSiteGenerated(),
+ *   deliberately excluding any attempt to invoke generation itself.
+ */
+
 import { and, asc, eq, notInArray } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages, stageTransitions, previewDeliveryMessages } from "@/lib/db/schema";

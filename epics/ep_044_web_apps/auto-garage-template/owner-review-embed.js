@@ -1,3 +1,14 @@
+/*
+ * owner-review-embed.js — renders the per-page owner review UI into
+ * #owner-review-root and composes the structured mailto submission.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: one card per screen with N questions x M
+ *   options, a "no action required" default, a free-text field, and a client-side
+ *   page_open_date_time per screen (no tracking beacon — the view record travels
+ *   with the submission).
+ */
+
 (() => {
   // Set to false to disable the owner review UI for this client without touching the HTML pages.
   const OWNER_REVIEW_ENABLED = true;

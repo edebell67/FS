@@ -1,3 +1,13 @@
+/**
+ * app/api/internal/site-generation/complete/route.ts — the single seam the
+ * (deferred, model-agnostic) generation module calls once a site genuinely exists.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: POST businessId + siteUrl, internal-key
+ *   authenticated; both fields required so a caller cannot record a completion
+ *   without naming the URL it is asserting is live.
+ */
+
 import { NextResponse } from "next/server";
 import { requireInternalApiKey } from "@/lib/auth/require-internal-api";
 import { recordSiteGenerated } from "@/lib/verification/site-generation";

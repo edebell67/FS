@@ -1,3 +1,16 @@
+/**
+ * lib/verification/email-template.ts — renders the business-verification email.
+ *
+ * VERSION HISTORY
+ * v1.2.0 · 2026-07-28 · Moves the sender's physical address out of source into
+ *   VERIFICATION_SENDER_ADDRESS so no address is a literal in tracked files.
+ * v1.1.0 · 2026-07-28 · Redesigns the email as a legitimate business sender
+ *   (why-you-received-this, signature block, reply-based opt-out) after a
+ *   plaintext-vs-link test proved the bare single-link CTA was what Gmail was
+ *   silently discarding; bumps the template version to v4.
+ * v1.0.0 · 2026-07-28 · Version history added; file predates this convention.
+ */
+
 export const VERIFICATION_TEMPLATE_VERSION = "verification-v4-legitimate-sender";
 
 const SENDER_NAME = "The Tech Principle";

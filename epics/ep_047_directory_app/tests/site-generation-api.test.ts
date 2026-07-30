@@ -1,3 +1,11 @@
+/**
+ * tests/site-generation-api.test.ts — covers internal bearer-key auth behaviour and
+ * the contract of the three site-generation handoff endpoints.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version.
+ */
+
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";

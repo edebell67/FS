@@ -1,3 +1,12 @@
+-- migrations/0016_site_generation_queue_stage.sql — adds the generation queue
+-- stage and renames the post-generation stage to ready_for_preview.
+--
+-- VERSION HISTORY
+-- v1.0.0 · 2026-07-29 · Initial version: inserts awaiting_site_generation at
+--   sort_order 11 (shifting later stages down) and renames website_generated to
+--   ready_for_preview, so the pipeline stage itself is the queue signal rather
+--   than a stage plus a null-column check.
+
 -- EP047: introduces an explicit queue stage between Claimed and site
 -- generation being usable, and renames the post-generation stage to match
 -- the agreed terminology (ready_for_preview). Additive/rename only -- no

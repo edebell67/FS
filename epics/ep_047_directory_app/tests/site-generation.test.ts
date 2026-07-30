@@ -1,3 +1,11 @@
+/**
+ * tests/site-generation.test.ts — covers claim-approval queueing, the queue stage
+ * being explicit rather than inferred, and the notification guard.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version.
+ */
+
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";

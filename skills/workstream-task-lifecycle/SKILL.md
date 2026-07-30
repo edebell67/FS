@@ -243,7 +243,63 @@ Add this section to the backlog before moving to complete:
 - Record concrete paths and command outputs in summarized form.
 - Do not create side docs; keep the full task narrative in the one lifecycle file.
 - Preserve prior entries; append updates rather than rewriting history.
+- Every created or modified source file MUST carry an updated in-file version-history block — see "In-File Version History (Mandatory for every code change)". A task is not complete while any file it touched is missing its entry for that change.
 - If the task scope changes materially, close current file and create a new task file.
+
+## In-File Version History (Mandatory for every code change)
+
+**Binding on every model/agent working under this skill.** Every source file that is created or modified MUST carry a version-history comment block as the very first thing in the file, above imports and any other code. This is not optional, and it is not limited to "significant" changes — any change to a file bumps its version and adds a line.
+
+### Format
+
+Use the target language's own comment syntax; keep the field order and labels identical across languages so the block is greppable.
+
+```ts
+/**
+ * <relative/path/to/file> — <one-line purpose of this file>
+ *
+ * VERSION HISTORY
+ * v1.2.0 · 2026-07-30 · Adds X so that Y; no behaviour change to Z.
+ * v1.1.0 · 2026-07-29 · Adds <what>; <why it was needed>.
+ * v1.0.0 · 2026-07-28 · Initial version: <what it did at creation>.
+ */
+```
+
+```python
+# <relative/path/to/file> — <one-line purpose of this file>
+#
+# VERSION HISTORY
+# v1.1.0 · 2026-07-30 · <what changed and why>.
+# v1.0.0 · 2026-07-29 · Initial version: <what it did at creation>.
+```
+
+```sql
+-- <relative/path/to/file> — <one-line purpose of this file>
+--
+-- VERSION HISTORY
+-- v1.0.0 · 2026-07-30 · Initial version: <what this migration does>.
+```
+
+For HTML artifacts, place the block immediately after `<!doctype html>` as an HTML comment, or inside a leading `<!-- ... -->` before `<html>`.
+
+### Rules
+
+- **Newest entry first.** Append new versions at the top of the list, never rewrite or delete prior entries — the history is append-only, exactly like the `Implementation Log` in a task file.
+- **Semantic-ish versioning**, judged by effect on callers, not by line count:
+  - **major** (`2.0.0`) — a breaking change to the file's exported interface, schema shape, or observable behaviour.
+  - **minor** (`1.1.0`) — new capability added, existing behaviour preserved.
+  - **patch** (`1.0.1`) — fix, refactor, comment, or test-only change with no interface change.
+- **Say what and why, not just what.** "Adds `nextServiceDate` column" is insufficient; "Adds `nextServiceDate` so post-delivery service scheduling has a home on the business record" is the standard.
+- **One line per version**, dated `YYYY-MM-DD`. Do not bundle several unrelated changes into one line — if a change is unrelated, it is a separate version entry.
+- **Never invent history.** When adding this block to a pre-existing file that does not have one, start at the current state as a single honest entry (for example `v1.0.0 · <today> · Version history added; file predates this convention.`) rather than fabricating dates and change descriptions for past edits you did not make.
+- **Never put secrets, tokens, credentials, or personal data in the block.** It is documentation that travels with the file into git history and any published artifact.
+- The version in the block is the authority for that file. It is independent of `package.json` versions, git tags, and any other file's version.
+
+### Scope
+
+- Applies to: application source, migrations, scripts, tests, skills, configuration files that accept comments, and generated-site templates that are edited by hand.
+- Does **not** apply to: files where a comment is structurally impossible (strict JSON such as `package.json`, `tsconfig.json`, `_journal.json`), lock files, binary assets, or vendor/`node_modules` content. Do not attempt to wedge comments into these.
+- A task may not be marked complete if any file it touched is missing its version entry for that change.
 
 ## New-Feature HTML Workflow and Delivery Status (Mandatory)
 

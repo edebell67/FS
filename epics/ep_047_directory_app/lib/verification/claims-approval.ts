@@ -1,3 +1,15 @@
+/**
+ * lib/verification/claims-approval.ts — pending-claim listing and the atomic
+ * bulk-approval transaction.
+ *
+ * VERSION HISTORY
+ * v1.1.0 · 2026-07-29 · Queues each approved business for automated site
+ *   generation in the same transaction, so awaiting_site_generation becomes its
+ *   current stage immediately; the Claimed transition is still written as its own
+ *   audited row rather than skipped.
+ * v1.0.0 · 2026-07-29 · Version history added; file predates this convention.
+ */
+
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, claimRequests, claimSuccessMessages, pipelineStages, stageTransitions } from "@/lib/db/schema";

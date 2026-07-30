@@ -1,3 +1,11 @@
+/**
+ * tests/preview-delivery.test.ts — covers the six message templates, the
+ * fail-closed sending gate, and prepare/send separation.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version.
+ */
+
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";

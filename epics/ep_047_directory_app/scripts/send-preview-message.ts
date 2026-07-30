@@ -1,3 +1,12 @@
+/**
+ * scripts/send-preview-message.ts — controlled-test CLI to prepare and send any
+ * one preview-delivery message type, until the admin UI for this exists.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: takes businessRef + recipient + optional
+ *   messageType; refuses to run unless preview delivery is explicitly enabled.
+ */
+
 // One-off / controlled-test CLI for the preview-delivery message types, until
 // the admin UI for this exists. Prepares then immediately sends a message,
 // printing the result. Requires PREVIEW_DELIVERY_MODE=gmail-api,

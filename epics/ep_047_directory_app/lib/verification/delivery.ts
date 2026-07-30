@@ -1,3 +1,19 @@
+/**
+ * lib/verification/delivery.ts — Gmail API transport and delivery-policy gating
+ * for the business-verification email.
+ *
+ * VERSION HISTORY
+ * v1.3.0 · 2026-07-28 · Adds a plaintext diagnostic mode and multi-address
+ *   allowlist support (previously exactly one address was permitted, which blocked
+ *   cross-provider testing).
+ * v1.2.0 · 2026-07-28 · Sources the allowed recipient from
+ *   VERIFICATION_RECIPIENT_ALLOWLIST instead of a hardcoded personal email,
+ *   keeping single-recipient enforcement but removing the literal from source.
+ * v1.1.0 · 2026-07-27 · Adds Gmail profile verification and sent-message readback
+ *   so a bare API acceptance is never treated as proof of a send.
+ * v1.0.0 · 2026-07-28 · Version history added; file predates this convention.
+ */
+
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { and, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";

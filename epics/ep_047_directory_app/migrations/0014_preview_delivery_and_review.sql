@@ -1,3 +1,12 @@
+-- migrations/0014_preview_delivery_and_review.sql — businesses columns and the
+-- message table backing the preview-delivery-and-review workflow.
+--
+-- VERSION HISTORY
+-- v1.0.0 · 2026-07-29 · Initial version: 6 additive businesses columns (generated
+--   site URL, generation timestamp, reminder/ETA timestamps, next service date)
+--   plus preview_delivery_messages, one table keyed by message_type so reminders
+--   are their own records rather than resends of the message they nudge.
+
 -- EP047: Preview delivery and review workflow (schema step only, payment
 -- excluded as a self-contained follow-up unit per its own workflow doc).
 -- Additive only: no existing column is altered or dropped.

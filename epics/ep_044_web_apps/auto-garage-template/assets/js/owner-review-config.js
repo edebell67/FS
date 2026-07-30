@@ -1,4 +1,13 @@
 /*
+ * assets/js/owner-review-config.js — per-site review screens, questions and options.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: 6 screens x 5 questions x 5 options as a
+ *   starting default (deliberately not a fixed limit), plus the operator recipient
+ *   the structured submission is addressed to.
+ */
+
+/*
  * ============================================================================
  *  OWNER REVIEW CONFIGURATION — SAMPLE / STARTING CONTENT
  * ============================================================================

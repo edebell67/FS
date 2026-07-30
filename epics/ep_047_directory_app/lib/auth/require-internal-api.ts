@@ -1,3 +1,12 @@
+/**
+ * lib/auth/require-internal-api.ts — bearer-key auth for server-to-server
+ * endpoints called by infrastructure rather than a logged-in browser.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: requireInternalApiKey(), failing closed
+ *   when INTERNAL_API_KEY is unset so a missing key can never mean "skip auth".
+ */
+
 // Server-to-server auth for endpoints called by infrastructure (a Render
 // Cron Job), not a logged-in browser session -- requireAdminUserForApi
 // doesn't apply here, there's no user or cookie. Fails closed: an unset

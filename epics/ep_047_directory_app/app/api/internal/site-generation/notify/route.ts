@@ -1,3 +1,13 @@
+/**
+ * app/api/internal/site-generation/notify/route.ts — sends the preview-ready email
+ * to every business at ready_for_preview that has not already been notified.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-07-29 · Initial version: POST, internal-key authenticated,
+ *   fail-closed on previewDeliveryEnabled(), and idempotent — absence of a prior
+ *   preview_ready message is the only guard needed, so repeated cron calls are safe.
+ */
+
 import { NextResponse } from "next/server";
 import { requireInternalApiKey } from "@/lib/auth/require-internal-api";
 import { getBusinessesReadyForPreviewNotification } from "@/lib/verification/site-generation";
