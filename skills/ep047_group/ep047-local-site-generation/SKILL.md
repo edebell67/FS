@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.4.0
+version: 1.5.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,11 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.5.0 · 2026-07-31 · The internal API (option B) no longer strictly needs
+  its own INTERNAL_API_KEY -- lib/auth/require-internal-api.ts now also
+  accepts an authenticated admin session, since requiring a whole separate
+  secret just to call the same app's own completion endpoint was
+  unnecessary friction when a working admin login already exists.
 v1.4.0 · 2026-07-31 · Makes Section 5 (report completion) an explicit
   mandatory gate, since a real run generated and deployed a site correctly
   but silently skipped this step, leaving the business stuck at
@@ -200,21 +205,24 @@ await recordSiteGenerated({
 });
 ```
 
-**B. Internal API**, if `INTERNAL_API_KEY` and `PUBLIC_APP_ORIGIN` are set
-in this session's environment:
+**B. Internal API**, using EITHER an `INTERNAL_API_KEY` bearer token OR an
+authenticated admin session cookie (both accepted -- see
+`lib/auth/require-internal-api.ts` v1.1.0):
 ```
 POST {PUBLIC_APP_ORIGIN}/api/internal/site-generation/complete
-Authorization: Bearer {INTERNAL_API_KEY}
+Authorization: Bearer {INTERNAL_API_KEY}    (omit if calling with a session cookie instead)
 Content-Type: application/json
 { "businessId": "...", "siteUrl": "{PUBLIC_APP_ORIGIN}/<slug>/index.html" }
 ```
+If this session already has a valid admin login (the same one used to read
+the business's details), that login works here directly -- no separate
+`INTERNAL_API_KEY` needs to exist just to close this loop.
 
-**C. Admin UI fallback**, if neither A nor B is available: log into
-`/directoryadmin/businesses/<businessRef>` and (1) use the "Edit business
-details" form to set the generated site URL field, then (2) use the "Move
-to a different stage..." dropdown to move it to `Ready for Preview`. This
-requires the generated-site-URL field to exist on that form -- if it
-doesn't yet, that's a real gap to flag, not something to skip past.
+**C. Admin UI fallback**, if B isn't reachable as an HTTP call from this
+session for some reason: log into `/directoryadmin/businesses/<businessRef>`
+and (1) use the "Edit business details" form's "Generated site URL" field to
+set it, then (2) use the "Move to a different stage..." dropdown to move it
+to `Ready for Preview`.
 
 Only report completion once the site is genuinely pushed, live, and this
 step has run — never speculatively. **Verify** by re-loading the business's

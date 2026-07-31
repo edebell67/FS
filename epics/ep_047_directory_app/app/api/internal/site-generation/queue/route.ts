@@ -12,7 +12,7 @@ import { getBusinessesAwaitingSiteGeneration } from "@/lib/verification/site-gen
 
 /** Called by the Render Cron Job to fetch the current generation queue. Read-only. */
 export async function GET(request: Request) {
-  const auth = requireInternalApiKey(request);
+  const auth = await requireInternalApiKey(request);
   if (auth) return auth;
   const businesses = await getBusinessesAwaitingSiteGeneration();
   return NextResponse.json({ businesses });

@@ -21,7 +21,7 @@ const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
  * asserting the site is real by calling this at all.
  */
 export async function POST(request: Request) {
-  const auth = requireInternalApiKey(request);
+  const auth = await requireInternalApiKey(request);
   if (auth) return auth;
 
   let body: { businessId?: string; siteUrl?: string } = {};

@@ -25,7 +25,7 @@ const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
  * stage is needed just to mean "already notified".
  */
 export async function POST(request: Request) {
-  const auth = requireInternalApiKey(request);
+  const auth = await requireInternalApiKey(request);
   if (auth) return auth;
 
   if (!previewDeliveryEnabled()) {
