@@ -6,7 +6,7 @@
 
 import { and, asc, desc, eq, ilike, or, sql, type SQL } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { businesses, pipelineStages } from "@/lib/db/schema";
+import { businesses, pipelineStages, stageTransitions } from "@/lib/db/schema";
 import { publicScopeWhere } from "@/ep047_visibility_news/lib/public-scope";
 
 export const PAGE_SIZE = 25;
@@ -156,4 +156,98 @@ export async function listDistinctTowns(): Promise<string[]> {
     .where(and(publicScopeWhere(), sql`${businesses.town} IS NOT NULL`))
     .orderBy(asc(businesses.town));
   return rows.map((r) => r.town).filter((t): t is string => Boolean(t));
+}
+
+// --- Admin edit form -------------------------------------------------------
+// Deliberately unrestricted by publicScopeWhere() -- an admin editing a
+// business needs to see and change it regardless of current public
+// visibility, unlike every read above this line which backs public-facing
+// pages.
+
+export interface BusinessEditableFields {
+  businessName: string;
+  tradingName: string | null;
+  category: string;
+  subCategory: string | null;
+  email: string | null;
+  phone: string | null;
+  mobile: string | null;
+  website: string | null;
+  facebook: string | null;
+  instagram: string | null;
+  linkedin: string | null;
+  address: string | null;
+  town: string | null;
+  county: string | null;
+  postcode: string | null;
+  description: string | null;
+  chatWidgetOptIn: boolean;
+}
+
+export type BusinessForEdit = BusinessEditableFields & { id: string; businessRef: string; currentStageId: number | null };
+
+export async function getBusinessForEdit(businessRef: string): Promise<BusinessForEdit | null> {
+  const [row] = await db
+    .select({
+      id: businesses.id,
+      businessRef: businesses.businessRef,
+      currentStageId: businesses.currentStageId,
+      businessName: businesses.businessName,
+      tradingName: businesses.tradingName,
+      category: businesses.category,
+      subCategory: businesses.subCategory,
+      email: businesses.email,
+      phone: businesses.phone,
+      mobile: businesses.mobile,
+      website: businesses.website,
+      facebook: businesses.facebook,
+      instagram: businesses.instagram,
+      linkedin: businesses.linkedin,
+      address: businesses.address,
+      town: businesses.town,
+      county: businesses.county,
+      postcode: businesses.postcode,
+      description: businesses.description,
+      chatWidgetOptIn: businesses.chatWidgetOptIn,
+    })
+    .from(businesses)
+    .where(eq(businesses.businessRef, businessRef))
+    .limit(1);
+  return row ?? null;
+}
+
+/**
+ * Updates any subset of a business's editable fields. Not a stage change --
+ * fromStageId/toStageId are both the business's current stage, so the edit
+ * shows up in its timeline (reusing stage_transitions rather than a new audit
+ * table) without implying any pipeline movement happened.
+ */
+export async function updateBusinessDetails(
+  businessId: string,
+  fields: Partial<BusinessEditableFields>,
+  actorUserId: string
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const [business] = await db.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
+  if (!business) return { ok: false, error: "Business not found." };
+  const currentStageId = business.currentStageId;
+  if (!currentStageId) return { ok: false, error: "Business has no pipeline stage set." };
+
+  const changedFields = Object.keys(fields);
+  if (changedFields.length === 0) return { ok: true };
+
+  await db.transaction(async (tx) => {
+    const now = new Date();
+    await tx.update(businesses).set({ ...fields, lastUpdated: now }).where(eq(businesses.id, businessId));
+    await tx.insert(stageTransitions).values({
+      businessId,
+      fromStageId: currentStageId,
+      toStageId: currentStageId,
+      occurredAt: now,
+      source: "admin",
+      reason: "Edited business details",
+      notes: `Changed: ${changedFields.join(", ")}`,
+      actorUserId,
+    });
+  });
+  return { ok: true };
 }

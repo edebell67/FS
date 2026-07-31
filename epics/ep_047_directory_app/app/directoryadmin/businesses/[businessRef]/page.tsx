@@ -2,9 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
 import { getBusinessByRef } from "@/lib/db/queries/directory";
+import { getBusinessForEdit } from "@/lib/db/queries/businesses";
 import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipeline";
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
+import { updateBusinessAction } from "./actions";
 import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
 import { canManageVerification, getLatestDeliveryForBusiness } from "@/lib/verification/repository";
 import type { VerificationDeliveryState } from "@/lib/verification/delivery-status";
@@ -22,9 +24,10 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
-  const [timeline, stages, validation, latestDelivery] = await Promise.all([
+  const [timeline, stages, validation, latestDelivery, editable] = await Promise.all([
     getBusinessTimeline(business.id), getPipelineStages(), getBusinessValidationDetail(business.id),
     canManageVerification(user.role) ? getLatestDeliveryForBusiness(business.id) : Promise.resolve(null),
+    getBusinessForEdit(businessRef),
   ]);
 
   return (
@@ -121,6 +124,109 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           </p>
         </div>
       </div>
+
+      {editable && (
+        <section className="mt-10 rounded-lg border border-slate-200 p-6">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">Edit business details</h2>
+          <form action={updateBusinessAction} className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <input type="hidden" name="businessId" value={editable.id} />
+            <input type="hidden" name="businessRef" value={editable.businessRef} />
+
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Business name</span>
+              <input name="businessName" defaultValue={editable.businessName} required
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Trading name</span>
+              <input name="tradingName" defaultValue={editable.tradingName ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Category</span>
+              <input name="category" defaultValue={editable.category} required
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Sub-category</span>
+              <input name="subCategory" defaultValue={editable.subCategory ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Email</span>
+              <input name="email" type="email" defaultValue={editable.email ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Phone</span>
+              <input name="phone" defaultValue={editable.phone ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Mobile</span>
+              <input name="mobile" defaultValue={editable.mobile ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Website</span>
+              <input name="website" defaultValue={editable.website ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Facebook</span>
+              <input name="facebook" defaultValue={editable.facebook ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Instagram</span>
+              <input name="instagram" defaultValue={editable.instagram ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">LinkedIn</span>
+              <input name="linkedin" defaultValue={editable.linkedin ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Address</span>
+              <input name="address" defaultValue={editable.address ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Town</span>
+              <input name="town" defaultValue={editable.town ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">County</span>
+              <input name="county" defaultValue={editable.county ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm">
+              <span className="font-medium text-slate-700">Postcode</span>
+              <input name="postcode" defaultValue={editable.postcode ?? ""}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+              <span className="font-medium text-slate-700">Description</span>
+              <textarea name="description" defaultValue={editable.description ?? ""} rows={3}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+            </label>
+            <label className="flex items-center gap-2 text-sm sm:col-span-2">
+              <input type="checkbox" name="chatWidgetOptIn" defaultChecked={editable.chatWidgetOptIn} />
+              <input type="hidden" name="chatWidgetOptIn" value="off" />
+              <span className="font-medium text-slate-700">Chat widget enabled on generated site</span>
+            </label>
+
+            <div className="sm:col-span-2">
+              <button type="submit"
+                className="rounded-md bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700">
+                Save changes
+              </button>
+            </div>
+          </form>
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="mb-4 text-lg font-semibold text-slate-900">Timeline</h2>
