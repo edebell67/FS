@@ -56,9 +56,21 @@ it directly by `business_ref` and confirm it's actually at
 `awaiting_site_generation` before proceeding — never generate for a business
 at any other stage.
 
-Also read `chat_widget_opt_in` on that business row (not currently in the
-queue helper's return type — select it directly, or add it there) to decide
-later whether the generated site wires in the chat widget.
+### Fresh-data gate (mandatory)
+
+Immediately before choosing the category skill or writing any site file, read
+the target row from the live production application/database and capture:
+`businessRef`, `businessName`, `category`, `town`, pipeline stage, and
+`chat_widget_opt_in`. Treat screenshots, chat history, local exports, cached
+browser DOM, prior test evidence, and earlier queue reads as leads only — not
+source of truth. If the fresh row differs in any of those fields, discard the
+stale values, re-normalize the **fresh** category, and restart matching from
+Step 2. Do not generate or deploy until this exact fresh snapshot is recorded
+in the Test Results bundle.
+
+Also read `chat_widget_opt_in` on that fresh business row (not currently in
+the queue helper's return type — select it directly, or add it there) to
+decide later whether the generated site wires in the chat widget.
 
 ## 2. Match category to the right ep044_group skill
 

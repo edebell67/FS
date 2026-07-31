@@ -20,7 +20,7 @@ This skill adds only the roofers-specific content below. **A thin, image-poor sc
 ## 2. Which skill applies — decision rule
 
 - **All evidence fields blank/placeholder** (no confirmed name/address/phone) → this skill. Build a clearly-fictional but realistic sample identity and place output under `epics/ep_044_web_apps/<template-name>/`. Add the footer disclosure: `Business name, address, phone and prices are sample placeholders for this reusable template — replace with real details per client.`
-- **Real evidence exists** (a real address/phone/niche confirmed via citation) → adapt this structure with the real facts and place output under `epics/ep_006_website_rebuilds/redesigns/<business-slug>/`. Never fabricate stats, ratings, reviews, accreditations, or years established.
+- **Real evidence exists** (a real address/phone/niche confirmed via a fresh production record read immediately before generation) → adapt this structure with the real facts and use the output location required by the calling generation workflow. A screenshot, chat history, prior run, cached UI, or local export is not fresh evidence. If the live name, category, town, contact facts, or opt-in state differ, stop and return control to the calling workflow to re-match the fresh category before writing output. Never fabricate stats, ratings, reviews, accreditations, or years established.
 
 ## 3. Design system — defer to the blueprint, choose the palette here
 
