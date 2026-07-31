@@ -26,7 +26,7 @@ export async function proxyGitHubPagesRequest(request: Request): Promise<Respons
       cache: "no-store",
     });
 
-    const headers = githubPagesResponseHeaders(upstream.headers);
+    const headers = githubPagesResponseHeaders(upstream.headers, incoming.pathname);
     const upstreamLocation = upstream.headers.get("location");
     if (upstreamLocation) {
       const publicLocation = githubPagesRedirectLocation(upstreamLocation);
