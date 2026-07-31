@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.2.0
+version: 1.3.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,10 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.3.0 · 2026-07-31 · Makes the jsDelivr purge step unconditional and
+  mandatory on every deploy (not just when regenerating an existing slug) --
+  a business revising its live site later needs the exact same purge, so
+  it's part of the standard deploy step, not a special case to remember.
 v1.2.0 · 2026-07-31 · Updates the deploy-verification note: the proxy now
   serves from jsDelivr's GitHub CDN, not GitHub Pages directly (GitHub Pages
   for edebell67/epics has a stuck custom-domain redirect that jsDelivr
@@ -123,12 +127,21 @@ The resulting live URL is proxied through the EP047 app via
 jsDelivr's GitHub CDN (`https://cdn.jsdelivr.net/gh/edebell67/epics@master`),
 not GitHub Pages directly -- GitHub Pages for that repo has a stuck
 custom-domain redirect (`thetechprinciple.com`, which now points at Render)
-that jsDelivr sidesteps entirely. A brand-new `<slug>/` folder should resolve
-immediately on first request, no action needed. If **regenerating** a site
-that already existed at the same slug, jsDelivr may still serve its cached
-copy of the old files for a while -- purge it first:
-`https://purge.jsdelivr.net/gh/edebell67/epics@master/<slug>/index.html`
-(and any other changed files) before assuming the new version is live.
+that jsDelivr sidesteps entirely.
+
+**Always purge jsDelivr's cache for every file just pushed, every deploy --
+not only when regenerating an existing slug.** This is unconditional, not a
+judgment call: a business revising and redeploying its site later needs the
+same purge, and purging a brand-new file that was never cached is harmless.
+For each file in `<slug>/` (at minimum `index.html` and any other page/asset
+that changed):
+```
+https://purge.jsdelivr.net/gh/edebell67/epics@master/<slug>/<file>
+```
+Purge propagation across jsDelivr's edge network is not instant even when
+the purge call itself reports success -- verify by re-fetching the file
+after a short wait and confirming the content actually changed before
+reporting the deploy as done.
 
 ## 5. Report completion back to the pipeline
 
