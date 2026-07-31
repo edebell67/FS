@@ -1,4 +1,11 @@
-const DEFAULT_GITHUB_PAGES_ORIGIN = "https://edebell67.github.io/FS";
+// Generated business sites live in the separate github.com/edebell67/epics
+// repo (flat, top-level <slug>/ folders), not the FS monorepo this app
+// itself lives in -- confirmed 2026-07-31 against the working example
+// dg-maintenance-uk-ltd/. That repo's GitHub Pages previously had a CNAME
+// pointing at thetechprinciple.com; once DNS for that domain moved to
+// Render, the CNAME had to be removed so the raw github.io URL below
+// serves content directly instead of 301-redirecting to the dead domain.
+const DEFAULT_GITHUB_PAGES_ORIGIN = "https://edebell67.github.io/epics";
 
 function githubPagesOrigin(): string {
   return (process.env.GITHUB_PAGES_ORIGIN ?? DEFAULT_GITHUB_PAGES_ORIGIN).replace(/\/$/, "");
