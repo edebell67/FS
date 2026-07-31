@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.3.0
+version: 1.4.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,13 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.4.0 · 2026-07-31 · Makes Section 5 (report completion) an explicit
+  mandatory gate, since a real run generated and deployed a site correctly
+  but silently skipped this step, leaving the business stuck at
+  awaiting_site_generation despite a live site. Adds two fallback methods
+  (internal API, admin UI) for when direct DB access isn't available, and
+  requires verifying the stage actually changed afterward. The admin edit
+  form now has a "Generated site URL" field to make the UI fallback real.
 v1.3.0 · 2026-07-31 · Makes the jsDelivr purge step unconditional and
   mandatory on every deploy (not just when regenerating an existing slug) --
   a business revising its live site later needs the exact same purge, so
@@ -168,25 +175,54 @@ the purge call itself reports success -- verify by re-fetching the file
 after a short wait and confirming the content actually changed before
 reporting the deploy as done.
 
-## 5. Report completion back to the pipeline
+## 5. Report completion back to the pipeline (mandatory -- the task is not done without this)
 
-Call the existing function directly (same process, no HTTP/API key needed):
+**A deploy that never reports back is an incomplete run, not a successful
+one.** Confirmed 2026-07-31: a real run generated and deployed a site
+correctly but skipped this step, leaving the business stuck at
+`awaiting_site_generation` indefinitely even though its site was live. Do
+not report the generation task as finished until this step has actually
+executed and you have verified the stage changed.
 
+Use whichever of these you actually have access to run -- try in this
+order, and do not stop at "I don't have DB access" without trying the next
+one:
+
+**A. Direct function call**, if this session has the app's production
+database access (same process, no HTTP/API key needed):
 ```ts
 import { recordSiteGenerated } from "@/lib/verification/site-generation";
 
 await recordSiteGenerated({
-  businessId, // from step 1
+  businessId, // from step 1's fresh row, not a cached/earlier id
   siteUrl: `${PUBLIC_APP_ORIGIN}/<slug>/index.html`,
   actorUserId, // the acting admin/system user id
 });
 ```
 
-Only call this once the site is genuinely pushed and live — never
-speculatively. This advances the business's pipeline stage to
-`ready_for_preview`. The existing preview-ready notification logic
-(`getBusinessesReadyForPreviewNotification`) picks it up separately; you
-don't need to trigger it yourself.
+**B. Internal API**, if `INTERNAL_API_KEY` and `PUBLIC_APP_ORIGIN` are set
+in this session's environment:
+```
+POST {PUBLIC_APP_ORIGIN}/api/internal/site-generation/complete
+Authorization: Bearer {INTERNAL_API_KEY}
+Content-Type: application/json
+{ "businessId": "...", "siteUrl": "{PUBLIC_APP_ORIGIN}/<slug>/index.html" }
+```
+
+**C. Admin UI fallback**, if neither A nor B is available: log into
+`/directoryadmin/businesses/<businessRef>` and (1) use the "Edit business
+details" form to set the generated site URL field, then (2) use the "Move
+to a different stage..." dropdown to move it to `Ready for Preview`. This
+requires the generated-site-URL field to exist on that form -- if it
+doesn't yet, that's a real gap to flag, not something to skip past.
+
+Only report completion once the site is genuinely pushed, live, and this
+step has run — never speculatively. **Verify** by re-loading the business's
+admin page afterward and confirming the stage now reads "Ready for
+Preview" — do not just assume the call succeeded. The existing
+preview-ready notification logic (`getBusinessesReadyForPreviewNotification`)
+picks up the notification separately; you don't need to trigger it
+yourself.
 
 ## Hard rule — check GENERATION_MODE first
 

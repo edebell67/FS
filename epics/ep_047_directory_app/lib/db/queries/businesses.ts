@@ -182,6 +182,11 @@ export interface BusinessEditableFields {
   postcode: string | null;
   description: string | null;
   chatWidgetOptIn: boolean;
+  // Not part of the normal edit flow -- exists so the site-generation skill
+  // has a UI-only fallback to report a live site when it has neither direct
+  // DB access nor the internal API key (see ep047-local-site-generation
+  // SKILL.md's Section 5, option C).
+  generatedSiteUrl: string | null;
 }
 
 export type BusinessForEdit = BusinessEditableFields & { id: string; businessRef: string; currentStageId: number | null };
@@ -209,6 +214,7 @@ export async function getBusinessForEdit(businessRef: string): Promise<BusinessF
       postcode: businesses.postcode,
       description: businesses.description,
       chatWidgetOptIn: businesses.chatWidgetOptIn,
+      generatedSiteUrl: businesses.generatedSiteUrl,
     })
     .from(businesses)
     .where(eq(businesses.businessRef, businessRef))

@@ -212,6 +212,16 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
               <textarea name="description" defaultValue={editable.description ?? ""} rows={3}
                 className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
             </label>
+            <label className="flex flex-col gap-1 text-sm sm:col-span-2">
+              <span className="font-medium text-slate-700">Generated site URL</span>
+              <input name="generatedSiteUrl" defaultValue={editable.generatedSiteUrl ?? ""}
+                placeholder="https://thetechprinciple.com/<slug>/index.html"
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm" />
+              <span className="text-xs text-slate-400">
+                Set this once a site is genuinely live, then use &ldquo;Move to a different
+                stage&rdquo; above to advance to Ready for Preview.
+              </span>
+            </label>
             <label className="flex items-center gap-2 text-sm sm:col-span-2">
               <input type="checkbox" name="chatWidgetOptIn" defaultChecked={editable.chatWidgetOptIn} />
               <input type="hidden" name="chatWidgetOptIn" value="off" />

@@ -7,6 +7,7 @@ import { updateBusinessDetails, type BusinessEditableFields } from "@/lib/db/que
 const TEXT_FIELDS = [
   "businessName", "tradingName", "category", "subCategory", "email", "phone", "mobile",
   "website", "facebook", "instagram", "linkedin", "address", "town", "county", "postcode", "description",
+  "generatedSiteUrl",
 ] as const satisfies readonly (keyof BusinessEditableFields)[];
 
 /**
