@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.0.0
+version: 1.1.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,14 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.1.0 · 2026-07-31 · Corrects the output/deploy location: local generation
+  workspace is `epics/ep_044_web_apps/<slug>/`, deploy target is the
+  separate `github.com/edebell67/epics` repo (flat, top-level `<slug>/`
+  folders -- this is the actual working mechanism behind the 55 sites
+  already generated, not `ep_006_website_rebuilds`, which is an unrelated
+  project). v1.0.0's location guidance was wrong -- it copied ep044_group's
+  generic "real evidence" rule without checking what that folder actually
+  is or verifying the deploy path resolved to a live URL.
 v1.0.0 · 2026-07-30 · Initial version.
 
 This skill owns the **workflow** of turning a queued business into a deployed
@@ -84,18 +92,35 @@ no console errors — the blueprint's own Section 14 definition of done.
 
 ## 4. Output location and deployment
 
-Write output to:
+Write output locally to:
 ```
-epics/ep_006_website_rebuilds/redesigns/<slug>/
+epics/ep_044_web_apps/<slug>/
 ```
 where `<slug>` is the business name, lowercased, non-alphanumeric → `-`. This
-is the same path `epics/ep_047_directory_app/lib/github-pages-proxy.ts`
-already proxies through, so nothing downstream needs to change.
+is the local generation workspace only — it is never the deploy target and
+is not itself pushed anywhere as-is.
 
-Commit and push the generated files to this repo's remote (`github.com/edebell67/FS`),
-using `github-deployment`'s scoped-commit discipline — never a blanket
-`git add -A` in this shared workspace. GitHub Pages then serves the new
-site automatically at the same path.
+**Deploy target is a separate repo:** `github.com/edebell67/epics`. Each
+business site is a top-level folder at that repo's root, e.g.
+`github.com/edebell67/epics/<slug>/index.html` (see the existing
+`dg-maintenance-uk-ltd/` folder there for the established convention — flat,
+no nesting under any subfolder).
+
+To deploy: copy the finished `epics/ep_044_web_apps/<slug>/` folder into a
+local clone of `edebell67/epics` (reuse an existing clone if one is already
+on this machine rather than creating a new one -- check first), as a new
+top-level `<slug>/` folder there, then commit and push. Use
+`github-deployment`'s scoped-commit discipline (commit only the new
+`<slug>/` folder, never a blanket `git add -A`).
+
+The resulting live URL, once GitHub Pages serves it, is proxied through the
+EP047 app via `epics/ep_047_directory_app/lib/github-pages-proxy.ts` --
+confirm that file's `GITHUB_PAGES_ORIGIN` actually points at
+`https://edebell67.github.io/epics` (it may still point at the wrong repo;
+check before assuming this works) and that the `epics` repo's GitHub Pages
+config doesn't have a stale custom-domain redirect (its `CNAME` file
+historically pointed at `thetechprinciple.com`, which now points at Render
+instead -- a stale CNAME will break the raw `github.io` URL the proxy needs).
 
 ## 5. Report completion back to the pipeline
 
@@ -106,7 +131,7 @@ import { recordSiteGenerated } from "@/lib/verification/site-generation";
 
 await recordSiteGenerated({
   businessId, // from step 1
-  siteUrl: `${PUBLIC_APP_ORIGIN}/epics/ep_006_website_rebuilds/redesigns/<slug>/index.html`,
+  siteUrl: `${PUBLIC_APP_ORIGIN}/<slug>/index.html`,
   actorUserId, // the acting admin/system user id
 });
 ```
