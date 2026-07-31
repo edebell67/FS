@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.1.0
+version: 1.2.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,11 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.2.0 · 2026-07-31 · Updates the deploy-verification note: the proxy now
+  serves from jsDelivr's GitHub CDN, not GitHub Pages directly (GitHub Pages
+  for edebell67/epics has a stuck custom-domain redirect that jsDelivr
+  sidesteps), and adds the purge-cache step needed only when regenerating
+  an already-existing slug.
 v1.1.0 · 2026-07-31 · Corrects the output/deploy location: local generation
   workspace is `epics/ep_044_web_apps/<slug>/`, deploy target is the
   separate `github.com/edebell67/epics` repo (flat, top-level `<slug>/`
@@ -113,14 +118,17 @@ top-level `<slug>/` folder there, then commit and push. Use
 `github-deployment`'s scoped-commit discipline (commit only the new
 `<slug>/` folder, never a blanket `git add -A`).
 
-The resulting live URL, once GitHub Pages serves it, is proxied through the
-EP047 app via `epics/ep_047_directory_app/lib/github-pages-proxy.ts` --
-confirm that file's `GITHUB_PAGES_ORIGIN` actually points at
-`https://edebell67.github.io/epics` (it may still point at the wrong repo;
-check before assuming this works) and that the `epics` repo's GitHub Pages
-config doesn't have a stale custom-domain redirect (its `CNAME` file
-historically pointed at `thetechprinciple.com`, which now points at Render
-instead -- a stale CNAME will break the raw `github.io` URL the proxy needs).
+The resulting live URL is proxied through the EP047 app via
+`epics/ep_047_directory_app/lib/github-pages-proxy.ts`, which fetches from
+jsDelivr's GitHub CDN (`https://cdn.jsdelivr.net/gh/edebell67/epics@master`),
+not GitHub Pages directly -- GitHub Pages for that repo has a stuck
+custom-domain redirect (`thetechprinciple.com`, which now points at Render)
+that jsDelivr sidesteps entirely. A brand-new `<slug>/` folder should resolve
+immediately on first request, no action needed. If **regenerating** a site
+that already existed at the same slug, jsDelivr may still serve its cached
+copy of the old files for a while -- purge it first:
+`https://purge.jsdelivr.net/gh/edebell67/epics@master/<slug>/index.html`
+(and any other changed files) before assuming the new version is live.
 
 ## 5. Report completion back to the pipeline
 
