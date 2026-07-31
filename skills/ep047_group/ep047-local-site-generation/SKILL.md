@@ -107,9 +107,22 @@ is empty for the category, and never commit any new image over 200KB).
 Wire in `assistant-embed.js` with `ASSISTANT_ENABLED` set to match the
 business's `chat_widget_opt_in` value from step 1.
 
-Verify before calling anything done: every `<img>` on every page loads,
-section/image counts match the blueprint's matrix, responsive, accessible,
-no console errors — the blueprint's own Section 14 definition of done.
+### Full-site test gate (mandatory)
+
+After generation and again after deployment, test **every visitor-facing page**
+from the site navigation and footer/legal links — not only `index.html`. For
+each route, verify HTTP success, fresh business identity/category/town, no
+stale previous-category content, all images loaded, no console errors, and
+working internal navigation. Verify responsive and accessible behaviour plus
+the blueprint image/section matrix. A generated site is incomplete when even
+one route remains stale or untested.
+
+Store the timestamped execution report, route-by-route pass/fail table,
+screenshot evidence, commit, and public URLs under
+`workstream/Test Results/ep044/yyyymmdd_hhmmss_<slug>_full_site_<result>/`.
+The reusable procedure and explicit criteria belong in
+`workstream/Test Library/ep044/`. Do not call the site generated, deploy it to
+the pipeline, or report completion until the full-site test result passes.
 
 ## 4. Output location and deployment
 

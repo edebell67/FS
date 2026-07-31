@@ -56,7 +56,7 @@ Every build ships with the shared AI assistant wired in **by default** (blueprin
 ## 8. Output location, verification, and task tracking
 
 - **Output**: `epics/ep_044_web_apps/<template-name>/` — `index.html`, `gallery.html`, `styles.css` (`:root` tokens + all component styles), `reveal.js`, `assistant-embed.js`. No `config.js`.
-- **Verify before done** (blueprint Section 14): serve locally and confirm every `<img>` on every page loads (`complete: true`); type scale, spacing and components match the blueprint; section image counts match the matrix; `tel:`/`mailto:` are consistent with the sample identity; no console errors; responsive, keyboard-accessible, reduced-motion respected.
+- **Full-site verification before done** (blueprint Section 14): serve locally and, after deployment, visit every header/nav/footer/legal route. Confirm each route loads, shows the fresh identity/category/town, has no stale prior-category text or assets, every `<img>` loads (`complete: true`), and no console errors occur. Verify type, layout, component and image-matrix requirements, links, responsive/keyboard/reduced-motion behaviour. Store route-by-route results and screenshots in `workstream/Test Results/ep044/` and the reusable procedure/criteria in `workstream/Test Library/ep044/`. No individual home-page pass is a full-site pass.
 - **Task tracking**: per this repo's `CLAUDE.md`, create a workstream task file in `workstream/300_complete/claude/` once built and verified.
 
 ## Required shared layout invariant
