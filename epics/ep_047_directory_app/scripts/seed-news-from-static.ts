@@ -1,7 +1,11 @@
 import fs from "node:fs";
 import vm from "node:vm";
+import { config } from "dotenv";
 import { sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
+
+config({ path: ".env.local" });
+config();
 
 const source = fs.readFileSync("../ep_047_newssite/The Tech Principle News.html", "utf8");
 const storySource = source.match(/(?:const|let) (?:staticStories|stories) = ([\s\S]*?);\s*\/\/ Each article/)?.[1];
