@@ -21,7 +21,7 @@ services:
     # wrong project entirely.
     rootDir: epics/ep_047_directory_app
     buildCommand: npm install --include=dev && npm run build
-    preDeployCommand: npm run db:migrate
+    preDeployCommand: npm run db:migrate && npm run news:seed
     startCommand: npm start
     healthCheckPath: /api/health
     envVars:
