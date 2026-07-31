@@ -232,7 +232,12 @@ export async function updateBusinessDetails(
   const currentStageId = business.currentStageId;
   if (!currentStageId) return { ok: false, error: "Business has no pipeline stage set." };
 
-  const changedFields = Object.keys(fields);
+  // Only the fields whose value actually differs from what's stored --
+  // submitting the whole form every time shouldn't make every field show up
+  // in the audit note when only one thing was actually edited.
+  const changedFields = (Object.keys(fields) as (keyof BusinessEditableFields)[]).filter(
+    (key) => fields[key] !== business[key]
+  );
   if (changedFields.length === 0) return { ok: true };
 
   await db.transaction(async (tx) => {
