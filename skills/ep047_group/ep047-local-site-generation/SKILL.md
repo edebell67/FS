@@ -1,7 +1,7 @@
 ---
 name: ep047-local-site-generation
 description: Generate a real business's website locally (no LLM API key, no per-call cost) for a business sitting at the awaiting_site_generation pipeline stage in the EP047 directory app, then deploy the output to GitHub. Use when asked to run local site generation, process the generation queue, or generate a site for a specific claimed business.
-version: 1.5.0
+version: 1.6.0
 metadata:
   hermes:
     tags: [ep047, site-generation, ep044_group, github-deployment]
@@ -11,6 +11,12 @@ metadata:
 # EP047 Local Site Generation
 
 VERSION HISTORY
+v1.6.0 · 2026-08-01 · Reverts the proxy origin from jsDelivr back to GitHub
+  Pages directly -- jsDelivr's GitHub CDN has a hard 50MB total-repo-size
+  limit ("Package size exceeded the configured limit of 50 MB"), which
+  edebell67/epics grew past as generated sites accumulated. GitHub Pages'
+  custom-domain redirect issue (the original reason for the jsDelivr
+  workaround) resolved on its own. No cache purge needed with GitHub Pages.
 v1.5.0 · 2026-07-31 · The internal API (option B) no longer strictly needs
   its own INTERNAL_API_KEY -- lib/auth/require-internal-api.ts now also
   accepts an authenticated admin session, since requiring a whole separate
@@ -160,25 +166,20 @@ top-level `<slug>/` folder there, then commit and push. Use
 `<slug>/` folder, never a blanket `git add -A`).
 
 The resulting live URL is proxied through the EP047 app via
-`epics/ep_047_directory_app/lib/github-pages-proxy.ts`, which fetches from
-jsDelivr's GitHub CDN (`https://cdn.jsdelivr.net/gh/edebell67/epics@master`),
-not GitHub Pages directly -- GitHub Pages for that repo has a stuck
-custom-domain redirect (`thetechprinciple.com`, which now points at Render)
-that jsDelivr sidesteps entirely.
+`epics/ep_047_directory_app/lib/github-pages-proxy.ts`, which fetches
+directly from GitHub Pages (`https://edebell67.github.io/epics`). jsDelivr's
+GitHub CDN was used briefly as a workaround for a stale custom-domain
+redirect on that repo, but jsDelivr enforces a hard 50MB total-repo-size
+limit ("Package size exceeded the configured limit of 50 MB") that this repo
+has since grown past as generated sites accumulated -- GitHub Pages has no
+such limit, so the proxy reverted to it once the redirect issue resolved.
+Do not switch back to jsDelivr for this repo; it will not scale as more
+sites are added.
 
-**Always purge jsDelivr's cache for every file just pushed, every deploy --
-not only when regenerating an existing slug.** This is unconditional, not a
-judgment call: a business revising and redeploying its site later needs the
-same purge, and purging a brand-new file that was never cached is harmless.
-For each file in `<slug>/` (at minimum `index.html` and any other page/asset
-that changed):
-```
-https://purge.jsdelivr.net/gh/edebell67/epics@master/<slug>/<file>
-```
-Purge propagation across jsDelivr's edge network is not instant even when
-the purge call itself reports success -- verify by re-fetching the file
-after a short wait and confirming the content actually changed before
-reporting the deploy as done.
+GitHub Pages content is typically live within roughly a minute of a push --
+verify by re-fetching the file after a short wait and confirming the new
+content is actually there before reporting the deploy as done. No manual
+cache purge is needed (unlike jsDelivr).
 
 ## 5. Report completion back to the pipeline (mandatory -- the task is not done without this)
 
