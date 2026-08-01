@@ -280,6 +280,18 @@ a{ color: inherit; text-decoration: none; }
 }
 .nav__links a:hover{ color: var(--on-ink); }
 .nav__links a:hover::after{ transform: scaleX(1); }
+.nav__product-menu{ position:relative; }
+.nav__product-menu summary{ cursor:pointer; list-style:none; color:var(--on-ink-mute); font-size:.9375rem; font-weight:500; padding-block:.35rem; }
+.nav__product-menu summary::-webkit-details-marker{ display:none; }
+.nav__product-menu summary span{ color:var(--accent); margin-left:.25rem; }
+.nav__product-menu[open] summary{ color:var(--on-ink); }
+.nav__product-panel{ position:absolute; z-index:20; top:2.2rem; left:-1rem; width:19rem; padding:.55rem; border:1px solid var(--line-dark); border-radius:10px; background:rgba(10,12,14,.98); box-shadow:0 18px 42px rgba(0,0,0,.35); }
+.nav__product-panel a{ display:block; padding:.8rem .9rem; border-radius:6px; }
+.nav__product-panel a:hover{ background:rgba(200,242,80,.1); }
+.nav__product-panel a::after{ display:none; }
+.nav__product-panel strong,.nav__product-panel span{ display:block; }
+.nav__product-panel strong{ color:var(--on-ink); font-size:.9rem; }
+.nav__product-panel span{ margin-top:.2rem; color:var(--on-ink-mute); font-size:.75rem; font-weight:400; line-height:1.4; }
 
 .nav__toggle{
   display: none;

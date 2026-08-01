@@ -147,7 +147,14 @@
       <span class="brand__word">The Tech Principle</span>
     </a>
     <nav class="nav__links" aria-label="Primary">
-      <a href="#services">Services</a>
+      <details class="nav__product-menu">
+        <summary>Services <span aria-hidden="true">+</span></summary>
+        <div class="nav__product-panel">
+          <a href="#services"><strong>Studio services</strong><span>Websites, AI assistants and systems</span></a>
+          <a href="/directory/"><strong>The Directory</strong><span>Find local businesses you can trust</span></a>
+          <a href="/news/"><strong>The Tech Principle News</strong><span>Verified local updates and reading</span></a>
+        </div>
+      </details>
       <a href="#work">Work</a>
       <a href="#process">Process</a>
       <a href="#writing">Writing</a>
@@ -159,7 +166,9 @@
     </button>
   </div>
   <div class="nav__drawer" id="navDrawer" hidden>
-    <a href="#services">Services</a>
+    <a href="#services">Studio services</a>
+    <a href="/directory/">The Directory</a>
+    <a href="/news/">The Tech Principle News</a>
     <a href="#work">Work</a>
     <a href="#process">Process</a>
     <a href="#writing">Writing</a>
