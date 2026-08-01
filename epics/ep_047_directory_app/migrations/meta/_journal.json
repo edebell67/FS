@@ -127,6 +127,13 @@
       "when": 1786250000000,
       "tag": "0017_chat_widget_opt_in",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1785609600000,
+      "tag": "0018_public_news_date_display_rules",
+      "breakpoints": true
     }
   ]
 }

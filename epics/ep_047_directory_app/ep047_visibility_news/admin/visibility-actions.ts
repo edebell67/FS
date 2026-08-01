@@ -1,4 +1,5 @@
 "use server";
+// EP047-2026.08.01.2 — protected News display settings action.
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db/client";
 import { requireAdminUserForPage } from "@/lib/auth/require";
@@ -30,4 +31,17 @@ export async function saveVisibility(formData: FormData) {
   await db.execute(sql`INSERT INTO public_visibility_audit (entity_type, entity_key, action, reason)
     VALUES (${kind}, ${key}, 'toggle', ${enabled ? "Enabled by admin" : "Hidden by admin"})`);
   revalidatePath("/directory", "layout");
+}
+
+export async function saveNewsDisplaySettings(formData: FormData) {
+  await requireAdminUserForPage("/directoryadmin/visibility");
+  const maxArticles = Math.max(1, Math.min(100, Number(formData.get("maxArticlesPerTown")) || 10));
+  const lookbackDays = Math.max(1, Math.min(3650, Number(formData.get("lookbackDays")) || 30));
+  await db.execute(sql`INSERT INTO public_news_display_settings (id, max_articles_per_town, lookback_days, updated_at)
+    VALUES (true, ${maxArticles}, ${lookbackDays}, now())
+    ON CONFLICT (id) DO UPDATE SET max_articles_per_town=${maxArticles}, lookback_days=${lookbackDays}, updated_at=now()`);
+  await db.execute(sql`INSERT INTO public_visibility_audit (entity_type, entity_key, action, reason)
+    VALUES ('news_display_settings', 'default', 'apply', ${`max_articles_per_town=${maxArticles}; lookback_days=${lookbackDays}`})`);
+  revalidatePath("/news", "page");
+  revalidatePath("/api/public-news");
 }
