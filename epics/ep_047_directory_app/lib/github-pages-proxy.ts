@@ -3,17 +3,18 @@
 // itself lives in -- confirmed 2026-07-31 against the working example
 // dg-maintenance-uk-ltd/.
 //
-// This uses jsDelivr's GitHub CDN rather than GitHub Pages directly.
-// GitHub Pages for that repo still has a stale custom-domain setting
-// (thetechprinciple.com, which now points at Render) that 301-redirects the
-// raw github.io URL even after the repo's CNAME file was deleted -- GitHub's
-// side didn't clear on its own in time. jsDelivr serves the exact same repo
-// content immediately with no such redirect (@master pins the branch; drop
-// the pin if latest-on-push is preferred over jsDelivr's CDN cache window).
-// jsDelivr reports .html/.js/.css as text/plain, which is why
-// githubPagesResponseHeaders() below infers content-type from the request
-// path's extension rather than trusting upstream's header.
-const DEFAULT_GITHUB_PAGES_ORIGIN = "https://cdn.jsdelivr.net/gh/edebell67/epics@master";
+// This is GitHub Pages directly, not jsDelivr's GitHub CDN. jsDelivr was
+// used briefly (2026-07-31) as a workaround while that repo's GitHub Pages
+// had a stale custom-domain setting (thetechprinciple.com, which now points
+// at Render) 301-redirecting the raw github.io URL -- but jsDelivr's GitHub
+// CDN mode has a hard 50MB total-repo-size limit ("Package size exceeded the
+// configured limit of 50 MB"), which this repo has since grown past as more
+// generated sites accumulated. GitHub Pages has no such limit, and the
+// custom-domain redirect issue resolved on its own, so this reverted back
+// to the direct, durable option. githubPagesResponseHeaders() still infers
+// content-type from the request path's extension as a harmless safety net,
+// even though GitHub Pages itself reports the correct type natively.
+const DEFAULT_GITHUB_PAGES_ORIGIN = "https://edebell67.github.io/epics";
 
 function githubPagesOrigin(): string {
   return (process.env.GITHUB_PAGES_ORIGIN ?? DEFAULT_GITHUB_PAGES_ORIGIN).replace(/\/$/, "");

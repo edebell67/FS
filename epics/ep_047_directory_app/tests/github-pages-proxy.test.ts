@@ -3,14 +3,14 @@ import test from "node:test";
 
 import { githubPagesUrl } from "../lib/github-pages-proxy";
 
-test("githubPagesUrl maps the public root to the epics jsDelivr root", () => {
-  assert.equal(githubPagesUrl("/").toString(), "https://cdn.jsdelivr.net/gh/edebell67/epics@master/");
+test("githubPagesUrl maps the public root to the epics GitHub Pages root", () => {
+  assert.equal(githubPagesUrl("/").toString(), "https://edebell67.github.io/epics/");
 });
 
 test("githubPagesUrl preserves a public site path and query string", () => {
   assert.equal(
     githubPagesUrl("/blog/?tag=build").toString(),
-    "https://cdn.jsdelivr.net/gh/edebell67/epics@master/blog/?tag=build"
+    "https://edebell67.github.io/epics/blog/?tag=build"
   );
 });
 
@@ -21,7 +21,7 @@ test("githubPagesUrl rejects traversal-like paths", () => {
 test("githubPagesRedirectLocation keeps GitHub Pages directory redirects on the public path", async () => {
   const { githubPagesRedirectLocation } = await import("../lib/github-pages-proxy");
   assert.equal(
-    githubPagesRedirectLocation("https://cdn.jsdelivr.net/gh/edebell67/epics@master/blog/"),
+    githubPagesRedirectLocation("https://edebell67.github.io/epics/blog/"),
     "/blog/"
   );
 });
