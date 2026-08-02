@@ -131,7 +131,7 @@
     {
       "idx": 18,
       "version": "7",
-      "when": 1785609600000,
+      "when": 1786300000000,
       "tag": "0018_public_news_date_display_rules",
       "breakpoints": true
     }
