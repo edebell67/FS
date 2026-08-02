@@ -18,7 +18,7 @@
     "news:seed": "tsx scripts/seed-news-from-static.ts",
     "generate:sites": "tsx scripts/generate-sites.ts",
     "auth:create-admin": "tsx scripts/create-admin.ts",
-    "test": "tsx --env-file=.env.local --test tests/*.test.ts ep047_visibility_news/*.test.ts",
+    "test": "tsx --env-file=.env.local --test tests/*.test.ts ep047_visibility_news/*.test.ts ep047_visibility_news/admin/*.test.ts",
     "verify": "npm run typecheck && npm run lint && npm run build"
   },
   "dependencies": {

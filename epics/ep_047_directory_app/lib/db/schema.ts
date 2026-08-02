@@ -664,7 +664,7 @@ export const newsArticles = pgTable(
     verifiedUpdate: text("verified_update").notNull(),
     localReading: text("local_reading").notNull(),
     businessVoices: text("business_voices"),
-    status: text("status").notNull().default("draft"), // draft | published | archived
+    status: text("status").notNull().default("draft"), // draft | review_required | published | archived
     publishedAt: timestamp("published_at", { withTimezone: true }),
     sourcePublishedAt: timestamp("source_published_at", { withTimezone: true }),
     originalEventDate: date("original_event_date"),
