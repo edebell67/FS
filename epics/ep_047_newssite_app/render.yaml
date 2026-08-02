@@ -1,0 +1,14 @@
+services:
+  - type: cron
+    name: ep047-newssite-intake
+    runtime: node
+    plan: starter
+    rootDir: epics/ep_047_newssite_app
+    schedule: "*/15 * * * *"
+    buildCommand: npm install
+    startCommand: npm run news:import
+    envVars:
+      - key: NEWS_IMPORT_API_URL
+        sync: false
+      - key: NEWS_IMPORT_API_KEY
+        sync: false
