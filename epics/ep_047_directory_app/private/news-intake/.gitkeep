@@ -1,0 +1,2 @@
+# Deployed private News JSON intake directory.
+# Commit versioned `*.json` batches here; the Render pre-deploy hook and retry cron scan only this directory.

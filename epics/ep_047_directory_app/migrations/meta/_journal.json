@@ -134,6 +134,13 @@
       "when": 1786300000000,
       "tag": "0018_public_news_date_display_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1786400000000,
+      "tag": "0019_news_intake_batch_ledger",
+      "breakpoints": true
     }
   ]
 }
