@@ -56,16 +56,18 @@ test("hashes canonical item content, restricts scanning to deployed intake, and 
   assert.deepEqual(nextRetryState(3), { status: "failed", nextAttempt: 3 });
 });
 
-test("automatic importer uses the durable ledger and cannot create published articles", async () => {
-  const [script, migration] = await Promise.all([
+test("automatic importer and API receiver share the durable ledger service and cannot create published articles", async () => {
+  const [script, service, migration] = await Promise.all([
     readFile(new URL("../scripts/import-news-batches.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/news-intake/service.ts", import.meta.url), "utf8"),
     readFile(new URL("../migrations/0019_news_intake_batch_ledger.sql", import.meta.url), "utf8"),
   ]);
   assert.match(script, /resolveNewsIntakeDirectory/);
-  assert.match(script, /news_intake_batches/);
-  assert.match(script, /news_intake_items/);
-  assert.match(script, /safeStatus: "draft" \| "review_required"/);
-  assert.doesNotMatch(script, /VALUES[\s\S]{0,400}'published'/);
+  assert.match(script, /importNewsIntakeBatch/);
+  assert.match(service, /news_intake_batches/);
+  assert.match(service, /news_intake_items/);
+  assert.match(service, /safeStatus: "draft" \| "review_required"/);
+  assert.doesNotMatch(service, /VALUES[\s\S]{0,400}'published'/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS news_intake_batches/i);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS news_intake_items/i);
   assert.match(migration, /UNIQUE \(batch_id, item_key\)/i);
