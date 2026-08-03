@@ -32,6 +32,9 @@ test("selected claim approval atomically projects claimed status and prepares a 
   assert.match(claimSubmissionRepository, /contactEmail: claimContactEmail/);
   assert.match(claimSubmissionRepository, /input\.fields\.email/);
   assert.match(repository, /You have successfully claimed this business listing/);
+  assert.match(repository, /we could not find a verified active website/);
+  assert.match(repository, /requests a free preview of a customized website/);
+  assert.match(repository, /generating your preview now/);
   assert.match(migration, /CREATE TABLE IF NOT EXISTS claim_success_messages/);
 });
 

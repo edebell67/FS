@@ -3,6 +3,10 @@
  * bulk-approval transaction.
  *
  * VERSION HISTORY
+ * v1.2.0 · 2026-08-03 · Rewrites claimSuccessMessage() to note we could not
+ *   find a verified active website for the business, frame the preview as the
+ *   thing their claim just requested, and set a few-minutes delivery
+ *   expectation instead of falsely implying the preview already existed.
  * v1.1.0 · 2026-07-29 · Queues each approved business for automated site
  *   generation in the same transaction, so awaiting_site_generation becomes its
  *   current stage immediately; the Claimed transition is still written as its own
@@ -41,9 +45,11 @@ export function claimSuccessMessage(businessName: string) {
   const subject = `You have successfully claimed ${businessName}`;
   const text = `You have successfully claimed this business listing for ${businessName}.
 
-Your website can now be previewed. A website can provide an owner-controlled social profile, stronger visibility to a local audience, and improved lead-generation potential.
+Right now, we could not find a verified active website for ${businessName}.
 
-You can reply with suggested changes or provide approved assets for incorporation, including your company logo, branding, colours, photography, and copy. No public website changes are made without your review and approval.`;
+Claiming this listing also requests a free preview of a customized website built for ${businessName} — no cost, no obligation, and nothing goes live without your review and approval.
+
+We've received that request and are generating your preview now. Expect it in your inbox within a few minutes, ready for you to look over. From there you can reply with suggested changes or approved assets — logo, branding, colours, photography, and copy — for us to incorporate.`;
   return { subject, text };
 }
 
