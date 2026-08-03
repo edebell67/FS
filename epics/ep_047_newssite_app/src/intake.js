@@ -15,7 +15,21 @@ export function parseBatch(raw) {
     if (!["high", "medium", "low"].includes(item.dateConfidence)) throw new Error("Invalid dateConfidence.");
     if (!["original_event", "source_publication"].includes(item.selectedDateKind)) throw new Error("Invalid selectedDateKind.");
   }
-  return batch;
+  return {
+    version: batch.version,
+    batchId: batch.batchId.trim(),
+    items: batch.items.map((item) => ({
+      itemId: item.itemId.trim(), headline: item.headline.trim(), town: item.town.trim(),
+      sourceName: item.sourceName.trim(), sourceUrl: item.sourceUrl.trim(),
+      verifiedUpdate: item.verifiedUpdate.trim(), localReading: item.localReading.trim(),
+      businessVoices: typeof item.businessVoices === "string" ? item.businessVoices.trim() || undefined : undefined,
+      eventIdentity: typeof item.eventIdentity === "string" ? item.eventIdentity.trim() || undefined : undefined,
+      originalEventDate: typeof item.originalEventDate === "string" ? item.originalEventDate.trim() || undefined : undefined,
+      sourcePublishedAt: item.sourcePublishedAt.trim(), dateProvenanceNote: item.dateProvenanceNote.trim(),
+      dateConfidence: item.dateConfidence, dateSelectionRationale: item.dateSelectionRationale.trim(),
+      selectedDateKind: item.selectedDateKind, categories: item.categories?.map((value) => value.trim()),
+    })),
+  };
 }
 
 function canonicalJson(value) {
