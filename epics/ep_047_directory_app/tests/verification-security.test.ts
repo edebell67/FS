@@ -28,3 +28,16 @@ test("delivery implementation is explicit, Gmail API-only, allowlisted, and hash
   assert.doesNotMatch(source, /SMTP_|nodemailer|sendMail/);
   assert.doesNotMatch(source, /rawToken:\s*text|raw_token/);
 });
+
+test("verification submission ends on a recipient acknowledgement page", async () => {
+  const page = await readFile(new URL("../app/verify/[token]/complete/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /Verification received/);
+  assert.match(page, /has not changed publicly/i);
+  assert.match(page, /manual review/i);
+});
+
+test("unavailable verification page offers a safe re-request route", async () => {
+  const page = await readFile(new URL("../app/verify/[token]/page.tsx", import.meta.url), "utf8");
+  assert.match(page, /href="\/verify\/request"/);
+  assert.match(page, /Request a new link/);
+});
