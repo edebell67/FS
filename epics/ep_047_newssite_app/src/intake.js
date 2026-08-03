@@ -18,6 +18,15 @@ export function parseBatch(raw) {
   return batch;
 }
 
+function canonicalJson(value) {
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+  if (value && typeof value === "object") {
+    return `{${Object.entries(value).sort(([a], [b]) => a.localeCompare(b))
+      .map(([key, child]) => `${JSON.stringify(key)}:${canonicalJson(child)}`).join(",")}}`;
+  }
+  return JSON.stringify(value);
+}
+
 export function batchHash(batch) {
-  return createHash("sha256").update(JSON.stringify(batch)).digest("hex");
+  return createHash("sha256").update(canonicalJson(batch)).digest("hex");
 }
