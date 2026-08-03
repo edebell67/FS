@@ -49,7 +49,14 @@ Right now, we could not find a verified active website for ${businessName}.
 
 Claiming this listing also requests a free preview of a customized website built for ${businessName} — no cost, no obligation, and nothing goes live without your review and approval.
 
-We've received that request and are generating your preview now. Expect it in your inbox within a few minutes, ready for you to look over. From there you can reply with suggested changes or approved assets — logo, branding, colours, photography, and copy — for us to incorporate.`;
+We've received that request and are generating your preview now.
+
+A preview can include:
+• your business identity, services, contact routes and imagery;
+• an owner-controlled social/contact presence;
+• a private enquiry assistant where appropriate.
+
+Expect it in your inbox shortly, ready for you to look over. From there you can reply with suggested changes or approved assets — logo, branding, colours, photography, and copy — for us to incorporate.`;
   return { subject, text };
 }
 
