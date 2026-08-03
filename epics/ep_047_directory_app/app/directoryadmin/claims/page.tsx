@@ -6,13 +6,15 @@ import { listPendingClaims } from "@/lib/verification/claims-approval";
 import { approveSelectedClaimsAction, sendPreparedClaimSuccessMessagesAction } from "./actions";
 
 export const dynamic = "force-dynamic";
-export default async function ClaimsPage({ searchParams }: { searchParams: Promise<{ approved?: string; messages?: string }> }) {
+export default async function ClaimsPage({ searchParams }: { searchParams: Promise<{ approved?: string; messages?: string; error?: string }> }) {
   const user = await requireAdminUserForPage("/directoryadmin/claims");
   if (!canManageVerification(user.role)) notFound();
   const [claims, params] = await Promise.all([listPendingClaims(), searchParams]);
   return <main className="mx-auto max-w-6xl px-6 py-12"><p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Ownership</p>
     <div className="mt-1 flex flex-wrap items-end justify-between gap-3"><div><h1 className="text-2xl font-semibold">Claims needing review</h1><p className="mt-2 text-slate-600">Claims submitted by businesses remain Claims pending until an authorised reviewer approves them.</p></div>
       <span className="rounded-full bg-amber-100 px-3 py-1 text-sm font-semibold text-amber-900">{claims.length} Claims pending</span></div>
+    {params.error === "select" && <p role="alert" className="mt-5 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Select at least one pending claim before approving.</p>}
+    {params.error === "confirm" && <p role="alert" className="mt-5 rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">Confirm that you reviewed the selected claims before approving.</p>}
     {params.approved && <p role="status" className="mt-5 rounded border border-green-300 bg-green-50 p-3 text-sm text-green-900">Selected claims were approved. Their listings are now Claimed; owner messages are recorded separately as prepared or not ready.</p>}
     {params.messages && <p role="status" className="mt-3 rounded border border-blue-300 bg-blue-50 p-3 text-sm text-blue-900">Prepared claim-success messages were handed to the configured delivery policy. Check message status before calling them delivered.</p>}
     <form action={sendPreparedClaimSuccessMessagesAction} className="mt-4"><button className="rounded border border-blue-600 px-3 py-2 text-sm font-medium text-blue-800 hover:bg-blue-50">Send prepared claim-success messages</button></form>

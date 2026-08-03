@@ -9,7 +9,8 @@ export async function approveSelectedClaimsAction(formData: FormData) {
   const user = await getCurrentUser();
   if (!user || !canManageVerification(user.role)) return;
   const claimIds = formData.getAll("claimId").map(String);
-  if (formData.get("confirmed") !== "on") throw new Error("Confirm the selected-claim approval before continuing.");
+  if (!claimIds.length) redirect("/directoryadmin/claims?error=select");
+  if (formData.get("confirmed") !== "on") redirect("/directoryadmin/claims?error=confirm");
   const result = await approveSelectedClaims({ claimIds, actorUserId: user.id, note: String(formData.get("note") ?? "") });
   await sendPreparedClaimSuccessMessages(result.messageIds);
   redirect("/directoryadmin/claims?approved=1");
