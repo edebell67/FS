@@ -1,0 +1,55 @@
+{
+  "version": "ep047.news-intake/v1",
+  "batchId": "local-20260802-leeds-c1f0a4",
+  "items": [
+    {
+      "itemId": "leeds-kingsdale-council-homes-milestone-20260731",
+      "headline": "Plans for new council homes at a former Leeds flats site reach another milestone",
+      "town": "leeds",
+      "categories": ["architects", "builders", "carpenters", "kitchen fitters"],
+      "sourceName": "Leeds City Council News",
+      "sourceUrl": "https://news.leeds.gov.uk/news/plans-submitted-for-new-council-housing-at-former-eyesore-flats-site",
+      "verifiedUpdate": "Leeds City Council reports that plans for dozens of new council homes at the former site of a flats complex in Leeds have passed another key milestone.",
+      "localReading": "Clearly labelled local-business reading: housing-project milestones can be relevant context for local construction, design and home-improvement businesses, but do not confirm procurement opportunities or contracts.",
+      "sourcePublishedAt": "2026-07-31",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "The Leeds City Council News listing dates this announcement 31 July 2026 and describes a further planning milestone.",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "No distinct real-world milestone date was directly captured beyond the source publication date.",
+      "eventIdentity": "leeds-kingsdale-former-flats-council-homes-milestone-2026"
+    },
+    {
+      "itemId": "leeds-tour-de-france-femmes-countdown-20260730",
+      "headline": "Leeds marks one-year countdown to the 2027 Tour de France Femmes Grand Départ",
+      "town": "leeds",
+      "categories": ["barbers", "beauty salons", "photographers"],
+      "sourceName": "Leeds City Council News",
+      "sourceUrl": "https://news.leeds.gov.uk/news/one-year-to-go-leeds-marks-key-milestone-in-build-up-to-grand-depart",
+      "verifiedUpdate": "Leeds City Council says the one-year countdown to the 2027 Tour de France Femmes avec Zwift Grand Départ began in Leeds on 30 July 2026.",
+      "localReading": "Clearly labelled local-business reading: a year-long major-event countdown may provide useful planning context for visitor-facing firms, but future footfall and commercial effects remain uncertain.",
+      "sourcePublishedAt": "2026-07-30",
+      "originalEventDate": "2026-07-30",
+      "selectedDateKind": "original_event",
+      "dateProvenanceNote": "The source listing dated 30 July 2026 says the year-long countdown got under way in Leeds today.",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "The source directly identifies the day the countdown activity began.",
+      "eventIdentity": "leeds-tour-de-france-femmes-grand-depart-countdown-20260730"
+    },
+    {
+      "itemId": "leeds-flood-risk-strategy-consultation-20260724",
+      "headline": "Leeds residents and businesses are asked for views on flood-risk strategy",
+      "town": "leeds",
+      "categories": ["builders", "damp proofing", "estate agents", "roofers"],
+      "sourceName": "Leeds City Council News",
+      "sourceUrl": "https://news.leeds.gov.uk/news/residents-and-businesses-asked-for-views-on-latest-flood-risk-management-strategy",
+      "verifiedUpdate": "Leeds City Council says it is consulting on its latest Local Flood Risk Management Strategy, setting out intended resilience measures across the city over coming years.",
+      "localReading": "Clearly labelled local-business reading: the consultation may be relevant context for property, construction and flood-resilience firms, but it does not establish any future work allocation or recommendation.",
+      "sourcePublishedAt": "2026-07-24",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "The Leeds City Council News listing dates the strategy-consultation announcement 24 July 2026.",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "No separately evidenced launch/event date was captured from the source listing.",
+      "eventIdentity": "leeds-local-flood-risk-management-strategy-consultation-2026"
+    }
+  ]
+}

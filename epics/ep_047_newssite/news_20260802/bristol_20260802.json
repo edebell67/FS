@@ -1,0 +1,56 @@
+{
+  "version": "ep047.news-intake/v1",
+  "batchId": "local-20260802-bristol-6e5897",
+  "items": [
+    {
+      "itemId": "bristol-east-street-crossing-20260824",
+      "headline": "East Street junction improvement work is scheduled to begin in August",
+      "town": "bristol",
+      "categories": ["builders", "carpenters", "fencing", "handyman"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/42109f3e-da60-493c-8ff1-f417a6908ed9/east-street-traffic-signals-to-be-replaced-and-crossing-improved",
+      "verifiedUpdate": "Bristol City Council says traffic-signal replacement and pedestrian/cyclist crossing improvements at Cannon Street's junction with East Street in Bedminster are due to start on 24 August and are expected to complete in October 2026.",
+      "localReading": "Clearly labelled local-business reading: planned works and changes to pedestrian access can affect how nearby traders plan deliveries, customer messaging and short-term access information.",
+      "sourcePublishedAt": "2026-07-31",
+      "originalEventDate": "2026-08-24",
+      "selectedDateKind": "original_event",
+      "dateProvenanceNote": "The council notice dated 31 July 2026 states that work will get underway from 24 August.",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "The scheduled work-start date is directly stated by the council and is more specific than the publication date for this planned event.",
+      "eventIdentity": "bristol-bedminster-east-street-junction-improvement-20260824"
+    },
+    {
+      "itemId": "bristol-gloucester-road-resurfacing-20260728",
+      "headline": "Overnight resurfacing works are planned for part of Gloucester Road in August",
+      "town": "bristol",
+      "categories": ["builders", "handyman", "mobile mechanics", "carpet cleaners"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/359293eb-f1a0-48aa-9923-fa9862471d39/part-of-gloucester-road-to-close-for-ten-nights-in-august",
+      "verifiedUpdate": "Bristol City Council says reconstruction, resurfacing and road-marking work affecting parts of Gloucester Road, Filton Road, Dorian Road and Wessex Avenue in Horfield is planned for later in August, with weeknight closures and diversions.",
+      "localReading": "Clearly labelled local-business reading: businesses dependent on vehicle access in the affected area may wish to check delivery windows, staff travel and customer directions against the council's closure information.",
+      "sourcePublishedAt": "2026-07-28",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "The Bristol City Council notice is dated 28 July 2026; the visible notice confirms later-August works but the extracted page view did not expose a complete machine-readable start-date list.",
+      "dateConfidence": "medium",
+      "dateSelectionRationale": "Source publication is selected because the directly evidenced specific work date was incomplete in the captured source content.",
+      "eventIdentity": "bristol-horfield-gloucester-road-resurfacing-2026-august"
+    },
+    {
+      "itemId": "bristol-broadmead-bus-route-change-20260830",
+      "headline": "Bristol city-centre bus routes are due to change at the end of August",
+      "town": "bristol",
+      "categories": ["estate agents", "marketing agencies", "photographers", "web design"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/b5e9c279-3247-4991-af2a-348c46afe2fc/major-changes-to-bristol-city-centre-bus-routes-at-the-end-of-the-summer",
+      "verifiedUpdate": "Bristol City Council says 25 bus services travelling through the city centre will be rerouted away from some Broadmead shopping streets from Sunday 30 August 2026, with stops on Union Street, The Horsefair and Penn Street among those due to close.",
+      "localReading": "Clearly labelled local-business reading: Broadmead-facing businesses may need to update visitor travel guidance and consider how route changes could alter footfall patterns around the affected streets.",
+      "sourcePublishedAt": "2026-07-27",
+      "originalEventDate": "2026-08-30",
+      "selectedDateKind": "original_event",
+      "dateProvenanceNote": "The council notice dated 27 July 2026 explicitly states that the route changes start on Sunday 30 August 2026.",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "The implementation date is explicitly stated in the primary council notice.",
+      "eventIdentity": "bristol-broadmead-city-centre-bus-route-change-20260830"
+    }
+  ]
+}
