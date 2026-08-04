@@ -42,6 +42,10 @@ export default async function PipelinePage() {
           className="inline-block rounded border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
           Select validated businesses for batch verification
         </Link>
+        <Link href="/directoryadmin/site-previews"
+          className="inline-block rounded border border-brand-600 px-4 py-2 text-sm font-medium text-brand-700 hover:bg-brand-50">
+          Send site preview links
+        </Link>
         <Link href="/directoryadmin/claims"
           className="inline-block rounded border border-amber-500 px-4 py-2 text-sm font-medium text-amber-800 hover:bg-amber-50">
           {pendingClaims ? `Review ${pendingClaims} claims pending` : "Open claims review"}
