@@ -6,6 +6,10 @@ import { moveStageAction } from "./actions";
 import { getValidationOverview } from "@/lib/validation/repository";
 import { ValidationOverviewPanel } from "@/components/admin/ValidationOverviewPanel";
 import { getPendingClaimCount } from "@/lib/verification/claims-approval";
+import { getEligibleVerificationBusinesses } from "@/lib/verification/batches";
+import { getBusinessesAwaitingSiteGeneration, getBusinessesReadyForPreviewNotification } from "@/lib/verification/site-generation";
+import { isGenerationConfigured } from "@/lib/generation/config";
+import { WorkflowControlModal } from "@/components/admin/WorkflowControlModal";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +22,18 @@ function formatHours(hours: number | null): string {
 
 export default async function PipelinePage() {
   await requireAdminUserForPage("/directoryadmin/pipeline");
-  const [columns, validationOverview, pendingClaims] = await Promise.all([
-    getBoardColumns(), getValidationOverview(), getPendingClaimCount(),
+  const [columns, validationOverview, pendingClaims, verificationBusinesses, generationQueue, previewBusinesses] = await Promise.all([
+    getBoardColumns(), getValidationOverview(), getPendingClaimCount(), getEligibleVerificationBusinesses(),
+    getBusinessesAwaitingSiteGeneration(), getBusinessesReadyForPreviewNotification(),
   ]);
+  const generationAvailable = isGenerationConfigured() && Boolean(process.env.INTERNAL_API_KEY?.trim()) && Boolean(process.env.PUBLIC_APP_ORIGIN?.trim());
+  const workflowCounts = {
+    awaitingValidation: validationOverview.counts.awaitingValidation,
+    verificationEligible: verificationBusinesses.filter((business) => business.validationStatus === "validated").length,
+    pendingClaims,
+    awaitingGeneration: generationQueue.length,
+    previewEligible: previewBusinesses.length,
+  };
   return (
     <main className="mx-auto max-w-[1400px] px-6 py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Pipeline</p>
@@ -32,6 +45,7 @@ export default async function PipelinePage() {
         stages with the dropdown on its card.
       </p>
       <div className="mt-4 flex flex-wrap gap-3">
+        <WorkflowControlModal counts={workflowCounts} generationAvailable={generationAvailable} />
         <Link href="/directoryadmin/validation"
           className="inline-block rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white">
           {validationOverview.counts.awaitingValidation > 0
