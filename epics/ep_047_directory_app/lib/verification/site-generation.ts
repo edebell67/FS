@@ -95,8 +95,13 @@ export type BusinessReadyForPreviewNotification = {
 export async function getBusinessesReadyForPreviewNotification(): Promise<BusinessReadyForPreviewNotification[]> {
   const stageId = await getStageId("ready_for_preview");
   if (!stageId) return [];
+  // Only a successfully-sent preview excludes a business. Prepared/failed rows remain
+  // visible to admins for a controlled retry after a policy/configuration issue is fixed.
   const alreadyNotified = await db.selectDistinct({ businessId: previewDeliveryMessages.businessId })
-    .from(previewDeliveryMessages).where(eq(previewDeliveryMessages.messageType, "preview_ready"));
+    .from(previewDeliveryMessages).where(and(
+      eq(previewDeliveryMessages.messageType, "preview_ready"),
+      eq(previewDeliveryMessages.status, "sent"),
+    ));
   const excludeIds = alreadyNotified.map((row) => row.businessId);
   return db.select({
     id: businesses.id, businessRef: businesses.businessRef, businessName: businesses.businessName,
