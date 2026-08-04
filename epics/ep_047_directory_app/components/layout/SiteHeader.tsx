@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logoutAction } from "@/app/directoryadmin/login/actions";
+import { AdminMenuModal } from "@/components/admin/AdminMenuModal";
 
 /**
  * Rendered on every page (root layout), including the fully public
@@ -33,33 +34,7 @@ export async function SiteHeader() {
           {user ? (
             <>
               <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
-              <Link href="/directoryadmin/dashboard" className="hover:text-slate-900">
-                Dashboard
-              </Link>
-              <Link href="/directoryadmin/pipeline" className="hover:text-slate-900">
-                Pipeline
-              </Link>
-              <Link href="/directoryadmin/businesses" className="hover:text-slate-900">
-                Businesses
-              </Link>
-              {user.role === "super_admin" && <Link href="/directoryadmin/visibility" className="hover:text-slate-900">
-                Visibility
-              </Link>}
-              {user.role === "super_admin" && <Link href="/directoryadmin/news" className="hover:text-slate-900">
-                News desk
-              </Link>}
-              {["super_admin", "admin", "operations"].includes(user.role) && <Link href="/directoryadmin/claims" className="hover:text-slate-900">
-                Claims
-              </Link>}
-              {["super_admin", "admin", "operations"].includes(user.role) && <Link href="/directoryadmin/validation" className="hover:text-slate-900">
-                Validation
-              </Link>}
-              <Link
-                href="/directoryadmin/import"
-                className="rounded-sm bg-brand-600 px-3 py-1.5 text-white hover:bg-brand-700"
-              >
-                Import
-              </Link>
+              <AdminMenuModal role={user.role} />
               <span className="h-4 w-px bg-slate-200" aria-hidden="true" />
               <span className="text-[#7a8587]">{user.email}</span>
               <form action={logoutAction}>

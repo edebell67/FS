@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { getVerificationByRawToken } from "@/lib/verification/repository";
 import { submitVerificationAction } from "./actions";
 
@@ -67,6 +68,6 @@ export default async function VerifyPage({ params, searchParams }: {
 function Unavailable() {
   return <main className="mx-auto max-w-xl px-5 py-20"><h1 className="text-2xl font-semibold">This verification link is unavailable</h1>
     <p className="mt-3 text-slate-600">It may have expired or already been used. You can request a new review without changing your listing.</p>
-    <a href="/verify/request" className="mt-6 inline-block rounded-md bg-brand-600 px-4 py-3 font-medium text-white">Request a new link</a>
+    <Link href="/verify/request" className="mt-6 inline-block rounded-md bg-brand-600 px-4 py-3 font-medium text-white">Request a new link</Link>
   </main>;
 }
