@@ -2,11 +2,14 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 
-test("generic pipeline mutation blocks Verification and Claimed server-side", async () => {
-  const source = await readFile(new URL("../lib/db/queries/pipeline.ts", import.meta.url), "utf8");
-  assert.match(source, /toStage\.boardColumn === "Verification"/);
-  assert.match(source, /toStage\.boardColumn === "Claimed"/);
-  assert.match(source, /controlled workflow/);
+test("generic pipeline mutation blocks protected lifecycle stages server-side", async () => {
+  const [source, policy] = await Promise.all([
+    readFile(new URL("../lib/db/queries/pipeline.ts", import.meta.url), "utf8"),
+    readFile(new URL("../lib/pipeline/stage-movement-policy.ts", import.meta.url), "utf8"),
+  ]);
+  assert.match(source, /canMoveBetweenPipelineStages\(fromStage\.key, toStage\.key\)/);
+  assert.match(source, /protectedStageMoveError\(\)/);
+  assert.match(policy, /controlled workflow/);
 });
 
 test("recipient projection omits internal and provenance fields", async () => {

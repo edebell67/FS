@@ -53,6 +53,8 @@ test("complete endpoint requires businessId and siteUrl, never speculative", asy
   assert.match(route, /requireInternalApiKey\(request\)/);
   assert.match(route, /businessId and siteUrl are required/);
   assert.match(route, /recordSiteGenerated/);
+  assert.match(route, /recover_generated_site_after_manual_review/);
+  assert.match(route, /recoveryReason/);
 });
 
 test("notify endpoint is fail-closed and idempotent by design", async () => {

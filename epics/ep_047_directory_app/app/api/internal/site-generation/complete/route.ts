@@ -1,39 +1,58 @@
 /**
- * app/api/internal/site-generation/complete/route.ts — the single seam the
- * (deferred, model-agnostic) generation module calls once a site genuinely exists.
- *
- * VERSION HISTORY
- * v1.0.0 · 2026-07-29 · Initial version: POST businessId + siteUrl, internal-key
- *   authenticated; both fields required so a caller cannot record a completion
- *   without naming the URL it is asserting is live.
+ * The protected completion seam for generated customer-proxy sites.
+ * Normal recording is one-shot; replacement requires the explicit, audited
+ * recover_generated_site_after_manual_review action.
  */
 
 import { NextResponse } from "next/server";
 import { requireInternalApiKey } from "@/lib/auth/require-internal-api";
-import { recordSiteGenerated } from "@/lib/verification/site-generation";
+import {
+  recordSiteGenerated,
+  recoverGeneratedSiteAfterManualReview,
+} from "@/lib/verification/site-generation";
 
 const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
+const RECOVERY_ACTION = "recover_generated_site_after_manual_review";
 
-/**
- * Called by the Render Cron Job (or any generation-module caller) once a
- * site genuinely exists at siteUrl -- the one seam the black-box generation
- * module needs to know how to call. Never speculative: the caller is
- * asserting the site is real by calling this at all.
- */
+type CompletionRequest = {
+  businessId?: string;
+  siteUrl?: string;
+  action?: string;
+  recoveryReason?: string;
+};
+
 export async function POST(request: Request) {
   const auth = await requireInternalApiKey(request);
   if (auth) return auth;
 
-  let body: { businessId?: string; siteUrl?: string } = {};
+  let body: CompletionRequest = {};
   try { body = await request.json(); } catch {}
   if (!body.businessId || !body.siteUrl) {
     return NextResponse.json({ error: "businessId and siteUrl are required." }, { status: 400 });
   }
+
   try {
-    await recordSiteGenerated({
-      businessId: body.businessId, siteUrl: body.siteUrl, actorUserId: SYSTEM_ACTOR_ID,
-    });
-    return NextResponse.json({ recorded: true });
+    if (body.action === undefined || body.action === "record") {
+      await recordSiteGenerated({
+        businessId: body.businessId, siteUrl: body.siteUrl, actorUserId: SYSTEM_ACTOR_ID,
+      });
+      return NextResponse.json({ recorded: true });
+    }
+
+    if (body.action === RECOVERY_ACTION) {
+      if (!body.recoveryReason?.trim()) {
+        return NextResponse.json({ error: "recoveryReason is required for generated-site recovery." }, { status: 400 });
+      }
+      await recoverGeneratedSiteAfterManualReview({
+        businessId: body.businessId,
+        siteUrl: body.siteUrl,
+        actorUserId: SYSTEM_ACTOR_ID,
+        recoveryReason: body.recoveryReason,
+      });
+      return NextResponse.json({ recovered: true, action: RECOVERY_ACTION });
+    }
+
+    return NextResponse.json({ error: "Unsupported site-generation completion action." }, { status: 400 });
   } catch (error) {
     return NextResponse.json({
       error: error instanceof Error ? error.message : "Unable to record site generation.",

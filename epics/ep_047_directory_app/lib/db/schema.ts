@@ -1,3 +1,9 @@
+// lib/db/schema.ts — Drizzle schema for the directory application.
+//
+// VERSION HISTORY
+// v1.1.0 · 2026-08-05 · Adds durable hashed owner-review links, decisions, and page responses.
+// v1.0.0 · 2026-08-05 · Version history added; file predates this convention.
+//
 // Phase 1 (partial) — the slice of the schema needed to import businesses.
 //
 // This is deliberately a subset of PLAN.md §2, not the full model. It covers
@@ -698,3 +704,20 @@ export const newsArticleCategories = pgTable(
     byCategory: index("news_article_categories_category_idx").on(table.categoryKey),
   })
 );
+
+// Owner review capability submissions are deliberately independent of verification and delivery.
+export const ownerReviewLinks = pgTable("owner_review_links", {
+  id: uuid("id").primaryKey().defaultRandom(), businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+  tokenHash: text("token_hash").notNull().unique(), expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  openedAt: timestamp("opened_at", { withTimezone: true }), submittedAt: timestamp("submitted_at", { withTimezone: true }), revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  createdByUserId: uuid("created_by_user_id").references(() => users.id), createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export const ownerReviewSubmissions = pgTable("owner_review_submissions", {
+  id: uuid("id").primaryKey().defaultRandom(), linkId: uuid("link_id").notNull().unique().references(() => ownerReviewLinks.id),
+  businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }), decision: text("decision").notNull(), submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export const ownerReviewPageResponses = pgTable("owner_review_page_responses", {
+  id: uuid("id").primaryKey().defaultRandom(), submissionId: uuid("submission_id").notNull().references(() => ownerReviewSubmissions.id, { onDelete: "cascade" }),
+  pageKey: text("page_key").notNull(), noActionRequired: boolean("no_action_required").notNull().default(true), selections: jsonb("selections").notNull().default([]),
+  anythingElse: text("anything_else").notNull().default(""), pageOpenDateTime: timestamp("page_open_date_time", { withTimezone: true }),
+}, (table) => ({ onePage: uniqueIndex("owner_review_page_response_uidx").on(table.submissionId, table.pageKey) }));

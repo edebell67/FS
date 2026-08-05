@@ -8,6 +8,7 @@ import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages, stageTransitions } from "@/lib/db/schema";
+import { canMoveBetweenPipelineStages, protectedStageMoveError } from "@/lib/pipeline/stage-movement-policy";
 
 export interface PipelineStage {
   id: number;
@@ -279,30 +280,43 @@ export async function moveBusinessToStage(
 ): Promise<MoveStageResult> {
   const [toStage] = await db.select().from(pipelineStages).where(eq(pipelineStages.key, toStageKey)).limit(1);
   if (!toStage) return { ok: false, error: `Unknown stage "${toStageKey}".` };
-  if (toStage.boardColumn === "Verification" || toStage.boardColumn === "Claimed") {
-    return { ok: false, error: "Verification and Claimed require their controlled workflow." };
-  }
 
   const [business] = await db.select().from(businesses).where(eq(businesses.id, businessId)).limit(1);
   if (!business) return { ok: false, error: "Business not found." };
+  if (!business.currentStageId) return { ok: false, error: "Business has no current stage." };
+  const currentStageId = business.currentStageId;
 
-  await db.transaction(async (tx) => {
+  const [fromStage] = await db
+    .select()
+    .from(pipelineStages)
+    .where(eq(pipelineStages.id, currentStageId))
+    .limit(1);
+  if (!fromStage) return { ok: false, error: "Business has an unknown current stage." };
+  if (!canMoveBetweenPipelineStages(fromStage.key, toStage.key)) {
+    return { ok: false, error: protectedStageMoveError() };
+  }
+
+  const moved = await db.transaction(async (tx) => {
     const now = new Date();
-    await tx
+    const [updatedBusiness] = await tx
       .update(businesses)
       .set({ currentStageId: toStage.id, stageEnteredAt: now, lastUpdated: now })
-      .where(eq(businesses.id, businessId));
+      .where(and(eq(businesses.id, businessId), eq(businesses.currentStageId, currentStageId)))
+      .returning({ id: businesses.id });
+    if (!updatedBusiness) return false;
 
     await tx.insert(stageTransitions).values({
       businessId,
-      fromStageId: business.currentStageId,
+      fromStageId: currentStageId,
       toStageId: toStage.id,
       occurredAt: now,
       source,
       reason,
       actorUserId,
     });
+    return true;
   });
 
+  if (!moved) return { ok: false, error: "Business stage changed; reload and retry." };
   return { ok: true };
 }
