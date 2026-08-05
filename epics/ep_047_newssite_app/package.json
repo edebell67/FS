@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.js",
-    "news:import": "node scripts/import-news-batches.js"
+    "news:import": "node scripts/import-news-batches.js",
+    "news:dry-run": "node scripts/import-news-batches.js --dry-run",
+    "news:source-plan": "node scripts/plan-daily-source-coverage.js"
   }
 }
