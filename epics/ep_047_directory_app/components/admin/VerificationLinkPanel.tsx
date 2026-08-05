@@ -36,7 +36,7 @@ export function VerificationLinkPanel({
           body: JSON.stringify({ expiresInDays: expiry, recipientAddress: recipient }) },
       );
       const body = await response.json();
-      if (!response.ok) return setError(body.error || "Unable to create preview.");
+      if (!response.ok) return setError(body.error || "Unable to prepare verification email.");
       setResult(body); setDeliveryState("prepared");
     } finally { setBusy(false); }
   }
@@ -79,7 +79,7 @@ export function VerificationLinkPanel({
   return <section className="mt-8 rounded-xl border border-slate-200 p-5">
     <h2 className="font-semibold">Verification email delivery</h2>
     <p className="mt-1 text-sm text-slate-600">
-      Prepare a single-recipient preview, review it, then explicitly confirm sending.
+      Prepare a single-recipient verification email, review it, then explicitly confirm sending.
     </p>
     <div role="status" aria-live="polite" className="mt-4 rounded-lg border-2 border-amber-300 bg-amber-50 p-4">
       <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">Delivery status</p>
@@ -100,7 +100,7 @@ export function VerificationLinkPanel({
       </label>
       <button type="button" disabled={busy || !recipient} onClick={create}
         className="rounded bg-brand-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-50">
-        Prepare preview
+        Prepare verification email
       </button>
     </div>
     {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
