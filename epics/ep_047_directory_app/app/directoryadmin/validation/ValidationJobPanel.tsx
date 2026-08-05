@@ -63,7 +63,7 @@ export function ValidationJobPanel({ initialJob }: { initialJob: ValidationJobPr
     : job ? 100 : 0;
 
   return <section className="mt-6 rounded-lg border border-brand-200 bg-brand-50 p-4">
-    <div className="flex flex-wrap items-center justify-between gap-3">
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="font-semibold">Active-business validation run</h2>
         {job ? <p className="mt-1 text-sm text-slate-700">

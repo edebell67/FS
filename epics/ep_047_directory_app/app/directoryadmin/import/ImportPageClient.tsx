@@ -92,11 +92,11 @@ export default function ImportPageClient() {
   const isBusy = phase.status === "uploading" || phase.status === "processing";
 
   return (
-    <main className="mx-auto max-w-3xl px-6 py-12">
+    <main className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
         Admin — Import
       </p>
-      <div className="mt-1 flex items-baseline justify-between">
+      <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Import businesses</h1>
         <Link href="/directoryadmin/businesses" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Browse businesses →
@@ -133,7 +133,7 @@ export default function ImportPageClient() {
               <h2 className="mb-2 text-lg font-semibold text-slate-900">Error report</h2>
               <ErrorReportTable errors={phase.summary.errors} />
             </div>
-            <div className="flex items-center justify-between border-t border-slate-200 pt-4">
+            <div className="flex flex-col gap-3 border-t border-slate-200 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <RollbackControl batchId={phase.summary.batchId} acceptedCount={phase.summary.accepted} />
               <button
                 onClick={() => setPhase({ status: "idle" })}

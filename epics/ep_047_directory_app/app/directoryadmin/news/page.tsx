@@ -14,7 +14,7 @@ export default async function NewsAdminPage() {
   `);
   const articles = (result as any).rows ?? [];
 
-  return <main className="mx-auto max-w-5xl px-6 py-12">
+  return <main className="mx-auto max-w-5xl px-4 sm:px-6 py-10 sm:py-12">
     <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Protected editorial desk</p>
     <h1 className="mt-1 text-3xl font-semibold">News drafts, review & publish</h1>
     <p className="mt-2 text-slate-600">Date evidence is required for publication. Incomplete or duplicate stories remain in review and published stories are never overwritten.</p>
@@ -47,18 +47,18 @@ export default async function NewsAdminPage() {
       </fieldset>
       <textarea name="verifiedUpdate" required placeholder="Verified update — sourced facts only" className="min-h-24 rounded border p-2" />
       <textarea name="localReading" required placeholder="Local reading — clearly labelled editorial interpretation" className="min-h-24 rounded border p-2" />
-      <button className="w-fit rounded bg-brand-600 px-4 py-2 text-white">Save draft for review</button>
+      <button className="w-full sm:w-fit rounded bg-brand-600 px-4 py-2 text-white">Save draft for review</button>
     </form>
     <section className="mt-10">
       <h2 className="text-xl font-semibold">Review queue</h2>
       <div className="mt-3 divide-y rounded-xl border">
-        {articles.length === 0 ? <p className="p-5 text-slate-500">No articles yet.</p> : articles.map((a: any) => <div key={a.id} className="flex items-center gap-4 p-4">
+        {articles.length === 0 ? <p className="p-5 text-slate-500">No articles yet.</p> : articles.map((a: any) => <div key={a.id} className="flex flex-col items-start gap-3 sm:flex-row sm:items-center p-4">
           <div className="flex-1">
             <p className="font-medium">{a.headline}</p>
             <p className="text-sm text-slate-500">{a.town} · {a.source_name} · {a.status} · effective {a.effective_story_date ?? "not selected"}</p>
             {a.status === "review_required" && <p className="mt-1 text-sm text-amber-700">Review required: {a.duplicate_reason ?? "complete or reconcile date evidence before publication."}</p>}
           </div>
-          {a.status === "draft" && a.duplicate_state === "unique" && <form action={publishArticle}><input type="hidden" name="id" value={a.id} /><button className="rounded border px-3 py-1 text-sm">Approve & publish</button></form>}
+          {a.status === "draft" && a.duplicate_state === "unique" && <form action={publishArticle} className="w-full sm:w-auto"><input type="hidden" name="id" value={a.id} /><button className="w-full rounded border px-3 py-1 text-sm sm:w-auto">Approve & publish</button></form>}
         </div>)}
       </div>
     </section>

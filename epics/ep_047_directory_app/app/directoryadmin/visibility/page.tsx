@@ -61,7 +61,7 @@ export default async function VisibilityPage({ searchParams }: { searchParams: P
     return <div className="mt-4 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm">
       <p className="font-semibold text-amber-900">Preview — nothing has been saved yet</p>
       <ul className="mt-2 list-disc pl-5 text-amber-900">{lines.map((line, i) => <li key={i}>{line}</li>)}</ul>
-      <form action={saveScope} className="mt-3 flex items-center gap-3">
+      <form action={saveScope} className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
         <input type="hidden" name="townMode" value={proposedTownMode} />
         <input type="hidden" name="categoryMode" value={proposedCategoryMode} />
         <input type="hidden" name="confirmed" value="1" />
@@ -71,7 +71,7 @@ export default async function VisibilityPage({ searchParams }: { searchParams: P
       </form>
     </div>;
   })() : null;
-  return <main className="mx-auto max-w-5xl px-6 py-12"><p className="text-sm font-medium uppercase tracking-wide text-brand-600">Protected admin</p><h1 className="mt-1 text-3xl font-semibold">Public visibility</h1><p className="mt-2 text-slate-600">Hidden records remain stored and available to administrators.</p>
+  return <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12"><p className="text-sm font-medium uppercase tracking-wide text-brand-600">Protected admin</p><h1 className="mt-1 text-3xl font-semibold">Public visibility</h1><p className="mt-2 text-slate-600">Hidden records remain stored and available to administrators.</p>
   {scopeApplied === "1" && !scopePreview && <div className="mt-4 rounded-lg border border-green-300 bg-green-50 p-3 text-sm text-green-900">Scope change applied and recorded in the audit log.</div>}
   <form action={saveScope} className="mt-8 grid gap-4 rounded-xl border p-5 sm:grid-cols-3"><label>Town mode<select name="townMode" defaultValue={row.town_mode} className="mt-1 block rounded border p-2"><option value="all">Show all towns</option><option value="selected">Selected towns only</option></select></label><label>Category mode<select name="categoryMode" defaultValue={row.category_mode} className="mt-1 block rounded border p-2"><option value="all">Show all categories</option><option value="selected">Selected categories only</option></select></label><button className="self-end rounded bg-brand-600 px-4 py-2 text-white">Preview scope change</button></form>
   {scopePreview}
@@ -79,7 +79,7 @@ export default async function VisibilityPage({ searchParams }: { searchParams: P
     <section className="mt-10 rounded-xl border p-5">
       <h2 className="text-xl font-semibold">Business-level override</h2>
       <p className="mt-1 text-sm text-slate-600">Handle one named listing as an exception without changing the whole town or category. A reason is required and every change is audited.</p>
-      <form method="get" className="mt-4 flex gap-2"><input name="q" defaultValue={query} placeholder="Search business name" className="flex-1 rounded border p-2" /><button className="rounded border px-4 py-2">Search</button></form>
+      <form method="get" className="mt-4 flex flex-col gap-2 sm:flex-row"><input name="q" defaultValue={query} placeholder="Search business name" className="flex-1 rounded border p-2" /><button className="rounded border px-4 py-2">Search</button></form>
       {query && <div className="mt-3">{((searchResults as any)?.rows ?? []).length === 0 ? <p className="text-sm text-slate-500">No businesses match &ldquo;{query}&rdquo;.</p> : ((searchResults as any).rows as any[]).map(overrideForm)}</div>}
       <h3 className="mt-6 text-sm font-semibold uppercase tracking-wide text-slate-500">Active overrides</h3>
       <div className="mt-2">{((currentOverrides as any).rows ?? []).length === 0 ? <p className="text-sm text-slate-500">No business currently has an override.</p> : ((currentOverrides as any).rows as any[]).map(overrideForm)}</div>

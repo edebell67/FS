@@ -15,7 +15,7 @@ export default async function VerificationBatchesPage() {
   const [businesses, batches, policy] = await Promise.all([
     getEligibleVerificationBusinesses(), listVerificationBatches(), getValidationPolicy(),
   ]);
-  return <main className="mx-auto max-w-6xl px-6 py-12">
+  return <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
     <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Verification</p>
     <h1 className="mt-1 text-2xl font-semibold">Batch verification</h1>
     <p className="mt-2 text-slate-600">Eligibility is calculated from field validation, independently of the pipeline board. Non-valid records are never selectable. Preparation creates one secure active link per business and never sends a message.</p>
@@ -23,7 +23,7 @@ export default async function VerificationBatchesPage() {
     <section className="mt-12"><h2 className="text-lg font-semibold">Recent durable queues</h2>
       <div className="mt-3 space-y-2">{batches.map((batch) =>
         <Link key={batch.id} href={`/directoryadmin/verification-batches/${batch.id}`}
-          className="flex justify-between rounded border p-3 text-sm hover:bg-slate-50">
+          className="flex flex-col gap-1 rounded border p-3 text-sm hover:bg-slate-50 sm:flex-row sm:items-center sm:justify-between">
           <span className="font-mono">{batch.id}</span>
           <span>{batch.readyCount}/{batch.totalCount} individually ready · {batch.status} · {format(batch.createdAt, "d MMM yyyy, HH:mm")}</span>
         </Link>)}</div>

@@ -10,7 +10,7 @@ export default async function AdminLoginPage({ searchParams }: PageProps) {
   const params = await searchParams;
 
   return (
-    <main className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-6 py-12">
+    <main className="mx-auto flex min-h-[70vh] max-w-sm flex-col justify-center px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
         Admin — Sign in
       </p>

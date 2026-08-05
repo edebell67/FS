@@ -11,13 +11,13 @@ export default async function ReviewPage({ params }: { params: Promise<{ claimRe
   if (!claim) notFound();
   const approve = approveClaimAction.bind(null, claimRequestId);
   const reopenForTest = reopenClaimForTestAction.bind(null, claimRequestId);
-  return <main className="mx-auto max-w-3xl px-6 py-12"><p className="text-sm font-medium text-brand-600">Admin — Claim review</p>
+  return <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 sm:py-12"><p className="text-sm font-medium text-brand-600">Admin — Claim review</p>
     <h1 className="mt-1 text-2xl font-semibold">{claim.businessName}</h1>
     <dl className="mt-6 grid gap-2 rounded border p-4 text-sm"><div><dt className="text-slate-500">Status</dt><dd>{claim.status}</dd></div>
       <div><dt className="text-slate-500">Requester</dt><dd>{claim.requesterName} · {claim.relationship}</dd></div>
       <div><dt className="text-slate-500">Contact</dt><dd>{claim.contactEmail || claim.contactPhone || "Not supplied"}</dd></div></dl>
     <h2 className="mt-6 font-semibold">Submitted corrections (not yet published)</h2>
-    <pre className="mt-2 overflow-auto rounded bg-slate-50 p-4 text-xs">{JSON.stringify(claim.submittedFields, null, 2)}</pre>
+    <pre className="mt-2 max-w-full overflow-x-auto rounded bg-slate-50 p-4 text-xs">{JSON.stringify(claim.submittedFields, null, 2)}</pre>
     {claim.status === "pending" && <form action={approve} className="mt-6"><label className="block text-sm">Decision note<textarea name="note" className="mt-1 block w-full rounded border p-2" /></label>
       <button className="mt-3 rounded bg-green-700 px-4 py-2 font-medium text-white">Approve claim manually</button></form>}
     {claim.status === "approved" && <form action={reopenForTest} className="mt-6 rounded border border-amber-300 bg-amber-50 p-4"><p className="text-sm text-amber-900">Controlled test recovery: restores Claims pending and clears the unsent message snapshot so this claim can be approved again.</p><button className="mt-3 rounded border border-amber-600 px-4 py-2 font-medium text-amber-900">Reopen claim for controlled email test</button></form>}

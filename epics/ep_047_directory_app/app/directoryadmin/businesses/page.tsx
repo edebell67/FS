@@ -59,9 +59,9 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
   );
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Businesses</p>
-      <div className="mt-1 flex items-baseline justify-between">
+      <div className="mt-1 flex flex-col items-start gap-3 sm:flex-row sm:items-baseline sm:justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Businesses</h1>
         <Link href="/directoryadmin/import" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Import more →
@@ -124,7 +124,7 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
             </option>
           ))}
         </select>
-        <div className="sm:col-span-4 flex items-center gap-3">
+        <div className="flex flex-col items-stretch gap-3 sm:col-span-4 sm:flex-row sm:items-center">
           <button
             type="submit"
             className="rounded-md bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
@@ -139,8 +139,8 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
         </div>
       </form>
 
-      <div className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full text-left text-sm">
+      <div role="region" aria-label="Businesses table" tabIndex={0} className="mt-6 overflow-x-auto rounded-xl border border-slate-200">
+        <table className="min-w-max w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-2 font-medium">Ref</th>
@@ -191,11 +191,11 @@ export default async function BusinessesPage({ searchParams }: PageProps) {
       </div>
 
       {pageCount > 1 && (
-        <div className="mt-4 flex items-center justify-between text-sm text-slate-600">
+        <div className="mt-4 flex flex-col items-start gap-3 text-sm text-slate-600 sm:flex-row sm:items-center sm:justify-between">
           <span>
             Page {page} of {pageCount} ({PAGE_SIZE} per page)
           </span>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {page > 1 && (
               <Link
                 href={`/directoryadmin/businesses${buildQueryString(params, { page: page - 1 })}`}

@@ -13,7 +13,7 @@ export default async function VerificationBatchPage({ params }: { params: Promis
   const batch = await getVerificationBatch(batchId);
   if (!batch) notFound();
   const batchReady = batch.readyCount === batch.totalCount && batch.delivery.canSend;
-  return <main className="mx-auto max-w-6xl px-6 py-12">
+  return <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-12">
     <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Verification audit</p>
     <h1 className="mt-1 text-2xl font-semibold">Batch queue</h1>
     <p className="mt-2 font-mono text-xs text-slate-500">{batch.id}</p>
@@ -21,7 +21,7 @@ export default async function VerificationBatchPage({ params }: { params: Promis
       <p>Status: <strong>{batch.status}</strong> · individually ready: <strong>{batch.readyCount}/{batch.totalCount}</strong> · batch send readiness: <strong>{batchReady ? "ready" : "not ready"}</strong></p>
       <p className="mt-1 text-slate-600">Outbound delivery: {batch.delivery.reason} Raw secure tokens are intentionally not retained in this audit view.</p>
     </div>
-    <div className="mt-5 overflow-x-auto"><table className="w-full text-left text-sm"><thead>
+    <div role="region" aria-label="Verification batch items" tabIndex={0} className="mt-5 overflow-x-auto"><table className="min-w-max w-full text-left text-sm"><thead>
       <tr className="border-b"><th className="p-2">Business</th><th className="p-2">Recipient route</th><th className="p-2">Expiry</th><th className="p-2">Status</th><th className="p-2">Individual readiness</th></tr>
     </thead><tbody>{batch.items.map((item) => <tr key={item.id} className="border-b">
       <td className="p-2">{item.businessName}<div className="font-mono text-xs">{item.businessRef}</div></td>

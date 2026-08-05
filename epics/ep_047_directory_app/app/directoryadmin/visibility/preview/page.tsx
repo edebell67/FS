@@ -66,7 +66,7 @@ export default async function VisibilityPreviewPage({
 
   const changed = townMode !== savedRow.town_mode || categoryMode !== savedRow.category_mode;
 
-  return <main className="mx-auto max-w-5xl px-6 py-12">
+  return <main className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-12">
     <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Protected admin — preview only</p>
     <h1 className="mt-1 text-3xl font-semibold">Logged-out preview</h1>
     <div className="mt-4 rounded-lg border border-blue-300 bg-blue-50 p-4 text-sm text-blue-900">

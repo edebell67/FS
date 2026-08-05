@@ -31,9 +31,9 @@ export default async function DashboardPage() {
   ]);
 
   return (
-    <main className="mx-auto max-w-6xl px-6 py-12">
+    <main className="mx-auto max-w-6xl px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Dashboard</p>
-      <div className="mt-1 flex items-baseline justify-between">
+      <div className="mt-1 flex flex-col gap-2 sm:flex-row sm:items-baseline sm:justify-between">
         <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Dashboard</h1>
         <Link href="/directoryadmin/pipeline" className="text-sm font-medium text-brand-600 hover:text-brand-700">
           Pipeline board →
@@ -53,7 +53,7 @@ export default async function DashboardPage() {
       </div>
 
       <h2 className="mb-3 mt-10 text-lg font-semibold text-slate-900">Imports</h2>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <Stat label="Today" value={metrics.importsToday} tone="brand" />
         <Stat label="This week" value={metrics.importsThisWeek} tone="brand" />
         <Stat label="This month" value={metrics.importsThisMonth} tone="brand" />
@@ -86,8 +86,8 @@ export default async function DashboardPage() {
       </div>
 
       <h2 className="mb-3 mt-10 text-lg font-semibold text-slate-900">Recent activity</h2>
-      <div className="overflow-x-auto rounded-xl border border-slate-200">
-        <table className="w-full text-left text-sm">
+      <div role="region" aria-label="Recent activity table" tabIndex={0} className="overflow-x-auto rounded-xl border border-slate-200">
+        <table className="min-w-max w-full text-left text-sm">
           <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-2 font-medium">Business</th>

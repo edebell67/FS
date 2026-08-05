@@ -31,13 +31,13 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   ]);
 
   return (
-    <main className="mx-auto max-w-4xl px-6 py-12">
+    <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">
         Admin — Business
       </p>
-      <div className="mt-1 flex items-start justify-between gap-4">
+      <div className="mt-1 flex flex-col items-start gap-4 sm:flex-row sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+          <h1 className="break-words text-2xl font-semibold tracking-tight text-slate-900">
             {business.businessName}
           </h1>
           <p className="mt-1 text-sm capitalize text-slate-500">
@@ -53,20 +53,20 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           View public page →
         </Link>
       </div>
-      <div className="mt-4 flex items-center justify-between rounded-lg border border-slate-200 p-4 text-sm">
-        <div>Calculated validation: <strong>{validation?.validationStatus ?? "non_valid"}</strong>
+      <div className="mt-4 flex flex-col items-start gap-3 rounded-lg border border-slate-200 p-4 text-sm sm:flex-row sm:justify-between">
+        <div className="break-words">Calculated validation: <strong>{validation?.validationStatus ?? "non_valid"}</strong>
           {validation?.outcomes.some((outcome) => !outcome.passed) &&
             <span className="ml-2 text-amber-700">{validation.outcomes.filter((outcome) => !outcome.passed).length} outstanding field(s)</span>}</div>
         {canManageVerification(user.role) && <Link href="/directoryadmin/validation" className="font-medium text-brand-700">Open validation & repair →</Link>}
       </div>
 
-      <div className="mt-6 flex items-center gap-3 rounded-lg border border-slate-200 p-4">
+      <div className="mt-6 flex flex-col items-stretch gap-3 rounded-lg border border-slate-200 p-4 sm:flex-row sm:items-center">
         <span className="rounded-full bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
           {business.stageLabel ?? "—"}
         </span>
-        <form action={moveStageAction} className="flex flex-1 gap-2">
+        <form action={moveStageAction} className="flex flex-col items-stretch gap-2 sm:flex-row sm:flex-1">
           <input type="hidden" name="businessId" value={business.id} />
-          <select name="toStageKey" defaultValue="" className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm">
+          <select name="toStageKey" defaultValue="" className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm sm:flex-1">
             <option value="" disabled>
               Move to a different stage…
             </option>
@@ -104,11 +104,11 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
             </div>
             <div className="flex gap-2">
               <dt className="text-slate-400">Email</dt>
-              <dd>{business.email ?? "—"}</dd>
+              <dd className="break-words">{business.email ?? "—"}</dd>
             </div>
             <div className="flex gap-2">
               <dt className="text-slate-400">Website</dt>
-              <dd>{business.website ?? "—"}</dd>
+              <dd className="break-words">{business.website ?? "—"}</dd>
             </div>
           </dl>
         </div>

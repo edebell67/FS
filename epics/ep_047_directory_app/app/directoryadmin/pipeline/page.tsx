@@ -35,7 +35,7 @@ export default async function PipelinePage() {
     previewEligible: previewBusinesses.length,
   };
   return (
-    <main className="mx-auto max-w-[1400px] px-6 py-12">
+    <main className="mx-auto max-w-[1400px] px-4 py-10 sm:px-6 sm:py-12">
       <p className="text-sm font-medium uppercase tracking-wide text-brand-600">Admin — Pipeline</p>
       <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
         Activation pipeline
@@ -80,6 +80,11 @@ export default async function PipelinePage() {
                   {column.count}
                 </span>
               </div>
+              {column.stages.some((stage) => stage.key === "awaiting_site_generation") && (
+                <p className="mt-2 rounded bg-brand-50 px-2 py-1 text-xs text-brand-900">
+                  Claim approval is recorded before a business queues here for generation.
+                </p>
+              )}
               <dl className="mt-2 grid grid-cols-3 gap-2 text-xs text-slate-500">
                 <div>
                   <dt className="uppercase tracking-wide">Today</dt>
@@ -119,12 +124,12 @@ export default async function PipelinePage() {
                         Entered {formatDistanceToNow(business.stageEnteredAt, { addSuffix: true })}
                       </p>
                     )}
-                    <form action={moveStageAction} className="mt-2 flex gap-1.5">
+                    <form action={moveStageAction} className="mt-2 flex flex-col gap-1.5 sm:flex-row">
                       <input type="hidden" name="businessId" value={business.id} />
                       <select
                         name="toStageKey"
                         defaultValue=""
-                        className="flex-1 rounded border border-slate-300 px-1.5 py-1 text-xs"
+                        className="w-full rounded border border-slate-300 px-1.5 py-1 text-xs sm:flex-1"
                       >
                         <option value="" disabled>
                           Move to…
@@ -139,7 +144,7 @@ export default async function PipelinePage() {
                       </select>
                       <button
                         type="submit"
-                        className="rounded bg-brand-600 px-2 py-1 text-xs font-medium text-white hover:bg-brand-700"
+                        className="rounded bg-brand-600 px-2 py-1 text-xs font-medium text-white hover:bg-brand-700 sm:w-auto"
                       >
                         Go
                       </button>
