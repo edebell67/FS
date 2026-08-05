@@ -174,6 +174,25 @@ export async function recoverGeneratedSiteAfterManualReview(input: {
   });
 }
 
+export async function replaceGeneratedSiteAfterRegeneration(input: {
+  businessId: string; siteUrl: string; actorUserId: string; regenerationReason: string;
+}) {
+  if (!input.regenerationReason.trim()) throw new Error("A regenerationReason is required.");
+  const verifiedUrl = await verifyGeneratedSiteUrl(input.siteUrl);
+  const [awaitingStageId, readyStageId] = await Promise.all([getStageId("awaiting_site_generation"), getStageId("ready_for_preview")]);
+  if (!awaitingStageId || !readyStageId) throw new Error("Required generation pipeline stages are unavailable.");
+  return db.transaction(async (tx) => {
+    const result = await tx.execute(sql`SELECT current_stage_id, generated_site_url FROM businesses WHERE id = ${input.businessId} FOR UPDATE`);
+    const biz = result.rows[0] as { current_stage_id: number | null; generated_site_url: string | null } | undefined;
+    if (!biz) throw new Error("Business not found.");
+    if (biz.current_stage_id !== awaitingStageId || biz.generated_site_url === null) throw new Error("Only an Awaiting Site Generation business with an existing URL can use regeneration replacement.");
+    const now = new Date();
+    const [updated] = await tx.update(businesses).set({ generatedSiteUrl: verifiedUrl.href, websiteGeneratedAt: now, currentStageId: readyStageId, stageEnteredAt: now, lastUpdated: now }).where(and(eq(businesses.id, input.businessId), eq(businesses.currentStageId, awaitingStageId), isNotNull(businesses.generatedSiteUrl))).returning({ id: businesses.id });
+    if (!updated) throw new Error("Generation replacement changed concurrently; re-read the business before retrying.");
+    await tx.insert(stageTransitions).values({ businessId: input.businessId, fromStageId: awaitingStageId, toStageId: readyStageId, occurredAt: now, source: "automation", actorUserId: input.actorUserId, reason: "Verified regenerated site recorded", notes: input.regenerationReason.trim() });
+  });
+}
+
 export type BusinessReadyForPreviewNotification = {
   id: string; businessRef: string; businessName: string; email: string | null; generatedSiteUrl: string | null;
 };

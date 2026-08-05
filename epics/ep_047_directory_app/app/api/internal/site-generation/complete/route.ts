@@ -9,6 +9,7 @@ import { requireInternalApiKey } from "@/lib/auth/require-internal-api";
 import {
   recordSiteGenerated,
   recoverGeneratedSiteAfterManualReview,
+  replaceGeneratedSiteAfterRegeneration,
 } from "@/lib/verification/site-generation";
 
 const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
@@ -19,6 +20,7 @@ type CompletionRequest = {
   siteUrl?: string;
   action?: string;
   recoveryReason?: string;
+  regenerationReason?: string;
 };
 
 export async function POST(request: Request) {
@@ -50,6 +52,17 @@ export async function POST(request: Request) {
         recoveryReason: body.recoveryReason,
       });
       return NextResponse.json({ recovered: true, action: RECOVERY_ACTION });
+    }
+
+    if (body.action === "replace_after_regeneration") {
+      if (!body.regenerationReason?.trim()) {
+        return NextResponse.json({ error: "regenerationReason is required for verified regeneration completion." }, { status: 400 });
+      }
+      await replaceGeneratedSiteAfterRegeneration({
+        businessId: body.businessId, siteUrl: body.siteUrl, actorUserId: SYSTEM_ACTOR_ID,
+        regenerationReason: body.regenerationReason,
+      });
+      return NextResponse.json({ regenerated: true, action: "replace_after_regeneration" });
     }
 
     return NextResponse.json({ error: "Unsupported site-generation completion action." }, { status: 400 });
