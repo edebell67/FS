@@ -4,6 +4,7 @@
  * the three reminder nudges.
  *
  * VERSION HISTORY
+ * v1.1.0 · 2026-08-05 · Adds a separately audited, explicitly authorized owner-review invitation message type.
  * v1.0.0 · 2026-07-29 · Initial version: six message builders, previewDeliveryEnabled()
  *   gating (mode + explicit approval + non-empty allowlist, mirroring the existing
  *   verification and claim-success paths), and preparePreviewMessage() /
@@ -99,7 +100,7 @@ The website for ${businessName} has been ready for a little while now. Whenever 
 }
 
 type PreviewMessageType =
-  | "preview_ready" | "eta" | "ready_for_activation"
+  | "preview_ready" | "owner_review_invitation" | "eta" | "ready_for_activation"
   | "reminder_intake" | "reminder_review" | "reminder_activation";
 
 /** Sends only a message explicitly prepared by an admin action, never a bulk/automatic broadcast. */

@@ -3,6 +3,7 @@
  * and the preview-notification guard for the web-activation pipeline.
  *
  * VERSION HISTORY
+ * v1.2.0 · 2026-08-05 · Adds a separate Ready for Preview candidate query for explicitly reissued owner-review invitations, including previously preview-notified businesses.
  * v1.1.0 · 2026-07-29 · Replaces the business_claimed + null-URL queue check with
  *   the explicit awaiting_site_generation stage, renames the completion target to
  *   ready_for_preview, and adds getBusinessesReadyForPreviewNotification() so the
@@ -11,7 +12,7 @@
  *   deliberately excluding any attempt to invoke generation itself.
  */
 
-import { and, asc, eq, isNull, notInArray, sql } from "drizzle-orm";
+import { and, asc, eq, isNotNull, isNull, notInArray, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages, stageTransitions, previewDeliveryMessages } from "@/lib/db/schema";
 import { verifyGeneratedSiteUrl } from "@/lib/verification/site-generation-guards";
@@ -188,5 +189,23 @@ export async function getBusinessesReadyForPreviewNotification(): Promise<Busine
   }).from(businesses).where(and(
     eq(businesses.currentStageId, stageId),
     excludeIds.length ? notInArray(businesses.id, excludeIds) : undefined,
+  )).orderBy(asc(businesses.stageEnteredAt));
+}
+
+/**
+ * Candidate list for a deliberate, separately audited review invitation.
+ * Unlike initial preview notification, a prior sent preview_ready message does
+ * not exclude this list: the operator must explicitly select and confirm it.
+ */
+export async function getBusinessesReadyForOwnerReviewInvitation(): Promise<BusinessReadyForPreviewNotification[]> {
+  const stageId = await getStageId("ready_for_preview");
+  if (!stageId) return [];
+  return db.select({
+    id: businesses.id, businessRef: businesses.businessRef, businessName: businesses.businessName,
+    email: businesses.email, generatedSiteUrl: businesses.generatedSiteUrl,
+  }).from(businesses).where(and(
+    eq(businesses.currentStageId, stageId),
+    isNotNull(businesses.email),
+    isNotNull(businesses.generatedSiteUrl),
   )).orderBy(asc(businesses.stageEnteredAt));
 }
