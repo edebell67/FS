@@ -53,6 +53,18 @@ export async function getBusinessesAwaitingSiteGeneration(): Promise<BusinessAwa
   }).from(businesses).where(eq(businesses.currentStageId, stageId)).orderBy(asc(businesses.stageEnteredAt));
 }
 
+/** Authenticated, read-only production snapshot used by the local generation worker's fresh-data gate. */
+export async function getBusinessGenerationReadiness(businessRef: string) {
+  const [row] = await db.select({
+    id: businesses.id, businessRef: businesses.businessRef, businessName: businesses.businessName,
+    category: businesses.category, town: businesses.town, chatWidgetOptIn: businesses.chatWidgetOptIn,
+    stageKey: pipelineStages.key, stageLabel: pipelineStages.label, generatedSiteUrl: businesses.generatedSiteUrl,
+    email: businesses.email, phone: businesses.phone,
+  }).from(businesses).leftJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
+    .where(eq(businesses.businessRef, businessRef)).limit(1);
+  return row ?? null;
+}
+
 /**
  * Records one verified deployment exactly once. This is intentionally not an
  * upsert: callers must use the explicitly named manual-review recovery action
