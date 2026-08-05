@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
 import { canManageVerification } from "@/lib/verification/repository";
 import { getBusinessesReadyForPreviewNotification } from "@/lib/verification/site-generation";
+import { createOwnerReviewLink } from "@/lib/owner-review/repository";
 import { preparePreviewMessage, previewReadyMessage, sendPreparedPreviewMessage } from "@/lib/verification/preview-delivery";
 
 export async function sendSelectedPreviewLinksAction(formData: FormData) {
@@ -16,7 +17,10 @@ export async function sendSelectedPreviewLinksAction(formData: FormData) {
   let sent = 0; let skipped = 0;
   for (const business of eligible) {
     if (!business.email || !business.generatedSiteUrl) { skipped++; continue; }
-    const message = previewReadyMessage(business.businessName, business.generatedSiteUrl);
+    const issued = await createOwnerReviewLink({ businessId: business.id, actorUserId: user.id });
+    const origin = (process.env.PUBLIC_APP_ORIGIN ?? "https://thetechprinciple.com").replace(/\/$/, "");
+    const reviewUrl = `${origin}/review/${issued.token}`;
+    const message = previewReadyMessage(business.businessName, business.generatedSiteUrl, reviewUrl);
     const id = await preparePreviewMessage({ businessId: business.id, messageType: "preview_ready", recipientAddress: business.email, subject: message.subject, textBody: message.text, actorUserId: user.id });
     const result = await sendPreparedPreviewMessage(id);
     if (result.sent) sent++; else skipped++;

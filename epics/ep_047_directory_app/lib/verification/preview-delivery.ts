@@ -30,8 +30,9 @@ export function previewDeliveryEnabled() {
 
 const NEWS_URL = "https://thetechprinciple.com/news/";
 
-export function previewReadyMessage(businessName: string, siteUrl: string) {
+export function previewReadyMessage(businessName: string, siteUrl: string, reviewUrl?: string) {
   const subject = `Your website preview is ready — ${businessName}`;
+  const reviewSection = reviewUrl ? `\n\nSubmit your review securely here:\n${reviewUrl}` : "";
   const text = `Hello,
 
 The website for ${businessName} has been generated and is ready to review.
@@ -41,7 +42,7 @@ ${siteUrl}
 
 A website can provide an owner-controlled social profile, stronger visibility to a local audience, and improved lead-generation potential.
 
-Review each page and either request changes or confirm you're happy with it as-is — there's a "no action required" option per page for anything you don't want changed.
+Review each page and either request changes or confirm you're happy with it as-is — there's a "no action required" option per page for anything you don't want changed.${reviewSection}
 
 You might also be interested in local business news for your area:
 ${NEWS_URL}`;

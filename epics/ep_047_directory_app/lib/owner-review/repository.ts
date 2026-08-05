@@ -7,10 +7,18 @@
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, ownerReviewLinks, ownerReviewPageResponses, ownerReviewSubmissions } from "@/lib/db/schema";
-import { hashVerificationToken, isValidRawToken } from "@/lib/verification/tokens";
+import { generateVerificationToken, hashVerificationToken, isValidRawToken } from "@/lib/verification/tokens";
 
 export type OwnerReviewInput = { decision: "accept" | "change" | "decline"; pages: Array<{ pageKey: string; noActionRequired: boolean; selections: string[]; anythingElse: string; pageOpenDateTime?: string }> };
 const valid = (input: OwnerReviewInput) => ["accept", "change", "decline"].includes(input.decision) && input.pages.length <= 30 && input.pages.every(p => /^[a-z0-9_-]{1,80}$/i.test(p.pageKey) && p.anythingElse.length <= 4000 && p.selections.length <= 20 && p.selections.every(s => s.length <= 200));
+
+export async function createOwnerReviewLink({ businessId, actorUserId, expiryDays = 5 }: { businessId: string; actorUserId: string; expiryDays?: number }) {
+  if (!Number.isInteger(expiryDays) || expiryDays < 1 || expiryDays > 14) throw new Error("Owner review expiry must be between 1 and 14 days.");
+  const token = generateVerificationToken();
+  const expiresAt = new Date(Date.now() + expiryDays * 86_400_000);
+  await db.insert(ownerReviewLinks).values({ businessId, tokenHash: hashVerificationToken(token), expiresAt, createdByUserId: actorUserId });
+  return { token, expiresAt };
+}
 
 export async function getOwnerReviewByRawToken(token: string) {
   if (!isValidRawToken(token)) return null;
