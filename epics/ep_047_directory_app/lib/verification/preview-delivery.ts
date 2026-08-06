@@ -31,6 +31,25 @@ export function previewDeliveryEnabled() {
 
 const NEWS_URL = "https://thetechprinciple.com/news/";
 
+/** Renders the branded The Tech Principle email template around any text body. */
+function renderBrandedEmail(subject: string, textBody: string, siteUrl?: string): string {
+  const escapedSubject = subject.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+  const escapedBody = textBody.replace(/\n/g, "<br>").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+  const ctaUrl = siteUrl ? siteUrl.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!) : "";
+  const ctaSection = ctaUrl ? `<a class="cta" href="${ctaUrl}">View website preview</a>` : "";
+  return `<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>body{margin:0;background:#e7ecea;font:15px Arial,sans-serif;color:#152022}.wrap{max-width:620px;margin:auto;padding:38px 18px}.inbox{background:#fff;box-shadow:0 6px 26px #17332a22}.top{background:#152b2a;padding:30px;color:white}.brand{font:700 22px Georgia,serif}.tag{margin-top:5px;color:#b8d9ce;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.body{padding:34px 34px 20px;line-height:1.6}.eyebrow{color:#00765e;font-size:11px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase}.cta{display:inline-block;background:#00765e;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px}.foot{border-top:1px solid #dce3df;padding:22px 34px 30px;color:#63716b;font-size:12px;line-height:1.5}.url{word-break:break-all;color:#006b55;font-size:12px}</style></head>
+<body><div class="wrap"><div class="inbox"><div class="top"><div class="brand">The Tech Principle</div><div class="tag">Local business directory &amp; website support</div></div>
+<div class="body"><div class="eyebrow">Website preview</div><h2 style="font-size:1.4rem;color:#152022;margin:10px 0 16px">${escapedSubject}</h2>
+<p style="margin:0 0 14px">Hello,</p>
+<p style="margin:0 0 14px">${escapedBody}</p>
+${ctaSection}
+${ctaUrl ? `<p class="url">${ctaUrl}</p>` : ""}</div>
+<div class="foot"><strong>The Tech Principle</strong><br>thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing or website. We do not treat a prepared message as sent, or sent as delivered, without delivery evidence.</div></div></div></body></html>`;
+}
+
 export function previewReadyMessage(businessName: string, siteUrl: string, reviewUrl?: string) {
   const subject = `Your website preview is ready — ${businessName}`;
   const reviewSection = reviewUrl ? `\n\nSubmit your review securely here:\n${reviewUrl}` : "";
@@ -118,7 +137,7 @@ export async function sendPreparedPreviewMessage(messageId: string) {
     const result = await transport.sendMessage({
       from: VERIFICATION_FROM, to: row.recipientAddress,
       subject: row.subject, text: row.textBody,
-      html: `<p>${row.textBody.replace(/\n/g, "<br />")}</p>`,
+      html: renderBrandedEmail(row.subject, row.textBody),
     });
     await db.update(previewDeliveryMessages).set({ status: "sent", sentAt: new Date(), providerMessageId: result.messageId })
       .where(and(eq(previewDeliveryMessages.id, row.id), isNull(previewDeliveryMessages.sentAt)));
