@@ -40,7 +40,8 @@ export async function POST(request: Request) {
       results.push({ businessRef: business.businessRef, sent: false, reason: "Missing recipient email or generated site URL." });
       continue;
     }
-    const message = previewReadyMessage(business.businessName, business.generatedSiteUrl);
+    const reviewUrl = new URL('owner-preview.html', business.generatedSiteUrl).href;
+    const message = previewReadyMessage(business.businessName, business.generatedSiteUrl, reviewUrl);
     const messageId = await preparePreviewMessage({
       businessId: business.id, messageType: "preview_ready",
       recipientAddress: business.email, subject: message.subject, textBody: message.text,

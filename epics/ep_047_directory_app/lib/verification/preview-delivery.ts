@@ -4,6 +4,7 @@
  * the three reminder nudges.
  *
  * VERSION HISTORY
+ * v1.2.0 · 2026-08-06 · Extracts preview/review URLs from text body to render both CTAs as branded buttons.
  * v1.1.0 · 2026-08-05 · Adds a separately audited, explicitly authorized owner-review invitation message type.
  * v1.0.0 · 2026-07-29 · Initial version: six message builders, previewDeliveryEnabled()
  *   gating (mode + explicit approval + non-empty allowlist, mirroring the existing
@@ -32,89 +33,67 @@ export function previewDeliveryEnabled() {
 const NEWS_URL = "https://thetechprinciple.com/news/";
 
 /** Renders the branded The Tech Principle email template around any text body. */
-function renderBrandedEmail(subject: string, textBody: string, siteUrl?: string): string {
-  const escapedSubject = subject.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
-  const escapedBody = textBody.replace(/\n/g, "<br>").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
-  const ctaUrl = siteUrl ? siteUrl.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!) : "";
-  const ctaSection = ctaUrl ? `<a class="cta" href="${ctaUrl}">View website preview</a>` : "";
-  return `<!doctype html>
-<html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<style>body{margin:0;background:#e7ecea;font:15px Arial,sans-serif;color:#152022}.wrap{max-width:620px;margin:auto;padding:38px 18px}.inbox{background:#fff;box-shadow:0 6px 26px #17332a22}.top{background:#152b2a;padding:30px;color:white}.brand{font:700 22px Georgia,serif}.tag{margin-top:5px;color:#b8d9ce;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.body{padding:34px 34px 20px;line-height:1.6}.eyebrow{color:#00765e;font-size:11px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase}.cta{display:inline-block;background:#00765e;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px}.foot{border-top:1px solid #dce3df;padding:22px 34px 30px;color:#63716b;font-size:12px;line-height:1.5}.url{word-break:break-all;color:#006b55;font-size:12px}</style></head>
-<body><div class="wrap"><div class="inbox"><div class="top"><div class="brand">The Tech Principle</div><div class="tag">Local business directory &amp; website support</div></div>
-<div class="body"><div class="eyebrow">Website preview</div><h2 style="font-size:1.4rem;color:#152022;margin:10px 0 16px">${escapedSubject}</h2>
-<p style="margin:0 0 14px">Hello,</p>
-<p style="margin:0 0 14px">${escapedBody}</p>
-${ctaSection}
-${ctaUrl ? `<p class="url">${ctaUrl}</p>` : ""}</div>
-<div class="foot"><strong>The Tech Principle</strong><br>thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing or website. We do not treat a prepared message as sent, or sent as delivered, without delivery evidence.</div></div></div></body></html>`;
+function renderBrandedEmail(subject: string, textBody: string): string {
+  const escapedSubject = subject.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+  const escapedBody = textBody.replace(/\n/g, "<br>").replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+  // Extract URLs from the fixed text body format written by previewReadyMessage()
+  const lines = textBody.split("\n");
+  let siteUrl = "", reviewUrl = "";
+  for (let i = 0; i < lines.length; i++) {
+    const t = lines[i]!.trim();
+    if (t === "Preview it here:" && i + 1 < lines.length) siteUrl = lines[i + 1]!.trim();
+    if (t.startsWith("Submit your review securely here:") && i + 1 < lines.length) reviewUrl = lines[i + 1]!.trim();
+  }
+  const esc = (s: string) => s.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+  const reviewBtn = reviewUrl
+    ? `<a class="cta" href="${esc(reviewUrl)}" style="background:#00765e;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">Review your website</a>`
+    : "";
+  const siteBtn = siteUrl
+    ? `<a class="cta" href="${esc(siteUrl)}" style="background:#152b2a;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">View website preview</a>`
+    : "";
+  const ctaRow = [reviewBtn, siteBtn].filter(Boolean).join("&nbsp;&nbsp;");
+  const extraUrls = [
+    siteUrl ? `<p class="url">${esc(siteUrl)}</p>` : "",
+    reviewUrl ? `<p class="url">${esc(reviewUrl)}</p>` : "",
+  ].filter(Boolean).join("\n");
+  return `<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<style>body{margin:0;background:#e7ecea;font:15px Arial,sans-serif;color:#152022}.wrap{max-width:620px;margin:auto;padding:38px 18px}.inbox{background:#fff;box-shadow:0 6px 26px #17332a22}.top{background:#152b2a;padding:30px;color:white}.brand{font:700 22px Georgia,serif}.tag{margin-top:5px;color:#b8d9ce;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.body{padding:34px 34px 20px;line-height:1.6}.eyebrow{color:#00765e;font-size:11px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase}.cta-row{margin:10px 0 18px}.foot{border-top:1px solid #dce3df;padding:22px 34px 30px;color:#63716b;font-size:12px;line-height:1.5}.url{word-break:break-all;color:#006b55;font-size:12px}</style></head>\n<body><div class="wrap"><div class="inbox"><div class="top"><div class="brand">The Tech Principle</div><div class="tag">Local business directory &amp; website support</div></div>\n<div class="body"><div class="eyebrow">Website preview</div><h2 style="font-size:1.4rem;color:#152022;margin:10px 0 16px">${escapedSubject}</h2>\n<p style="margin:0 0 14px">Hello,</p>\n<p style="margin:0 0 14px">${escapedBody}</p>\n${ctaRow ? `<div class="cta-row">${ctaRow}</div>` : ""}\n${extraUrls}</div>\n<div class="foot"><strong>The Tech Principle</strong><br>thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing or website. We do not treat a prepared message as sent, or sent as delivered, without delivery evidence.</div></div></div></body></html>`;
 }
 
 export function previewReadyMessage(businessName: string, siteUrl: string, reviewUrl?: string) {
   const subject = `Your website preview is ready — ${businessName}`;
   const reviewSection = reviewUrl ? `\n\nSubmit your review securely here:\n${reviewUrl}` : "";
-  const text = `Hello,
-
-The website for ${businessName} has been generated and is ready to review.
-
-Preview it here:
-${siteUrl}
-
-A website can provide an owner-controlled social profile, stronger visibility to a local audience, and improved lead-generation potential.
-
-Review each page and either request changes or confirm you're happy with it as-is — there's a "no action required" option per page for anything you don't want changed.${reviewSection}
-
-You might also be interested in local business news for your area:
-${NEWS_URL}`;
+  const text = `Hello,\n\nThe website for ${businessName} has been generated and is ready to review.\n\nPreview it here:\n${siteUrl}\n\nA website can provide an owner-controlled social profile, stronger visibility to a local audience, and improved lead-generation potential.\n\nReview each page and either request changes or confirm you're happy with it as-is — there's a "no action required" option per page for anything you don't want changed.${reviewSection}\n\nYou might also be interested in local business news for your area:\n${NEWS_URL}`;
   return { subject, text };
 }
 
 export function etaMessage(businessName: string, readyForActivationDate: Date) {
   const dateLabel = readyForActivationDate.toISOString().slice(0, 10);
   const subject = `Estimated ready date for your website — ${businessName}`;
-  const text = `Hello,
-
-Thanks for reviewing the website preview for ${businessName}. We've gone through your requested changes and expect the site to be ready for activation by ${dateLabel}.
-
-We'll be in touch again once it's ready.`;
+  const text = `Hello,\n\nThanks for reviewing the website preview for ${businessName}. We've gone through your requested changes and expect the site to be ready for activation by ${dateLabel}.\n\nWe'll be in touch again once it's ready.`;
   return { subject, text };
 }
 
 export function readyForActivationMessage(businessName: string) {
   const subject = `Your website is ready to activate — ${businessName}`;
-  const text = `Hello,
-
-The website for ${businessName} has been updated with your requested changes and is ready.
-
-Activating your site is a separate step you control — we'll send you the activation details as their own message.`;
+  const text = `Hello,\n\nThe website for ${businessName} has been updated with your requested changes and is ready.\n\nActivating your site is a separate step you control — we'll send you the activation details as their own message.`;
   return { subject, text };
 }
 
 export function reminderIntakeMessage(businessName: string) {
   const subject = `A quick reminder — your website preview for ${businessName}`;
-  const text = `Hello,
-
-Just checking in — we haven't heard back about the website preview for ${businessName} yet.
-
-Whenever you get a chance, take a look and let us know if anything needs changing, or confirm you're happy with it as-is.`;
+  const text = `Hello,\n\nJust checking in — we haven't heard back about the website preview for ${businessName} yet.\n\nWhenever you get a chance, take a look and let us know if anything needs changing, or confirm you're happy with it as-is.`;
   return { subject, text };
 }
 
 export function reminderReviewMessage(businessName: string) {
   const subject = `We need a bit more information — ${businessName}`;
-  const text = `Hello,
-
-While reviewing your requested changes for ${businessName}, we need a little more information before we can proceed.
-
-Could you reply with the details we asked for when you get a chance?`;
+  const text = `Hello,\n\nWhile reviewing your requested changes for ${businessName}, we need a little more information before we can proceed.\n\nCould you reply with the details we asked for when you get a chance?`;
   return { subject, text };
 }
 
 export function reminderActivationMessage(businessName: string) {
   const subject = `Your website is still waiting to be activated — ${businessName}`;
-  const text = `Hello,
-
-The website for ${businessName} has been ready for a little while now. Whenever you're ready, the activation details from our earlier message are still valid.`;
+  const text = `Hello,\n\nThe website for ${businessName} has been ready for a little while now. Whenever you're ready, the activation details from our earlier message are still valid.`;
   return { subject, text };
 }
 
