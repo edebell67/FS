@@ -148,6 +148,20 @@
       "when": 1786450000000,
       "tag": "0020_news_articles_review_required_status",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1786500000000,
+      "tag": "0021_owner_review_intake",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1786510000000,
+      "tag": "0022_owner_review_reissue_delivery",
+      "breakpoints": true
     }
   ]
 }

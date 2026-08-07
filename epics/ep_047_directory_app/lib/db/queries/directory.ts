@@ -117,6 +117,7 @@ export interface BusinessProfile {
   reviewCount: number | null;
   description: string | null;
   stageLabel: string | null;
+  stageKey: string | null;
   importDate: Date;
 }
 
@@ -147,6 +148,7 @@ export async function getBusinessBySlug(slug: string): Promise<BusinessProfile |
       reviewCount: businesses.reviewCount,
       description: businesses.description,
       stageLabel: pipelineStages.label,
+      stageKey: pipelineStages.key,
       importDate: businesses.importDate,
     })
     .from(businesses)
@@ -184,6 +186,7 @@ export async function getBusinessByRef(businessRef: string): Promise<BusinessPro
       reviewCount: businesses.reviewCount,
       description: businesses.description,
       stageLabel: pipelineStages.label,
+      stageKey: pipelineStages.key,
       importDate: businesses.importDate,
     })
     .from(businesses)
