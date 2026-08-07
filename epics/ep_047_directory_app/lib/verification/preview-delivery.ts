@@ -35,28 +35,26 @@ const NEWS_URL = "https://thetechprinciple.com/news/";
 /** Renders the branded The Tech Principle email template around any text body. */
 function renderBrandedEmail(subject: string, textBody: string): string {
   const escapedSubject = subject.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
-  const escapedBody = textBody.replace(/\n/g, "<br>").replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
-  // Extract URLs from the fixed text body format written by previewReadyMessage()
-  const lines = textBody.split("\n");
-  let siteUrl = "", reviewUrl = "";
-  for (let i = 0; i < lines.length; i++) {
-    const t = lines[i]!.trim();
-    if (t === "Preview it here:" && i + 1 < lines.length) siteUrl = lines[i + 1]!.trim();
-    if (t.startsWith("Submit your review securely here:") && i + 1 < lines.length) reviewUrl = lines[i + 1]!.trim();
-  }
-  const esc = (s: string) => s.replace(/[&<>\"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
-  const reviewBtn = reviewUrl
-    ? `<a class="cta" href="${esc(reviewUrl)}" style="background:#00765e;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">Review your website</a>`
-    : "";
-  const siteBtn = siteUrl
-    ? `<a class="cta" href="${esc(siteUrl)}" style="background:#152b2a;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">View website preview</a>`
-    : "";
-  const ctaRow = [reviewBtn, siteBtn].filter(Boolean).join("&nbsp;&nbsp;");
-  const extraUrls = [
-    siteUrl ? `<p class="url">${esc(siteUrl)}</p>` : "",
-    reviewUrl ? `<p class="url">${esc(reviewUrl)}</p>` : "",
-  ].filter(Boolean).join("\n");
-  return `<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<style>body{margin:0;background:#e7ecea;font:15px Arial,sans-serif;color:#152022}.wrap{max-width:620px;margin:auto;padding:38px 18px}.inbox{background:#fff;box-shadow:0 6px 26px #17332a22}.top{background:#152b2a;padding:30px;color:white}.brand{font:700 22px Georgia,serif}.tag{margin-top:5px;color:#b8d9ce;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.body{padding:34px 34px 20px;line-height:1.6}.eyebrow{color:#00765e;font-size:11px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase}.cta-row{margin:10px 0 18px}.foot{border-top:1px solid #dce3df;padding:22px 34px 30px;color:#63716b;font-size:12px;line-height:1.5}.url{word-break:break-all;color:#006b55;font-size:12px}</style></head>\n<body><div class="wrap"><div class="inbox"><div class="top"><div class="brand">The Tech Principle</div><div class="tag">Local business directory &amp; website support</div></div>\n<div class="body"><div class="eyebrow">Website preview</div><h2 style="font-size:1.4rem;color:#152022;margin:10px 0 16px">${escapedSubject}</h2>\n<p style="margin:0 0 14px">Hello,</p>\n<p style="margin:0 0 14px">${escapedBody}</p>\n${ctaRow ? `<div class="cta-row">${ctaRow}</div>` : ""}\n${extraUrls}</div>\n<div class="foot"><strong>The Tech Principle</strong><br>thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing or website. We do not treat a prepared message as sent, or sent as delivered, without delivery evidence.</div></div></div></body></html>`;
+  const escapedBody = textBody
+      .replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!)
+      .replace(/\n/g, "<br>");
+    // Extract URLs from the fixed text body format written by previewReadyMessage()
+    const lines = textBody.split("\n");
+    let siteUrl = "", reviewUrl = "";
+    for (let i = 0; i < lines.length; i++) {
+      const t = lines[i]!.trim();
+      if (t === "Preview it here:" && i + 1 < lines.length) siteUrl = lines[i + 1]!.trim();
+      if (t.startsWith("Submit your review securely here:") && i + 1 < lines.length) reviewUrl = lines[i + 1]!.trim();
+    }
+    const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;" })[c]!);
+    const reviewBtn = reviewUrl
+      ? `<a class="cta" href="${esc(reviewUrl)}" style="background:#00765e;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">Review your website</a>`
+      : "";
+    const siteBtn = siteUrl
+      ? `<a class="cta" href="${esc(siteUrl)}" style="background:#152b2a;color:white!important;text-decoration:none;padding:13px 19px;border-radius:3px;font-weight:bold;margin:10px 0 18px;display:inline-block">View website preview</a>`
+      : "";
+    const ctaRow = [reviewBtn, siteBtn].filter(Boolean).join("&nbsp;&nbsp;");
+  return `<!doctype html>\n<html lang="en">\n<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">\n<style>body{margin:0;background:#e7ecea;font:15px Arial,sans-serif;color:#152022}.wrap{max-width:620px;margin:auto;padding:38px 18px}.inbox{background:#fff;box-shadow:0 6px 26px #17332a22}.top{background:#152b2a;padding:30px;color:white}.brand{font:700 22px Georgia,serif}.tag{margin-top:5px;color:#b8d9ce;font-size:11px;letter-spacing:.12em;text-transform:uppercase}.body{padding:34px 34px 20px;line-height:1.6}.eyebrow{color:#00765e;font-size:11px;font-weight:bold;letter-spacing:.12em;text-transform:uppercase}.cta-row{margin:10px 0 18px}.foot{border-top:1px solid #dce3df;padding:22px 34px 30px;color:#63716b;font-size:12px;line-height:1.5}</style></head>\n<body><div class="wrap"><div class="inbox"><div class="top"><div class="brand">The Tech Principle</div><div class="tag">Local business directory &amp; website support</div></div>\n<div class="body"><div class="eyebrow">Website preview</div><h2 style="font-size:1.4rem;color:#152022;margin:10px 0 16px">${escapedSubject}</h2>\n<p style="margin:0 0 14px">Hello,</p>\n<p style="margin:0 0 14px">${escapedBody}</p>\n${ctaRow ? `<div class="cta-row">${ctaRow}</div>` : ""}</div>\n<div class="foot"><strong>The Tech Principle</strong><br>thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing or website. We do not treat a prepared message as sent, or sent as delivered, without delivery evidence.</div></div></div></body></html>`;
 }
 
 export function previewReadyMessage(businessName: string, siteUrl: string, reviewUrl?: string) {
