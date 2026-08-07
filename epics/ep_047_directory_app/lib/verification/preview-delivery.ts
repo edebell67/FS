@@ -13,7 +13,7 @@
  *   a message never implies it was sent.
  */
 
-import { and, eq, isNull } from "drizzle-orm";
+import { and, desc, eq, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { businesses, previewDeliveryMessages } from "@/lib/db/schema";
 import { createGmailApiTransport, VERIFICATION_FROM } from "./delivery";
@@ -150,5 +150,23 @@ export async function getBusinessForPreviewMessage(businessId: string) {
     id: businesses.id, businessName: businesses.businessName, email: businesses.email,
     generatedSiteUrl: businesses.generatedSiteUrl, readyForActivationDate: businesses.readyForActivationDate,
   }).from(businesses).where(eq(businesses.id, businessId));
+  return row ?? null;
+}
+
+/** Returns the most recent preview delivery message for display on the business detail page. */
+export async function getLatestPreviewMessageForBusiness(businessId: string) {
+  const [row] = await db.select({
+    id: previewDeliveryMessages.id,
+    messageType: previewDeliveryMessages.messageType,
+    status: previewDeliveryMessages.status,
+    recipientAddress: previewDeliveryMessages.recipientAddress,
+    subject: previewDeliveryMessages.subject,
+    textBody: previewDeliveryMessages.textBody,
+    sentAt: previewDeliveryMessages.sentAt,
+    failureReason: previewDeliveryMessages.failureReason,
+    createdAt: previewDeliveryMessages.createdAt,
+  }).from(previewDeliveryMessages)
+    .where(eq(previewDeliveryMessages.businessId, businessId))
+    .orderBy(desc(previewDeliveryMessages.createdAt)).limit(1);
   return row ?? null;
 }

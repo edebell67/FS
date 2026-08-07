@@ -17,9 +17,11 @@ import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 import { updateBusinessAction } from "./actions";
 import { VerificationLinkPanel } from "@/components/admin/VerificationLinkPanel";
+import { PreviewDeliveryPanel } from "@/components/admin/PreviewDeliveryPanel";
 import { canManageVerification, getLatestDeliveryForBusiness } from "@/lib/verification/repository";
 import type { VerificationDeliveryState } from "@/lib/verification/delivery-status";
 import { getBusinessValidationDetail } from "@/lib/validation/repository";
+import { getLatestPreviewMessageForBusiness } from "@/lib/verification/preview-delivery";
 
 export const dynamic = "force-dynamic";
 
@@ -33,10 +35,12 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
-  const [timeline, stages, validation, latestDelivery, editable] = await Promise.all([
+  const [timeline, stages, validation, latestDelivery, editable, latestPreviewMessage] = await Promise.all([
     getBusinessTimeline(business.id), getPipelineStages(), getBusinessValidationDetail(business.id),
     canManageVerification(user.role) ? getLatestDeliveryForBusiness(business.id) : Promise.resolve(null),
     getBusinessForEdit(businessRef),
+    canManageVerification(user.role) && business.stageKey === "ready_for_preview"
+      ? getLatestPreviewMessageForBusiness(business.id) : Promise.resolve(null),
   ]);
 
   return (
@@ -93,7 +97,9 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
           </button>
         </form>
       </div>
-      {canManageVerification(user.role) && <VerificationLinkPanel
+      {canManageVerification(user.role) && business.stageKey === "ready_for_preview"
+        ? <PreviewDeliveryPanel delivery={latestPreviewMessage} />
+        : canManageVerification(user.role) && <VerificationLinkPanel
         businessRef={business.businessRef}
         initialRecipient={business.email ?? ""}
         initialDeliveryState={(latestDelivery?.status ?? "prepared") as VerificationDeliveryState}
