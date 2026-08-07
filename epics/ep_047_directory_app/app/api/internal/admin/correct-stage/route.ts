@@ -4,7 +4,24 @@ import { NextResponse } from "next/server";
 import { requireInternalApiKey } from "@/lib/auth/require-internal-api";
 import { db } from "@/lib/db/client";
 import { businesses, pipelineStages, stageTransitions } from "@/lib/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq, ilike, sql } from "drizzle-orm";
+
+export async function GET(request: Request) {
+  const auth = await requireInternalApiKey(request);
+  if (auth) return auth;
+
+  const search = new URL(request.url).searchParams.get("search")?.trim();
+  if (!search) return NextResponse.json({ error: "search query required." }, { status: 400 });
+
+  const rows = await db.select({
+    id: businesses.id, businessRef: businesses.businessRef, slug: businesses.slug,
+    businessName: businesses.businessName, stageKey: pipelineStages.key,
+    generatedSiteUrl: businesses.generatedSiteUrl,
+  }).from(businesses).leftJoin(pipelineStages, eq(businesses.currentStageId, pipelineStages.id))
+    .where(ilike(businesses.businessName, `%${search}%`))
+    .orderBy(businesses.businessName).limit(10);
+  return NextResponse.json({ businesses: rows });
+}
 
 export async function POST(request: Request) {
   const auth = await requireInternalApiKey(request);
