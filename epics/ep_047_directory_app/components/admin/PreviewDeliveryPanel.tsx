@@ -1,7 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
-
 type PreviewMessage = {
   id: string;
   messageType: string;
@@ -17,12 +15,17 @@ type PreviewMessage = {
 type StatusEntry = { label: string; border: string; bg: string; explanation: string };
 
 const statusStyle: Record<string, StatusEntry> = {
-  prepared: { label: "Prepared (not yet sent)",  border: "border-amber-300", bg: "bg-amber-50",   explanation: "The message has been composed and recorded, but delivery has not been attempted or enabled." },
+  prepared: { label: "Prepared (not yet sent)",  border: "border-amber-300", bg: "bg-amber-50",   explanation: "The message has been composed and recorded; delivery has not been attempted or enabled." },
   sent:     { label: "Sent ✓",                   border: "border-green-300", bg: "bg-green-50",    explanation: "Successfully handed off to Gmail API." },
   failed:   { label: "Delivery failed ✗",        border: "border-red-300",   bg: "bg-red-50",       explanation: "Gmail API returned a non-retryable error." },
 };
 
 const defaultStyle: StatusEntry = { label: "Unknown", border: "border-slate-300", bg: "bg-slate-50", explanation: "" };
+
+function fmt(d: Date | string): string {
+  const dt = typeof d === "string" ? new Date(d) : d;
+  return isNaN(dt.getTime()) ? "—" : dt.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 export function PreviewDeliveryPanel({ delivery }: { delivery: PreviewMessage | null }) {
   const st = delivery ? (statusStyle[delivery.status] ?? defaultStyle) : null;
@@ -48,8 +51,8 @@ export function PreviewDeliveryPanel({ delivery }: { delivery: PreviewMessage | 
           <p><strong>Type:</strong> {delivery.messageType}</p>
           <p><strong>To:</strong> {delivery.recipientAddress ?? "—"}</p>
           <p><strong>Subject:</strong> {delivery.subject ?? "—"}</p>
-          {delivery.sentAt && <p><strong>Sent:</strong> {format(new Date(delivery.sentAt), "d MMM yyyy, HH:mm")}</p>}
-          <p><strong>Prepared:</strong> {format(new Date(delivery.createdAt), "d MMM yyyy, HH:mm")}</p>
+          {delivery.sentAt && <p><strong>Sent:</strong> {fmt(delivery.sentAt)}</p>}
+          <p><strong>Prepared:</strong> {fmt(delivery.createdAt)}</p>
           {delivery.textBody && <pre className="mt-3 whitespace-pre-wrap rounded bg-white p-3 font-sans text-sm">{delivery.textBody}</pre>}
         </div>
       </details>
