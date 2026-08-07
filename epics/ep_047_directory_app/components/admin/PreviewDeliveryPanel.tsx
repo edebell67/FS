@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 type PreviewMessage = {
   id: string;
   messageType: string;
@@ -34,7 +36,7 @@ export function PreviewDeliveryPanel({ delivery }: { delivery: PreviewMessage | 
     <h2 className="font-semibold">Ready for Review — email delivery</h2>
     <p className="mt-1 text-sm text-slate-600">
       Preview-ready email status for this business. Send owner-review invitations from the{" "}
-      <a href="/directoryadmin/site-previews" className="text-brand-700 underline">Site Previews</a> page.
+      <Link href="/directoryadmin/site-previews" className="text-brand-700 underline">Site Previews</Link> page.
     </p>
 
     {delivery ? <>
@@ -65,9 +67,9 @@ export function PreviewDeliveryPanel({ delivery }: { delivery: PreviewMessage | 
     </>}
 
     <p className="mt-4 text-sm">
-      <a href="/directoryadmin/site-previews" className="font-medium text-brand-700 hover:underline">
+      <Link href="/directoryadmin/site-previews" className="font-medium text-brand-700 hover:underline">
         Send owner-review invitation from Site Previews →
-      </a>
+      </Link>
     </p>
   </section>;
 }
