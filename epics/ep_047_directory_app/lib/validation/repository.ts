@@ -225,7 +225,9 @@ export async function startBusinessValidationJob(actorUserId: string): Promise<V
 
     await tx.execute(sql`
       INSERT INTO validation_job_items (job_id, business_id)
-      SELECT ${job.id}::uuid, id FROM businesses WHERE status = 'active'
+      SELECT ${job.id}::uuid, business.id FROM businesses business
+      INNER JOIN pipeline_stages stage ON stage.id = business.current_stage_id
+      WHERE business.status = 'active' AND stage.key = 'imported'
       ON CONFLICT (job_id, business_id) DO NOTHING
     `);
     const countResult = await tx.execute(sql`
