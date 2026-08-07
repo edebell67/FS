@@ -10,16 +10,19 @@ export async function POST(request: Request) {
   const auth = await requireInternalApiKey(request);
   if (auth) return auth;
 
-  let body: { businessRef?: string; targetStageKey?: string; reason?: string } = {};
+  let body: { businessRef?: string; targetStageKey?: string; reason?: string; slug?: string } = {};
   try { body = await request.json(); } catch {}
-  if (!body.businessRef || !body.targetStageKey) {
-    return NextResponse.json({ error: "businessRef and targetStageKey are required." }, { status: 400 });
+  if ((!body.businessRef && !body.slug) || !body.targetStageKey) {
+    return NextResponse.json({ error: "businessRef (or slug) and targetStageKey are required." }, { status: 400 });
   }
 
   try {
+    const whereClause = body.businessRef
+      ? eq(businesses.businessRef, body.businessRef)
+      : eq(businesses.slug, body.slug!);
     const [business] = await db.select({
       id: businesses.id, currentStageId: businesses.currentStageId, generatedSiteUrl: businesses.generatedSiteUrl,
-    }).from(businesses).where(eq(businesses.businessRef, body.businessRef)).limit(1);
+    }).from(businesses).where(whereClause).limit(1);
     if (!business) return NextResponse.json({ error: "Business not found." }, { status: 404 });
 
     const [targetStage] = await db.select().from(pipelineStages).where(eq(pipelineStages.key, body.targetStageKey)).limit(1);
