@@ -3,11 +3,25 @@
 // reads or writes stage_transitions/businesses.currentStageId together,
 // never one without the other (see PLAN.md §1's "state is a projection"
 // rule).
+//
+// VERSION HISTORY
+// v1.1.0 · 2026-08-06 · getBusinessTimeline() now merges verification delivery
+//   events (sent/opened/clicked) alongside stage transitions, sorted together
+//   by time. Previously it read only stage_transitions, so an owner's preview
+//   being sent, opened or clicked never appeared on the Pipeline business
+//   detail view even though it was correctly recorded in
+//   verification_deliveries via recordTrackedEvent() — gap `verificationstage`
+//   on EP047_end_to_end_workflow_gap_register.html ("Sent/opened audit events
+//   are not consistently shown on Pipeline"). No existing test covered this
+//   function; added tests/business-timeline-delivery-events.test.ts as
+//   source-level coverage (no local DB available this session to run a live
+//   integration test against — see that file's own note).
+// v1.0.0 · 2026-08-06 · Version history added; file predates this convention.
 
 import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 import { alias } from "drizzle-orm/pg-core";
 import { db } from "@/lib/db/client";
-import { businesses, pipelineStages, stageTransitions } from "@/lib/db/schema";
+import { businesses, pipelineStages, stageTransitions, verificationDeliveries, verificationLinks } from "@/lib/db/schema";
 import { canMoveBetweenPipelineStages, protectedStageMoveError } from "@/lib/pipeline/stage-movement-policy";
 
 export interface PipelineStage {
@@ -228,7 +242,8 @@ export async function getRecentActivity(limit: number): Promise<RecentActivityRo
 }
 
 export interface TimelineEntry {
-  id: number;
+  id: string;
+  kind: "stage_transition" | "delivery_event";
   fromStageLabel: string | null;
   toStageLabel: string;
   occurredAt: Date;
@@ -237,7 +252,7 @@ export interface TimelineEntry {
   notes: string | null;
 }
 
-export async function getBusinessTimeline(businessId: string): Promise<TimelineEntry[]> {
+async function getStageTransitionEntries(businessId: string): Promise<TimelineEntry[]> {
   // Two joins to the same table need two aliases.
   const fromStages = alias(pipelineStages, "from_stages");
   const toStages = alias(pipelineStages, "to_stages");
@@ -258,7 +273,88 @@ export async function getBusinessTimeline(businessId: string): Promise<TimelineE
     .where(eq(stageTransitions.businessId, businessId))
     .orderBy(asc(stageTransitions.occurredAt));
 
-  return rows.map((r) => ({ ...r, toStageLabel: r.toStageLabel! }));
+  return rows.map((r) => ({
+    id: `stage:${r.id}`,
+    kind: "stage_transition" as const,
+    fromStageLabel: r.fromStageLabel,
+    toStageLabel: r.toStageLabel!,
+    occurredAt: r.occurredAt,
+    source: r.source,
+    reason: r.reason,
+    notes: r.notes,
+  }));
+}
+
+// Delivery events are recorded per-timestamp-column on verification_deliveries
+// (sentAt/openedAt/clickedAt) by recordTrackedEvent(), not as separate rows —
+// so one delivery can contribute up to three timeline entries. A delivery with
+// no sentAt yet contributes nothing (nothing has happened for it to show).
+async function getDeliveryEventEntries(businessId: string): Promise<TimelineEntry[]> {
+  const rows = await db
+    .select({
+      id: verificationDeliveries.id,
+      recipientAddress: verificationDeliveries.recipientAddress,
+      sentAt: verificationDeliveries.sentAt,
+      openedAt: verificationDeliveries.openedAt,
+      clickedAt: verificationDeliveries.clickedAt,
+      failedAt: verificationDeliveries.failedAt,
+      failureReason: verificationDeliveries.failureReason,
+    })
+    .from(verificationDeliveries)
+    .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
+    .where(eq(verificationLinks.businessId, businessId));
+
+  const entries: TimelineEntry[] = [];
+  for (const r of rows) {
+    if (r.sentAt) {
+      entries.push({
+        id: `delivery:${r.id}:sent`, kind: "delivery_event", fromStageLabel: null,
+        toStageLabel: "Preview email sent", occurredAt: r.sentAt, source: "delivery_event",
+        reason: null, notes: r.recipientAddress,
+      });
+    }
+    if (r.openedAt) {
+      entries.push({
+        id: `delivery:${r.id}:opened`, kind: "delivery_event", fromStageLabel: null,
+        toStageLabel: "Preview opened", occurredAt: r.openedAt, source: "delivery_event",
+        reason: null, notes: r.recipientAddress,
+      });
+    }
+    if (r.clickedAt) {
+      entries.push({
+        id: `delivery:${r.id}:clicked`, kind: "delivery_event", fromStageLabel: null,
+        toStageLabel: "Preview link clicked", occurredAt: r.clickedAt, source: "delivery_event",
+        reason: null, notes: r.recipientAddress,
+      });
+    }
+    if (r.failedAt) {
+      entries.push({
+        id: `delivery:${r.id}:failed`, kind: "delivery_event", fromStageLabel: null,
+        toStageLabel: "Preview delivery failed", occurredAt: r.failedAt, source: "delivery_event",
+        reason: r.failureReason, notes: r.recipientAddress,
+      });
+    }
+  }
+  return entries;
+}
+
+// Pure merge step, split out from getBusinessTimeline() so it is unit-testable
+// without a live database connection (tests/business-timeline-delivery-events.test.ts).
+export function mergeAndSortTimelineEntries(
+  stageEntries: TimelineEntry[],
+  deliveryEntries: TimelineEntry[]
+): TimelineEntry[] {
+  return [...stageEntries, ...deliveryEntries].sort(
+    (a, b) => a.occurredAt.getTime() - b.occurredAt.getTime()
+  );
+}
+
+export async function getBusinessTimeline(businessId: string): Promise<TimelineEntry[]> {
+  const [stageEntries, deliveryEntries] = await Promise.all([
+    getStageTransitionEntries(businessId),
+    getDeliveryEventEntries(businessId),
+  ]);
+  return mergeAndSortTimelineEntries(stageEntries, deliveryEntries);
 }
 
 export interface MoveStageResult {

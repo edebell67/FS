@@ -1,3 +1,12 @@
+/**
+ * app/directoryadmin/businesses/[businessRef]/page.tsx — business detail page.
+ *
+ * VERSION HISTORY
+ * v1.1.0 · 2026-08-06 · Timeline entries now visually distinguish delivery
+ *   events (sky dot) from stage transitions (brand dot), matching the merged
+ *   getBusinessTimeline() (pipeline.ts v1.1.0) — gap `verificationstage`.
+ * v1.0.0 · 2026-08-06 · Version history added; file predates this convention.
+ */
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { format } from "date-fns";
@@ -243,7 +252,12 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
         <ol className="space-y-4 border-l-2 border-slate-200 pl-6">
           {timeline.map((entry) => (
             <li key={entry.id} className="relative">
-              <span className="absolute -left-[1.94rem] top-1 h-3 w-3 rounded-full bg-brand-500" />
+              <span
+                className={`absolute -left-[1.94rem] top-1 h-3 w-3 rounded-full ${
+                  entry.kind === "delivery_event" ? "bg-sky-400" : "bg-brand-500"
+                }`}
+                title={entry.kind === "delivery_event" ? "Delivery event" : "Stage transition"}
+              />
               <p className="font-medium text-slate-900">
                 {entry.fromStageLabel ? `${entry.fromStageLabel} → ${entry.toStageLabel}` : entry.toStageLabel}
               </p>

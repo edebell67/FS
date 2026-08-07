@@ -1,7 +1,22 @@
+/**
+ * app/directoryadmin/businesses/[businessRef]/actions.ts — business edit server action.
+ *
+ * VERSION HISTORY
+ * v1.1.0 · 2026-08-06 · updateBusinessAction now requires canManageVerification(role)
+ *   in addition to an authenticated session — matching the fix applied to
+ *   moveStageAction (pipeline/actions.ts v1.1.0). Same gap `role` on the gap
+ *   register, found by auditing every "use server" action file for the same
+ *   session-only check. Notably this action also controls chatWidgetOptIn
+ *   (the assistant activation flag, gap `assistant`) and generatedSiteUrl —
+ *   both were previously editable by any authenticated session.
+ * v1.0.0 · 2026-08-06 · Version history added; file predates this convention.
+ */
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
+import { canManageVerification } from "@/lib/verification/repository";
 import { updateBusinessDetails, type BusinessEditableFields } from "@/lib/db/queries/businesses";
 
 const TEXT_FIELDS = [
@@ -16,7 +31,7 @@ const TEXT_FIELDS = [
  */
 export async function updateBusinessAction(formData: FormData): Promise<void> {
   const user = await getCurrentUser();
-  if (!user) return;
+  if (!user || !canManageVerification(user.role)) redirect("/directoryadmin/login");
 
   const businessId = String(formData.get("businessId") ?? "");
   if (!businessId) return;

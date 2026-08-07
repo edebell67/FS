@@ -1,3 +1,9 @@
+// tests/pipeline-stage-movement.test.ts
+//
+// VERSION HISTORY
+// v1.1.0 · 2026-08-06 · Adds role-gating coverage for moveStageAction, matching
+//   the fix in app/directoryadmin/pipeline/actions.ts v1.1.0.
+// v1.0.0 · 2026-08-06 · Version history added; file predates this convention.
 import assert from "node:assert/strict";
 import test from "node:test";
 import { readFile } from "node:fs/promises";
@@ -53,4 +59,18 @@ test("the server action delegates movement to the guarded generic service", asyn
   const action = await source("app/directoryadmin/pipeline/actions.ts");
   assert.match(action, /await moveBusinessToStage\(/);
   assert.doesNotMatch(action, /\.update\(businesses\)/);
+});
+
+test("the server action requires operations authority, not just an authenticated session", async () => {
+  const action = await source("app/directoryadmin/pipeline/actions.ts");
+  assert.match(
+    action,
+    /canManageVerification\(user\.role\)/,
+    "moveStageAction must gate on role, not just presence of a session — " +
+      "an authenticated session alone is not operations authority",
+  );
+  // The role check must run before any DB-affecting work, not after.
+  const userCheckIndex = action.indexOf("canManageVerification");
+  const dbCallIndex = action.indexOf("moveBusinessToStage(");
+  assert.ok(userCheckIndex > -1 && dbCallIndex > -1 && userCheckIndex < dbCallIndex);
 });
