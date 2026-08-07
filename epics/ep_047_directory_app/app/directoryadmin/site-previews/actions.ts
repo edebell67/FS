@@ -13,6 +13,7 @@ import { canManageVerification } from "@/lib/verification/repository";
 import { getBusinessesReadyForOwnerReviewInvitation, getBusinessesReadyForPreviewNotification } from "@/lib/verification/site-generation";
 import { createOwnerReviewLink } from "@/lib/owner-review/repository";
 import { preparePreviewMessage, previewReadyMessage, sendPreparedPreviewMessage } from "@/lib/verification/preview-delivery";
+import { moveBusinessToStage } from "@/lib/db/queries/pipeline";
 
 const reviewOrigin = () => (process.env.PUBLIC_APP_ORIGIN ?? "https://thetechprinciple.com").replace(/\/$/, "");
 
@@ -31,7 +32,10 @@ export async function sendSelectedPreviewLinksAction(formData: FormData) {
     const message = previewReadyMessage(business.businessName, business.generatedSiteUrl, reviewUrl);
     const id = await preparePreviewMessage({ businessId: business.id, messageType: "preview_ready", recipientAddress: business.email, subject: message.subject, textBody: message.text, actorUserId: user.id });
     const result = await sendPreparedPreviewMessage(id);
-    if (result.sent) sent++; else skipped++;
+    if (result.sent) {
+      sent++;
+      await moveBusinessToStage(business.id, "site_in_review", "admin", `Preview-ready email sent to ${business.email}`, user.id, true);
+    } else skipped++;
   }
   redirect(`/directoryadmin/site-previews?sent=${sent}&skipped=${skipped}`);
 }
@@ -52,7 +56,10 @@ export async function sendOwnerReviewInvitationAction(formData: FormData) {
     const message = previewReadyMessage(business.businessName, business.generatedSiteUrl, reviewUrl);
     const id = await preparePreviewMessage({ businessId: business.id, messageType: "owner_review_invitation", recipientAddress: business.email, subject: message.subject, textBody: message.text, actorUserId: user.id });
     const result = await sendPreparedPreviewMessage(id);
-    if (result.sent) sent++; else skipped++;
+    if (result.sent) {
+      sent++;
+      await moveBusinessToStage(business.id, "site_in_review", "admin", `Owner-review invitation sent to ${business.email}`, user.id, true);
+    } else skipped++;
   }
   redirect(`/directoryadmin/site-previews?reviewSent=${sent}&reviewSkipped=${skipped}`);
 }

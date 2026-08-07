@@ -9,6 +9,7 @@ const PROTECTED_LIFECYCLE_STAGE_KEYS = new Set([
   "business_claimed",
   "awaiting_site_generation",
   "ready_for_preview",
+  "site_in_review",
   "website_generated",
   "website_viewed",
   "website_ready",

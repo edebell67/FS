@@ -372,7 +372,8 @@ export async function moveBusinessToStage(
   toStageKey: string,
   source: "admin" | "automation" = "admin",
   reason?: string,
-  actorUserId?: string
+  actorUserId?: string,
+  force = false,
 ): Promise<MoveStageResult> {
   const [toStage] = await db.select().from(pipelineStages).where(eq(pipelineStages.key, toStageKey)).limit(1);
   if (!toStage) return { ok: false, error: `Unknown stage "${toStageKey}".` };
@@ -388,7 +389,7 @@ export async function moveBusinessToStage(
     .where(eq(pipelineStages.id, currentStageId))
     .limit(1);
   if (!fromStage) return { ok: false, error: "Business has an unknown current stage." };
-  if (!canMoveBetweenPipelineStages(fromStage.key, toStage.key)) {
+  if (!canMoveBetweenPipelineStages(fromStage.key, toStage.key) && !force) {
     return { ok: false, error: protectedStageMoveError() };
   }
 
