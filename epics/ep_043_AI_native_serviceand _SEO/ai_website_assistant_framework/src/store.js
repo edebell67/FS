@@ -153,12 +153,31 @@ export class JsonStore {
     return clone(this.records);
   }
 
+  activePromotionsForClient(clientId) {
+    const client = this.clients.find((c) => c.id === clientId);
+    if (!client || !Array.isArray(client.promotions)) return [];
+    const now = new Date();
+    return client.promotions.filter((p) => p.active && new Date(p.startAt) <= now && new Date(p.endAt) > now);
+  }
+
   persistClients() {
     return this.enqueueWrite(this.clientsPath, this.clients);
   }
 
   persistRecords() {
     return this.enqueueWrite(this.recordsPath, this.records);
+  }
+
+  promotionEffectiveness(promotion) {
+    if (!promotion) return null;
+    const events = (this.records.events || []).filter(
+      (e) => e.promotionId === promotion.promotionId
+    );
+    const impressions = events.filter((e) => e.type === "promotion_impression").length;
+    const clicks = events.filter((e) => e.type === "promotion_click").length;
+    const stats = { ...promotion.stats, impressions, clicks };
+    stats.clickThroughRate = impressions > 0 ? clicks / impressions : 0;
+    return stats;
   }
 
   enqueueWrite(file, value) {
@@ -182,6 +201,43 @@ function normalizeWorkflow(workflow = {}) {
     blocker: String(workflow?.blocker || "").replace(/[\u0000-\u001f]/g, " ").trim().slice(0, 1500),
     stages
   };
+}
+
+const PROMOTION_TYPES = new Set(["discount", "voucher", "combo", "custom"]);
+const PROMOTION_APPLY_TO = new Set(["single", "multiple", "any"]);
+const PROMOTION_DISPLAY_ON = new Set(["website", "chat_widget"]);
+function normalizePromotion(p = {}) {
+  return {
+    promotionId: p.promotionId || randomUUID(),
+    clientId: String(p.clientId || "").slice(0, 80),
+    type: PROMOTION_TYPES.has(p.type) ? p.type : "discount",
+    value: Number.isFinite(Number(p.value)) ? Math.max(0, Math.min(100, Number(p.value))) : 10,
+    valueLabel: String(p.valueLabel || `${p.value || 10}%`).slice(0, 20),
+    description: String(p.description || "").trim().slice(0, 500),
+    voucherCode: String(p.voucherCode || "").slice(0, 30),
+    services: Array.isArray(p.services) ? p.services.filter(Boolean).map((s) => String(s).slice(0, 80)) : [],
+    applyTo: PROMOTION_APPLY_TO.has(p.applyTo) ? p.applyTo : "single",
+    displayOn: Array.isArray(p.displayOn) ? p.displayOn.filter((d) => PROMOTION_DISPLAY_ON.has(d)) : ["website"],
+    active: p.active !== false,
+    startAt: p.startAt || new Date().toISOString(),
+    endAt: p.endAt || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+    deactivatedAt: p.deactivatedAt || null,
+    createdAt: p.createdAt || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    stats: {
+      impressions: Number.isFinite(Number(p.stats?.impressions)) ? p.stats.impressions : 0,
+      clicks: Number.isFinite(Number(p.stats?.clicks)) ? p.stats.clicks : 0,
+      clickThroughRate: 0,
+      conversions: Number.isFinite(Number(p.stats?.conversions)) ? p.stats.conversions : 0,
+      conversionUplift: p.stats?.conversionUplift || null
+    }
+  };
+}
+
+/** Return promotions that are currently active for a client. */
+function activePromotions(client) {
+  const now = new Date();
+  return (client.promotions || []).filter((p) => p.active && new Date(p.startAt) <= now && new Date(p.endAt) > now);
 }
 
 function normalizeClient(client) {
@@ -209,7 +265,8 @@ function normalizeClient(client) {
     consolePassword: String(client.consolePassword || "").slice(0, 200),
     leadFollowupDelayMs: clampLeadFollowupDelay(client.leadFollowupDelayMs),
     averageJobValue: Number.isFinite(Number(client.averageJobValue)) ? Math.max(0, Number(client.averageJobValue)) : 0,
-    proactiveDelayMs: clampProactiveDelay(client.proactiveDelayMs)
+    proactiveDelayMs: clampProactiveDelay(client.proactiveDelayMs),
+    promotions: Array.isArray(client.promotions) ? client.promotions.map(normalizePromotion) : []
   };
 }
 

@@ -513,13 +513,201 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 200, { clientId, analyticsEnabled: body.analyticsEnabled, message: `Web tracking ${body.analyticsEnabled ? "enabled" : "disabled"}.` });
       }
 
+      // Promotion: create
+      if (req.method === "POST" && url.pathname === "/api/owner/promotions") {
+        const body = await bodyJson(req);
+        const clientId = String(body.clientId || url.searchParams.get("tenant") || "");
+        if (!clientId) return json(res, 400, { error: "Missing clientId." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const normalizedPromo = {
+          clientId,
+          type: body.type || "discount",
+          value: body.value || 10,
+          valueLabel: body.valueLabel || (body.value ? body.value + "%" : "10%"),
+          description: String(body.description || "").trim().slice(0, 500),
+          voucherCode: String(body.voucherCode || "").slice(0, 30),
+          services: Array.isArray(body.services) ? body.services : [],
+          applyTo: body.applyTo || "single",
+          displayOn: Array.isArray(body.displayOn) ? body.displayOn : ["website", "chat_widget"],
+          startAt: new Date().toISOString(),
+          endAt: body.durationDays
+            ? new Date(Date.now() + Number(body.durationDays) * 24 * 60 * 60 * 1000).toISOString()
+            : new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+        };
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const promotions = [...(client.promotions || [])];
+        promotions.unshift(normalizedPromo);
+        await store.updateClient(clientId, { promotions });
+        const created = store.getClientById(clientId).promotions[0];
+        return json(res, 201, { promotion: created });
+      }
+
+      // Promotion: list
+      if (req.method === "GET" && url.pathname === "/api/owner/promotions") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const now = new Date();
+        const promotions = (client.promotions || []).map((p) => ({
+          ...p,
+          stats: store.promotionEffectiveness(p),
+          status: !p.active ? "paused" : new Date(p.endAt) <= now ? "expired" : "active"
+        }));
+        return json(res, 200, { promotions });
+      }
+
+      // Promotion: activate / deactivate
+      const promoActionMatch = url.pathname.match(/^\/api\/owner\/promotions\/([^/]+)\/(activate|deactivate)$/);
+      if (promoActionMatch && (req.method === "PUT" || req.method === "POST")) {
+        const promoId = decodeURIComponent(promoActionMatch[1]);
+        const action = promoActionMatch[2];
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const promotions = [...(client.promotions || [])];
+        const idx = promotions.findIndex((p) => p.promotionId === promoId);
+        if (idx < 0) return json(res, 404, { error: "Promotion not found." });
+        if (action === "activate") {
+          promotions[idx] = { ...promotions[idx], active: true, deactivatedAt: null, updatedAt: new Date().toISOString() };
+        } else {
+          promotions[idx] = { ...promotions[idx], active: false, deactivatedAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+        }
+        await store.updateClient(clientId, { promotions });
+        return json(res, 200, { promotion: promotions[idx] });
+      }
+
+      // Day-over-day comparison
+      if (req.method === "GET" && url.pathname === "/api/owner/reporting/compare") {
+        const clientId = url.searchParams.get("tenant") || "";
+        const days = Math.min(90, Math.max(1, parseInt(url.searchParams.get("days") || "7", 10)));
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const events = (store.listRecords().events || []).filter((e) => e.clientId === clientId);
+        const now = new Date();
+        const todayStr = now.toISOString().slice(0, 10);
+        const todayEvents = events.filter((e) => (e.createdAt || e.timestamp || "").slice(0, 10) === todayStr);
+        const pastCutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+        const pastEvents = events.filter((e) => {
+          const d = new Date(e.createdAt || e.timestamp || 0);
+          return d >= pastCutoff && d < new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        });
+        const avgMultiplier = days > 0 ? 1 / days : 1;
+        const toMetric = (arr) => ({
+          visitors: new Set(arr.filter((e) => e.sessionId).map((e) => e.sessionId)).size,
+          pageViews: arr.filter((e) => e.type === "page_view").length,
+          engagedPct: arr.length > 0 ? Math.round((arr.filter((e) => e.type !== "page_view").length / arr.length) * 100) : 0,
+          ctaClicks: arr.filter((e) => e.type === "button_click" || e.target?.startsWith("cta_")).length
+        });
+        const today = toMetric(todayEvents);
+        const past = toMetric(pastEvents);
+        const average = { visitors: Math.round(past.visitors * avgMultiplier), pageViews: Math.round(past.pageViews * avgMultiplier), engagedPct: past.engagedPct, ctaClicks: Math.round(past.ctaClicks * avgMultiplier) };
+        const perService = [...new Set(events.map((e) => e.service || e.target || "unknown"))].map((svc) => {
+          const todaySvc = todayEvents.filter((e) => (e.service || e.target) === svc);
+          const pastSvc = pastEvents.filter((e) => (e.service || e.target) === svc);
+          return {
+            service: svc,
+            views: { today: todaySvc.filter((e) => e.type === "service_view").length, average: Math.round(pastSvc.filter((e) => e.type === "service_view").length * avgMultiplier) },
+            clicks: { today: todaySvc.filter((e) => e.type === "button_click").length, average: Math.round(pastSvc.filter((e) => e.type === "button_click").length * avgMultiplier) }
+          };
+        }).filter((s) => s.views.today > 0 || s.views.average > 0);
+        return json(res, 200, { comparison: { visitors: computeChange(today.visitors, average.visitors), pageViews: computeChange(today.pageViews, average.pageViews), engagedPct: { today: today.engagedPct, average: average.engagedPct, change: today.engagedPct - average.engagedPct }, ctaClicks: computeChange(today.ctaClicks, average.ctaClicks), perService }, days });
+      }
+
+      // Promotion effectiveness
+      const promoEffectMatch = url.pathname.match(/^\/api\/owner\/reporting\/promotion\/([^/]+)$/);
+      if (promoEffectMatch && req.method === "GET") {
+        const promoId = decodeURIComponent(promoEffectMatch[1]);
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const promotion = (client.promotions || []).find((p) => p.promotionId === promoId);
+        if (!promotion) return json(res, 404, { error: "Promotion not found." });
+        const events = (store.listRecords().events || []).filter((e) => e.clientId === clientId);
+        const promoStart = new Date(promotion.startAt);
+        const promoEnd = new Date(promotion.endAt);
+        const postEnd = new Date(promoEnd.getTime() + 7 * 24 * 60 * 60 * 1000);
+        const baselineEvents = events.filter((e) => {
+          const d = new Date(e.createdAt || e.timestamp || 0);
+          return d < promoStart && d >= new Date(promoStart.getTime() - 7 * 24 * 60 * 60 * 1000);
+        });
+        const duringEvents = events.filter((e) => {
+          const d = new Date(e.createdAt || e.timestamp || 0);
+          return d >= promoStart && d <= promoEnd;
+        });
+        const postEvents = events.filter((e) => {
+          const d = new Date(e.createdAt || e.timestamp || 0);
+          return d > promoEnd && d <= postEnd;
+        });
+        const targetServices = promotion.services || [];
+        const filterService = (arr) => targetServices.length ? arr.filter((e) => targetServices.includes(e.service) || targetServices.includes(e.target)) : arr;
+        const baseline = filterService(baselineEvents);
+        const during = filterService(duringEvents);
+        const post = filterService(postEvents);
+        const baselineDays = 7;
+        const duringDays = Math.max(1, (promoEnd - promoStart) / (24 * 60 * 60 * 1000));
+        const postDays = Math.max(1, (postEnd - promoEnd) / (24 * 60 * 60 * 1000));
+        const stats = store.promotionEffectiveness(promotion);
+        const result = {
+          promotion, stats,
+          baseline: {
+            dailyViews: Math.round(baseline.length / baselineDays),
+            dailyConversions: Math.round(baseline.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / baselineDays),
+            conversionRate: baseline.length > 0 ? baseline.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / baseline.length : 0
+          },
+          duringPromotion: {
+            dailyViews: Math.round(during.length / duringDays),
+            dailyConversions: Math.round(during.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / duringDays),
+            conversionRate: during.length > 0 ? during.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / during.length : 0,
+            impressions: stats.impressions, clicks: stats.clicks, clickThroughRate: stats.clickThroughRate
+          },
+          postPromotion: {
+            dailyViews: Math.round(post.length / postDays),
+            dailyConversions: Math.round(post.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / postDays),
+            conversionRate: post.length > 0 ? post.filter((e) => e.type === "form_submit" || e.type === "callback_request").length / post.length : 0
+          }
+        };
+        const baselineRate = result.baseline.conversionRate;
+        const duringRate = result.duringPromotion.conversionRate;
+        if (baselineRate > 0 && duringRate > 0) {
+          result.duringPromotion.conversionUplift = ((duringRate - baselineRate) / baselineRate * 100).toFixed(0) + "%";
+        }
+        if (result.postPromotion.conversionRate > 0) {
+          const postUplift = baselineRate > 0 ? ((result.postPromotion.conversionRate - baselineRate) / baselineRate * 100) : 0;
+          result.postPromotion.lastEffect = postUplift > 10 ? "elevated" : (postUplift < -10 ? "below_baseline" : "returned_to_baseline");
+        }
+        if (client.averageJobValue > 0) {
+          result.revenueImpact = Math.round(result.duringPromotion.dailyConversions * duringDays * client.averageJobValue);
+        }
+        return json(res, 200, result);
+      }
+
+      // Public: active promotions for a client (no auth — displayed on website / widget)
+      if (req.method === "GET" && url.pathname === "/api/public/promotions") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const active = store.activePromotionsForClient(clientId);
+        return json(res, 200, { promotions: active.map((p) => ({ promotionId: p.promotionId, type: p.type, value: p.value, valueLabel: p.valueLabel, description: p.description, services: p.services, applyTo: p.applyTo, displayOn: p.displayOn, endAt: p.endAt })) });
+      }
+
       if (req.method === "GET") return serveStatic(url.pathname, res);
-      return json(res, 404, { error: "Not found." });
     } catch (error) {
       return json(res, error.status || 500, { error: error.status ? error.message : "The service could not complete this request." });
     }
   });
 }
+
+function computeChange(today, average) { return { today, average, change: average > 0 ? ((today - average) / average * 100).toFixed(0) + "%" : today > 0 ? "+100%" : "0%" }; }
 
 async function serveStatic(pathname, res) {
   const routes = { "/": "index.html", "/admin": "admin.html", "/owner": "owner.html", "/widget.js": "widget.js" };
