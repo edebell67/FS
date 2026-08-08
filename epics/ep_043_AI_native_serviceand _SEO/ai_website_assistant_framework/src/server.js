@@ -29,6 +29,41 @@ function adminAuthorized(req, env) {
   return Boolean(env.ADMIN_TOKEN && safeEqual(token, env.ADMIN_TOKEN));
 }
 
+/** Business owner token: per-client token stored in JSON env var (BUSINESS_OWNER_TOKENS_JSON). Created by admin only. */
+function bizOwnerTokenFor(env, clientId) {
+  try { const tokens = JSON.parse(String(env.BUSINESS_OWNER_TOKENS_JSON || "{}")); return tokens[clientId] || ""; } catch { return ""; }
+}
+function bizOwnerAuthorized(req, env, clientId) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  const expected = bizOwnerTokenFor(env, clientId);
+  return Boolean(expected && safeEqual(token, expected));
+}
+/** Accepts either the new business_owner token or the legacy owner console token. */
+function anyOwnerAuthorized(req, env, clientId) {
+  return bizOwnerAuthorized(req, env, clientId) || ownerAuthorized(req, env, clientId);
+}
+
+function ownerConsoleActivated(client) {
+  return client.ownerConsole?.activated !== false;
+}
+
+function ownerTokenFor(env, clientId) {
+  try {
+    const maps = ["OWNER_CONSOLE_TOKENS_JSON", "OWNER_CONSOLE_TOKENS_JSON_BATCH_01"].map((key) => JSON.parse(String(env[key] || "{}")));
+    return maps.find((tokens) => tokens && typeof tokens === "object" && typeof tokens[clientId] === "string" && tokens[clientId])?.[clientId] || "";
+  } catch { return ""; }
+}
+
+function ownerPasswordAuthorized(password, env, clientId) {
+  const expected = ownerTokenFor(env, clientId);
+  return Boolean(expected && safeEqual(password, expected));
+}
+
+function ownerAuthorized(req, env, clientId) {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  return ownerPasswordAuthorized(token, env, clientId);
+}
+
 async function bodyJson(req, maxBytes = 64 * 1024) {
   let raw = "";
   for await (const chunk of req) {
@@ -92,6 +127,60 @@ function sanitizeEvent(event, { clientId, sessionId }) {
   };
 }
 
+// Aggregate a client's page-behaviour events (from analytics-embed.js) into a
+// summary shape for the owner console - counts and rates only, never raw
+// per-visitor rows, matching the same anonymity contract as ingestion.
+function pageAnalyticsSummary(events) {
+  const sessions = new Set(events.map((e) => e.sessionId).filter(Boolean));
+  const pageviews = events.filter((e) => e.type === "pageview").length;
+  const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "form_start", "form_submit", "assistant_open", "gallery_open"]);
+  const engagedSessions = new Set(events.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).map((e) => e.sessionId));
+  const count = (t) => events.filter((e) => e.type === t).length;
+  const exits = events.filter((e) => e.type === "page_exit");
+  const avg = (arr, key) => arr.length ? Math.round(arr.reduce((sum, e) => sum + (Number(e[key]) || 0), 0) / arr.length) : 0;
+  const topN = (key, type) => {
+    const counts = {};
+    for (const e of events) {
+      if (type && e.type !== type) continue;
+      const k = e[key] || "—";
+      counts[k] = (counts[k] || 0) + 1;
+    }
+    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  };
+  const sess = sessions.size;
+  return {
+    uniqueVisits: sess,
+    pageViews: pageviews,
+    engagedVisits: engagedSessions.size,
+    engagedPct: sess ? Math.round((engagedSessions.size / sess) * 100) : 0,
+    ctaClicks: count("cta_click"),
+    phoneTaps: count("phone_click"),
+    emailTaps: count("email_click"),
+    assistantOpens: count("assistant_open"),
+    assistantHandoffs: count("assistant_handoff"),
+    avgDwellSeconds: Math.round(avg(exits, "dwellMs") / 1000),
+    avgScrollPct: avg(exits, "scrollPct"),
+    topPages: topN("path", "pageview"),
+    eventBreakdown: topN("type")
+  };
+}
+
+function ownerPerformance(records, client, now = new Date()) {
+  const day = now.toISOString().slice(0, 10);
+  const today = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.filter((entry) => String(entry.createdAt || "").slice(0, 10) === day)]));
+  const sessions = new Set((today.conversations || []).map((entry) => entry.sessionId).filter(Boolean));
+  const callbacks = today.callbacks || [];
+  const handled = callbacks.filter((entry) => entry.handledAt && Date.parse(entry.handledAt) >= Date.parse(entry.createdAt));
+  const callbackMinutes = handled.map((entry) => Math.round((Date.parse(entry.handledAt) - Date.parse(entry.createdAt)) / 60000));
+  const averageCallbackMinutes = callbackMinutes.length ? Math.round(callbackMinutes.reduce((sum, value) => sum + value, 0) / callbackMinutes.length) : null;
+  const visitorCount = sessions.size;
+  const leadCount = (today.leads || []).length;
+  return {
+    today: { date: day, assistantVisitors: visitorCount, leadsCaptured: leadCount, leadRate: visitorCount ? Math.round((leadCount / visitorCount) * 100) : null, callbacks: callbacks.length, averageCallbackMinutes, resolvedCallbacks: handled.length },
+    baseline: client.ownerReporting?.baseline || { assistantVisitors: null, leadsCaptured: null, callbacks: null, averageCallbackMinutes: null, source: "No previous baseline supplied." }
+  };
+}
+
 async function writeResponseLedger({ env, record }) {
   const token = String(env.RESPONSE_LEDGER_GITHUB_TOKEN || "").trim();
   const repository = String(env.RESPONSE_LEDGER_REPOSITORY || "").trim();
@@ -140,57 +229,8 @@ function scheduleLeadFollowup({ store, env, client, leadId, delayMs }) {
   return timer;
 }
 
-// Owner-console session/rate-limit state, scoped per createApp() instance
-// (fresh per test run, cleared on process restart - acceptable since a
-// site owner just re-enters the console password, nothing is lost).
-const OWNER_SESSION_TTL_MS = 2 * 60 * 60 * 1000; // 2 hours
-const OWNER_MAX_ATTEMPTS = 5;
-const OWNER_LOCKOUT_MS = 5 * 60 * 1000; // 5 minutes
-
-// Aggregate a client's already-filtered events/enquiries into the same
-// summary shape the admin "Visitor insights" view computes client-side -
-// computed server-side here so the browser only ever receives numbers, not
-// the underlying raw event rows, for the anonymous owner-console case.
-function computeOwnerInsights(events, enquiries) {
-  const sessions = new Set(events.map((e) => e.sessionId).filter(Boolean));
-  const pageviews = events.filter((e) => e.type === "pageview").length;
-  const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "form_start", "form_submit", "assistant_open", "gallery_open"]);
-  const engagedSessions = new Set(events.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).map((e) => e.sessionId));
-  const count = (t) => events.filter((e) => e.type === t).length;
-  const exits = events.filter((e) => e.type === "page_exit");
-  const avg = (arr, key) => arr.length ? Math.round(arr.reduce((s, e) => s + (Number(e[key]) || 0), 0) / arr.length) : 0;
-  const topN = (key, type) => {
-    const counts = {};
-    for (const e of events) {
-      if (type && e.type !== type) continue;
-      const k = e[key] || "—";
-      counts[k] = (counts[k] || 0) + 1;
-    }
-    return Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
-  };
-  const sess = sessions.size;
-  return {
-    uniqueVisits: sess,
-    pageViews: pageviews,
-    engagedVisits: engagedSessions.size,
-    engagedPct: sess ? Math.round((engagedSessions.size / sess) * 100) : 0,
-    enquiries: enquiries.length,
-    phoneTaps: count("phone_click"),
-    emailTaps: count("email_click"),
-    ctaClicks: count("cta_click"),
-    assistantOpens: count("assistant_open"),
-    assistantHandoffs: count("assistant_handoff"),
-    avgDwellSeconds: Math.round(avg(exits, "dwellMs") / 1000),
-    avgScrollPct: avg(exits, "scrollPct"),
-    topPages: topN("path", "pageview"),
-    eventBreakdown: topN("type")
-  };
-}
-
 export async function createApp({ store = new JsonStore(dataDir), env = runtimeEnv } = {}) {
   await store.init();
-  const ownerSessions = new Map();       // token -> { clientId, expiresAt }
-  const ownerLoginAttempts = new Map();  // clientId -> { count, lockedUntil }
   return createServer(async (req, res) => {
     const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
     try {
@@ -205,6 +245,16 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const client = store.resolveClient({ publicKey: url.searchParams.get("clientKey"), host: requestHost(req, url.searchParams.get("host")) });
         if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
         return json(res, 200, { client: store.publicClient(client) }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/owner-dashboard-access") {
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner dashboard is available after assistant activation only." }, corsHeaders(req));
+        const password = cleanText(input.password, 512, true);
+        if (!ownerPasswordAuthorized(password, env, client.id)) return json(res, 401, { error: "Owner password was not accepted." }, corsHeaders(req));
+        return json(res, 200, { dashboardUrl: `/owner?tenant=${encodeURIComponent(client.id)}` }, corsHeaders(req));
       }
 
       if (req.method === "POST" && url.pathname === "/api/public/chat") {
@@ -283,60 +333,6 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 202, { accepted: true, stored: events.length }, corsHeaders(req));
       }
 
-      if (req.method === "POST" && url.pathname === "/api/public/owner/login") {
-        // Unlocks the anonymous-insights console inside this one client's own
-        // chat widget. Scoped entirely to the resolved client - the token
-        // this issues can never see another tenant's data.
-        const input = await bodyJson(req);
-        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
-        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
-        if (!client.consolePassword) return json(res, 403, { error: "The owner console is not enabled for this site." }, corsHeaders(req));
-        const attempt = ownerLoginAttempts.get(client.id) || { count: 0, lockedUntil: 0 };
-        if (attempt.lockedUntil > Date.now()) return json(res, 429, { error: "Too many attempts. Try again in a few minutes." }, corsHeaders(req));
-        const password = String(input.password || "").slice(0, 200);
-        if (!password || !safeEqual(password, client.consolePassword)) {
-          attempt.count += 1;
-          if (attempt.count >= OWNER_MAX_ATTEMPTS) { attempt.lockedUntil = Date.now() + OWNER_LOCKOUT_MS; attempt.count = 0; }
-          ownerLoginAttempts.set(client.id, attempt);
-          return json(res, 401, { error: "Incorrect password." }, corsHeaders(req));
-        }
-        ownerLoginAttempts.delete(client.id);
-        const token = randomUUID();
-        const expiresAt = Date.now() + OWNER_SESSION_TTL_MS;
-        ownerSessions.set(token, { clientId: client.id, expiresAt });
-        return json(res, 200, { ok: true, token, expiresAt }, corsHeaders(req));
-      }
-
-      if (req.method === "POST" && url.pathname === "/api/public/owner/logout") {
-        const input = await bodyJson(req);
-        ownerSessions.delete(String(input.token || ""));
-        return json(res, 200, { ok: true }, corsHeaders(req));
-      }
-
-      if (req.method === "GET" && url.pathname === "/api/public/owner/insights") {
-        const token = url.searchParams.get("token") || "";
-        const session = ownerSessions.get(token);
-        if (!session || session.expiresAt < Date.now()) {
-          ownerSessions.delete(token);
-          return json(res, 401, { error: "Your console session has expired. Please log in again." }, corsHeaders(req));
-        }
-        const clientId = session.clientId;
-        const fromMs = url.searchParams.get("from") ? Date.parse(url.searchParams.get("from")) : null;
-        const toMs = url.searchParams.get("to") ? Date.parse(url.searchParams.get("to")) : null;
-        const pathFilter = cleanText(url.searchParams.get("path") || "", 300);
-        const records = store.listRecords();
-        const allClientEvents = (records.events || []).filter((e) => e.clientId === clientId);
-        let events = allClientEvents;
-        if (Number.isFinite(fromMs)) events = events.filter((e) => new Date(e.createdAt).getTime() >= fromMs);
-        if (Number.isFinite(toMs)) events = events.filter((e) => new Date(e.createdAt).getTime() <= toMs);
-        if (pathFilter) events = events.filter((e) => e.path === pathFilter);
-        let enquiries = [...(records.leads || []), ...(records.callbacks || [])].filter((r) => r.clientId === clientId);
-        if (Number.isFinite(fromMs)) enquiries = enquiries.filter((r) => new Date(r.createdAt).getTime() >= fromMs);
-        if (Number.isFinite(toMs)) enquiries = enquiries.filter((r) => new Date(r.createdAt).getTime() <= toMs);
-        const paths = [...new Set(allClientEvents.filter((e) => e.type === "pageview" && e.path).map((e) => e.path))].sort();
-        return json(res, 200, { ...computeOwnerInsights(events, enquiries), paths }, corsHeaders(req));
-      }
-
       const demoMatch = url.pathname.match(/^\/api\/public\/demo\/(booking|payment|email|crm)$/);
       if (req.method === "POST" && demoMatch) {
         const workflow = demoMatch[1];
@@ -393,6 +389,40 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 201, { accepted: true, simulated: true, workflow, record }, corsHeaders(req));
       }
 
+      const completeCallbackMatch = url.pathname.match(/^\/api\/owner\/callbacks\/([^/]+)\/complete$/);
+      if (req.method === "POST" && completeCallbackMatch) {
+        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
+        if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
+        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
+        const callbackId = cleanText(decodeURIComponent(completeCallbackMatch[1]), 120, true);
+        const callback = (store.listRecords().callbacks || []).find((record) => record.id === callbackId && record.clientId === client.id);
+        if (!callback) return json(res, 404, { error: "Callback activity was not found." });
+        const record = await store.updateRecord("callbacks", callbackId, { handledAt: new Date().toISOString(), handledByOwner: true });
+        return json(res, 200, { record, performance: ownerPerformance(Object.fromEntries(Object.entries(store.listRecords()).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)])), client) });
+      }
+
+      if (req.method === "GET" && url.pathname === "/api/owner/activity") {
+        const client = store.getClientById(cleanText(url.searchParams.get("tenant"), 120, true));
+        if (!client) return json(res, 404, { error: "Owner console was not found." });
+        if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner console is available after assistant activation only." });
+        if (!ownerAuthorized(req, env, client.id)) return json(res, 401, { error: "Owner access is required." });
+        const allRecords = store.listRecords();
+        // Raw page-behaviour events are high-volume and not conversation-shaped,
+        // so they're summarised separately (pageAnalytics) rather than dumped
+        // into the per-type activity timeline below.
+        const { events: clientEvents = [], ...recordTypesForTimeline } = Object.fromEntries(
+          Object.entries(allRecords).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === client.id)])
+        );
+        const records = recordTypesForTimeline;
+        const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
+        return json(res, 200, {
+          owner: { id: client.id, businessName: client.businessName, status: client.status, enabledModules: client.enabledModules, reportingVocabulary: client.ownerReporting?.vocabulary || {} },
+          records, summary, performance: ownerPerformance(records, client),
+          pageAnalytics: pageAnalyticsSummary(clientEvents)
+        });
+      }
+
       if (url.pathname.startsWith("/api/admin/")) {
         if (!adminAuthorized(req, env)) return json(res, 401, { error: "Administrator authorization is required." });
         if (req.method === "GET" && url.pathname === "/api/admin/clients") return json(res, 200, { clients: store.listClients() });
@@ -436,6 +466,51 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
             recoveryRate, estimatedRecoveredRevenue
           });
         }
+        // Admin: manage business owner tokens
+        if (req.method === "POST" && url.pathname === "/api/admin/owners") {
+          const body = await bodyJson(req);
+          const clientId = String(body.clientId || "");
+          const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+          if (!client) return json(res, 404, { error: "Client not found." });
+          const token = randomUUID();
+          const current = (() => { try { return JSON.parse(String(env.BUSINESS_OWNER_TOKENS_JSON || "{}")); } catch { return {}; } })();
+          current[clientId] = token;
+          return json(res, 201, { clientId, ownerToken: token, businessName: client.businessName,
+            message: "Save this token in the BUSINESS_OWNER_TOKENS_JSON env var on Render. It is shown only once." });
+        }
+        if (req.method === "GET" && url.pathname === "/api/admin/owners") {
+          const tokens = (() => { try { return JSON.parse(String(env.BUSINESS_OWNER_TOKENS_JSON || "{}")); } catch { return {}; } })();
+          const owners = Object.entries(tokens).map(([cid]) => {
+            const cl = store.listClients().find((c) => c.id === cid || c.publicKey === cid);
+            return { clientId: cid, tokenPresent: true, businessName: cl?.businessName || null };
+          });
+          return json(res, 200, { owners });
+        }
+      }
+
+      // Business owner routes (new: owner-token-based reporting + tracking toggle)
+      if (req.method === "GET" && url.pathname === "/api/owner/reporting") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const records = store.listRecords(clientId);
+        const pageAnalytics = client.analyticsEnabled === false ? { status: "tracking_disabled" } : store.listPageAnalytics?.(clientId) || {};
+        const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
+        const performance = ownerPerformance(records, client, new Date());
+        return json(res, 200, { clientId, businessName: client.businessName, pageAnalytics, summary, performance });
+      }
+      if (req.method === "PUT" && url.pathname === "/api/owner/reporting/tracking") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const body = await bodyJson(req);
+        if (typeof body.analyticsEnabled !== "boolean") return json(res, 400, { error: "analyticsEnabled must be a boolean." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        await store.updateClient(clientId, { analyticsEnabled: body.analyticsEnabled });
+        return json(res, 200, { clientId, analyticsEnabled: body.analyticsEnabled, message: `Web tracking ${body.analyticsEnabled ? "enabled" : "disabled"}.` });
       }
 
       if (req.method === "GET") return serveStatic(url.pathname, res);
@@ -447,7 +522,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
 }
 
 async function serveStatic(pathname, res) {
-  const routes = { "/": "index.html", "/admin": "admin.html", "/widget.js": "widget.js" };
+  const routes = { "/": "index.html", "/admin": "admin.html", "/owner": "owner.html", "/widget.js": "widget.js" };
   const relative = routes[pathname] || pathname.replace(/^\//, "");
   const file = path.resolve(publicDir, relative);
   if (!file.startsWith(`${publicDir}${path.sep}`)) return json(res, 403, { error: "Forbidden." });
