@@ -8,7 +8,47 @@
 .insights-bar-track{height:9px;background:#ece8df;border-radius:100px;overflow:hidden}
 .insights-bar-fill{height:100%;background:var(--accent);border-radius:100px}
 .insights-bar-val{text-align:right;color:var(--muted);font-family:monospace}
-@media(max-width:760px){.insights-grid{grid-template-columns:1fr}}
+@media(max-width:760px){.insights-grid{grid-template-columns:1fr}
+/* === Mobile / tablet responsiveness === */
+@media(max-width:840px){
+.shell{grid-template-columns:1fr}
+aside{position:fixed;bottom:0;top:auto;height:auto;z-index:100;padding:10px 14px;border-radius:16px 16px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);overflow-x:auto;flex-direction:row;align-items:center;gap:8px}
+aside .product{display:none}
+aside nav{margin-top:0;display:flex;gap:4px;flex:1}
+aside nav button{white-space:nowrap;padding:8px 10px;font-size:11px}
+.connection{display:none}
+.topbar{flex-direction:column;align-items:stretch;gap:12px;padding:18px 16px;min-height:auto}
+.topbar h1{font-size:22px}
+.auth{flex-wrap:wrap;gap:6px}
+.auth input{width:100%;max-width:280px}
+.client-rail{width:100%;border-right:none;border-bottom:1px solid var(--line)}
+.editor{width:100%}
+.editor-head{flex-direction:column;align-items:stretch;gap:10px}
+.editor-head .actions{flex-wrap:wrap}
+.fields.two,.fields.four{grid-template-columns:1fr}
+.record{grid-template-columns:1fr;gap:6px;padding:12px 0}
+.roi-stats{grid-template-columns:1fr 1fr}
+.roi-lead-row{grid-template-columns:1fr;gap:8px}
+.save-bar{left:0;padding:0 14px;font-size:9px}
+.module-grid{grid-template-columns:1fr 1fr}
+.deployment-row .grid{grid-template-columns:1fr}
+.deployment-row .grid.wide{grid-template-columns:1fr}
+.activity{padding:18px 14px}
+.activity-filter{overflow-x:auto;gap:10px}
+.activity-filter button{white-space:nowrap;padding-bottom:10px}
+.notice{padding:18px 14px}
+}
+@media(max-width:480px){
+aside{padding:8px 10px;gap:4px}
+aside nav button{font-size:10px;padding:6px 8px}
+.topbar{padding:14px 12px}
+.topbar h1{font-size:18px}
+.roi-stats{grid-template-columns:1fr}
+.activity-filter button{font-size:10px}
+.auth input{max-width:100%}
+.module-grid{grid-template-columns:1fr}
+}
+}
 .insights-filter{display:flex;gap:14px;align-items:end;flex-wrap:wrap;margin-bottom:10px}
 .insights-filter label{display:grid;gap:5px;font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
 .insights-filter input,.insights-filter select{height:39px;border:1px solid var(--line);border-radius:7px;background:#fbfaf6;padding:0 11px;font-size:12px}

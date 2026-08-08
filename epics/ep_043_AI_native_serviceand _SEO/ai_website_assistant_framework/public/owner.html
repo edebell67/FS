@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <title>Business Owner Dashboard</title>
+  <link rel="stylesheet" href="/owner.css">
+</head>
+<body>
+  <div id="login-screen" class="screen">
+    <div class="login-card">
+      <span class="logo">📊</span>
+      <h1>Owner Dashboard</h1>
+      <p class="hint">Enter your site key and owner token to access reporting, tracking, and promotions.</p>
+      <label>Site key / tenant ID<input id="login-tenant" placeholder="e.g. northstar-heating"></label>
+      <label>Owner token<input id="login-token" type="password" placeholder="Your business owner token"></label>
+      <button id="login-btn" class="primary">Access dashboard</button>
+      <p id="login-error" class="error" hidden></p>
+    </div>
+  </div>
+
+  <div id="dash-screen" class="screen" hidden>
+    <header class="dash-header">
+      <div><span class="dash-logo">📊</span><h1 id="dash-title">Owner Dashboard</h1></div>
+      <nav class="dash-nav">
+        <button class="nav-on" data-view="overview">Overview</button>
+        <button data-view="compare">Compare</button>
+        <button data-view="promotions">Promotions</button>
+        <button id="logout-btn">Logout</button>
+      </nav>
+    </header>
+
+    <main class="dash-main">
+      <!-- Overview -->
+      <section id="view-overview" class="dash-view">
+        <div class="stats-grid" id="overview-stats"></div>
+        <div class="card"><h3>Recent activity</h3><div id="overview-activity"></div></div>
+        <div class="tracking-card">
+          <div><h3>Web tracking</h3><p class="hint" id="tracking-status">Checking...</p></div>
+          <label class="toggle"><input type="checkbox" id="tracking-toggle"><span class="slider"></span></label>
+        </div>
+      </section>
+
+      <!-- Compare (day-over-day) -->
+      <section id="view-compare" class="dash-view" hidden>
+        <div class="compare-controls">
+          <label>Days<input type="number" id="compare-days" value="7" min="1" max="90"></label>
+          <button id="compare-btn" class="primary">Refresh</button>
+        </div>
+        <div class="stats-grid" id="compare-stats"></div>
+        <div class="card"><h3>Per-service comparison</h3><div id="compare-services"></div></div>
+      </section>
+
+      <!-- Promotions -->
+      <section id="view-promotions" class="dash-view" hidden>
+        <div class="promo-header"><h3>Your promotions</h3><button id="new-promo-btn" class="primary">+ Create promotion</button></div>
+        <div id="promo-list"></div>
+        <div id="promo-form" class="card" hidden>
+          <h3>Create promotion</h3>
+          <label>Promotion type<select id="promo-type"><option value="discount">Discount (X%)</option><option value="voucher">Voucher (X%)</option><option value="combo">Service combo</option><option value="custom">Custom description</option></select></label>
+          <label>Value (%)<input type="number" id="promo-value" min="0" max="100" value="10"></label>
+          <label>Description<input id="promo-desc" placeholder="e.g. 15% off boiler servicing quotes" maxlength="500"></label>
+          <label>Voucher code<input id="promo-code" placeholder="Optional voucher code" maxlength="30"></label>
+          <label>Services targeted<select id="promo-services" multiple></select></label>
+          <p class="hint">Ctrl+click to select multiple, or leave empty for "any service".</p>
+          <label>Duration (days)<input type="number" id="promo-duration" value="7" min="1" max="90"></label>
+          <label>Display on<div class="checkbox-group"><label><input type="checkbox" id="promo-display-web" checked> Website banner</label><label><input type="checkbox" id="promo-display-chat" checked> Chat widget</label></div></label>
+          <div class="btn-row"><button id="promo-submit" class="primary">Create promotion</button><button id="promo-cancel">Cancel</button></div>
+          <p id="promo-error" class="error" hidden></p>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="/owner.js"></script>
+</body>
+</html>
