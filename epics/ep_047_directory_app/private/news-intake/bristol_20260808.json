@@ -1,0 +1,54 @@
+{
+  "version": "ep047.news-intake/v1",
+  "batchId": "daily-2026-08-08-bristol-776528",
+  "items": [
+    {
+      "itemId": "bristol-parking-charges-simplified-20260805",
+      "headline": "Changes to simplify parking charges introduced in Bristol",
+      "town": "bristol",
+      "categories": ["estate agents", "marketing agencies", "photographers", "web design"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/6924d377-2ce7-4615-9277-b6993cbf0198/changes-to-simplify-parking-charges-introduced",
+      "verifiedUpdate": "Bristol City Council has announced changes intended to simplify parking charges across the city, as detailed in a press release published 5 August 2026.",
+      "localReading": "Clearly labelled local-business reading: parking-charge simplification can affect how customer-facing businesses communicate parking costs to visitors and may influence footfall patterns near council-operated parking areas.",
+      "sourcePublishedAt": "2026-08-05",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "Google News RSS feed metadata lists the publication date as Wed, 05 Aug 2026 17:00:00 GMT for this press release. The press release title and slug confirmed via Bristol City Council Newsroom redirect (HTTP 302).",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "Source publication date is directly confirmed by Google News RSS metadata. No distinct original event date was captured beyond the publication date.",
+      "eventIdentity": "bristol-parking-charges-simplification-20260805"
+    },
+    {
+      "itemId": "bristol-avonmouth-incident-leader-statement-20260805",
+      "headline": "Statement from the Leader of the Council in response to the incident in Avonmouth",
+      "town": "bristol",
+      "categories": ["builders", "damp proofing", "estate agents"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/8cc1d1e2-e041-4f1f-aaf0-67d77eb9a63e/statement-from-the-leader-of-the-council-in-response-to-the-incident-in-avonmout",
+      "verifiedUpdate": "Bristol City Council issued a statement from the Leader of the Council responding to an incident in Avonmouth, published 5 August 2026.",
+      "localReading": "Clearly labelled local-business reading: council statements following local incidents can signal community-recovery or resilience activities that construction, property and trades businesses may need to be aware of in the affected area.",
+      "sourcePublishedAt": "2026-08-05",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "Google News RSS feed metadata lists the publication date as Wed, 05 Aug 2026 15:08:00 GMT for this statement. Press release slug confirmed via Bristol City Council Newsroom redirect (HTTP 302).",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "Source publication date is directly confirmed by Google News RSS metadata. No distinct original event date was captured beyond the publication date.",
+      "eventIdentity": "bristol-avonmouth-incident-leader-statement-20260805"
+    },
+    {
+      "itemId": "bristol-wildlife-galleries-redesign-20260806",
+      "headline": "Wildlife galleries to be redesigned for first time in decades at Bristol Museum & Art Gallery",
+      "town": "bristol",
+      "categories": ["architects", "builders", "carpenters", "painters & decorators"],
+      "sourceName": "Bristol City Council Newsroom",
+      "sourceUrl": "https://news.bristol.gov.uk/press-releases/f82c4522-2766-420d-9c18-2bb6718caf79/wildlife-galleries-to-be-redesigned-for-first-time-in-decades-at-bristol-museum---art-gallery",
+      "verifiedUpdate": "Bristol City Council has announced that wildlife galleries at Bristol Museum & Art Gallery are to be redesigned for the first time in decades, as published 6 August 2026.",
+      "localReading": "Clearly labelled local-business reading: a major museum gallery redesign project may create contract and supply opportunities for local building, design and fit-out trades, though no specific procurement has been announced in this release.",
+      "sourcePublishedAt": "2026-08-06",
+      "selectedDateKind": "source_publication",
+      "dateProvenanceNote": "Google News RSS feed metadata lists the publication date as Thu, 06 Aug 2026 13:30:00 GMT for this press release. Title and slug confirmed via Bristol City Council Newsroom redirect (HTTP 302).",
+      "dateConfidence": "high",
+      "dateSelectionRationale": "Source publication date is directly confirmed by Google News RSS metadata. No distinct original event date was captured beyond the publication date.",
+      "eventIdentity": "bristol-wildlife-galleries-redesign-bristol-museum-20260806"
+    }
+  ]
+}
