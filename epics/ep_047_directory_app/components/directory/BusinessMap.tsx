@@ -90,7 +90,16 @@ export default function BusinessMap({
           maxZoom: 19,
         }).addTo(map);
 
-        L.marker([lat, lon])
+        // Red drop-pin SVG marker — no external image dependencies
+        const redIcon = L.divIcon({
+          html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 26 16 26s16-14 16-26C32 7.2 24.8 0 16 0z" fill="#e85347"/><circle cx="16" cy="15" r="7" fill="#fff"/></svg>`,
+          className: "",
+          iconSize: [32, 42],
+          iconAnchor: [16, 42],
+          popupAnchor: [0, -42],
+        });
+
+        L.marker([lat, lon], { icon: redIcon })
           .addTo(map)
           .bindPopup(`<strong>${businessName}</strong><br>${fullAddress}`);
 
