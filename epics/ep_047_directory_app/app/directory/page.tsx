@@ -34,13 +34,17 @@ export default async function HomePage() {
           {summary.townCount} towns.
         </p>
 
-        <form action="/directory/search" className="mx-auto mt-7 flex max-w-xl gap-2">
+        <form action="/directory/search" className="mx-auto mt-7 grid max-w-2xl gap-2 sm:grid-cols-[1fr_12rem_auto]">
           <input
             type="text"
             name="q"
-            placeholder="Search by name, category, or town…"
-            className="flex-1 rounded-sm border border-[#b9b6ad] bg-[#fffdf9] px-4 py-3 text-sm outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100"
+            placeholder="Search by name or category…"
+            className="rounded-sm border border-[#b9b6ad] bg-[#fffdf9] px-4 py-3 text-sm outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100"
           />
+          <select name="town" aria-label="Filter directory by town" className="rounded-sm border border-[#b9b6ad] bg-[#fffdf9] px-4 py-3 text-sm capitalize outline-none transition focus:border-brand-600 focus:ring-4 focus:ring-brand-100">
+            <option value="">All towns</option>
+            {towns.map((town) => <option key={town.slug} value={town.label}>{town.label} ({town.count})</option>)}
+          </select>
           <button
             type="submit"
             className="rounded-sm bg-brand-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
