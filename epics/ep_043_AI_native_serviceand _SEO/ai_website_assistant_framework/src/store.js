@@ -5,11 +5,11 @@ import { BLUEPRINT_KEYS, resolveBlueprintActions, resolveDemoActions } from "./b
 import { retrieveKnowledge } from "./assistant.js";
 
 const clone = (value) => structuredClone(value);
-const RECORD_TYPES = ["conversations", "previewResponses", "leads", "callbacks", "bookings", "payments", "emails", "crmLeads", "events"];
+export const RECORD_TYPES = ["conversations", "previewResponses", "leads", "callbacks", "bookings", "payments", "emails", "crmLeads", "events", "questionFollowups"];
 // Visitor analytics events are far higher-volume than leads, so they keep a
 // larger ring buffer. Everything else keeps the original cap.
-const RECORD_CAPS = { events: 20000 };
-const DEFAULT_RECORD_CAP = 2000;
+export const RECORD_CAPS = { events: 20000 };
+export const DEFAULT_RECORD_CAP = 2000;
 const WORKFLOW_STATUSES = new Set(["not_started", "in_progress", "ready_for_outreach", "blocked", "outreach_sent", "replied", "closed_do_not_contact"]);
 const WORKFLOW_STAGE_STATES = new Set(["pending", "complete", "not_applicable"]);
 const ENGAGEMENT_MODES = new Set(["on_demand", "proactive"]);
@@ -75,6 +75,8 @@ export class JsonStore {
       engagementMode: client.engagementMode,
       proactiveDelayMs: client.proactiveDelayMs,
       analyticsEnabled: client.analyticsEnabled,
+      leadReasonOptions: client.enabledModules.includes("leadCapture") ? client.leadReasonOptions : [],
+      serviceReasonMap: client.enabledModules.includes("leadCapture") ? client.serviceReasonMap : {},
       assistantActions: resolveBlueprintActions(client, retrieveKnowledge),
       demoActions: resolveDemoActions(client)
     };
@@ -149,8 +151,14 @@ export class JsonStore {
     return record ? clone(record) : null;
   }
 
-  listRecords() {
-    return clone(this.records);
+  // Every existing caller passes no clientId and filters by clientId itself
+  // afterward (server.js does this at every call site except one) — so
+  // filtering here only when a clientId IS supplied is purely additive,
+  // not a behaviour change for any existing caller.
+  listRecords(clientId) {
+    const all = clone(this.records);
+    if (!clientId) return all;
+    return Object.fromEntries(Object.entries(all).map(([type, entries]) => [type, entries.filter((entry) => entry.clientId === clientId)]));
   }
 
   activePromotionsForClient(clientId) {
@@ -240,7 +248,23 @@ function activePromotions(client) {
   return (client.promotions || []).filter((p) => p.active && new Date(p.startAt) <= now && new Date(p.endAt) > now);
 }
 
-function normalizeClient(client) {
+// Phase 2c: owner/admin-editable "we delivered this" proof points, matched
+// to a service line so the widget can surface one relevant to whatever the
+// visitor is currently looking at. Deliberately no numeric outcome claims —
+// mirrors the site's own documented policy against unverified figures.
+function normalizeCaseStudy(c = {}) {
+  return {
+    id: c.id || randomUUID(),
+    service: String(c.service || "").slice(0, 80),
+    title: String(c.title || "").trim().slice(0, 120),
+    description: String(c.description || "").trim().slice(0, 500)
+  };
+}
+
+export function normalizeClient(client) {
+  const leadReasonOptions = Array.isArray(client.leadReasonOptions) ? client.leadReasonOptions.map((o) => String(o).slice(0, 80)).filter(Boolean).slice(0, 20) : [];
+  const allowedReasons = new Set(leadReasonOptions);
+  const rawServiceReasonMap = client.serviceReasonMap && typeof client.serviceReasonMap === "object" ? client.serviceReasonMap : {};
   const modules = ["assistant", ...(Array.isArray(client.enabledModules) ? client.enabledModules : [])];
   return {
     ...client,
@@ -266,7 +290,24 @@ function normalizeClient(client) {
     leadFollowupDelayMs: clampLeadFollowupDelay(client.leadFollowupDelayMs),
     averageJobValue: Number.isFinite(Number(client.averageJobValue)) ? Math.max(0, Number(client.averageJobValue)) : 0,
     proactiveDelayMs: clampProactiveDelay(client.proactiveDelayMs),
-    promotions: Array.isArray(client.promotions) ? client.promotions.map(normalizePromotion) : []
+    promotions: Array.isArray(client.promotions) ? client.promotions.map(normalizePromotion) : [],
+    caseStudies: Array.isArray(client.caseStudies) ? client.caseStudies.map(normalizeCaseStudy) : [],
+    // Phase 2d: an optional, client-specific fixed taxonomy for "why did you
+    // visit". Additive — clients without this configured keep the existing
+    // free-text service/reason fields on the lead form untouched.
+    leadReasonOptions,
+    // Maps a service name (matching data-service on the site, or a
+    // promotion/highlight's service) to a default reasonForVisit value, so
+    // the widget can pre-select the form field instead of leaving it blank
+    // — still editable by the visitor, never enforced server-side. This is
+    // client-specific data (other clients' service names differ entirely),
+    // not shared widget.js logic, and only meaningful for values that are
+    // also in leadReasonOptions — anything else is dropped at normalize time.
+    serviceReasonMap: Object.fromEntries(
+      Object.entries(rawServiceReasonMap)
+        .filter(([, reason]) => allowedReasons.has(reason))
+        .map(([service, reason]) => [String(service).slice(0, 80), reason])
+    )
   };
 }
 

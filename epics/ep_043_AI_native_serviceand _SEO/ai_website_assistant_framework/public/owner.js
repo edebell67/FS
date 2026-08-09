@@ -1,5 +1,34 @@
 const BASE = window.location.origin;
-let STATE = { tenant: "", token: "", client: null };
+let STATE = { tenant: "", token: "", client: null, stream: null };
+
+// Phase 2b: live push. EventSource can't set an Authorization header, so the
+// token travels via query string for this one connection — the stream
+// endpoint accepts that as a documented exception, not a general relaxation.
+// Falls back to nothing worse than the pre-existing polled behaviour: the
+// Refresh button and tab-switch reloads still work unmodified if the stream
+// never connects or silently drops.
+function openReportingStream(){
+  closeReportingStream();
+  const stream = new EventSource(`${BASE}/api/owner/reporting/stream?tenant=${encodeURIComponent(STATE.tenant)}&token=${encodeURIComponent(STATE.token)}`);
+  stream.onmessage = (event) => {
+    $('live-status').textContent = 'Live';
+    $('live-status').classList.remove('stale');
+    try { renderOverview(JSON.parse(event.data)); } catch { /* ignore a malformed frame, keep the connection open */ }
+  };
+  stream.onerror = () => {
+    // EventSource retries on its own; only tell the owner their data may be
+    // stale, don't tear anything down — a transient network blip shouldn't
+    // force a manual reconnect.
+    $('live-status').textContent = 'Reconnecting…';
+    $('live-status').classList.add('stale');
+  };
+  STATE.stream = stream;
+}
+
+function closeReportingStream(){
+  STATE.stream?.close();
+  STATE.stream = null;
+}
 
 function $(id){return document.getElementById(id)}
 function qs(sel){return document.querySelector(sel)}
@@ -22,6 +51,7 @@ document.querySelectorAll('.dash-nav button[data-view]').forEach(btn => {
     if(btn.dataset.view==='overview') loadOverview();
     if(btn.dataset.view==='compare') loadCompare();
     if(btn.dataset.view==='promotions') loadPromotions();
+    if(btn.dataset.view==='questions') loadQuestions();
   });
 });
 
@@ -46,6 +76,7 @@ async function login(){
     $('login-screen').hidden = true;
     $('dash-screen').hidden = false;
     loadOverview();
+    openReportingStream();
   } catch(e){
     $('login-error').textContent = e.message || 'Login failed. Check your site key and token.';
     $('login-error').hidden = false;
@@ -53,34 +84,53 @@ async function login(){
 }
 
 function logout(){
-  STATE = { tenant:'', token:'', client:null };
+  closeReportingStream();
+  STATE = { tenant:'', token:'', client:null, stream:null };
   $('login-screen').hidden = false;
   $('dash-screen').hidden = true;
   $('login-error').hidden = true;
 }
 
+// Shared by the manual fetch (loadOverview) and the live SSE push
+// (openReportingStream) — one rendering path, two ways to get data into it,
+// per the workflow doc's explicit instruction not to duplicate this logic.
+function renderOverview(data){
+  STATE.client = data;
+  const tracking = data.pageAnalytics;
+  const isDisabled = tracking && tracking.status === 'tracking_disabled';
+  $('tracking-status').textContent = isDisabled ? 'Web tracking is off' : 'Web tracking is on';
+  $('tracking-toggle').checked = !isDisabled;
+
+  $('overview-stats').innerHTML = `
+    <div class="stat-card"><span>Unique visitors</span><strong>${tracking?.uniqueVisits||0}</strong></div>
+    <div class="stat-card"><span>Page views</span><strong>${tracking?.pageViews||0}</strong></div>
+    <div class="stat-card"><span>Conversations</span><strong>${data.summary?.conversations||0}</strong></div>
+    <div class="stat-card"><span>Leads captured</span><strong>${data.summary?.leads||0}</strong></div>
+  `;
+
+  const reasons = Object.entries(data.leadsByReason || {}).sort((a,b)=>b[1]-a[1]);
+  $('overview-reasons-card').hidden = reasons.length === 0;
+  if(reasons.length){
+    const total = reasons.reduce((sum,[,count])=>sum+count,0);
+    $('overview-reasons').innerHTML = reasons.map(([reason,count])=>{
+      const pct = total ? Math.round((count/total)*100) : 0;
+      const label = reason.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      return `<div class="service-row"><span class="svc-name">${label}</span><span class="svc-val">${count} lead${count===1?'':'s'}</span><span class="svc-change up">${pct}%</span></div>`;
+    }).join('');
+  }
+
+  const records = Object.entries(data.summary || {}).filter(([k,v])=>v>0&&k!=='previewResponses').slice(0,8);
+  $('overview-activity').innerHTML = records.length
+    ? records.map(([k,v])=>`<div class="activity-item"><strong>${k}</strong> — ${v} records</div>`).join('')
+    : '<div class="empty-state">No activity yet. Activity appears when visitors interact with your site.</div>';
+  const selector = $('promo-services');
+  const selected = new Set(Array.from(selector.selectedOptions).map((option) => option.value));
+  selector.innerHTML = (tracking?.serviceViews || []).map(([service]) => `<option value="${service.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;')}"${selected.has(service) ? ' selected' : ''}>${service.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</option>`).join('');
+}
+
 async function loadOverview(){
   try {
-    const data = await api(`/api/owner/reporting?tenant=${encodeURIComponent(STATE.tenant)}`);
-    STATE.client = data;
-    const tracking = data.pageAnalytics;
-    const isDisabled = tracking && tracking.status === 'tracking_disabled';
-    $('tracking-status').textContent = isDisabled ? 'Web tracking is off' : 'Web tracking is on';
-    $('tracking-toggle').checked = !isDisabled;
-
-    const perf = data.performance || {};
-    const totalRecords = data.summary ? Object.values(data.summary).reduce((a,b)=>a+b,0) : 0;
-    $('overview-stats').innerHTML = `
-      <div class="stat-card"><span>Unique visitors</span><strong>${perf.uniqueVisits||0}</strong></div>
-      <div class="stat-card"><span>Page views</span><strong>${perf.pageViews||0}</strong></div>
-      <div class="stat-card"><span>Conversations</span><strong>${data.summary?.conversations||0}</strong></div>
-      <div class="stat-card"><span>Leads captured</span><strong>${data.summary?.leads||0}</strong></div>
-    `;
-
-    const records = Object.entries(data.summary || {}).filter(([k,v])=>v>0&&k!=='previewResponses').slice(0,8);
-    $('overview-activity').innerHTML = records.length
-      ? records.map(([k,v])=>`<div class="activity-item"><strong>${k}</strong> — ${v} records</div>`).join('')
-      : '<div class="empty-state">No activity yet. Activity appears when visitors interact with your site.</div>';
+    renderOverview(await api(`/api/owner/reporting?tenant=${encodeURIComponent(STATE.tenant)}`));
   } catch(e){
     $('overview-stats').innerHTML = `<div class="stat-card"><span>Error</span><strong>${e.message}</strong></div>`;
   }
@@ -112,6 +162,10 @@ async function loadCompare(){
       <div class="stat-card"><span>CTA clicks</span><strong>${c.ctaClicks?.today||0}</strong>${pc(c.ctaClicks||{})}</div>
     `;
     const services = c.perService || [];
+    const signals = c.signals || [];
+    $('compare-signals').innerHTML = signals.length
+      ? signals.map((signal) => `<div class="service-row"><span class="svc-name">${signal.service}</span><span class="svc-val">${signal.viewsToday} views today · average ${signal.averageViews}</span><span class="svc-change up">Act</span></div>`).join('')
+      : '<div class="empty-state">No actionable demand signal yet. The dashboard waits for sufficient above-baseline interest.</div>';
     $('compare-services').innerHTML = services.length
       ? services.map(s=>{
           const vc = s.views.change;
@@ -232,6 +286,37 @@ async function viewEffectiveness(id){
   } catch(e){ alert('Failed to load effectiveness: '+e.message); }
 }
 
+async function loadQuestions(){
+  try {
+    const data = await api(`/api/owner/question-followups?tenant=${encodeURIComponent(STATE.tenant)}`);
+    const renderQuestions = (list) => list.map(q=>`<li>${q.text.replace(/&/g,'&amp;').replace(/</g,'&lt;')}</li>`).join('');
+    const pending = data.pending || [];
+    $('questions-pending').innerHTML = pending.length
+      ? pending.map(r=>`<div class="promo-item">
+          <div class="promo-top"><span class="promo-type">${r.email}</span><span class="promo-status active">pending</span></div>
+          <ul class="promo-desc">${renderQuestions(r.questions)}</ul>
+          <div class="promo-actions"><button class="primary" onclick="resolveQuestionFollowup('${r.id}')">Mark replied</button></div>
+        </div>`).join('')
+      : '<div class="empty-state">No unanswered questions right now.</div>';
+    const resolved = data.resolved || [];
+    $('questions-resolved').innerHTML = resolved.length
+      ? resolved.map(r=>`<div class="promo-item">
+          <div class="promo-top"><span class="promo-type">${r.email}</span><span class="promo-status paused">resolved</span></div>
+          <ul class="promo-desc">${renderQuestions(r.questions)}</ul>
+        </div>`).join('')
+      : '<div class="empty-state">Nothing resolved yet.</div>';
+  } catch(e){
+    $('questions-pending').innerHTML = `<div class="empty-state">Error loading questions: ${e.message}</div>`;
+  }
+}
+
+async function resolveQuestionFollowup(id){
+  try {
+    await api(`/api/owner/question-followups/${id}/resolve?tenant=${encodeURIComponent(STATE.tenant)}`, {method:'PUT'});
+    loadQuestions();
+  } catch(e){ alert('Failed: '+e.message); }
+}
+
 // Load clients for promo service selector on login
 async function loadServices(){
   try {
@@ -252,3 +337,4 @@ document.addEventListener('DOMContentLoaded', () => {
 window.activatePromo = activatePromo;
 window.deactivatePromo = deactivatePromo;
 window.viewEffectiveness = viewEffectiveness;
+window.resolveQuestionFollowup = resolveQuestionFollowup;

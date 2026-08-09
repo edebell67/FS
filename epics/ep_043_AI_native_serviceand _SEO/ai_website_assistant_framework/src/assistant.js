@@ -72,6 +72,21 @@ export function detectModuleResponse(client, message) {
   return null;
 }
 
+// The single "no direct answer" reply, used by both the deterministic and
+// LLM-configured paths so the fallback behaves identically either way. The
+// widget (not this function) decides whether to show the full email prompt
+// or a short "added to your list" acknowledgement — that depends on
+// per-session state this server call has no visibility into. The action
+// type is the only signal the widget needs: it means "this question has no
+// approved answer", every time, regardless of session history.
+function noAnswerReply() {
+  return {
+    text: "I don't have an approved answer for that yet, but I can get you a properly researched one by email.",
+    sources: [],
+    action: { type: "question-followup", label: "Email me the answer" }
+  };
+}
+
 export function deterministicReply(client, message, matches) {
   const moduleResponse = detectModuleResponse(client, message);
   if (moduleResponse) return { ...moduleResponse, sources: [] };
@@ -81,8 +96,7 @@ export function deterministicReply(client, message, matches) {
       sources: matches.map((item) => ({ id: item.id, title: item.title }))
     };
   }
-  const contact = client.enabledModules.includes("contact") ? " I can also show you the best way to contact the team." : "";
-  return { text: `I don't have approved information for that yet, so I don't want to guess.${contact}`, sources: [] };
+  return noAnswerReply();
 }
 
 function extractResponseText(payload) {
@@ -99,12 +113,16 @@ export async function createAssistantReply({ client, message, history = [], env 
   const matches = retrieveKnowledge(client, message);
   const moduleResponse = detectModuleResponse(client, message);
   if (moduleResponse) return { ...moduleResponse, sources: [] };
+  // No approved knowledge and no module match: this is the same precise,
+  // already-available "no direct answer" signal deterministicReply() uses.
+  // Go straight to the email-offer fallback rather than asking the model to
+  // say it doesn't know — that would need fragile prose-parsing to detect
+  // reliably, and produces the same outcome either way.
+  if (matches.length === 0) return noAnswerReply();
   if (!env.OPENAI_API_KEY) return deterministicReply(client, message, matches);
 
-  const approvedContext = matches.length
-    ? matches.map((item) => `[${item.title}] ${item.content}`).join("\n")
-    : "No approved knowledge matched this question.";
-  const instructions = `You are the website assistant for ${client.businessName}. Answer professionally and concisely. Use only APPROVED KNOWLEDGE below. If it does not contain the answer, say you do not have approved information and offer an enabled contact option. Never infer prices, guarantees, policies, availability, or service coverage.\n\nAPPROVED KNOWLEDGE\n${approvedContext}`;
+  const approvedContext = matches.map((item) => `[${item.title}] ${item.content}`).join("\n");
+  const instructions = `You are the website assistant for ${client.businessName}. Answer professionally and concisely. Use only APPROVED KNOWLEDGE below. Never infer prices, guarantees, policies, availability, or service coverage.\n\nAPPROVED KNOWLEDGE\n${approvedContext}`;
   const input = [...history.slice(-8), { role: "user", content: message }].map((item) => ({ role: item.role, content: String(item.content).slice(0, 2000) }));
   const response = await fetchImpl(`${env.OPENAI_BASE_URL || "https://api.openai.com/v1"}/responses`, {
     method: "POST",

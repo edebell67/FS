@@ -117,10 +117,12 @@
     if (/^tel:/i.test(href)) track("phone_click", href.replace(/^tel:/i, "").slice(0, 40));
     else if (/^mailto:/i.test(href)) track("email_click");
     else if (/wa\.me|whatsapp/i.test(href)) track("whatsapp_click");
+    else if (href.startsWith("#")) track("cta_click", a.getAttribute("aria-label") || a.textContent.trim().slice(0, 80) || href);
     else if (/^https?:/i.test(href)) {
       try { if (new URL(href).hostname !== location.hostname) track("outbound_click", new URL(href).hostname); }
       catch { /* ignore */ }
     }
+    else if (href && !href.startsWith("javascript:")) track("cta_click", a.getAttribute("aria-label") || a.textContent.trim().slice(0, 80) || href);
   }, true);
 
   const startedForms = new WeakSet();
@@ -132,6 +134,118 @@
     const form = e.target;
     if (form && form.tagName === "FORM") track("form_submit", form.getAttribute("name") || form.id || "");
   }, true);
+
+  // Service cards declare stable service names in data-service. A service_view
+  // is recorded once a card is substantially visible; no visitor input or page
+  // text is collected. Dwell time per service is also accumulated (enter/exit
+  // pairs from the same observer) to drive the highlight trigger below —
+  // reuses this one observer rather than adding a second.
+  const seenServices = new WeakSet();
+  const dwellStart = new Map();
+  const dwellAccum = new Map();
+  const highlightTriggered = new Set();
+  const DWELL_THRESHOLD_MS = 4000;
+  if ("IntersectionObserver" in window) {
+    const serviceObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const service = entry.target.getAttribute("data-service") || "";
+        if (entry.isIntersecting) {
+          if (!seenServices.has(entry.target)) {
+            seenServices.add(entry.target);
+            track("service_view", "", { service });
+          }
+          dwellStart.set(entry.target, Date.now());
+        } else if (dwellStart.has(entry.target)) {
+          const elapsed = Date.now() - dwellStart.get(entry.target);
+          dwellStart.delete(entry.target);
+          const total = (dwellAccum.get(service) || 0) + elapsed;
+          dwellAccum.set(service, total);
+          if (total >= DWELL_THRESHOLD_MS && !highlightTriggered.has(service)) {
+            highlightTriggered.add(service);
+            maybeShowHighlight(service);
+          }
+        }
+      }
+    }, { threshold: 0.6 });
+    document.querySelectorAll("[data-service]").forEach((element) => serviceObserver.observe(element));
+  }
+
+  // Shared by both the promotion banner and the case-study highlight below —
+  // one visual mechanism, two content sources. Only one banner occupies the
+  // slot at a time.
+  let activeBanner = null;
+  let promotionActive = false;
+  function renderBanner({ accentTitle, body, ctaLabel, ctaHref, service, onImpression, onClick }) {
+    const banner = document.createElement("aside");
+    banner.setAttribute("role", "region");
+    banner.setAttribute("aria-label", accentTitle || "Notice");
+    banner.style.cssText = "position:fixed;right:1rem;bottom:1rem;z-index:9999;max-width:20rem;padding:1rem 1.25rem;background:#0A0C0E;color:#fff;border:1px solid #C8F250;border-radius:.75rem;box-shadow:0 14px 36px rgba(0,0,0,.28);font:500 14px/1.4 system-ui,sans-serif";
+    const title = document.createElement("strong");
+    title.textContent = accentTitle;
+    title.style.cssText = "display:block;color:#C8F250;margin-bottom:.25rem";
+    const copy = document.createElement("span");
+    copy.textContent = body;
+    const action = document.createElement("a");
+    action.href = ctaHref;
+    action.textContent = ctaLabel;
+    action.style.cssText = "display:inline-block;margin-top:.65rem;color:#C8F250;font-weight:700";
+    // Phase 2d funnel: open the widget's lead form directly rather than
+    // just scrolling to a contact section — every entry path (chat,
+    // promotion, highlight) lands on the same capture point. Falls back to
+    // the plain #contact navigation if the widget script hasn't mounted.
+    action.addEventListener("click", (event) => {
+      onClick();
+      if (window.aiwOpenLeadForm?.(service)) event.preventDefault();
+    });
+    banner.append(title, copy, action);
+    document.body.appendChild(banner);
+    onImpression();
+    activeBanner = banner;
+    return banner;
+  }
+
+  // Owner-created offers are fetched from the same tracking service. Only a
+  // current offer explicitly configured for the website is rendered.
+  // Promotions always win the one banner slot over a highlight.
+  fetch(`${apiBase}/api/public/promotions?tenant=${encodeURIComponent(clientKey)}`)
+    .then((response) => response.ok ? response.json() : { promotions: [] })
+    .then(({ promotions = [] }) => {
+      const promotion = promotions.find((item) => Array.isArray(item.displayOn) && item.displayOn.includes("website"));
+      if (!promotion || !promotion.description) return;
+      promotionActive = true;
+      renderBanner({
+        accentTitle: promotion.valueLabel || "Offer",
+        body: promotion.description,
+        ctaLabel: "Discuss this offer",
+        ctaHref: "#contact",
+        service: (promotion.services || [])[0] || "",
+        onImpression: () => track("promotion_impression", promotion.promotionId, { promotionId: promotion.promotionId, service: (promotion.services || [])[0] || "" }),
+        onClick: () => track("promotion_click", promotion.promotionId, { promotionId: promotion.promotionId, service: (promotion.services || [])[0] || "" })
+      });
+    }).catch(() => {});
+
+  // Triggered once a service has accumulated enough dwell time. Only shows
+  // when no promotion is occupying the banner slot; re-checks after the
+  // fetch resolves in case a promotion rendered while it was in flight.
+  function maybeShowHighlight(service) {
+    if (promotionActive || activeBanner) return;
+    fetch(`${apiBase}/api/public/highlights?tenant=${encodeURIComponent(clientKey)}&service=${encodeURIComponent(service)}`)
+      .then((response) => response.ok ? response.json() : { highlights: [] })
+      .then(({ highlights = [] }) => {
+        if (promotionActive || activeBanner) return;
+        const highlight = highlights[0];
+        if (!highlight) return;
+        renderBanner({
+          accentTitle: "What we've built",
+          body: `${highlight.title} — ${highlight.description}`,
+          ctaLabel: "See how we can help",
+          ctaHref: "#contact",
+          service: highlight.service,
+          onImpression: () => track("highlight_impression", highlight.id, { highlightId: highlight.id, service: highlight.service }),
+          onClick: () => track("highlight_click", highlight.id, { highlightId: highlight.id, service: highlight.service })
+        });
+      }).catch(() => {});
+  }
 
   const flushExit = () => {
     if (document.visibilityState === "hidden") {

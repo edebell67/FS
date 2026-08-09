@@ -6,6 +6,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createAssistantReply } from "./assistant.js";
 import { JsonStore } from "./store.js";
+import { SqliteStore } from "./sqliteStore.js";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const publicDir = path.join(rootDir, "public");
@@ -100,7 +101,9 @@ function validEmail(value) {
 const ALLOWED_EVENT_TYPES = new Set([
   "pageview", "page_exit", "scroll_depth", "cta_click", "phone_click",
   "email_click", "whatsapp_click", "form_start", "form_submit",
-  "gallery_open", "gallery_view", "assistant_open", "assistant_handoff", "outbound_click"
+  "gallery_open", "gallery_view", "assistant_open", "assistant_handoff", "outbound_click",
+  "service_view", "promotion_impression", "promotion_click",
+  "highlight_impression", "highlight_click"
 ]);
 
 // Reduce an incoming event to a safe, PII-free, identity-free record. Only a
@@ -123,6 +126,9 @@ function sanitizeEvent(event, { clientId, sessionId }) {
     device: cleanText(event.device, 20),       // "mobile" | "tablet" | "desktop"
     scrollPct: num(event.scrollPct, 100),
     dwellMs: num(event.dwellMs, 86400000),
+    service: cleanText(event.service, 120),
+    promotionId: cleanText(event.promotionId, 80),
+    highlightId: cleanText(event.highlightId, 80),
     ts: cleanText(event.ts, 40)                // client timestamp (ISO)
   };
 }
@@ -158,6 +164,9 @@ function pageAnalyticsSummary(events) {
     emailTaps: count("email_click"),
     assistantOpens: count("assistant_open"),
     assistantHandoffs: count("assistant_handoff"),
+    serviceViews: topN("service", "service_view"),
+    promotionImpressions: count("promotion_impression"),
+    promotionClicks: count("promotion_click"),
     avgDwellSeconds: Math.round(avg(exits, "dwellMs") / 1000),
     avgScrollPct: avg(exits, "scrollPct"),
     topPages: topN("path", "pageview"),
@@ -179,6 +188,45 @@ function ownerPerformance(records, client, now = new Date()) {
     today: { date: day, assistantVisitors: visitorCount, leadsCaptured: leadCount, leadRate: visitorCount ? Math.round((leadCount / visitorCount) * 100) : null, callbacks: callbacks.length, averageCallbackMinutes, resolvedCallbacks: handled.length },
     baseline: client.ownerReporting?.baseline || { assistantVisitors: null, leadsCaptured: null, callbacks: null, averageCallbackMinutes: null, source: "No previous baseline supplied." }
   };
+}
+
+// Same computation GET /api/owner/reporting already does, factored out so
+// the SSE stream (Phase 2b) can push identical snapshots rather than
+// duplicating this logic or inventing a second, divergent shape.
+function buildReportingSnapshot(store, client) {
+  const records = store.listRecords(client.id);
+  const clientEvents = (records.events || []).filter((event) => event.clientId === client.id);
+  const pageAnalytics = client.analyticsEnabled === false ? { status: "tracking_disabled" } : pageAnalyticsSummary(clientEvents);
+  const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
+  const performance = ownerPerformance(records, client, new Date());
+  // Phase 2d: turns raw lead volume into a prioritised list — a spike in one
+  // reason category is visible at a glance instead of buried in the total.
+  // Only populated for clients with leadReasonOptions configured; others get
+  // an empty object rather than a misleading all-"unspecified" breakdown.
+  const leadsByReason = client.leadReasonOptions?.length
+    ? (records.leads || []).reduce((counts, lead) => {
+        const reason = lead.reasonForVisit || "unspecified";
+        counts[reason] = (counts[reason] || 0) + 1;
+        return counts;
+      }, {})
+    : {};
+  return { clientId: client.id, businessName: client.businessName, pageAnalytics, summary, performance, leadsByReason };
+}
+
+// Phase 2b: live owner-reporting push. Map of clientId -> Set of open SSE
+// response objects. A full recomputed snapshot is pushed on every relevant
+// write (simplest correct option per the workflow doc's own recommendation
+// — traffic volumes here don't yet justify a delta-based protocol) rather
+// than a raw per-event stream, so the client never needs to reconcile
+// partial state.
+const sseConnections = new Map();
+function pushReportingSnapshot(store, clientId) {
+  const subscribers = sseConnections.get(clientId);
+  if (!subscribers || subscribers.size === 0) return;
+  const client = store.listClients().find((c) => c.id === clientId);
+  if (!client) return;
+  const payload = `data: ${JSON.stringify(buildReportingSnapshot(store, client))}\n\n`;
+  for (const res of subscribers) res.write(payload);
 }
 
 async function writeResponseLedger({ env, record }) {
@@ -293,6 +341,18 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const isLead = url.pathname.endsWith("leads");
         const requiredModule = isLead ? "leadCapture" : "callback";
         if (!client.enabledModules.includes(requiredModule)) return json(res, 403, { error: "This module is not enabled." }, corsHeaders(req));
+        // Phase 2d: a client-specific fixed reason-for-visit taxonomy, additive
+        // to the existing free-text service/reason fields. Enforced — both
+        // presence and value — only when the client has leadReasonOptions
+        // configured; other clients' lead forms are completely unaffected.
+        // Hard-required, not just format-checked when present: the widget's
+        // required <select> is not a substitute for server-side enforcement
+        // — a direct API call or a bypassed form must not be able to skip it.
+        const reasonForVisit = cleanText(input.reasonForVisit, 80);
+        if (isLead && client.leadReasonOptions.length) {
+          if (!reasonForVisit) return json(res, 400, { error: "reasonForVisit is required." }, corsHeaders(req));
+          if (!client.leadReasonOptions.includes(reasonForVisit)) return json(res, 400, { error: "reasonForVisit must be one of the configured options." }, corsHeaders(req));
+        }
         let record = await store.appendRecord(isLead ? "leads" : "callbacks", {
           clientId: client.id,
           name: cleanText(input.name, 120, true),
@@ -301,6 +361,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           preferredTime: cleanText(input.preferredTime, 120),
           service: cleanText(input.service, 160),
           reason: cleanText(input.reason || input.notes, 1000),
+          ...(isLead ? { reasonForVisit } : {}),
           simulated: client.status === "demo",
           convertedAt: null,
           convertedVia: null,
@@ -313,7 +374,47 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           record = await store.updateRecord("leads", record.id, { followupStatus: "scheduled", followupScheduledAt: new Date().toISOString() });
           scheduleLeadFollowup({ store, env, client, leadId: record.id, delayMs: client.leadFollowupDelayMs });
         }
+        pushReportingSnapshot(store, client.id);
         return json(res, 201, { accepted: true, simulated: record.simulated, notification }, corsHeaders(req));
+      }
+
+      if (req.method === "POST" && url.pathname === "/api/public/question-followups") {
+        // The widget's "no direct answer" fallback: captured at most once per
+        // visitor session. A second unanswered question in the same session
+        // appends to the same pending record (and does not re-notify) rather
+        // than creating a second one — one visitor gets one consolidated
+        // email reply, not one email per question. This is a core assistant
+        // capability, not gated behind an optional module.
+        const input = await bodyJson(req);
+        const client = store.resolveClient({ publicKey: input.clientKey, host: requestHost(req, input.host) });
+        if (!client) return json(res, 404, { error: "Client profile was not found for this website." }, corsHeaders(req));
+        const sessionId = cleanText(input.sessionId, 100, true);
+        const email = cleanText(input.email, 160, true);
+        const question = cleanText(input.question, 1000, true);
+        if (!validEmail(email)) return json(res, 400, { error: "Enter a valid email address." }, corsHeaders(req));
+        const existing = (store.listRecords().questionFollowups || []).find(
+          (item) => item.clientId === client.id && item.sessionId === sessionId && item.status === "pending"
+        );
+        if (existing) {
+          const record = await store.updateRecord("questionFollowups", existing.id, {
+            questions: [...existing.questions, { text: question, askedAt: new Date().toISOString() }],
+            updatedAt: new Date().toISOString()
+          });
+          pushReportingSnapshot(store, client.id);
+          return json(res, 200, { accepted: true, record, notification: { delivered: false, reason: "already_notified" } }, corsHeaders(req));
+        }
+        const record = await store.appendRecord("questionFollowups", {
+          clientId: client.id,
+          sessionId,
+          email,
+          questions: [{ text: question, askedAt: new Date().toISOString() }],
+          status: "pending",
+          updatedAt: new Date().toISOString(),
+          resolvedAt: null
+        });
+        const notification = await notify({ env, client, kind: "question_followup", record });
+        pushReportingSnapshot(store, client.id);
+        return json(res, 201, { accepted: true, record, notification }, corsHeaders(req));
       }
 
       if (req.method === "POST" && url.pathname === "/api/public/events") {
@@ -329,7 +430,10 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const events = rawEvents
           .filter((event) => event && ALLOWED_EVENT_TYPES.has(String(event.type)))
           .map((event) => sanitizeEvent(event, { clientId: client.id, sessionId }));
-        if (events.length) await store.appendRecords("events", events);
+        if (events.length) {
+          await store.appendRecords("events", events);
+          pushReportingSnapshot(store, client.id);
+        }
         return json(res, 202, { accepted: true, stored: events.length }, corsHeaders(req));
       }
 
@@ -495,11 +599,33 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
         const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
         if (!client) return json(res, 404, { error: "Client not found." });
-        const records = store.listRecords(clientId);
-        const pageAnalytics = client.analyticsEnabled === false ? { status: "tracking_disabled" } : store.listPageAnalytics?.(clientId) || {};
-        const summary = Object.fromEntries(Object.entries(records).map(([type, entries]) => [type, entries.length]));
-        const performance = ownerPerformance(records, client, new Date());
-        return json(res, 200, { clientId, businessName: client.businessName, pageAnalytics, summary, performance });
+        return json(res, 200, buildReportingSnapshot(store, client));
+      }
+      if (req.method === "GET" && url.pathname === "/api/owner/reporting/stream") {
+        // Phase 2b: live push. Same auth as the regular reporting endpoint,
+        // with one addition: the browser's native EventSource cannot set an
+        // Authorization header, so this endpoint alone also accepts the
+        // token via a ?token= query parameter — the standard workaround for
+        // SSE/WebSocket auth, not a general relaxation of the Bearer-header
+        // requirement used everywhere else. Sends an immediate snapshot on
+        // connect, then another each time pushReportingSnapshot() is called
+        // for this tenant (see the write paths below). Falls back cleanly:
+        // a client that only ever polls /api/owner/reporting continues to
+        // work unmodified.
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!req.headers.authorization && url.searchParams.get("token")) {
+          req.headers.authorization = `Bearer ${url.searchParams.get("token")}`;
+        }
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        res.writeHead(200, { "Content-Type": "text/event-stream", "Cache-Control": "no-cache", Connection: "keep-alive", ...corsHeaders(req) });
+        res.write(`data: ${JSON.stringify(buildReportingSnapshot(store, client))}\n\n`);
+        if (!sseConnections.has(client.id)) sseConnections.set(client.id, new Set());
+        sseConnections.get(client.id).add(res);
+        req.on("close", () => { sseConnections.get(client.id)?.delete(res); });
+        return;
       }
       if (req.method === "PUT" && url.pathname === "/api/owner/reporting/tracking") {
         const clientId = url.searchParams.get("tenant") || "";
@@ -581,6 +707,35 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 200, { promotion: promotions[idx] });
       }
 
+      // Unanswered-question follow-ups: the owner sees one accumulated
+      // record per visitor session, not a raw per-question log.
+      if (req.method === "GET" && url.pathname === "/api/owner/question-followups") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const all = (store.listRecords().questionFollowups || []).filter((item) => item.clientId === client.id);
+        return json(res, 200, {
+          pending: all.filter((item) => item.status === "pending"),
+          resolved: all.filter((item) => item.status === "resolved")
+        });
+      }
+
+      const questionFollowupResolveMatch = url.pathname.match(/^\/api\/owner\/question-followups\/([^/]+)\/resolve$/);
+      if (questionFollowupResolveMatch && req.method === "PUT") {
+        const followupId = decodeURIComponent(questionFollowupResolveMatch[1]);
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const existing = (store.listRecords().questionFollowups || []).find((item) => item.id === followupId && item.clientId === client.id);
+        if (!existing) return json(res, 404, { error: "Question follow-up not found." });
+        const record = await store.updateRecord("questionFollowups", followupId, { status: "resolved", resolvedAt: new Date().toISOString() });
+        return json(res, 200, { record });
+      }
+
       // Day-over-day comparison
       if (req.method === "GET" && url.pathname === "/api/owner/reporting/compare") {
         const clientId = url.searchParams.get("tenant") || "";
@@ -599,25 +754,33 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           return d >= pastCutoff && d < new Date(now.getTime() - 24 * 60 * 60 * 1000);
         });
         const avgMultiplier = days > 0 ? 1 / days : 1;
+        const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "outbound_click", "form_start", "form_submit", "promotion_click"]);
         const toMetric = (arr) => ({
           visitors: new Set(arr.filter((e) => e.sessionId).map((e) => e.sessionId)).size,
-          pageViews: arr.filter((e) => e.type === "page_view").length,
-          engagedPct: arr.length > 0 ? Math.round((arr.filter((e) => e.type !== "page_view").length / arr.length) * 100) : 0,
-          ctaClicks: arr.filter((e) => e.type === "button_click" || e.target?.startsWith("cta_")).length
+          pageViews: arr.filter((e) => e.type === "pageview").length,
+          engagedPct: arr.length > 0 ? Math.round((arr.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).length / arr.length) * 100) : 0,
+          ctaClicks: arr.filter((e) => e.type === "cta_click").length
         });
         const today = toMetric(todayEvents);
         const past = toMetric(pastEvents);
         const average = { visitors: Math.round(past.visitors * avgMultiplier), pageViews: Math.round(past.pageViews * avgMultiplier), engagedPct: past.engagedPct, ctaClicks: Math.round(past.ctaClicks * avgMultiplier) };
-        const perService = [...new Set(events.map((e) => e.service || e.target || "unknown"))].map((svc) => {
-          const todaySvc = todayEvents.filter((e) => (e.service || e.target) === svc);
-          const pastSvc = pastEvents.filter((e) => (e.service || e.target) === svc);
+        const perService = [...new Set(events.map((e) => e.service).filter(Boolean))].map((svc) => {
+          const todaySvc = todayEvents.filter((e) => e.service === svc);
+          const pastSvc = pastEvents.filter((e) => e.service === svc);
           return {
             service: svc,
             views: { today: todaySvc.filter((e) => e.type === "service_view").length, average: Math.round(pastSvc.filter((e) => e.type === "service_view").length * avgMultiplier) },
-            clicks: { today: todaySvc.filter((e) => e.type === "button_click").length, average: Math.round(pastSvc.filter((e) => e.type === "button_click").length * avgMultiplier) }
+            clicks: { today: todaySvc.filter((e) => engagedTypes.has(e.type)).length, average: Math.round(pastSvc.filter((e) => engagedTypes.has(e.type)).length * avgMultiplier) }
           };
         }).filter((s) => s.views.today > 0 || s.views.average > 0);
-        return json(res, 200, { comparison: { visitors: computeChange(today.visitors, average.visitors), pageViews: computeChange(today.pageViews, average.pageViews), engagedPct: { today: today.engagedPct, average: average.engagedPct, change: today.engagedPct - average.engagedPct }, ctaClicks: computeChange(today.ctaClicks, average.ctaClicks), perService }, days });
+        // A signal requires both enough current attention to matter and a
+        // clear uplift above the selected daily baseline. Sparse traffic is
+        // deliberately not promoted as a recommendation.
+        const signals = perService
+          .filter((item) => item.views.today >= 3 && item.views.today >= Math.max(2, item.views.average * 1.5))
+          .sort((left, right) => (right.views.today - right.views.average) - (left.views.today - left.views.average))
+          .map((item) => ({ service: item.service, viewsToday: item.views.today, averageViews: item.views.average, recommendation: "Consider a time-bound promotion for this service." }));
+        return json(res, 200, { comparison: { visitors: computeChange(today.visitors, average.visitors), pageViews: computeChange(today.pageViews, average.pageViews), engagedPct: { today: today.engagedPct, average: average.engagedPct, change: today.engagedPct - average.engagedPct }, ctaClicks: computeChange(today.ctaClicks, average.ctaClicks), perService, signals }, days });
       }
 
       // Promotion effectiveness
@@ -700,6 +863,18 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         return json(res, 200, { promotions: active.map((p) => ({ promotionId: p.promotionId, type: p.type, value: p.value, valueLabel: p.valueLabel, description: p.description, services: p.services, applyTo: p.applyTo, displayOn: p.displayOn, endAt: p.endAt })) });
       }
 
+      // Public: case-study highlights, optionally filtered to one service —
+      // no auth (displayed on the website itself), mirrors /api/public/promotions.
+      if (req.method === "GET" && url.pathname === "/api/public/highlights") {
+        const clientId = url.searchParams.get("tenant") || "";
+        if (!clientId) return json(res, 400, { error: "Missing tenant parameter." });
+        const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
+        if (!client) return json(res, 404, { error: "Client not found." });
+        const service = url.searchParams.get("service") || "";
+        const matches = (client.caseStudies || []).filter((c) => !service || c.service === service);
+        return json(res, 200, { highlights: matches.map((c) => ({ id: c.id, service: c.service, title: c.title, description: c.description })) });
+      }
+
       if (req.method === "GET") return serveStatic(url.pathname, res);
     } catch (error) {
       return json(res, error.status || 500, { error: error.status ? error.message : "The service could not complete this request." });
@@ -724,10 +899,17 @@ async function serveStatic(pathname, res) {
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
-  const app = await createApp();
+  // STORE_DRIVER opt-in switch (Phase 2a cutover): unset/"json" keeps the
+  // existing file-based store untouched; "sqlite" runs the DB-backed
+  // adapter instead. Same createApp() call either way — route handlers
+  // never know which one they're talking to.
+  const store = runtimeEnv.STORE_DRIVER === "sqlite"
+    ? new SqliteStore(runtimeEnv.SQLITE_PATH ? path.resolve(runtimeEnv.SQLITE_PATH) : path.join(dataDir, "app.db"))
+    : undefined;
+  const app = await createApp(store ? { store } : {});
   const port = Number(runtimeEnv.PORT || 4310);
   const host = runtimeEnv.HOST || "127.0.0.1";
-  app.listen(port, host, () => console.log(`AI Website Assistant running at http://${host}:${port}`));
+  app.listen(port, host, () => console.log(`AI Website Assistant running at http://${host}:${port} (store: ${runtimeEnv.STORE_DRIVER === "sqlite" ? "sqlite" : "json"})`));
 }
 
 function loadEnvironment(file) {

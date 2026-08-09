@@ -1,5 +1,62 @@
 [
   {
+    "id": "the-tech-principle-local",
+    "publicKey": "thetechprinciple_local",
+    "allowedHosts": ["thetechprinciple.com", "www.thetechprinciple.com", "localhost", "127.0.0.1"],
+    "businessName": "The Tech Principle",
+    "tagline": "Independent technology studio",
+    "logoText": "TP",
+    "theme": {
+      "accent": "#C8F250",
+      "ink": "#0A0C0E",
+      "surface": "#F2F0EB"
+    },
+    "status": "live",
+    "enabledModules": ["navigation", "leadCapture", "leadFollowup"],
+    "pages": [
+      { "title": "Services", "url": "#services", "keywords": ["web design", "AI assistants", "local SEO", "data products"] },
+      { "title": "Work", "url": "#work", "keywords": ["case studies", "portfolio", "projects"] },
+      { "title": "Writing", "url": "#writing", "keywords": ["blog", "articles", "insight"] },
+      { "title": "Contact", "url": "#contact", "keywords": ["start a project", "email", "enquiry"] }
+    ],
+    "knowledge": [
+      { "id": "svc-web-design", "title": "Web design and rebuilds", "content": "Bespoke sites for businesses that have outgrown a template, and rescue work for ones stuck on something a decade old. Hand-built, fast, and owned by you: design systems rather than one-off page layouts, sub-second loads on hand-written HTML and CSS, accessible by default (semantics, contrast, focus states), and legacy migration with content and rankings preserved. What we build toward: a site you own outright, built to load fast and turn more of your visitors into enquiries." },
+      { "id": "svc-ai-assistants", "title": "AI site assistants", "content": "A trained assistant that lives on your site, answers real questions in your voice, books the job, and tells your team when a lead has gone cold instead of letting it die. Grounded in your actual services, prices and hours; lead capture with automatic follow-up on non-converters; an admin dashboard with recovered-revenue reporting; modular, so capabilities switch on per client. What we build toward: enquiries answered at 11pm, and a dashboard that puts a figure on what follow-up brought back." },
+      { "id": "svc-local-seo", "title": "Local SEO and lead generation", "content": "Being findable in the ten miles that actually matter. Technical SEO, structured data and Core Web Vitals; local pack positioning and review infrastructure; AI-native discovery built to be cited, not just crawled; automated prospect discovery and qualification. What we build toward: a steady inbound line instead of a monthly scramble for the next job." },
+      { "id": "svc-trading-data", "title": "Trading and data products", "content": "Live market data pipelines, strategy execution engines, backtest-to-live parity auditing, and the analytics layer that makes any of it trustworthy. Real-time ingestion and multi-asset price collection; strategy execution with full audit trails; backtest and live parity verification; analytics dashboards over SQL and PostgreSQL. What we build toward: systems that keep their promises after the demo is over." },
+      { "id": "work-site-programme", "title": "Small business site programme", "content": "Forty-four hand-built sites moving through the deployment pipeline: garages, salons, nail bars, trades and taxi firms, each a bespoke design system rather than a reskinned template." },
+      { "id": "work-salon-rebuilds", "title": "Salon and barbering rebuilds", "content": "Eleven legacy hair and beauty sites taken from dated, unresponsive builds to modern, bookable storefronts, with the original content and search equity intact." },
+      { "id": "work-assistant-framework", "title": "Website assistant framework", "content": "A multi-tenant assistant platform with per-client modules, lead capture, cold-lead follow-up and an ROI dashboard that puts a number on the revenue it recovered." },
+      { "id": "work-signal-platform", "title": "Autonomous signal platform", "content": "End-to-end market data ingestion, strategy selection and execution, with parity auditing between backtest and live so the numbers survive contact with reality." },
+      { "id": "work-leadgen-engine", "title": "Lead generation engine", "content": "Automated business discovery, qualification and outreach: identifying companies running dated sites and putting a working preview in front of them." },
+      { "id": "work-analytics-tooling", "title": "Analytics and insight tooling", "content": "Dashboards and reporting surfaces over live trading data: performance views, strategy comparison, and the audit kits that make results defensible." },
+      { "id": "how-we-work", "title": "How we work: diagnose, build, prove", "content": "Diagnose: we look at what you have, what it costs you, and what it's failing to do, including when the honest answer is that you don't need us. Build: hand-built, in the open, with something to look at early, no six-week silence followed by a reveal. Prove: shipped with the instrumentation to show whether it worked, load times, enquiries, conversions, recovered leads, evidence not assurances." },
+      { "id": "the-principle", "title": "The Tech Principle: technology should earn its place", "content": "Every choice on a project has to justify itself against a simpler alternative, and most of the time the simpler thing wins. Build it, don't assemble it: hand-written code understood end to end, instead of a stack of plugins nobody can debug at 2am. Evidence over assertion: if we say it's faster, there's a number; if we say it converts, there's a dashboard showing it. You own the outcome: your code, your data, your accounts, no hostage-taking, no proprietary lock-in, no rental model on your own site. Say no to the wrong work: we turn down projects we can't do well." },
+      { "id": "contact-how", "title": "How to get in touch", "content": "Email edward.bell@thetechprinciple.com to start a project or ask a question. There is no published phone number or office address yet." }
+    ],
+    "deployments": [],
+    "notificationDestinations": [{ "type": "email", "value": "edward.bell@thetechprinciple.com" }],
+    "workflow": { "status": "in_progress", "blocker": "", "stages": {} },
+    "analyticsEnabled": true,
+    "averageJobValue": 0,
+    "promotions": [],
+    "caseStudies": [
+      { "service": "Web design & rebuilds", "title": "Small business site programme", "description": "Forty-four hand-built sites moving through the deployment pipeline: garages, salons, nail bars, trades and taxi firms, each a bespoke design system rather than a reskinned template." },
+      { "service": "Web design & rebuilds", "title": "Salon & barbering rebuilds", "description": "Eleven legacy hair and beauty sites taken from dated, unresponsive builds to modern, bookable storefronts, with the original content and search equity intact." },
+      { "service": "AI site assistants", "title": "Website assistant framework", "description": "A multi-tenant assistant platform with per-client modules, lead capture, cold-lead follow-up and an ROI dashboard that puts a number on the revenue it recovered." },
+      { "service": "Trading & data products", "title": "Autonomous signal platform", "description": "End-to-end market data ingestion, strategy selection and execution, with parity auditing between backtest and live so the numbers survive contact with reality." },
+      { "service": "Local SEO & lead generation", "title": "Lead generation engine", "description": "Automated business discovery, qualification and outreach: identifying companies running dated sites and putting a working preview in front of them." },
+      { "service": "Trading & data products", "title": "Analytics & insight tooling", "description": "Dashboards and reporting surfaces over live trading data: performance views, strategy comparison, and the audit kits that make results defensible." }
+    ],
+    "leadReasonOptions": ["website audit", "website build", "ai automation", "application build", "mobile apps", "other"],
+    "serviceReasonMap": {
+      "Web design & rebuilds": "website build",
+      "AI site assistants": "ai automation",
+      "Local SEO & lead generation": "website audit",
+      "Trading & data products": "application build"
+    }
+  },
+  {
     "id": "northstar-heating",
     "publicKey": "demo_northstar",
     "allowedHosts": [

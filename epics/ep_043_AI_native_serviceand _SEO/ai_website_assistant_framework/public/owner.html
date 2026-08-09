@@ -26,6 +26,7 @@
         <button class="nav-on" data-view="overview">Overview</button>
         <button data-view="compare">Compare</button>
         <button data-view="promotions">Promotions</button>
+        <button data-view="questions">Questions</button>
         <button id="logout-btn">Logout</button>
       </nav>
     </header>
@@ -33,7 +34,9 @@
     <main class="dash-main">
       <!-- Overview -->
       <section id="view-overview" class="dash-view">
+        <p class="hint live-indicator"><span id="live-status">Connecting…</span></p>
         <div class="stats-grid" id="overview-stats"></div>
+        <div class="card" id="overview-reasons-card" hidden><h3>Leads by reason for visit</h3><div id="overview-reasons"></div></div>
         <div class="card"><h3>Recent activity</h3><div id="overview-activity"></div></div>
         <div class="tracking-card">
           <div><h3>Web tracking</h3><p class="hint" id="tracking-status">Checking...</p></div>
@@ -48,6 +51,7 @@
           <button id="compare-btn" class="primary">Refresh</button>
         </div>
         <div class="stats-grid" id="compare-stats"></div>
+        <div class="card"><h3>Demand signals</h3><div id="compare-signals"></div></div>
         <div class="card"><h3>Per-service comparison</h3><div id="compare-services"></div></div>
       </section>
 
@@ -68,6 +72,14 @@
           <div class="btn-row"><button id="promo-submit" class="primary">Create promotion</button><button id="promo-cancel">Cancel</button></div>
           <p id="promo-error" class="error" hidden></p>
         </div>
+      </section>
+
+      <!-- Question follow-ups: visitor questions the widget couldn't answer -->
+      <section id="view-questions" class="dash-view" hidden>
+        <div class="promo-header"><h3>Pending — awaiting your reply</h3></div>
+        <div id="questions-pending"></div>
+        <div class="promo-header"><h3>Resolved</h3></div>
+        <div id="questions-resolved"></div>
       </section>
     </main>
   </div>

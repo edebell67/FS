@@ -20,6 +20,14 @@
   })();
   const state = { client: null, open: false, sessionId: sharedSessionId, history: [], proactive: false, owner: null };
   const declinedKey = `aiw-declined-${clientKey}`;
+  // Email for the "no direct answer" fallback is asked at most once per
+  // session: { asked: bool, email: string|null }. Once asked (accepted or
+  // not), never asked again this session — later unanswered questions
+  // either accumulate silently (email known) or get a quiet one-line note
+  // (email not given), never a second prompt.
+  const qaKey = `aiw-qa-${clientKey}`;
+  function readQaState() { try { return JSON.parse(sessionStorage.getItem(qaKey) || "{}"); } catch { return {}; } }
+  function writeQaState(patch) { try { sessionStorage.setItem(qaKey, JSON.stringify({ ...readQaState(), ...patch })); } catch { /* storage unavailable */ } }
   const NEGATIVE_REPLY = /^(no|nah|nope|no\s*thanks?|no\s*thank\s*you|not\s*now|not\s*interested|not\s*right\s*now|i'?m\s*(good|fine|ok|okay)|no\s*need|leave\s*me\s*alone|go\s*away|maybe\s*later|later)\b/i;
 
   const style = document.createElement("style");
@@ -145,6 +153,21 @@
     root.insertBefore(panel, launcher);
     panel.querySelector("input")?.focus();
   }
+
+  // Phase 2d funnel: the promotion banner and case-study highlight banner
+  // (both rendered by analytics-embed.js, a separate script) call this
+  // instead of just navigating to #contact, so every path — chat, a
+  // promotion click, a highlight click — lands on the exact same lead form,
+  // not three different ones. Falls back to nothing (caller still has its
+  // own #contact href as a fallback) if the widget hasn't loaded a client yet.
+  window.aiwOpenLeadForm = (service) => {
+    if (!state.client) return false;
+    if (!state.open) toggle();
+    const panel = root.querySelector(".panel");
+    if (!panel) return false;
+    showModuleForm("lead", panel.querySelector(".messages"), panel, service);
+    return true;
+  };
 
   function resetConversation() {
     state.sessionId = crypto.randomUUID();
@@ -416,7 +439,8 @@
       if (!response.ok) throw new Error(payload.error || "Request failed");
       pending.remove();
       addMessage(messages, "assistant", payload.reply.text, payload.reply.sources);
-      if (payload.reply.action) addAction(messages, payload.reply.action, panel);
+      if (payload.reply.action?.type === "question-followup") handleQuestionFollowup(message, messages);
+      else if (payload.reply.action) addAction(messages, payload.reply.action, panel);
       state.history.push({ role:"user", content:message }, { role:"assistant", content:payload.reply.text });
       state.history = state.history.slice(-8);
     } catch (error) { pending.textContent = error.message || "The assistant is unavailable."; }
@@ -440,11 +464,67 @@
     container.append(button);
   }
 
-  function showModuleForm(type, container) {
+  // "No direct answer" fallback. Email is asked at most once per session:
+  // - Never asked before: mark asked immediately (so even an ignored prompt
+  //   doesn't ask twice), show the email form for this question.
+  // - Already have an email: accumulate this question silently, no new UI.
+  // - Asked before but no email given: quiet one-line note, no repeat ask.
+  function handleQuestionFollowup(question, container) {
+    const qa = readQaState();
+    if (qa.email) {
+      submitQuestionFollowup(qa.email, question).catch(() => {});
+      addMessage(container, "assistant", "(Added to what I'll send you.)");
+      return;
+    }
+    if (qa.asked) {
+      addMessage(container, "assistant", "(Noted — I don't have an email for you yet, so I can't include this in a reply.)");
+      return;
+    }
+    writeQaState({ asked: true });
+    const form = element("form", "module-form qa-followup-form");
+    form.innerHTML = `<strong>Get a researched answer by email</strong><input name="email" type="email" required maxlength="160" placeholder="you@example.com"><button>Send me the answer</button><span class="error"></span>`;
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const button = form.querySelector("button"); button.disabled = true;
+      const email = new FormData(form).get("email");
+      try {
+        await submitQuestionFollowup(email, question);
+        writeQaState({ email });
+        form.replaceChildren(element("strong", "", "Thanks — I'll get a properly researched answer back to you by email."));
+      } catch (error) { form.querySelector(".error").textContent = error.message || "Could not submit."; button.disabled = false; }
+    });
+    container.append(form);
+    container.scrollTop = container.scrollHeight;
+  }
+
+  async function submitQuestionFollowup(email, question) {
+    const response = await fetch(`${apiBase}/api/public/question-followups`, {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ clientKey, host: location.hostname, sessionId: state.sessionId, email, question })
+    });
+    const payload = await response.json();
+    if (!response.ok) throw new Error(payload.error || "Could not submit.");
+    return payload;
+  }
+
+  function showModuleForm(type, container, _panel, serviceHint) {
     container.querySelector(".module-form")?.remove();
     const form = element("form", "module-form");
     const lead = type === "lead";
-    form.innerHTML = `<strong>${lead ? "Send an enquiry" : "Request a callback"}</strong><input name="name" required maxlength="120" placeholder="Name"><input name="telephone" required maxlength="40" placeholder="Telephone"><input name="email" type="email" maxlength="160" placeholder="Email (optional)">${lead ? '<input name="service" maxlength="160" placeholder="Service required">' : '<input name="preferredTime" maxlength="120" placeholder="Preferred callback time">'}<textarea name="reason" maxlength="1000" placeholder="${lead ? "Additional notes" : "Reason for callback"}"></textarea><button>Submit ${state.client.status === "demo" ? "demo" : "request"}</button><span class="error"></span>`;
+    // Phase 2d: a client-specific fixed reason-for-visit taxonomy, in place
+    // of the free-text service field, only when the client has one
+    // configured — other clients keep the plain text input unchanged.
+    // serviceHint (the service the visitor was engaging with when they
+    // opened this form — from a promotion/highlight banner) pre-selects the
+    // best-guess match via the client's own serviceReasonMap, still fully
+    // editable; chat-triggered forms have no hint and fall back to the
+    // unselected placeholder, same as before.
+    const reasonOptions = lead ? (state.client.leadReasonOptions || []) : [];
+    const defaultReason = lead ? state.client.serviceReasonMap?.[serviceHint] : undefined;
+    const serviceField = reasonOptions.length
+      ? `<select name="reasonForVisit" required>${defaultReason ? "" : '<option value="" disabled selected>Reason for visit</option>'}${reasonOptions.map((option) => `<option value="${option.replace(/"/g, "&quot;")}"${option === defaultReason ? " selected" : ""}>${option.replace(/</g, "&lt;")}</option>`).join("")}</select>`
+      : '<input name="service" maxlength="160" placeholder="Service required">';
+    form.innerHTML = `<strong>${lead ? "Send an enquiry" : "Request a callback"}</strong><input name="name" required maxlength="120" placeholder="Name"><input name="telephone" required maxlength="40" placeholder="Telephone"><input name="email" type="email" maxlength="160" placeholder="Email (optional)">${lead ? serviceField : '<input name="preferredTime" maxlength="120" placeholder="Preferred callback time">'}<textarea name="reason" maxlength="1000" placeholder="${lead ? "Additional notes" : "Reason for callback"}"></textarea><button>Submit ${state.client.status === "demo" ? "demo" : "request"}</button><span class="error"></span>`;
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       const button = form.querySelector("button"); button.disabled = true;

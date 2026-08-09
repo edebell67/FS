@@ -188,6 +188,22 @@ test("visitor events are tenant-scoped, anonymous, sanitized, whitelisted, and s
   assert.equal(denied.status, 404);
 });
 
+test("campaign open pixel records only a bounded opaque token and always returns a transparent GIF", async () => {
+  const pixel = await request("/api/public/campaign/open.gif?clientKey=demo_northstar&host=localhost&campaign=followup_test&t=Opaque_TestToken_1234");
+  assert.equal(pixel.status, 200);
+  assert.equal(pixel.headers.get("content-type"), "image/gif");
+  assert.equal(pixel.headers.get("x-tracking-event"), "stored");
+  const records = await request("/api/admin/records", { token: "test-secret" });
+  const event = records.body.records.events.find((item) => item.sessionId === "campaign:Opaque_TestToken_1234");
+  assert.equal(event.type, "email_open");
+  assert.equal(event.label, "campaign:followup_test");
+  assert.equal(event.path, "/campaign/open");
+  assert.equal("email" in event, false);
+  const invalid = await request("/api/public/campaign/open.gif?clientKey=demo_northstar&host=localhost&campaign=followup_test&t=short");
+  assert.equal(invalid.status, 200);
+  assert.equal(invalid.headers.get("x-tracking-event"), "ignored");
+});
+
 test("visitor analytics can be switched off per site", async () => {
   const off = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: false } });
   assert.equal(off.body.client.analyticsEnabled, false);
@@ -390,7 +406,7 @@ test("clients can be duplicated without sharing identity and remain in demo mode
 });
 
 test("optional Responses API adapter receives bounded approved context", async () => {
-  const client = JSON.parse(await readFile(path.join(projectRoot, "data", "clients.json"), "utf8"))[0];
+  const client = JSON.parse(await readFile(path.join(projectRoot, "data", "clients.json"), "utf8")).find((item) => item.id === "northstar-heating");
   let requestBody;
   const reply = await createAssistantReply({
     client,
