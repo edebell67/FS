@@ -12,6 +12,7 @@ import { Breadcrumbs } from "@/components/directory/Breadcrumbs";
 import { BusinessCard } from "@/components/directory/BusinessCard";
 import { SITE_URL, SITE_NAME } from "@/lib/site-config";
 import { getCurrentUser } from "@/lib/auth/session";
+import BusinessMap from "@/components/directory/BusinessMap";
 
 export const dynamic = "force-dynamic";
 
@@ -208,6 +209,16 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           </Link>
         </section>
       </div>
+
+      {(business.address || business.town || business.postcode) && (
+        <BusinessMap
+          address={business.address ?? ""}
+          town={business.town}
+          county={business.county}
+          postcode={business.postcode}
+          businessName={business.businessName}
+        />
+      )}
 
       {related.length > 0 && (
         <section className="mt-10">
