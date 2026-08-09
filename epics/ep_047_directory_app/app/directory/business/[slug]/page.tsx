@@ -11,6 +11,7 @@ import {
 import { Breadcrumbs } from "@/components/directory/Breadcrumbs";
 import { BusinessCard } from "@/components/directory/BusinessCard";
 import { SITE_URL, SITE_NAME } from "@/lib/site-config";
+import { getCurrentUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -43,6 +44,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
   const { slug } = await params;
   const business = await getBusinessBySlug(slug);
   if (!business) notFound();
+  const user = await getCurrentUser();
 
   const [related, nearby] = await Promise.all([
     getRelatedBusinesses(business.category, business.id, 4),
@@ -107,6 +109,11 @@ export default async function BusinessProfilePage({ params }: PageProps) {
             {business.town ? ` · ${business.town}` : ""}
           </p>
         </div>
+        {user && (
+          <span className="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
+            {business.stageLabel ?? "Listed"}
+          </span>
+        )}
       </div>
 
       {business.description && <p className="mt-6 text-slate-700">{business.description}</p>}
