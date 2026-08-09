@@ -107,9 +107,6 @@ export default async function BusinessProfilePage({ params }: PageProps) {
             {business.town ? ` · ${business.town}` : ""}
           </p>
         </div>
-        <span className="whitespace-nowrap rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700">
-          {business.stageLabel ?? "Listed"}
-        </span>
       </div>
 
       {business.description && <p className="mt-6 text-slate-700">{business.description}</p>}
