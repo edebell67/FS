@@ -128,7 +128,7 @@ export async function sendPreparedPreviewMessage(messageId: string) {
 /** Records a message as prepared; sending is always a distinct, explicit follow-up action. */
 export async function preparePreviewMessage(input: {
   businessId: string; messageType: PreviewMessageType;
-  recipientAddress: string | null; subject: string; textBody: string; actorUserId: string;
+  recipientAddress: string | null; subject: string; textBody: string; actorUserId: string | null;
 }) {
   const [row] = await db.insert(previewDeliveryMessages).values({
     businessId: input.businessId, messageType: input.messageType,
