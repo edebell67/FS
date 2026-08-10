@@ -217,6 +217,8 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           county={business.county}
           postcode={business.postcode}
           businessName={business.businessName}
+          latitude={business.latitude}
+          longitude={business.longitude}
         />
       )}
 

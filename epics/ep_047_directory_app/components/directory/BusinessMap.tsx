@@ -10,11 +10,15 @@ interface BusinessMapProps {
   county: string | null;
   postcode: string | null;
   businessName: string;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 /**
  * OpenStreetMap-powered map showing the business location.
- * Uses Leaflet (BSD-2-Clause) with OSM tiles and Nominatim geocoding.
+ * Uses stored lat/lng coordinates from the database when available;
+ * falls back to Nominatim geocoding only as a last resort.
+ * Uses Leaflet (BSD-2-Clause) with OSM tiles.
  * No API keys required — all data is free and open-source (ODbL).
  *
  * The attribution line is required by the OpenStreetMap copyright policy and
@@ -26,18 +30,69 @@ export default function BusinessMap({
   county,
   postcode,
   businessName,
+  latitude,
+  longitude,
 }: BusinessMapProps) {
   const mapRef = useRef<HTMLDivElement>(null);
   const instanceRef = useRef<L.Map | null>(null);
 
+  /** Render the map at the given coordinates. */
+  function renderMap(lat: number, lon: number, label: string) {
+    if (!mapRef.current || instanceRef.current) return;
+
+    const map = L.map(mapRef.current, {
+      center: [lat, lon],
+      zoom: 15,
+      scrollWheelZoom: false,
+      attributionControl: true,
+    });
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Red drop-pin SVG marker — no external image dependencies
+    const redIcon = L.divIcon({
+      html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 26 16 26s16-14 16-26C32 7.2 24.8 0 16 0z" fill="#e85347"/><circle cx="16" cy="15" r="7" fill="#fff"/></svg>`,
+      className: "",
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+    });
+
+    L.marker([lat, lon], { icon: redIcon })
+      .addTo(map)
+      .bindPopup(`<strong>${businessName}</strong><br>${label}`);
+
+    instanceRef.current = map;
+
+    // Enable scroll zoom on click/tap
+    map.on("click", () => {
+      if (map.scrollWheelZoom) {
+        map.scrollWheelZoom.enable();
+      }
+    });
+  }
+
   useEffect(() => {
     if (!mapRef.current || instanceRef.current) return;
 
+    // 1. Use stored lat/lng from DB when available — instant, reliable, zero API calls
+    if (latitude != null && longitude != null && !isNaN(latitude) && !isNaN(longitude)) {
+      const label = [address, town, county, postcode].filter(Boolean).join(", ");
+      renderMap(latitude, longitude, label);
+      return;
+    }
+
+    // 2. Fallback: geocode the address via Nominatim (free, no API key, max 1 req/sec)
     const fullAddress = [address, town, county, postcode]
       .filter(Boolean)
       .join(", ");
 
-    // Geocode via Nominatim (free, no API key, usage: max 1 req/sec)
+    if (!fullAddress) return;
+
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 8000);
 
@@ -52,7 +107,7 @@ export default function BusinessMap({
       .then((data) => {
         clearTimeout(timeout);
         if (!Array.isArray(data) || data.length === 0) {
-          // Fallback: try postcode only
+          // Try postcode only as last resort
           if (postcode) {
             return fetch(
               `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(postcode)}&limit=1&countrycodes=gb`,
@@ -72,45 +127,10 @@ export default function BusinessMap({
       })
       .then((result) => {
         if (!result || !mapRef.current || instanceRef.current) return;
-
         const lat = parseFloat(result[0].lat);
         const lon = parseFloat(result[0].lon);
         if (isNaN(lat) || isNaN(lon)) return;
-
-        const map = L.map(mapRef.current, {
-          center: [lat, lon],
-          zoom: 15,
-          scrollWheelZoom: false,
-          attributionControl: true,
-        });
-
-        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-          attribution:
-            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-          maxZoom: 19,
-        }).addTo(map);
-
-        // Red drop-pin SVG marker — no external image dependencies
-        const redIcon = L.divIcon({
-          html: `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="42" viewBox="0 0 32 42"><path d="M16 0C7.2 0 0 7.2 0 16c0 12 16 26 16 26s16-14 16-26C32 7.2 24.8 0 16 0z" fill="#e85347"/><circle cx="16" cy="15" r="7" fill="#fff"/></svg>`,
-          className: "",
-          iconSize: [32, 42],
-          iconAnchor: [16, 42],
-          popupAnchor: [0, -42],
-        });
-
-        L.marker([lat, lon], { icon: redIcon })
-          .addTo(map)
-          .bindPopup(`<strong>${businessName}</strong><br>${fullAddress}`);
-
-        instanceRef.current = map;
-
-        // Enable scroll zoom on click/tap
-        map.on("click", () => {
-          if (map.scrollWheelZoom) {
-            map.scrollWheelZoom.enable();
-          }
-        });
+        renderMap(lat, lon, fullAddress);
       })
       .catch(() => {
         clearTimeout(timeout);
@@ -120,7 +140,7 @@ export default function BusinessMap({
       clearTimeout(timeout);
       controller.abort();
     };
-  }, [address, town, county, postcode, businessName]);
+  }, [address, town, county, postcode, businessName, latitude, longitude]);
 
   // Cleanup on unmount
   useEffect(() => {
