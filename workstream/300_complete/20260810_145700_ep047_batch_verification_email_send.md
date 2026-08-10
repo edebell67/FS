@@ -16,3 +16,4 @@ Allow an authorised directory administrator to send the selected/prepared verifi
 - 2026-08-10 14:57 UTC — RED: batch-send contract test failed because the protected route did not exist.
 - 2026-08-10 14:57 UTC — GREEN: implemented protected confirmed batch send, per-recipient link reissue and Gmail handoff, durable per-recipient audit/outcomes, and the admin send panel.
 - 2026-08-10 14:57 UTC — Focused security/delivery tests 12/12 passed; full suite 168/168 passed; typecheck passed; production build passed (existing BusinessMap dependency warning only); diff check passed.
+- 2026-08-10 15:27 UTC — Deployed commit `ff795bc` to Render deployment `dep-d9suq9m7bikc73aac40g`, which reached `live`. Health endpoint reports database connected. Render confirms `VERIFICATION_SENDER_ADDRESS` is configured. Unauthenticated browser access correctly redirected to admin sign-in; no email was sent during deployment verification.
