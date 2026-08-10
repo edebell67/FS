@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/session";
 import { logoutAction } from "@/app/directoryadmin/login/actions";
 import { AdminMenuModal } from "@/components/admin/AdminMenuModal";
+import { SiteHeaderNav } from "@/components/layout/SiteHeaderNav";
 
 /**
  * Rendered on every page (root layout), including the fully public
@@ -11,6 +12,9 @@ import { AdminMenuModal } from "@/components/admin/AdminMenuModal";
  *
  * Roles aren't enforced yet (see AUTH_PLAN.md §4) — any authenticated user
  * sees the full admin nav regardless of role.
+ *
+ * On verify/claim pages, navigation links are disabled to keep business
+ * owners focused on completing their form.
  */
 export async function SiteHeader() {
   const user = await getCurrentUser();
@@ -18,19 +22,11 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-[#152022] bg-[#f6f3ed]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <Link href="/directory" className="font-display text-2xl font-semibold tracking-[-0.04em] text-[#152022]">
-          The <span className="text-brand-600">Directory</span>
-        </Link>
-        <nav className="flex items-center gap-6 text-sm font-medium text-[#4c5657]">
-          <a href="https://thetechprinciple.com/" className="hover:text-brand-700">
-            TTP
-          </a>
-          <Link href="/directory/search" className="hover:text-brand-700">
-            Search
-          </Link>
-          <a href="https://thetechprinciple.com/news/" className="hover:text-brand-700">
-            News
-          </a>
+        <div className="font-display text-2xl font-semibold tracking-[-0.04em] text-[#152022]">
+          TTP <span className="text-brand-600">Directory</span>
+        </div>
+        <div className="flex items-center gap-6 text-sm font-medium text-[#4c5657]">
+          <SiteHeaderNav />
           {user ? (
             <>
               <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
@@ -51,7 +47,7 @@ export async function SiteHeader() {
               </Link>
             </>
           )}
-        </nav>
+        </div>
       </div>
     </header>
   );
