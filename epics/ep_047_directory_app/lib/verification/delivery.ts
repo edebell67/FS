@@ -20,7 +20,7 @@ import {
   verificationLinks,
   businesses,
 } from "@/lib/db/schema";
-import { VERIFICATION_TEMPLATE_VERSION, renderVerificationEmail } from "./email-template";
+import { VERIFICATION_TEMPLATE_VERSION, renderVerificationEmail, senderPhysicalAddress } from "./email-template";
 import { isValidRawToken, hashVerificationToken } from "./tokens";
 import { businessListingUrl, trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from "./urls";
 
@@ -31,6 +31,7 @@ export type DeliveryEnvironment = Partial<Record<
   | "VERIFICATION_DELIVERY_MODE" | "VERIFICATION_DELIVERY_APPROVED"
   | "VERIFICATION_EMAIL_TEST_PLAINTEXT"
   | "GMAIL_OAUTH_CLIENT_ID" | "GMAIL_OAUTH_CLIENT_SECRET" | "GMAIL_OAUTH_REFRESH_TOKEN"
+  | "VERIFICATION_SENDER_ADDRESS"
   | "NODE_ENV" | "NEXT_PUBLIC_SITE_URL",
   string | undefined
 >>;
@@ -55,11 +56,13 @@ export function getDeliveryPolicy(
     env.GMAIL_OAUTH_REFRESH_TOKEN?.trim(),
   );
   const publicOriginReady = env.NODE_ENV === "production";
+  const senderAddressConfigured = Boolean(senderPhysicalAddress(env));
   const reasons = [
     mode !== "gmail-api" && "Delivery mode is disabled.",
     !approved && "Gmail API delivery has not been explicitly approved.",
     !oauthConfigured && "Gmail OAuth configuration is incomplete.",
     !publicOriginReady && "Sending requires the canonical production origin.",
+    !senderAddressConfigured && "A registered sender address must be configured before delivery.",
     recipient !== undefined && !recipientPresent && "A recorded business email is required.",
   ].filter(Boolean) as string[];
   return {
