@@ -27,7 +27,16 @@ export async function getEligibleVerificationBusinesses() {
     id: businesses.id, businessRef: businesses.businessRef, businessName: businesses.businessName,
     email: businesses.email, town: businesses.town, validationStatus: businesses.validationStatus,
   }).from(businesses)
-    .where(and(inArray(businesses.validationStatus, ["validated", "partially_validated"]), eq(businesses.status, "active")))
+    .where(and(
+      inArray(businesses.validationStatus, ["validated", "partially_validated"]),
+      eq(businesses.status, "active"),
+      sql`NOT EXISTS (
+        SELECT 1 FROM verification_deliveries sent_delivery
+        INNER JOIN verification_links sent_link ON sent_link.id = sent_delivery.verification_link_id
+        WHERE sent_link.business_id = ${businesses.id}
+          AND sent_delivery.sent_at IS NOT NULL
+      )`,
+    ))
     .orderBy(businesses.businessName);
 }
 

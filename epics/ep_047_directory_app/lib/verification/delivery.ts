@@ -19,6 +19,8 @@ import {
   verificationDeliveryEvents,
   verificationLinks,
   businesses,
+  pipelineStages,
+  stageTransitions,
 } from "@/lib/db/schema";
 import { VERIFICATION_TEMPLATE_VERSION, renderVerificationEmail } from "./email-template";
 import { isValidRawToken, hashVerificationToken } from "./tokens";
@@ -275,6 +277,8 @@ export async function sendPreparedDelivery(input: {
     businessName: businesses.businessName,
     businessSlug: businesses.slug,
     businessEmail: businesses.email,
+    businessId: businesses.id,
+    currentStageId: businesses.currentStageId,
   }).from(verificationDeliveries)
     .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
     .innerJoin(businesses, eq(verificationLinks.businessId, businesses.id))
@@ -341,6 +345,17 @@ export async function sendPreparedDelivery(input: {
         deliveryId: record.id, eventType: "sent", actorUserId: input.actorUserId,
         metadata: { providerAccepted: true },
       });
+      const [sentStage] = await tx.select().from(pipelineStages)
+        .where(eq(pipelineStages.key, "verification_sent")).limit(1);
+      if (sentStage && record.currentStageId !== sentStage.id) {
+        await tx.update(businesses).set({ currentStageId: sentStage.id, stageEnteredAt: now, lastUpdated: now })
+          .where(eq(businesses.id, record.businessId));
+        await tx.insert(stageTransitions).values({
+          businessId: record.businessId, fromStageId: record.currentStageId, toStageId: sentStage.id,
+          occurredAt: now, source: "automation", actorUserId: input.actorUserId,
+          reason: "Verification email accepted by Gmail API",
+        });
+      }
     });
     return { status: "sent" as const, sentAt: now, providerMessageId: result.messageId ?? null };
   } catch (error) {
