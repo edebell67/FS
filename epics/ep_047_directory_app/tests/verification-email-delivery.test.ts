@@ -12,10 +12,10 @@ const enabledEnvironment = {
   NODE_ENV: "production",
   VERIFICATION_DELIVERY_MODE: "gmail-api",
   VERIFICATION_DELIVERY_APPROVED: "true",
-  VERIFICATION_SENDER_ADDRESS: "1 Example Street, London, SW1A 1AA",
   GMAIL_OAUTH_CLIENT_ID: "test-client-id",
   GMAIL_OAUTH_CLIENT_SECRET: "test-client-secret",
   GMAIL_OAUTH_REFRESH_TOKEN: "test-refresh-token",
+  VERIFICATION_SENDER_ADDRESS: "1 Example Street, London, E1 1AA",
 };
 const PROSPECT_EMAIL = "prospect@example.com";
 
@@ -124,6 +124,28 @@ test("tracked URLs have a fixed-origin redirect destination and email labels no 
   // The expiry must read as a date a person would write, never an ISO stamp.
   assert.match(email.text, /expires on 1 August 2026\./);
   assert.doesNotMatch(email.text, /\d{4}-\d{2}-\d{2}T/);
+});
+
+test("verification HTML uses the approved black-and-lime TTP shell without raw action URLs", () => {
+  const email = renderVerificationEmail({
+    businessName: "Example Ltd",
+    verificationUrl: "https://thetechprinciple.com/verify/capability-token",
+    listingUrl: "https://thetechprinciple.com/directory/business/example-ltd",
+    expiresAt: new Date("2026-08-16T00:00:00Z"),
+  });
+  assert.match(email.html, /background:#111111/);
+  assert.match(email.html, /background:#d7f542;color:#111111/);
+  assert.match(email.html, /Review and correct details/);
+  assert.match(email.html, /View public listing/);
+  assert.doesNotMatch(email.html, /prepared message as sent/i);
+  assert.doesNotMatch(email.html, />https:\/\/thetechprinciple\.com\/verify/);
+  assert.doesNotMatch(email.html, />https:\/\/thetechprinciple\.com\/directory/);
+});
+
+test("delivery remains fail-closed while the required sender address is unset", () => {
+  const { VERIFICATION_SENDER_ADDRESS: _address, ...withoutAddress } = enabledEnvironment;
+  assert.equal(getDeliveryPolicy(PROSPECT_EMAIL, withoutAddress).canSend, false);
+  assert.equal(getDeliveryPolicy(PROSPECT_EMAIL, enabledEnvironment).canSend, true);
 });
 
 test("migration stores hashes and append-only event metadata, never raw capabilities", async () => {
