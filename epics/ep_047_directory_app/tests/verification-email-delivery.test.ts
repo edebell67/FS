@@ -12,6 +12,7 @@ const enabledEnvironment = {
   NODE_ENV: "production",
   VERIFICATION_DELIVERY_MODE: "gmail-api",
   VERIFICATION_DELIVERY_APPROVED: "true",
+  VERIFICATION_SENDER_ADDRESS: "1 Example Street, London, SW1A 1AA",
   GMAIL_OAUTH_CLIENT_ID: "test-client-id",
   GMAIL_OAUTH_CLIENT_SECRET: "test-client-secret",
   GMAIL_OAUTH_REFRESH_TOKEN: "test-refresh-token",

@@ -29,7 +29,7 @@ export type DeliveryMode = "disabled" | "gmail-api";
 
 export type DeliveryEnvironment = Partial<Record<
   | "VERIFICATION_DELIVERY_MODE" | "VERIFICATION_DELIVERY_APPROVED"
-  | "VERIFICATION_EMAIL_TEST_PLAINTEXT"
+  | "VERIFICATION_EMAIL_TEST_PLAINTEXT" | "VERIFICATION_SENDER_ADDRESS"
   | "GMAIL_OAUTH_CLIENT_ID" | "GMAIL_OAUTH_CLIENT_SECRET" | "GMAIL_OAUTH_REFRESH_TOKEN"
   | "NODE_ENV" | "NEXT_PUBLIC_SITE_URL",
   string | undefined
@@ -55,11 +55,13 @@ export function getDeliveryPolicy(
     env.GMAIL_OAUTH_REFRESH_TOKEN?.trim(),
   );
   const publicOriginReady = env.NODE_ENV === "production";
+  const senderAddressConfigured = Boolean(env.VERIFICATION_SENDER_ADDRESS?.trim());
   const reasons = [
     mode !== "gmail-api" && "Delivery mode is disabled.",
     !approved && "Gmail API delivery has not been explicitly approved.",
     !oauthConfigured && "Gmail OAuth configuration is incomplete.",
     !publicOriginReady && "Sending requires the canonical production origin.",
+    !senderAddressConfigured && "The registered sender address must be configured before sending.",
     recipient !== undefined && !recipientPresent && "A recorded business email is required.",
   ].filter(Boolean) as string[];
   return {
