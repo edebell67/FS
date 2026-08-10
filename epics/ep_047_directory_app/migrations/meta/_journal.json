@@ -169,6 +169,13 @@
       "when": 1786600000000,
       "tag": "0023_site_in_review_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786630000000,
+      "tag": "0024_verification_batch_send_status",
+      "breakpoints": true
     }
   ]
 }
