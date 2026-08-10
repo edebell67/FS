@@ -87,6 +87,8 @@ test("owner reporting stream: initial snapshot on connect, live push on new even
   const pushed = (await events.next()).value;
   assert.equal(pushed.clientId, "the-tech-principle-local");
   assert.equal(pushed.summary.events, 1, "the pushed snapshot reflects the new event, and only one — the other tenant's write did not leak in");
+  assert.equal(pushed.compare.days, 7, "Compare rides alongside Overview in the same push frame — live_subscribe (3.3), not poll-only");
+  assert.equal(pushed.compare.comparison.pageViews.today, 1, "the pushed compare frame reflects the same new event Overview just saw");
 
   const secondWrite = await fetch(`${base}/api/public/leads`, {
     method: "POST", headers: { "Content-Type": "application/json" },

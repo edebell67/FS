@@ -190,6 +190,49 @@ function ownerPerformance(records, client, now = new Date()) {
   };
 }
 
+// Same computation GET /api/owner/reporting/compare already does, factored
+// out so the SSE stream (Phase 2b) can push identical Compare-tab snapshots
+// too, not just Overview — closing the live_subscribe (3.3) gap where the
+// Compare tab stayed poll-only. Always computed at the default 7-day window
+// for the push path; the owner's Refresh button still re-fetches at their
+// chosen day count, which the push intentionally doesn't try to track.
+function buildCompareSnapshot(store, client, days = 7) {
+  const events = (store.listRecords().events || []).filter((e) => e.clientId === client.id);
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const todayEvents = events.filter((e) => (e.createdAt || e.timestamp || "").slice(0, 10) === todayStr);
+  const pastCutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
+  const pastEvents = events.filter((e) => {
+    const d = new Date(e.createdAt || e.timestamp || 0);
+    return d >= pastCutoff && d < new Date(now.getTime() - 24 * 60 * 60 * 1000);
+  });
+  const avgMultiplier = days > 0 ? 1 / days : 1;
+  const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "outbound_click", "form_start", "form_submit", "promotion_click"]);
+  const toMetric = (arr) => ({
+    visitors: new Set(arr.filter((e) => e.sessionId).map((e) => e.sessionId)).size,
+    pageViews: arr.filter((e) => e.type === "pageview").length,
+    engagedPct: arr.length > 0 ? Math.round((arr.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).length / arr.length) * 100) : 0,
+    ctaClicks: arr.filter((e) => e.type === "cta_click").length
+  });
+  const today = toMetric(todayEvents);
+  const past = toMetric(pastEvents);
+  const average = { visitors: Math.round(past.visitors * avgMultiplier), pageViews: Math.round(past.pageViews * avgMultiplier), engagedPct: past.engagedPct, ctaClicks: Math.round(past.ctaClicks * avgMultiplier) };
+  const perService = [...new Set(events.map((e) => e.service).filter(Boolean))].map((svc) => {
+    const todaySvc = todayEvents.filter((e) => e.service === svc);
+    const pastSvc = pastEvents.filter((e) => e.service === svc);
+    return {
+      service: svc,
+      views: { today: todaySvc.filter((e) => e.type === "service_view").length, average: Math.round(pastSvc.filter((e) => e.type === "service_view").length * avgMultiplier) },
+      clicks: { today: todaySvc.filter((e) => engagedTypes.has(e.type)).length, average: Math.round(pastSvc.filter((e) => engagedTypes.has(e.type)).length * avgMultiplier) }
+    };
+  }).filter((s) => s.views.today > 0 || s.views.average > 0);
+  const signals = perService
+    .filter((item) => item.views.today >= 3 && item.views.today >= Math.max(2, item.views.average * 1.5))
+    .sort((left, right) => (right.views.today - right.views.average) - (left.views.today - left.views.average))
+    .map((item) => ({ service: item.service, viewsToday: item.views.today, averageViews: item.views.average, recommendation: "Consider a time-bound promotion for this service." }));
+  return { comparison: { visitors: computeChange(today.visitors, average.visitors), pageViews: computeChange(today.pageViews, average.pageViews), engagedPct: { today: today.engagedPct, average: average.engagedPct, change: today.engagedPct - average.engagedPct }, ctaClicks: computeChange(today.ctaClicks, average.ctaClicks), perService, signals }, days };
+}
+
 // Same computation GET /api/owner/reporting already does, factored out so
 // the SSE stream (Phase 2b) can push identical snapshots rather than
 // duplicating this logic or inventing a second, divergent shape.
@@ -225,7 +268,11 @@ function pushReportingSnapshot(store, clientId) {
   if (!subscribers || subscribers.size === 0) return;
   const client = store.listClients().find((c) => c.id === clientId);
   if (!client) return;
-  const payload = `data: ${JSON.stringify(buildReportingSnapshot(store, client))}\n\n`;
+  // Compare rides alongside the Overview snapshot in the same frame — one
+  // push, one parse, both tabs live. Always the default 7-day window; a
+  // non-default day count still needs the polled Refresh (documented on
+  // the live_subscribe workflow node, not an oversight).
+  const payload = `data: ${JSON.stringify({ ...buildReportingSnapshot(store, client), compare: buildCompareSnapshot(store, client) })}\n\n`;
   for (const res of subscribers) res.write(payload);
 }
 
@@ -744,43 +791,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         if (!anyOwnerAuthorized(req, env, clientId)) return json(res, 401, { error: "Unauthorized." });
         const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
         if (!client) return json(res, 404, { error: "Client not found." });
-        const events = (store.listRecords().events || []).filter((e) => e.clientId === clientId);
-        const now = new Date();
-        const todayStr = now.toISOString().slice(0, 10);
-        const todayEvents = events.filter((e) => (e.createdAt || e.timestamp || "").slice(0, 10) === todayStr);
-        const pastCutoff = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
-        const pastEvents = events.filter((e) => {
-          const d = new Date(e.createdAt || e.timestamp || 0);
-          return d >= pastCutoff && d < new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        });
-        const avgMultiplier = days > 0 ? 1 / days : 1;
-        const engagedTypes = new Set(["cta_click", "phone_click", "email_click", "whatsapp_click", "outbound_click", "form_start", "form_submit", "promotion_click"]);
-        const toMetric = (arr) => ({
-          visitors: new Set(arr.filter((e) => e.sessionId).map((e) => e.sessionId)).size,
-          pageViews: arr.filter((e) => e.type === "pageview").length,
-          engagedPct: arr.length > 0 ? Math.round((arr.filter((e) => engagedTypes.has(e.type) || (e.type === "scroll_depth" && Number(e.scrollPct) >= 50)).length / arr.length) * 100) : 0,
-          ctaClicks: arr.filter((e) => e.type === "cta_click").length
-        });
-        const today = toMetric(todayEvents);
-        const past = toMetric(pastEvents);
-        const average = { visitors: Math.round(past.visitors * avgMultiplier), pageViews: Math.round(past.pageViews * avgMultiplier), engagedPct: past.engagedPct, ctaClicks: Math.round(past.ctaClicks * avgMultiplier) };
-        const perService = [...new Set(events.map((e) => e.service).filter(Boolean))].map((svc) => {
-          const todaySvc = todayEvents.filter((e) => e.service === svc);
-          const pastSvc = pastEvents.filter((e) => e.service === svc);
-          return {
-            service: svc,
-            views: { today: todaySvc.filter((e) => e.type === "service_view").length, average: Math.round(pastSvc.filter((e) => e.type === "service_view").length * avgMultiplier) },
-            clicks: { today: todaySvc.filter((e) => engagedTypes.has(e.type)).length, average: Math.round(pastSvc.filter((e) => engagedTypes.has(e.type)).length * avgMultiplier) }
-          };
-        }).filter((s) => s.views.today > 0 || s.views.average > 0);
-        // A signal requires both enough current attention to matter and a
-        // clear uplift above the selected daily baseline. Sparse traffic is
-        // deliberately not promoted as a recommendation.
-        const signals = perService
-          .filter((item) => item.views.today >= 3 && item.views.today >= Math.max(2, item.views.average * 1.5))
-          .sort((left, right) => (right.views.today - right.views.average) - (left.views.today - left.views.average))
-          .map((item) => ({ service: item.service, viewsToday: item.views.today, averageViews: item.views.average, recommendation: "Consider a time-bound promotion for this service." }));
-        return json(res, 200, { comparison: { visitors: computeChange(today.visitors, average.visitors), pageViews: computeChange(today.pageViews, average.pageViews), engagedPct: { today: today.engagedPct, average: average.engagedPct, change: today.engagedPct - average.engagedPct }, ctaClicks: computeChange(today.ctaClicks, average.ctaClicks), perService, signals }, days });
+        return json(res, 200, buildCompareSnapshot(store, client, days));
       }
 
       // Promotion effectiveness

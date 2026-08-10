@@ -13,7 +13,14 @@ function openReportingStream(){
   stream.onmessage = (event) => {
     $('live-status').textContent = 'Live';
     $('live-status').classList.remove('stale');
-    try { renderOverview(JSON.parse(event.data)); } catch { /* ignore a malformed frame, keep the connection open */ }
+    try {
+      const payload = JSON.parse(event.data);
+      renderOverview(payload);
+      // Only push into Compare while the owner is on the default 7-day
+      // window they'd get from a fresh Refresh — a custom day count is an
+      // explicit choice the live push must not silently overwrite.
+      if (payload.compare && (parseInt($('compare-days').value) || 7) === 7) renderCompare(payload.compare);
+    } catch { /* ignore a malformed frame, keep the connection open */ }
   };
   stream.onerror = () => {
     // EventSource retries on its own; only tell the owner their data may be
@@ -149,30 +156,38 @@ async function toggleTracking(){
   }
 }
 
+// Phase 2b: shared by the polled Refresh button and the live SSE push, so
+// both paths render identically — see openReportingStream() below, which
+// calls this with the compare frame that now rides alongside every
+// Overview push (default 7-day window only; a non-default day count still
+// needs a manual Refresh, matching the days param the owner last chose).
+function renderCompare(data){
+  const c = data.comparison || {};
+  const pc = (v)=>`<span class="change ${v.change.startsWith('+')?'up':'down'}">${v.change}</span>`;
+  $('compare-stats').innerHTML = `
+    <div class="stat-card"><span>Visitors</span><strong>${c.visitors?.today||0}</strong>${pc(c.visitors||{})}</div>
+    <div class="stat-card"><span>Page views</span><strong>${c.pageViews?.today||0}</strong>${pc(c.pageViews||{})}</div>
+    <div class="stat-card"><span>Engaged</span><strong>${c.engagedPct?.today||0}%</strong><span class="change">avg ${c.engagedPct?.average||0}%</span></div>
+    <div class="stat-card"><span>CTA clicks</span><strong>${c.ctaClicks?.today||0}</strong>${pc(c.ctaClicks||{})}</div>
+  `;
+  const services = c.perService || [];
+  const signals = c.signals || [];
+  $('compare-signals').innerHTML = signals.length
+    ? signals.map((signal) => `<div class="service-row"><span class="svc-name">${signal.service}</span><span class="svc-val">${signal.viewsToday} views today · average ${signal.averageViews}</span><span class="svc-change up">Act</span></div>`).join('')
+    : '<div class="empty-state">No actionable demand signal yet. The dashboard waits for sufficient above-baseline interest.</div>';
+  $('compare-services').innerHTML = services.length
+    ? services.map(s=>{
+        const vc = s.views.change;
+        const cc = s.clicks.change;
+        return `<div class="service-row"><span class="svc-name">${s.service}</span><span class="svc-val">Views: ${s.views.today} <small>(avg ${s.views.average})</small></span><span class="svc-change ${vc>0?'up':'down'}">${vc>0?'+':''}${vc||0}%</span></div>`;
+      }).join('')
+    : '<div class="empty-state">No service data yet. Data appears after visitors interact with your services.</div>';
+}
+
 async function loadCompare(){
   const days = parseInt($('compare-days').value) || 7;
   try {
-    const data = await api(`/api/owner/reporting/compare?tenant=${encodeURIComponent(STATE.tenant)}&days=${days}`);
-    const c = data.comparison || {};
-    const pc = (v)=>`<span class="change ${v.change.startsWith('+')?'up':'down'}">${v.change}</span>`;
-    $('compare-stats').innerHTML = `
-      <div class="stat-card"><span>Visitors</span><strong>${c.visitors?.today||0}</strong>${pc(c.visitors||{})}</div>
-      <div class="stat-card"><span>Page views</span><strong>${c.pageViews?.today||0}</strong>${pc(c.pageViews||{})}</div>
-      <div class="stat-card"><span>Engaged</span><strong>${c.engagedPct?.today||0}%</strong><span class="change">avg ${c.engagedPct?.average||0}%</span></div>
-      <div class="stat-card"><span>CTA clicks</span><strong>${c.ctaClicks?.today||0}</strong>${pc(c.ctaClicks||{})}</div>
-    `;
-    const services = c.perService || [];
-    const signals = c.signals || [];
-    $('compare-signals').innerHTML = signals.length
-      ? signals.map((signal) => `<div class="service-row"><span class="svc-name">${signal.service}</span><span class="svc-val">${signal.viewsToday} views today · average ${signal.averageViews}</span><span class="svc-change up">Act</span></div>`).join('')
-      : '<div class="empty-state">No actionable demand signal yet. The dashboard waits for sufficient above-baseline interest.</div>';
-    $('compare-services').innerHTML = services.length
-      ? services.map(s=>{
-          const vc = s.views.change;
-          const cc = s.clicks.change;
-          return `<div class="service-row"><span class="svc-name">${s.service}</span><span class="svc-val">Views: ${s.views.today} <small>(avg ${s.views.average})</small></span><span class="svc-change ${vc>0?'up':'down'}">${vc>0?'+':''}${vc||0}%</span></div>`;
-        }).join('')
-      : '<div class="empty-state">No service data yet. Data appears after visitors interact with your services.</div>';
+    renderCompare(await api(`/api/owner/reporting/compare?tenant=${encodeURIComponent(STATE.tenant)}&days=${days}`));
   } catch(e){
     $('compare-stats').innerHTML = `<div class="stat-card"><span>Error</span><strong>${e.message}</strong></div>`;
   }
