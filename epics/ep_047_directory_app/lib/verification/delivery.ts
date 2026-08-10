@@ -96,6 +96,7 @@ export async function prepareDeliveryPreview(input: {
   recipientAddress: string;
   actorUserId: string;
   businessName: string;
+  listingUrl: string;
   rawToken: string;
   expiresAt: Date;
 }) {
@@ -119,7 +120,7 @@ export async function prepareDeliveryPreview(input: {
   const clickUrl = trackingClickUrl(auditId, trackingKey, input.rawToken);
   const pixelUrl = trackingPixelUrl(auditId, trackingKey);
   const message = renderVerificationEmail({
-    businessName: input.businessName, verificationUrl: clickUrl,
+    businessName: input.businessName, listingUrl: input.listingUrl, verificationUrl: clickUrl,
     trackingPixelUrl: pixelUrl, expiresAt: input.expiresAt,
   });
   return {
@@ -284,6 +285,7 @@ export async function sendPreparedDelivery(input: {
     expiresAt: verificationLinks.expiresAt,
     revokedAt: verificationLinks.revokedAt,
     businessName: businesses.businessName,
+    businessSlug: businesses.slug,
   }).from(verificationDeliveries)
     .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
     .innerJoin(businesses, eq(verificationLinks.businessId, businesses.id))
@@ -326,7 +328,9 @@ export async function sendPreparedDelivery(input: {
         html: "<p>This is a plain text test message with no links or attachments, sent to confirm mail delivery between these two addresses.</p><p>No action is needed.</p>",
       }
     : renderVerificationEmail({
-        businessName: record.businessName, verificationUrl, expiresAt: record.expiresAt,
+        businessName: record.businessName,
+        listingUrl: `${new URL(verificationUrl).origin}/directory/business/${encodeURIComponent(record.businessSlug)}`,
+        verificationUrl, expiresAt: record.expiresAt,
       });
   try {
     const transport = options.transport ?? createGmailApiTransport(env);

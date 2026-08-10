@@ -122,10 +122,13 @@ test("tracked URLs have a fixed-origin redirect destination and email labels no 
   assert.equal(click, "https://thetechprinciple.com/v/c/delivery/tracking/capability");
   assert.equal(pixel, "https://thetechprinciple.com/v/o/delivery/tracking.gif");
   const email = renderVerificationEmail({
-    businessName: "<Business>", verificationUrl: click,
+    businessName: "<Business>", listingUrl: "https://thetechprinciple.com/directory/business/example",
+    verificationUrl: click,
     trackingPixelUrl: pixel, expiresAt: new Date("2026-08-01T00:00:00Z"),
   });
-  assert.match(email.html, /&lt;Business&gt;/);
+  assert.equal(email.subject, "Is <Business>'s listing on thetechprinciple.com correct?");
+  assert.match(email.text, /current listing here: https:\/\/thetechprinciple\.com\/directory\/business\/example/);
+  assert.match(email.html, /current listing here/);
   assert.match(email.html, /width="1"/);
   assert.doesNotMatch(email.text, /delivered/i);
 });

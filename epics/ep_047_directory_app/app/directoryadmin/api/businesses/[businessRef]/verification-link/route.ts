@@ -22,7 +22,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ bus
     }
     const preview = await prepareDeliveryPreview({
       verificationLinkId: link.id, recipientAddress, actorUserId: user.id,
-      businessName: business.businessName, rawToken: link.rawToken, expiresAt: link.expiresAt,
+      businessName: business.businessName,
+      listingUrl: `${new URL(verificationCapabilityUrl(link.rawToken)).origin}/directory/business/${encodeURIComponent(business.slug)}`,
+      rawToken: link.rawToken, expiresAt: link.expiresAt,
     });
     return NextResponse.json({
       url: verificationCapabilityUrl(link.rawToken), linkId: link.id,
