@@ -2,36 +2,26 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import {
-  createGmailApiTransport, getDeliveryPolicy, INITIAL_ALLOWED_RECIPIENT, VERIFICATION_FROM,
+  createGmailApiTransport, getDeliveryPolicy, VERIFICATION_FROM,
   handoffVerificationEmail,
 } from "../lib/verification/delivery";
 import { renderVerificationEmail } from "../lib/verification/email-template";
-import { trackingClickUrl, trackingPixelUrl } from "../lib/verification/urls";
+import { businessListingUrl, trackingClickUrl, trackingPixelUrl } from "../lib/verification/urls";
 
 const enabledEnvironment = {
   NODE_ENV: "production",
   VERIFICATION_DELIVERY_MODE: "gmail-api",
   VERIFICATION_DELIVERY_APPROVED: "true",
-  VERIFICATION_RECIPIENT_ALLOWLIST: INITIAL_ALLOWED_RECIPIENT,
   GMAIL_OAUTH_CLIENT_ID: "test-client-id",
   GMAIL_OAUTH_CLIENT_SECRET: "test-client-secret",
   GMAIL_OAUTH_REFRESH_TOKEN: "test-refresh-token",
 };
+const PROSPECT_EMAIL = "prospect@example.com";
 
-test("Gmail API policy fails closed and enables only explicitly configured recipients", () => {
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, enabledEnvironment).canSend, true);
-  assert.equal(getDeliveryPolicy("prospect@example.com", enabledEnvironment).canSend, false);
-  const multiRecipientEnvironment = {
-    ...enabledEnvironment, VERIFICATION_RECIPIENT_ALLOWLIST:
-      `${INITIAL_ALLOWED_RECIPIENT},second-allowed@example.com`,
-  };
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, multiRecipientEnvironment).canSend, true);
-  assert.equal(getDeliveryPolicy("second-allowed@example.com", multiRecipientEnvironment).canSend, true);
-  assert.equal(getDeliveryPolicy("prospect@example.com", multiRecipientEnvironment).canSend, false);
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
-    ...enabledEnvironment, VERIFICATION_RECIPIENT_ALLOWLIST: "",
-  }).canSend, false);
-  assert.equal(getDeliveryPolicy(INITIAL_ALLOWED_RECIPIENT, {
+test("Gmail API policy enables a verified business recipient and still fails closed for transport prerequisites", () => {
+  assert.equal(getDeliveryPolicy(PROSPECT_EMAIL, enabledEnvironment).canSend, true);
+  assert.equal(getDeliveryPolicy("", enabledEnvironment).canSend, false);
+  assert.equal(getDeliveryPolicy(PROSPECT_EMAIL, {
     ...enabledEnvironment, GMAIL_OAUTH_REFRESH_TOKEN: "",
   }).canSend, false);
 });
@@ -39,7 +29,7 @@ test("Gmail API policy fails closed and enables only explicitly configured recip
 test("controlled sender handoff uses the fixed From identity and no network transport", async () => {
   const messages: Array<Record<string, string>> = [];
   const result = await handoffVerificationEmail({
-    recipientAddress: INITIAL_ALLOWED_RECIPIENT,
+    recipientAddress: PROSPECT_EMAIL,
     subject: "Test verification", text: "test", html: "<p>test</p>",
     transport: {
       async sendMessage(message) {
@@ -51,12 +41,12 @@ test("controlled sender handoff uses the fixed From identity and no network tran
   assert.equal(result.messageId, "fake-provider-id");
   assert.equal(messages.length, 1);
   assert.equal(messages[0]?.from, VERIFICATION_FROM);
-  assert.equal(messages[0]?.to, INITIAL_ALLOWED_RECIPIENT);
+  assert.equal(messages[0]?.to, PROSPECT_EMAIL);
 });
 
 test("controlled handoff rejects a Gmail response without a message ID", async () => {
   await assert.rejects(() => handoffVerificationEmail({
-    recipientAddress: INITIAL_ALLOWED_RECIPIENT,
+    recipientAddress: PROSPECT_EMAIL,
     subject: "Test verification", text: "test", html: "<p>test</p>",
     transport: { async sendMessage() { return { messageId: "" }; } },
   }), /message ID/);
@@ -71,13 +61,13 @@ test("Gmail transport refreshes OAuth and sends an encoded fixed-identity messag
     if (requests.length === 3) return Response.json({ id: "gmail-message-id", threadId: "gmail-thread-id" });
     return Response.json({
       id: "gmail-message-id", labelIds: ["SENT"],
-      payload: { headers: [{ name: "From", value: VERIFICATION_FROM }, { name: "To", value: INITIAL_ALLOWED_RECIPIENT }] },
+      payload: { headers: [{ name: "From", value: VERIFICATION_FROM }, { name: "To", value: PROSPECT_EMAIL }] },
     });
   };
   const transport = createGmailApiTransport(enabledEnvironment, fakeFetch as typeof fetch);
   const result = await transport.sendMessage({
     from: VERIFICATION_FROM,
-    to: INITIAL_ALLOWED_RECIPIENT,
+    to: PROSPECT_EMAIL,
     subject: "Test verification ✓",
     text: "plain body",
     html: "<p>html body</p>",
@@ -96,7 +86,7 @@ test("Gmail transport refreshes OAuth and sends an encoded fixed-identity messag
   const sendBody = JSON.parse(String(requests[2]?.init?.body)) as { raw: string };
   const raw = Buffer.from(sendBody.raw, "base64url").toString("utf8");
   assert.match(raw, new RegExp(`From: ${VERIFICATION_FROM}`));
-  assert.match(raw, new RegExp(`To: ${INITIAL_ALLOWED_RECIPIENT}`));
+  assert.match(raw, new RegExp(`To: ${PROSPECT_EMAIL}`));
   assert.match(raw, /Content-Type: multipart\/alternative/);
   assert.doesNotMatch(raw, /refresh-token|access-token|client-secret/);
 });
@@ -108,7 +98,7 @@ test("Gmail transport fails closed and never includes provider bodies in errors"
   const transport = createGmailApiTransport(enabledEnvironment, (async () =>
     new Response('{"error":"test-refresh-token"}', { status: 401 })) as typeof fetch);
   await assert.rejects(() => transport.sendMessage({
-    from: VERIFICATION_FROM, to: INITIAL_ALLOWED_RECIPIENT,
+    from: VERIFICATION_FROM, to: PROSPECT_EMAIL,
     subject: "Test", text: "test", html: "<p>test</p>",
   }), (error: unknown) => {
     assert.equal(error instanceof Error && error.message, "Gmail OAuth token refresh failed.");
@@ -121,16 +111,18 @@ test("tracked URLs have a fixed-origin redirect destination and email labels no 
   const pixel = trackingPixelUrl("delivery", "tracking", enabledEnvironment);
   assert.equal(click, "https://thetechprinciple.com/v/c/delivery/tracking/capability");
   assert.equal(pixel, "https://thetechprinciple.com/v/o/delivery/tracking.gif");
+  const listing = businessListingUrl("a-business", enabledEnvironment);
+  assert.equal(listing, "https://thetechprinciple.com/directory/business/a-business");
   const email = renderVerificationEmail({
-    businessName: "<Business>", listingUrl: "https://thetechprinciple.com/directory/business/example",
-    verificationUrl: click,
+    businessName: "<Business>", verificationUrl: click, listingUrl: listing,
     trackingPixelUrl: pixel, expiresAt: new Date("2026-08-01T00:00:00Z"),
   });
-  assert.equal(email.subject, "Is <Business>'s listing on thetechprinciple.com correct?");
-  assert.match(email.text, /current listing here: https:\/\/thetechprinciple\.com\/directory\/business\/example/);
-  assert.match(email.html, /current listing here/);
+  assert.match(email.html, /&lt;Business&gt;/);
   assert.match(email.html, /width="1"/);
   assert.doesNotMatch(email.text, /delivered/i);
+  // The expiry must read as a date a person would write, never an ISO stamp.
+  assert.match(email.text, /expires on 1 August 2026\./);
+  assert.doesNotMatch(email.text, /\d{4}-\d{2}-\d{2}T/);
 });
 
 test("migration stores hashes and append-only event metadata, never raw capabilities", async () => {

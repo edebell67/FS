@@ -36,6 +36,13 @@ export function verificationCapabilityUrl(
   return `${verificationCapabilityOrigin(env)}/verify/${encodeURIComponent(rawToken)}`;
 }
 
+export function businessListingUrl(
+  slug: string,
+  env: VerificationUrlEnvironment = process.env,
+): string {
+  return `${verificationCapabilityOrigin(env)}/directory/business/${encodeURIComponent(slug)}`;
+}
+
 export function trackingClickUrl(
   deliveryId: string, trackingKey: string, rawToken: string,
   env: VerificationUrlEnvironment = process.env,

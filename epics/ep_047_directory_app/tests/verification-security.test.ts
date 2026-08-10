@@ -18,11 +18,10 @@ test("recipient projection omits internal and provenance fields", async () => {
   assert.doesNotMatch(lookup, /internalNotes|notes|importedSource|importBatchId/);
 });
 
-test("delivery implementation is explicit, Gmail API-only, allowlisted, and hash-protected", async () => {
+test("delivery implementation is explicit, Gmail API-only, business-recipient protected, and hash-protected", async () => {
   const source = await readFile(new URL("../lib/verification/delivery.ts", import.meta.url), "utf8");
   assert.match(source, /VERIFICATION_DELIVERY_APPROVED/);
-  assert.match(source, /INITIAL_ALLOWED_RECIPIENT =\s*\n?\s*process\.env\.VERIFICATION_RECIPIENT_ALLOWLIST/);
-  assert.doesNotMatch(source, /INITIAL_ALLOWED_RECIPIENT = "[^"]+@[^"]+"/);
+  assert.doesNotMatch(source, /VERIFICATION_RECIPIENT_ALLOWLIST/);
   assert.match(source, /VERIFICATION_FROM = "edward\.bell@thetechprinciple\.com"/);
   assert.match(source, /trackingKeyHash: hashTrackingKey/);
   assert.match(source, /gmail\.googleapis\.com\/gmail\/v1\/users\/me\/messages\/send/);
@@ -30,6 +29,15 @@ test("delivery implementation is explicit, Gmail API-only, allowlisted, and hash
   assert.match(source, /sendMessage/);
   assert.doesNotMatch(source, /SMTP_|nodemailer|sendMail/);
   assert.doesNotMatch(source, /rawToken:\s*text|raw_token/);
+});
+
+test("verification preparation derives the recipient from the selected business record", async () => {
+  const route = await readFile(new URL(
+    "../app/directoryadmin/api/businesses/[businessRef]/verification-link/route.ts",
+    import.meta.url,
+  ), "utf8");
+  assert.match(route, /const recipientAddress = business\.email\?\.trim\(\) \?\? ""/);
+  assert.doesNotMatch(route, /body\.recipientAddress/);
 });
 
 test("verification submission ends on a recipient acknowledgement page", async () => {
