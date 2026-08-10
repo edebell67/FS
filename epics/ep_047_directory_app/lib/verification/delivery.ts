@@ -3,12 +3,9 @@
  * for the business-verification email.
  *
  * VERSION HISTORY
- * v1.3.0 · 2026-07-28 · Adds a plaintext diagnostic mode and multi-address
- *   allowlist support (previously exactly one address was permitted, which blocked
- *   cross-provider testing).
- * v1.2.0 · 2026-07-28 · Sources the allowed recipient from
- *   VERIFICATION_RECIPIENT_ALLOWLIST instead of a hardcoded personal email,
- *   keeping single-recipient enforcement but removing the literal from source.
+ * v1.4.0 · 2026-08-10 · Sends only to the selected business's current recorded
+ *   email address. This replaces the temporary test-recipient allowlist while
+ *   retaining admin role, explicit-confirmation, one-time-link, OAuth, and audit gates.
  * v1.1.0 · 2026-07-27 · Adds Gmail profile verification and sent-message readback
  *   so a bare API acceptance is never treated as proof of a send.
  * v1.0.0 · 2026-07-28 · Version history added; file predates this convention.
@@ -25,18 +22,14 @@ import {
 } from "@/lib/db/schema";
 import { VERIFICATION_TEMPLATE_VERSION, renderVerificationEmail } from "./email-template";
 import { isValidRawToken, hashVerificationToken } from "./tokens";
-import { trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from "./urls";
+import { businessListingUrl, trackingClickUrl, trackingPixelUrl, verificationCapabilityUrl } from "./urls";
 
 export const VERIFICATION_FROM = "edward.bell@thetechprinciple.com";
-export const INITIAL_ALLOWED_RECIPIENT =
-  process.env.VERIFICATION_RECIPIENT_ALLOWLIST?.split(",")[0]?.trim().toLowerCase() ?? "";
-export const ALLOWED_RECIPIENTS = (process.env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
-  .split(",").map((value) => value.trim().toLowerCase()).filter(Boolean);
 export type DeliveryMode = "disabled" | "gmail-api";
 
 export type DeliveryEnvironment = Partial<Record<
   | "VERIFICATION_DELIVERY_MODE" | "VERIFICATION_DELIVERY_APPROVED"
-  | "VERIFICATION_RECIPIENT_ALLOWLIST" | "VERIFICATION_EMAIL_TEST_PLAINTEXT"
+  | "VERIFICATION_EMAIL_TEST_PLAINTEXT"
   | "GMAIL_OAUTH_CLIENT_ID" | "GMAIL_OAUTH_CLIENT_SECRET" | "GMAIL_OAUTH_REFRESH_TOKEN"
   | "NODE_ENV" | "NEXT_PUBLIC_SITE_URL",
   string | undefined
@@ -55,11 +48,7 @@ export function getDeliveryPolicy(
   const mode: DeliveryMode =
     env.VERIFICATION_DELIVERY_MODE === "gmail-api" ? "gmail-api" : "disabled";
   const approved = env.VERIFICATION_DELIVERY_APPROVED === "true";
-  const configuredAllowlist = (env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
-    .split(",").map(normaliseAddress).filter(Boolean);
-  const allowlistConfigured = configuredAllowlist.length > 0;
-  const recipientAllowed = Boolean(recipient) &&
-    allowlistConfigured && configuredAllowlist.includes(normaliseAddress(recipient!));
+  const recipientPresent = Boolean(recipient?.trim());
   const oauthConfigured = Boolean(
     env.GMAIL_OAUTH_CLIENT_ID?.trim() &&
     env.GMAIL_OAUTH_CLIENT_SECRET?.trim() &&
@@ -71,13 +60,12 @@ export function getDeliveryPolicy(
     !approved && "Gmail API delivery has not been explicitly approved.",
     !oauthConfigured && "Gmail OAuth configuration is incomplete.",
     !publicOriginReady && "Sending requires the canonical production origin.",
-    !allowlistConfigured && "Recipient allowlist is not configured.",
-    recipient !== undefined && !recipientAllowed && "Recipient is not allowlisted.",
+    recipient !== undefined && !recipientPresent && "A recorded business email is required.",
   ].filter(Boolean) as string[];
   return {
-    mode, approved, sender: VERIFICATION_FROM, recipientAllowed,
+    mode, approved, sender: VERIFICATION_FROM, recipientPresent,
     canSend: reasons.length === 0,
-    reason: reasons[0] ?? "Approved allowlisted-recipient Gmail API delivery is configured.",
+    reason: reasons[0] ?? "Approved Gmail API delivery is configured for this business email.",
   };
 }
 
@@ -96,6 +84,7 @@ export async function prepareDeliveryPreview(input: {
   recipientAddress: string;
   actorUserId: string;
   businessName: string;
+  businessSlug: string;
   rawToken: string;
   expiresAt: Date;
 }) {
@@ -120,6 +109,7 @@ export async function prepareDeliveryPreview(input: {
   const pixelUrl = trackingPixelUrl(auditId, trackingKey);
   const message = renderVerificationEmail({
     businessName: input.businessName, verificationUrl: clickUrl,
+    listingUrl: businessListingUrl(input.businessSlug),
     trackingPixelUrl: pixelUrl, expiresAt: input.expiresAt,
   });
   return {
@@ -139,9 +129,7 @@ export async function handoffVerificationEmail(input: {
   subject: string; text: string; html: string;
 }) {
   const recipientAddress = normaliseAddress(input.recipientAddress);
-  if (!ALLOWED_RECIPIENTS.includes(recipientAddress)) {
-    throw new Error("Recipient is not allowlisted.");
-  }
+  if (!recipientAddress) throw new Error("A recorded business email is required.");
   const result = await input.transport.sendMessage({
     from: VERIFICATION_FROM, to: recipientAddress,
     subject: input.subject, text: input.text, html: input.html,
@@ -195,10 +183,8 @@ function buildRawMessage(message: {
 export function createGmailApiTransport(
   env: DeliveryEnvironment,
   fetchImpl: Fetch = fetch,
-  allowedRecipients?: string[],
+  authorisedRecipients?: string[],
 ): GmailTransport {
-  const recipients = allowedRecipients ?? (env.VERIFICATION_RECIPIENT_ALLOWLIST ?? "")
-    .split(",").map(normaliseAddress).filter(Boolean);
   const clientId = env.GMAIL_OAUTH_CLIENT_ID?.trim();
   const clientSecret = env.GMAIL_OAUTH_CLIENT_SECRET?.trim();
   const refreshToken = env.GMAIL_OAUTH_REFRESH_TOKEN?.trim();
@@ -207,8 +193,9 @@ export function createGmailApiTransport(
   }
   return {
     async sendMessage(message) {
-      if (message.from !== VERIFICATION_FROM ||
-          !recipients.includes(normaliseAddress(message.to))) {
+      const recipient = normaliseAddress(message.to);
+      if (message.from !== VERIFICATION_FROM || !recipient ||
+          (authorisedRecipients && !authorisedRecipients.map(normaliseAddress).includes(recipient))) {
         throw new Error("Gmail message violates the fixed sender or recipient policy.");
       }
       const tokenResponse = await fetchImpl("https://oauth2.googleapis.com/token", {
@@ -284,6 +271,8 @@ export async function sendPreparedDelivery(input: {
     expiresAt: verificationLinks.expiresAt,
     revokedAt: verificationLinks.revokedAt,
     businessName: businesses.businessName,
+    businessSlug: businesses.slug,
+    businessEmail: businesses.email,
   }).from(verificationDeliveries)
     .innerJoin(verificationLinks, eq(verificationDeliveries.verificationLinkId, verificationLinks.id))
     .innerJoin(businesses, eq(verificationLinks.businessId, businesses.id))
@@ -295,6 +284,10 @@ export async function sendPreparedDelivery(input: {
     )).limit(1);
   if (!record || record.status !== "prepared" || record.revokedAt) {
     throw new Error("Prepared delivery is unavailable.");
+  }
+  if (!record.businessEmail ||
+      normaliseAddress(record.recipientAddress) !== normaliseAddress(record.businessEmail)) {
+    throw new Error("Prepared delivery recipient no longer matches the business email.");
   }
   if (record.expiresAt <= new Date() ||
       record.tokenHash !== hashVerificationToken(input.rawToken) ||
@@ -326,7 +319,9 @@ export async function sendPreparedDelivery(input: {
         html: "<p>This is a plain text test message with no links or attachments, sent to confirm mail delivery between these two addresses.</p><p>No action is needed.</p>",
       }
     : renderVerificationEmail({
-        businessName: record.businessName, verificationUrl, expiresAt: record.expiresAt,
+        businessName: record.businessName, verificationUrl,
+        listingUrl: businessListingUrl(record.businessSlug, env),
+        expiresAt: record.expiresAt,
       });
   try {
     const transport = options.transport ?? createGmailApiTransport(env);
