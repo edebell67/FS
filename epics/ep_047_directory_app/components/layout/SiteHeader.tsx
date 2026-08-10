@@ -22,11 +22,8 @@ export async function SiteHeader() {
   return (
     <header className="border-b border-[#152022] bg-[#f6f3ed]">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-        <div className="font-display text-2xl font-semibold tracking-[-0.04em] text-[#152022]">
-          TTP <span className="text-brand-600">Directory</span>
-        </div>
+        <SiteHeaderNav />
         <div className="flex items-center gap-6 text-sm font-medium text-[#4c5657]">
-          <SiteHeaderNav />
           {user ? (
             <>
               <span className="h-4 w-px bg-[#d6d2c9]" aria-hidden="true" />
