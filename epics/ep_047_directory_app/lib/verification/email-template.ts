@@ -2,6 +2,7 @@
  * lib/verification/email-template.ts — renders the business-verification email.
  *
  * VERSION HISTORY
+ * v1.4.0 · 2026-08-10 · Applies the shared The Tech Principle brand shell and a visible review CTA; bumps the template version to v6.
  * v1.3.0 · 2026-08-10 · Rewrites the body to lead with why the listing matters
  *   to the recipient, links the public directory so the sender can be checked
  *   before any link is clicked, formats the expiry as a human date rather than
@@ -16,7 +17,9 @@
  * v1.0.0 · 2026-07-28 · Version history added; file predates this convention.
  */
 
-export const VERIFICATION_TEMPLATE_VERSION = "verification-v5-value-and-trust";
+import { escapeEmailHtml, renderTheTechPrincipleEmail } from "@/lib/email/brand";
+
+export const VERIFICATION_TEMPLATE_VERSION = "verification-v6-branded";
 
 const SENDER_PERSON = "Edward Bell";
 const SENDER_NAME = "The Tech Principle";
@@ -58,27 +61,27 @@ ${SENDER_NAME}
 ${SENDER_CONTACT_EMAIL}
 ${SENDER_PHYSICAL_ADDRESS}`;
 
-  const html = [
-    `<p>Hello,</p>`,
-    `<p><strong>${escapeHtml(businessName)}</strong> is listed on thetechprinciple.com, our local business directory. This is the page customers see: <a href="${escapeHtml(input.listingUrl)}">${escapeHtml(input.listingUrl)}</a></p>`,
-    `<p>People use the directory to find contact details, opening hours and directions for local businesses — so we'd like to make sure yours is right.</p>`,
-    `<p><a href="${escapeHtml(input.verificationUrl)}">Review and correct the details for ${escapeHtml(businessName)}</a></p>`,
-    `<p>It takes about a minute and doesn't need an account or password. Submitting sends your details for manual review; nothing is published automatically. This link is unique to your listing and expires on ${escapeHtml(expiry)}.</p>`,
-    `<p>If this isn't your business, or you'd rather we didn't contact you about this listing, just reply to this email and we'll take care of it.</p>`,
-    `<p>${escapeHtml(SENDER_PERSON)}<br>${escapeHtml(SENDER_NAME)}<br>${escapeHtml(SENDER_CONTACT_EMAIL)}<br>${escapeHtml(SENDER_PHYSICAL_ADDRESS)}</p>`,
+  const bodyHtml = [
+    `<p style="margin:0 0 14px">Hello,</p>`,
+    `<p style="margin:0 0 14px"><strong>${escapeEmailHtml(businessName)}</strong> is listed on thetechprinciple.com, our local business directory. This is the page customers see: <a href="${escapeEmailHtml(input.listingUrl)}">${escapeEmailHtml(input.listingUrl)}</a></p>`,
+    `<p style="margin:0 0 14px">People use the directory to find contact details, opening hours and directions for local businesses — so we'd like to make sure yours is right.</p>`,
+    `<p style="margin:0 0 14px">It takes about a minute and doesn't need an account or password. Submitting sends your details for manual review; nothing is published automatically. This link is unique to your listing and expires on ${escapeEmailHtml(expiry)}.</p>`,
+    `<p style="margin:0 0 14px">If this isn't your business, or you'd rather we didn't contact you about this listing, just reply to this email and we'll take care of it.</p>`,
+    `<p style="margin:0 0 14px">${escapeEmailHtml(SENDER_PERSON)}<br>${escapeEmailHtml(SENDER_NAME)}<br>${escapeEmailHtml(SENDER_CONTACT_EMAIL)}<br>${escapeEmailHtml(SENDER_PHYSICAL_ADDRESS)}</p>`,
     input.trackingPixelUrl
-      ? `<img src="${escapeHtml(input.trackingPixelUrl)}" width="1" height="1" alt="" style="display:none" />`
+      ? `<img src="${escapeEmailHtml(input.trackingPixelUrl)}" width="1" height="1" alt="" style="display:none" />`
       : "",
   ].join("");
+  const html = renderTheTechPrincipleEmail({
+    eyebrow: "Listing verification",
+    heading: `Is this the right contact info for ${businessName}?`,
+    bodyHtml,
+    cta: { href: input.verificationUrl, label: "Review and correct details" },
+    footerDetail: "thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing. A prepared message has not been sent, and a sent message is not evidence of delivery.",
+  });
 
   return {
     subject: `Is this the right contact info for ${businessName}?`,
     text, html,
   };
-}
-
-function escapeHtml(value: string) {
-  return value.replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
-  })[character]!);
 }
