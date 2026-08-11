@@ -169,6 +169,13 @@
       "when": 1786600000000,
       "tag": "0023_site_in_review_stage",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1786332137951,
+      "tag": "0024_crm_reporting_tables",
+      "breakpoints": true
     }
   ]
 }
