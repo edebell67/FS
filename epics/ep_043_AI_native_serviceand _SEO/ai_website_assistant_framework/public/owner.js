@@ -365,7 +365,14 @@ async function handoffLogin(){
 
 document.addEventListener('DOMContentLoaded', () => {
   const routeTenant = new URLSearchParams(location.search).get('tenant') || '';
-  if (routeTenant) $('login-tenant').value = routeTenant;
+  if (routeTenant) {
+    $('login-tenant').value = routeTenant;
+    $('login-tenant').readOnly = true;
+    $('login-tenant-label').hidden = true;
+    $('login-title').textContent = 'The Tech Principle';
+    $('login-hint').textContent = 'Enter your owner password to access your private reporting dashboard.';
+  }
+  $('login-token').value = '';
   $('login-token').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
   $('login-tenant').addEventListener('keydown', e => { if(e.key==='Enter') $('login-token').focus(); });
   handoffLogin();
