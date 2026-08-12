@@ -1,3 +1,10 @@
+/**
+ * src/server.js — tenant-scoped website assistant HTTP service.
+ *
+ * VERSION HISTORY
+ * v1.0.0 · 2026-08-12 · Adds directory-service authenticated enquiry handoff so live confirmations require provider acceptance; file predates this convention.
+ */
+
 import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
@@ -299,14 +306,36 @@ async function writeResponseLedger({ env, record }) {
   return { repository, filePath };
 }
 
+function enquiryDeliveryPolicy(env, client) {
+  if (client.status === "demo") return { canSend: false, reason: "demo_mode" };
+  const configured = env.ASSISTANT_ENQUIRY_DELIVERY_MODE === "directory-gmail" &&
+    env.ASSISTANT_ENQUIRY_DELIVERY_APPROVED === "true" &&
+    env.DIRECTORY_ENQUIRY_DELIVERY_URL && env.DIRECTORY_ENQUIRY_DELIVERY_KEY;
+  return configured ? { canSend: true, reason: "configured" } : { canSend: false, reason: "not_configured" };
+}
+
 async function notify({ env, client, kind, record }) {
-  if (client.status !== "live" || !env.NOTIFICATION_WEBHOOK_URL) return { delivered: false, reason: client.status === "demo" ? "demo_mode" : "not_configured" };
-  const response = await fetch(env.NOTIFICATION_WEBHOOK_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ kind, clientId: client.id, destinations: client.notificationDestinations, record })
-  });
-  return { delivered: response.ok, reason: response.ok ? "sent" : `webhook_${response.status}` };
+  const policy = enquiryDeliveryPolicy(env, client);
+  if (!policy.canSend) return { delivered: false, reason: policy.reason };
+  try {
+    const request = env.fetchImpl || fetch;
+    const response = await request(env.DIRECTORY_ENQUIRY_DELIVERY_URL, {
+      method: "POST",
+      headers: { "content-type": "application/json", authorization: `Bearer ${env.DIRECTORY_ENQUIRY_DELIVERY_KEY}` },
+      body: JSON.stringify({
+        tenant: client.id, kind, record: {
+          id: record.id, createdAt: record.createdAt, name: record.name, telephone: record.telephone,
+          email: record.email, reasonForVisit: record.reasonForVisit, service: record.service,
+          preferredTime: record.preferredTime, reason: record.reason
+        }
+      })
+    });
+    const payload = await response.json().catch(() => ({}));
+    if (!response.ok || !payload.providerMessageId) return { delivered: false, reason: "provider_failed" };
+    return { delivered: true, reason: "provider_accepted", providerMessageId: payload.providerMessageId };
+  } catch {
+    return { delivered: false, reason: "provider_failed" };
+  }
 }
 
 // Recovers a lead that didn't convert in-session: after leadFollowupDelayMs,
@@ -417,6 +446,17 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
           followupSentAt: null
         });
         const notification = await notify({ env, client, kind: isLead ? "lead" : "callback", record });
+        if (!notification.delivered && client.status === "live") {
+          await store.updateRecord(isLead ? "leads" : "callbacks", record.id, {
+            deliveryStatus: "failed", deliveryReason: notification.reason, deliveryFailedAt: new Date().toISOString()
+          });
+          pushReportingSnapshot(store, client.id);
+          return json(res, 503, {
+            accepted: false,
+            error: "We could not send your enquiry at the moment. Please try again shortly.",
+            notification: { delivered: false, reason: notification.reason }
+          }, corsHeaders(req));
+        }
         if (isLead && client.enabledModules.includes("leadFollowup")) {
           record = await store.updateRecord("leads", record.id, { followupStatus: "scheduled", followupScheduledAt: new Date().toISOString() });
           scheduleLeadFollowup({ store, env, client, leadId: record.id, delayMs: client.leadFollowupDelayMs });
