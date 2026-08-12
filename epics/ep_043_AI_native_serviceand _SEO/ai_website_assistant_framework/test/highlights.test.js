@@ -20,7 +20,7 @@ test("GET /api/public/highlights: filters by service, no auth required, and high
   const base = `http://127.0.0.1:${server.address().port}`;
   const request = async (route, opts = {}) => {
     const response = await fetch(`${base}${route}`, opts);
-    return { status: response.status, body: await response.json() };
+    return { status: response.status, body: await response.json(), headers: response.headers };
   };
   t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(temporary, { recursive: true, force: true }); });
 
@@ -35,6 +35,13 @@ test("GET /api/public/highlights: filters by service, no auth required, and high
 
   const missingTenant = await request("/api/public/highlights");
   assert.equal(missingTenant.status, 400);
+
+  const promotions = await request("/api/public/promotions?tenant=the-tech-principle-local", {
+    headers: { Origin: "https://thetechprinciple.com" },
+  });
+  assert.equal(promotions.status, 200);
+  assert.equal(promotions.body.promotions.length, 0);
+  assert.equal(promotions.headers.get("access-control-allow-origin"), "https://thetechprinciple.com");
 
   const events = await request("/api/public/events", {
     method: "POST", headers: { "Content-Type": "application/json" },

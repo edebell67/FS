@@ -871,7 +871,7 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         const client = store.listClients().find((c) => c.id === clientId || c.publicKey === clientId);
         if (!client) return json(res, 404, { error: "Client not found." });
         const active = store.activePromotionsForClient(clientId);
-        return json(res, 200, { promotions: active.map((p) => ({ promotionId: p.promotionId, type: p.type, value: p.value, valueLabel: p.valueLabel, description: p.description, services: p.services, applyTo: p.applyTo, displayOn: p.displayOn, endAt: p.endAt })) });
+        return json(res, 200, { promotions: active.map((p) => ({ promotionId: p.promotionId, type: p.type, value: p.value, valueLabel: p.valueLabel, description: p.description, services: p.services, applyTo: p.applyTo, displayOn: p.displayOn, endAt: p.endAt })) }, corsHeaders(req));
       }
 
       // Public: case-study highlights, optionally filtered to one service —
