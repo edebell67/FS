@@ -364,6 +364,8 @@ async function handoffLogin(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  const routeTenant = new URLSearchParams(location.search).get('tenant') || '';
+  if (routeTenant) $('login-tenant').value = routeTenant;
   $('login-token').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
   $('login-tenant').addEventListener('keydown', e => { if(e.key==='Enter') $('login-token').focus(); });
   handoffLogin();
