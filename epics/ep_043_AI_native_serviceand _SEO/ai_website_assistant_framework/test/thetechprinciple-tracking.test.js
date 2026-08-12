@@ -34,6 +34,7 @@ test("The Tech Principle local site resolves to its isolated anonymous tracking 
   for (const [prompt, expected] of quickAnswerExpectations) {
     const reply = deterministicReply(client, prompt, retrieveKnowledge(client, prompt));
     assert.match(reply.text, expected, `quick action should return its dedicated approved TTP answer: ${prompt}`);
+    assert.equal(reply.sources.length, 1, `quick action should use only its dedicated source: ${prompt}`);
   }
   const quoteReply = deterministicReply(client, "I would like a quote.", retrieveKnowledge(client, "I would like a quote."));
   assert.equal(quoteReply.action?.type, "lead");

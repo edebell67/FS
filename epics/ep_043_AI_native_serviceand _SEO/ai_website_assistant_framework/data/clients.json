@@ -19,6 +19,11 @@
       { "title": "Writing", "url": "#writing", "keywords": ["blog", "articles", "insight"] },
       { "title": "Contact", "url": "#contact", "keywords": ["start a project", "email", "enquiry"] }
     ],
+    "quickAnswers": {
+      "what services do you provide?": { "id": "quick-services-overview", "title": "Services overview", "text": "The Tech Principle works across four connected disciplines: Web design and rebuilds; AI site assistants; Local SEO and lead generation; and Trading and data products. We can help you decide which is the right starting point for your business." },
+      "tell me about your business.": { "id": "quick-about-overview", "title": "About The Tech Principle", "text": "The Tech Principle is an independent technology studio in London. We diagnose what is not working, build the right solution in the open, then prove the outcome with evidence. The focus is hand-built systems that you own, with technology chosen only when it earns its place." },
+      "how much do your services cost?": { "id": "quick-pricing-guide", "title": "Pricing guide", "text": "We scope each project around the work required rather than sell fixed packages or invent a price before understanding the brief. Email edward.bell@thetechprinciple.com with what you need and we will provide a clear estimate." }
+    },
     "knowledge": [
       { "id": "quick-services-overview", "title": "What services do you provide? Services overview", "content": "The Tech Principle works across four connected disciplines: Web design and rebuilds; AI site assistants; Local SEO and lead generation; and Trading and data products. We can help you decide which is the right starting point for your business." },
       { "id": "quick-about-overview", "title": "Tell me about your business. About The Tech Principle", "content": "The Tech Principle is an independent technology studio in London. We diagnose what is not working, build the right solution in the open, then prove the outcome with evidence. The focus is hand-built systems that you own, with technology chosen only when it earns its place." },
