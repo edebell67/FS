@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { createApp } from "../src/server.js";
 import { JsonStore } from "../src/store.js";
+import { deterministicReply, retrieveKnowledge } from "../src/assistant.js";
 
 const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteRoot = path.resolve(frameworkRoot, "..", "..", "ep_046_thetechprinciple", "site");
@@ -25,6 +26,17 @@ test("The Tech Principle local site resolves to its isolated anonymous tracking 
   assert.equal(client.status, "live");
   assert.equal(client.analyticsEnabled, true);
   assert.ok(client.knowledge.length > 0, "production knowledge base should not be empty");
+  const quickAnswerExpectations = [
+    ["What services do you provide?", /Web design and rebuilds.*AI site assistants.*Local SEO and lead generation.*Trading and data products/s],
+    ["Tell me about your business.", /independent technology studio.*diagnose.*build.*prove/s],
+    ["How much do your services cost?", /scope each project around the work required.*clear estimate/s],
+  ];
+  for (const [prompt, expected] of quickAnswerExpectations) {
+    const reply = deterministicReply(client, prompt, retrieveKnowledge(client, prompt));
+    assert.match(reply.text, expected, `quick action should return its dedicated approved TTP answer: ${prompt}`);
+  }
+  const quoteReply = deterministicReply(client, "I would like a quote.", retrieveKnowledge(client, "I would like a quote."));
+  assert.equal(quoteReply.action?.type, "lead");
   assert.ok(store.resolveClient({ publicKey: "thetechprinciple_local", host: "localhost" }), "local dev host should still resolve");
   assert.equal(store.resolveClient({ publicKey: "thetechprinciple_local", host: "unapproved.example" }), null);
   const ownerDashboard = await readFile(path.join(frameworkRoot, "public", "owner.js"), "utf8");
