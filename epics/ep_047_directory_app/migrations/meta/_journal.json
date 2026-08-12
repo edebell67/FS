@@ -173,8 +173,15 @@
     {
       "idx": 24,
       "version": "7",
-      "when": 1786332137951,
-      "tag": "0024_crm_reporting_tables",
+      "when": 1786630000000,
+      "tag": "0024_verification_batch_send_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1786700000000,
+      "tag": "0025_crm_reporting_tables",
       "breakpoints": true
     }
   ]
