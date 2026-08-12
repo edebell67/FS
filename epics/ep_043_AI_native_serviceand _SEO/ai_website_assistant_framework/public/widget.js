@@ -295,12 +295,25 @@
   async function submitConsoleLogin(panel, password, submit, error) {
     if (!password) { error.textContent = "Enter the console password."; return; }
     submit.disabled = true; error.textContent = "";
+    const dashboardWindow = window.open("", "_blank");
+    if (!dashboardWindow) {
+      error.textContent = "Allow pop-ups for the owner dashboard, then try again.";
+      submit.disabled = false;
+      return;
+    }
     try {
-      const response = await fetch(`${apiBase}/api/public/owner/login`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientKey, host: location.hostname, password }) });
+      const response = await fetch(`${apiBase}/api/public/owner-dashboard-access`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientKey, host: location.hostname, password }) });
       const payload = await response.json();
-      if (!response.ok) throw new Error(payload.error || "Incorrect password.");
-      state.owner = { token: payload.token, expiresAt: payload.expiresAt };
-      renderConsole(panel);
+      if (!response.ok || !payload.dashboardUrl) {
+        dashboardWindow.close();
+        throw new Error(payload.error || "Owner password was not accepted.");
+      }
+      const destination = new URL(payload.dashboardUrl, apiBase);
+      destination.searchParams.set("tenant", clientKey);
+      dashboardWindow.location.replace(destination.toString());
+      error.className = "success";
+      error.textContent = "Owner dashboard opened in a new tab. Enter this site’s owner password again there to access the dashboard.";
+      submit.disabled = false;
     } catch (failure) {
       error.textContent = failure.message || "Could not connect.";
       submit.disabled = false;

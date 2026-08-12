@@ -63,7 +63,7 @@ test("The Tech Principle enquiry fails closed when no delivery transport is conf
   assert.equal(response.status, 503);
   const body = await response.json();
   assert.equal(body.accepted, false);
-  assert.match(body.error, /could not be delivered/i);
+  assert.match(body.error, /could not send your enquiry/i);
 });
 
 test("The Tech Principle enquiry confirms only after the authenticated sender returns a provider message ID", async (t) => {
