@@ -5,7 +5,7 @@
  * v1.0.0 · 2026-08-12 · Adds directory-service authenticated enquiry handoff so live confirmations require provider acceptance; file predates this convention.
  */
 
-import { createHash, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { readFile } from "node:fs/promises";
@@ -46,9 +46,29 @@ function bizOwnerAuthorized(req, env, clientId) {
   const expected = bizOwnerTokenFor(env, clientId);
   return Boolean(expected && safeEqual(token, expected));
 }
-/** Accepts either the new business_owner token or the legacy owner console token. */
+function ownerDashboardHandoffToken(env, clientId) {
+  const expiresAt = Date.now() + 8 * 60 * 60 * 1000;
+  const payload = Buffer.from(JSON.stringify({ clientId, expiresAt, nonce: randomUUID() })).toString("base64url");
+  const secret = String(env.ADMIN_TOKEN || "");
+  const signature = createHmac("sha256", secret).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function ownerDashboardHandoffAuthorized(token, env, clientId) {
+  const [payload, signature] = String(token || "").split(".");
+  if (!payload || !signature || !env.ADMIN_TOKEN) return false;
+  const expected = createHmac("sha256", String(env.ADMIN_TOKEN)).update(payload).digest("base64url");
+  if (!safeEqual(signature, expected)) return false;
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return data.clientId === clientId && Number.isFinite(data.expiresAt) && data.expiresAt > Date.now();
+  } catch { return false; }
+}
+
+/** Accepts an owner credential or a short-lived, tenant-bound dashboard handoff. */
 function anyOwnerAuthorized(req, env, clientId) {
-  return bizOwnerAuthorized(req, env, clientId) || ownerAuthorized(req, env, clientId);
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, "") || "";
+  return bizOwnerAuthorized(req, env, clientId) || ownerAuthorized(req, env, clientId) || ownerDashboardHandoffAuthorized(token, env, clientId);
 }
 
 function ownerConsoleActivated(client) {
@@ -378,7 +398,10 @@ export async function createApp({ store = new JsonStore(dataDir), env = runtimeE
         if (!ownerConsoleActivated(client)) return json(res, 403, { error: "Owner dashboard is available after assistant activation only." }, corsHeaders(req));
         const password = cleanText(input.password, 512, true);
         if (!ownerPasswordAuthorized(password, env, client.id)) return json(res, 401, { error: "Owner password was not accepted." }, corsHeaders(req));
-        return json(res, 200, { dashboardUrl: `/owner?tenant=${encodeURIComponent(client.id)}` }, corsHeaders(req));
+        return json(res, 200, {
+          dashboardUrl: `/owner?tenant=${encodeURIComponent(client.id)}`,
+          handoffToken: ownerDashboardHandoffToken(env, client.id)
+        }, corsHeaders(req));
       }
 
       if (req.method === "POST" && url.pathname === "/api/public/chat") {

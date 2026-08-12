@@ -17,5 +17,6 @@ test("widget owner console uses the deployed dashboard-access gate and opens the
   assert.doesNotMatch(widget, /\/api\/public\/owner\/login/);
   assert.match(widget, /const dashboardWindow = window\.open\("", "_blank"\)/);
   assert.match(widget, /dashboardWindow\.location\.replace\(destination\.toString\(\)\)/);
-  assert.match(widget, /Enter this site’s owner password again there/);
+  assert.match(widget, /handoffToken/);
+  assert.doesNotMatch(widget, /Enter this site’s owner password again there/);
 });

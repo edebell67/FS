@@ -304,15 +304,15 @@
     try {
       const response = await fetch(`${apiBase}/api/public/owner-dashboard-access`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ clientKey, host: location.hostname, password }) });
       const payload = await response.json();
-      if (!response.ok || !payload.dashboardUrl) {
+      if (!response.ok || !payload.dashboardUrl || !payload.handoffToken) {
         dashboardWindow.close();
         throw new Error(payload.error || "Owner password was not accepted.");
       }
       const destination = new URL(payload.dashboardUrl, apiBase);
-      destination.searchParams.set("tenant", clientKey);
+      destination.hash = new URLSearchParams({ handoff: payload.handoffToken }).toString();
       dashboardWindow.location.replace(destination.toString());
       error.className = "success";
-      error.textContent = "Owner dashboard opened in a new tab. Enter this site’s owner password again there to access the dashboard.";
+      error.textContent = "Owner dashboard opened in a new tab.";
       submit.disabled = false;
     } catch (failure) {
       error.textContent = failure.message || "Could not connect.";
