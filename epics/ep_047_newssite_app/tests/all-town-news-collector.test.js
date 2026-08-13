@@ -50,6 +50,21 @@ test("collector rejects article records whose canonical URL is the listing itsel
   assert.equal(result.status, "degraded");
   assert.equal(result.items.length, 0);
 });
+test("collector skips malformed canonicals and normalizes URL fragments", async () => {
+  const result = await collectSourceItems(source, { fetchPage: async (url) => {
+    if (url === source.canonicalUrl) return { url, status: 200, html: '<article><a href="/news/bad/">Bad</a></article><article><a href="/news/good/#first">Good</a></article><article><a href="/news/good/#second">Duplicate</a></article>' };
+    if (url.includes("bad")) return { url, status: 200, html: '<link rel="canonical" href="http://[bad">' };
+    return { url, status: 200, html: '<link rel="canonical" href="https://cityco.com/news/good/#tracking"><meta property="og:title" content="Good article"><meta property="article:published_time" content="2026-08-12T00:00:00Z">' };
+  } });
+  assert.equal(result.status, "healthy");
+  assert.deepEqual(result.items.map((item) => item.identity), ["https://cityco.com/news/good/"]);
+});
+
+test("collector rejects impossible publication dates", async () => {
+  const result = await collectSourceItems(source, { fetchPage: async (url) => ({ url, status: 200, html: url === source.canonicalUrl ? '<article><a href="/news/impossible/">Impossible date</a></article>' : '<link rel="canonical" href="https://cityco.com/news/impossible/"><meta property="og:title" content="Impossible"><meta property="article:published_time" content="2026-02-31T00:00:00Z">' }) });
+  assert.equal(result.status, "degraded");
+});
+
 test("novelty ledger selection only admits identities not already seen for this source", () => {
   const items = [
     { identity: "https://cityco.com/news/newest-story/" },

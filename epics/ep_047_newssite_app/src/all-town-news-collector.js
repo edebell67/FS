@@ -21,17 +21,25 @@ function meta(html, property) {
   return "";
 }
 
+function normalizeUrl(value, fallback) {
+  const url = new URL(value, fallback);
+  url.hash = "";
+  return url.toString();
+}
+
 function canonicalUrl(html, fallback) {
   const tags = html.match(/<link\b[^>]*>/gi) || [];
   const canonical = tags.find((tag) => /\brel=["']canonical["']/i.test(tag));
   const href = canonical ? attribute(canonical, "href") : "";
-  return href ? new URL(href, fallback).toString() : fallback;
+  return normalizeUrl(href || fallback, fallback);
 }
 
 function dateOnly(value) {
-  const match = String(value || "").match(/20\d{2}-\d{2}-\d{2}/);
-  if (!match || Number.isNaN(Date.parse(`${match[0]}T00:00:00Z`))) return "";
-  return match[0];
+  const match = String(value || "").match(/^(20\d{2})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+  const [, year, month, day] = match;
+  const parsed = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
+  return parsed.getUTCFullYear() === Number(year) && parsed.getUTCMonth() + 1 === Number(month) && parsed.getUTCDate() === Number(day) ? `${year}-${month}-${day}` : "";
 }
 
 function allowed(source, url) {
@@ -48,7 +56,7 @@ function listingLinks(html, listingUrl, source) {
     const headline = plain(match[2]);
     if (!headline || headline.length < 8) continue;
     let url;
-    try { url = new URL(match[1], listingUrl).toString(); } catch { continue; }
+    try { url = normalizeUrl(match[1], listingUrl); } catch { continue; }
     if (!allowed(source, url) || url === listingUrl || /^(mailto:|tel:|javascript:)/i.test(url)) continue;
     links.set(url, headline);
   }
@@ -72,7 +80,8 @@ export async function collectSourceItems(source, { fetchPage = nativeFetchPage, 
     let page;
     try { page = await fetchPage(candidate.url); } catch { continue; }
     if (page.status < 200 || page.status >= 300 || !allowed(source, page.url)) continue;
-    const canonical = canonicalUrl(page.html, page.url);
+    let canonical;
+    try { canonical = canonicalUrl(page.html, page.url); } catch { continue; }
     if (!allowed(source, canonical) || canonical === listing.url) continue;
     const headline = meta(page.html, "og:title") || plain((page.html.match(/<h1\b[^>]*>([\s\S]*?)<\/h1>/i) || [])[1]) || candidate.listingHeadline;
     const sourcePublishedAt = dateOnly(meta(page.html, "article:published_time")) || dateOnly(meta(page.html, "date")) || dateOnly((page.html.match(/<time\b[^>]*datetime=["']([^"']+)/i) || [])[1]);
