@@ -15,6 +15,10 @@ test("public News uses the approved interactive two-pane reader with preserved s
   assert.match(page, /status = 'published'/);
   assert.match(page, /publicScopeWhere\(\)/);
   assert.match(component, /By place/);
+  assert.match(component, /ticker-track/);
+  assert.match(component, /animation:\s*ticker-left/);
+  assert.match(component, /@keyframes ticker-left/);
+  assert.match(component, /prefers-reduced-motion:\s*reduce/);
   assert.match(component, /Search headlines, places or topics/);
   assert.match(component, /aria-label="View by town, city or postcode"/);
   assert.match(component, /aria-label="View by date"/);

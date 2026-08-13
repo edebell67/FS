@@ -55,14 +55,33 @@ export function PublicNewsReader({ stories }: { stories: Story[] }) {
     setSort("newest");
   }
 
+  const tickerStories = [...stories, ...stories];
+
   return <>
+    <style jsx>{`
+      @keyframes ticker-left {
+        from { transform: translateX(0); }
+        to { transform: translateX(-50%); }
+      }
+      .ticker-track { animation: ticker-left 55s linear infinite; }
+      .ticker-window:hover .ticker-track,
+      .ticker-window:focus-within .ticker-track { animation-play-state: paused; }
+      @media (prefers-reduced-motion: reduce) {
+        .ticker-track { animation: none; transform: none; }
+      }
+    `}</style>
     <section className="border-b border-[#d6d2c9] bg-[#152022] text-white" aria-label="Scrolling local headlines">
       <div className="mx-auto flex h-12 max-w-7xl items-center gap-3 overflow-hidden px-4 sm:px-6 lg:px-8">
         <span className="shrink-0 bg-[#d85f35] px-2.5 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.1em]">By place</span>
-        <div className="flex min-w-max gap-8 overflow-x-auto py-1 text-sm [scrollbar-width:none]">
-          {stories.map((story) => <button key={story.id} type="button" onClick={() => setSelectedId(story.id)} className="min-h-11 whitespace-nowrap text-left text-white hover:text-[#8fe1d5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5c451]">
-            <strong className="mr-2 font-mono text-[11px] uppercase tracking-[0.08em] text-[#8fe1d5]">{story.town}</strong>{story.headline}
-          </button>)}
+        <div className="ticker-window min-w-0 flex-1 overflow-hidden py-1" aria-label="Latest local headlines; hover or focus a headline to pause">
+          <div className="ticker-track flex w-max gap-8 text-sm">
+            {tickerStories.map((story, index) => {
+              const duplicate = index >= stories.length;
+              return <button key={`${story.id}-${index}`} type="button" onClick={() => setSelectedId(story.id)} aria-hidden={duplicate || undefined} tabIndex={duplicate ? -1 : undefined} className="min-h-11 whitespace-nowrap text-left text-white hover:text-[#8fe1d5] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#f5c451]">
+                <strong className="mr-2 font-mono text-[11px] uppercase tracking-[0.08em] text-[#8fe1d5]">{story.town}</strong>{story.headline}
+              </button>;
+            })}
+          </div>
         </div>
       </div>
     </section>
