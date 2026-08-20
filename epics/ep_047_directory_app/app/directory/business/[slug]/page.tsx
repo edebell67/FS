@@ -13,6 +13,7 @@ import { BusinessCard } from "@/components/directory/BusinessCard";
 import { SITE_URL, SITE_NAME } from "@/lib/site-config";
 import { getCurrentUser } from "@/lib/auth/session";
 import BusinessMap from "@/components/directory/BusinessMap";
+import { canRequestPublicClaim } from "@/lib/verification/claim-eligibility";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +47,7 @@ export default async function BusinessProfilePage({ params }: PageProps) {
   const business = await getBusinessBySlug(slug);
   if (!business) notFound();
   const user = await getCurrentUser();
+  const canClaim = canRequestPublicClaim(business.stageKey);
 
   const [related, nearby] = await Promise.all([
     getRelatedBusinesses(business.category, business.id, 4),
@@ -202,11 +204,22 @@ export default async function BusinessProfilePage({ params }: PageProps) {
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
             Is this your business?
           </h2>
-          <p className="text-sm text-slate-600">Request a secure verification and manual ownership review.</p>
-          <Link href={`/claim?business=${encodeURIComponent(business.businessRef)}`}
-            className="mt-4 block w-full rounded-md bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white">
-            Claim my listing
-          </Link>
+          <p className="text-sm text-slate-600">
+            {canClaim
+              ? "Request a manual ownership review."
+              : "Claiming becomes available after the verification has been completed."}
+          </p>
+          {canClaim ? (
+            <Link href={`/claim?business=${encodeURIComponent(business.businessRef)}`}
+              className="mt-4 block w-full rounded-md bg-brand-600 px-4 py-2 text-center text-sm font-medium text-white">
+              Claim my listing
+            </Link>
+          ) : (
+            <button type="button" disabled aria-disabled="true"
+              className="mt-4 block w-full cursor-not-allowed rounded-md bg-slate-300 px-4 py-2 text-center text-sm font-medium text-slate-600">
+              Claim available after verification
+            </button>
+          )}
         </section>
       </div>
 

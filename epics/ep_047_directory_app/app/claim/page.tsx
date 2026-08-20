@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getBusinessByRef } from "@/lib/db/queries/directory";
 import { listBusinesses } from "@/lib/db/queries/businesses";
 import { publicClaimAction } from "./actions";
+import { canRequestPublicClaim } from "@/lib/verification/claim-eligibility";
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = { title: "Claim my listing", robots: { index: false, follow: true } };
 export default async function ClaimPage({ searchParams }: { searchParams: Promise<{ business?: string; q?: string }> }) {
@@ -12,7 +13,8 @@ export default async function ClaimPage({ searchParams }: { searchParams: Promis
     <p className="mt-2 text-slate-600">Request verification and manual review. No listing changes are made now.</p>
     {!selected && <form className="mt-6 flex gap-2"><input name="q" defaultValue={q} required placeholder="Business name or town" className="flex-1 rounded-md border px-3 py-2" /><button className="rounded-md border px-4">Search</button></form>}
     {results.map((r) => <a key={r.id} href={`/claim?business=${encodeURIComponent(r.businessRef)}`} className="mt-2 block rounded border p-3">{r.businessName}<span className="block text-sm text-slate-500">{r.category}{r.town ? ` · ${r.town}` : ""}</span></a>)}
-    {selected && <form action={publicClaimAction} className="mt-6 space-y-4">
+    {selected && !canRequestPublicClaim(selected.stageKey) && <p role="status" className="mt-6 rounded-md bg-slate-100 p-4 text-sm text-slate-700">Claiming is available after this listing&apos;s verification has been completed.</p>}
+    {selected && canRequestPublicClaim(selected.stageKey) && <form action={publicClaimAction} className="mt-6 space-y-4">
       <input type="hidden" name="businessRef" value={selected.businessRef} />
       <p className="rounded bg-slate-50 p-3 font-medium">{selected.businessName}<span className="block text-sm font-normal text-slate-500">{selected.town}</span></p>
       <label className="block text-sm">Your name<input name="requesterName" required maxLength={200} className="mt-1 block w-full rounded border px-3 py-2" /></label>
