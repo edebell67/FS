@@ -39,20 +39,12 @@ test("question-followups: accumulate per session, notify once, resolve via owner
     conversations: [], leads: [], callbacks: [], bookings: [], payments: [], emails: [], crmLeads: [], events: [], questionFollowups: []
   }));
 
-  // notify() calls the bare global fetch (env.fetchImpl exists only for the
-  // separate response-ledger path), so a real webhook call count can only be
-  // observed by patching the global for this test's lifetime.
-  let webhookCalls = 0;
-  const realFetch = globalThis.fetch;
-  globalThis.fetch = async (url, options) => {
-    if (url === "http://webhook.invalid/notify") { webhookCalls += 1; return { ok: true, status: 200, json: async () => ({}) }; }
-    return realFetch(url, options);
-  };
+  let handoffCalls = 0;
 
   const server = await createApp({
     store: new JsonStore(temporary),
     env: {
-      ADMIN_TOKEN: "test-admin", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "http://webhook.invalid/notify",
+      ADMIN_TOKEN: "test-admin", OPENAI_API_KEY: "", NODE_ENV: "production", ASSISTANT_ENQUIRY_DELIVERY_MODE: "directory-gmail", ASSISTANT_ENQUIRY_DELIVERY_APPROVED: "true", DIRECTORY_ENQUIRY_DELIVERY_URL: "https://directory.internal/api/internal/assistant-enquiries", DIRECTORY_ENQUIRY_DELIVERY_KEY: "test-internal-key", fetchImpl: async () => { handoffCalls += 1; return Response.json({ accepted: true, providerMessageId: "test-provider-id" }, { status: 201 }); },
       BUSINESS_OWNER_TOKENS_JSON: JSON.stringify({ "the-tech-principle-local": "test-owner" })
     }
   });
@@ -69,7 +61,6 @@ test("question-followups: accumulate per session, notify once, resolve via owner
   t.after(async () => {
     await new Promise((resolve) => server.close(resolve));
     await rm(temporary, { recursive: true, force: true });
-    globalThis.fetch = realFetch;
   });
 
   const rejected = await request("/api/public/question-followups", { method: "POST", body: {
@@ -91,13 +82,13 @@ test("question-followups: accumulate per session, notify once, resolve via owner
   assert.equal(second.body.record.id, first.body.record.id, "one record per session, not one per question");
   assert.equal(second.body.record.questions.length, 2);
   assert.equal(second.body.notification.reason, "already_notified", "no second notification for an accumulated question");
-  assert.equal(webhookCalls, 1, "exactly one notification call across two accumulated questions");
+  assert.equal(handoffCalls, 1, "exactly one notification call across two accumulated questions");
 
   const otherSession = await request("/api/public/question-followups", { method: "POST", body: {
     clientKey: "thetechprinciple_local", host: "thetechprinciple.com", sessionId: "s2", email: "someone-else@example.com", question: "Do you build mobile apps?"
   } });
   assert.equal(otherSession.status, 201, "a different session gets its own record and its own notification");
-  assert.equal(webhookCalls, 2);
+  assert.equal(handoffCalls, 2);
 
   const list = await request("/api/owner/question-followups?tenant=the-tech-principle-local", { owner: true });
   assert.equal(list.status, 200);
