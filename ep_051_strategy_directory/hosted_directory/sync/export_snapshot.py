@@ -9,9 +9,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from app.config import get_settings
-from app.contracts import Snapshot, Strategy, snapshot_hash
+from app.contracts import Snapshot, Strategy, snapshot_hash, MAX_SNAPSHOT_ITEMS
 from app.repository import local_equity_curves, local_strategies
 from app.intelligence.profile import build_profile
+
+
+def select_snapshot_items(items) -> list[Strategy]:
+    """Select the stable contract-bounded strategy population before curve work."""
+    records = sorted((item if isinstance(item, Strategy) else Strategy.model_validate(item) for item in items), key=lambda item: item.strategy_id)
+    return records[:MAX_SNAPSHOT_ITEMS]
 
 
 def build_snapshot(items, source_watermark: str | datetime, generated_at: datetime | None = None,profiles=None,return_series=None) -> Snapshot:
@@ -31,7 +37,7 @@ def build_snapshot(items, source_watermark: str | datetime, generated_at: dateti
 def main():
     parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--watermark")
     args = parser.parse_args(); watermark = args.watermark or datetime.now(timezone.utc).isoformat()
-    settings=get_settings();items=local_strategies(settings);curves=local_equity_curves(settings)
+    settings=get_settings();selected=select_snapshot_items(local_strategies(settings));items=[item.model_dump() for item in selected];curves=local_equity_curves(settings,[item.strategy_id for item in selected])
     profiles=[build_profile(item,curves.get(item["strategy_id"],[])) for item in items];series=[]
     for strategy_id,points in curves.items():
         for point in points:series.append({"strategy_id":strategy_id,"trade_id":str(point.get("guid") or point["trade_number"]),"trade_number":point["trade_number"],"opened_at":point.get("opened_at"),"observed_at":point["closed_at"],"net_return":point["net_return"],"cumulative_net_return":point["equity"],"drawdown":point["drawdown"]})

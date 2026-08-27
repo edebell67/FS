@@ -10,7 +10,7 @@ import pytest
 from pydantic import ValidationError
 
 from app.contracts import Snapshot,Strategy, snapshot_hash
-from sync.export_snapshot import build_snapshot
+from sync.export_snapshot import build_snapshot, select_snapshot_items
 
 
 def test_snapshot_hash_and_payload_are_deterministic(strategy_items, snapshot_kwargs):
@@ -47,6 +47,20 @@ def test_validation_rejects_tampering_and_count_mismatch(strategy_items, snapsho
     wrong_count = payload.model_copy(update={"item_count": payload.item_count + 1})
     with pytest.raises(ValueError):
         wrong_count.verified()
+
+
+def test_snapshot_export_selection_caps_and_sorts_over_contract_limit(strategy_items):
+    items = []
+    for number in range(2001):
+        item = deepcopy(strategy_items[0])
+        item["strategy_id"] = f"DNA_{number:06d}"
+        items.append(item)
+
+    selected = select_snapshot_items(list(reversed(items)))
+
+    assert len(selected) == 2000
+    assert selected[0].strategy_id == "DNA_000000"
+    assert selected[-1].strategy_id == "DNA_001999"
 
 
 def test_hash_ignores_input_order(strategy_items):
