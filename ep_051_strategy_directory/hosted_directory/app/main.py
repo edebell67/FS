@@ -61,7 +61,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     cfg = settings or get_settings()
     repo = repository or (PostgresRepository(cfg.database_url) if cfg.data_backend == "postgres" and cfg.database_url else None)
     app = FastAPI(title="DNA Strategy Directory API", version="1.0.0", docs_url=None, redoc_url=None)
-    user_store=PostgresUserIntelligenceStore(cfg.database_url,maintenance_database_url=cfg.maintenance_database_url) if cfg.data_backend=="postgres" and cfg.database_url else UserIntelligenceStore()
+    user_store=PostgresUserIntelligenceStore(cfg.database_url, verify_boundary=bool(cfg.intelligence_user_token), maintenance_database_url=cfg.maintenance_database_url) if cfg.data_backend=="postgres" and cfg.database_url else UserIntelligenceStore()
     market_store=PostgresMarketFeatureStore(cfg.database_url) if cfg.data_backend=="postgres" and cfg.database_url else MarketFeatureStore()
     if cfg.data_backend=="sqlserver":
         market_cache=Path(cfg.local_market_feature_cache_path);market_cache=market_cache if market_cache.is_absolute() else Path(__file__).resolve().parents[1]/market_cache
