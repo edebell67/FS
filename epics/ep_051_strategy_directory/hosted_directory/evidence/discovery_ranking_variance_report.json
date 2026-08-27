@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:16.898625+00:00",
+  "passed": true,
+  "checks": {
+    "ten_repeat_plans_identical": true,
+    "exact_plan_match": true,
+    "all_protected_slices_enforce_hard_constraints": true,
+    "all_protected_slices_rank_repeatably": true
+  },
+  "repeat_runs": 10,
+  "cases": 6,
+  "protected_slices": [
+    {
+      "id": "fx-win",
+      "result_count": 6,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    },
+    {
+      "id": "equity-risk",
+      "result_count": 0,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    },
+    {
+      "id": "sharpe",
+      "result_count": 15,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    },
+    {
+      "id": "track-record",
+      "result_count": 0,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    },
+    {
+      "id": "regime",
+      "result_count": 0,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    },
+    {
+      "id": "return",
+      "result_count": 0,
+      "hard_constraints_valid": true,
+      "rank_stable": true
+    }
+  ]
+}

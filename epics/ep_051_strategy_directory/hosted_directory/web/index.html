@@ -1,0 +1,315 @@
+<!doctype html>
+<!--
+ index.html — Connected Strategy Directory homepage.
+
+ VERSION HISTORY
+ v1.6.1 · 2026-08-27 · Renames the summary label to the clearer “Profitable strategies”.
+ v1.6.0 · 2026-08-27 · Applies the approved The Tech Principle intelligence visual system across the live directory homepage.
+ v1.5.0 · 2026-08-27 · Replaces the aggregate net-return headline with the percentage of selected-period strategies that are profitable.
+ v1.4.2 · 2026-08-26 · Confirms current-day default.
+ v1.4.1 · 2026-08-25 · Restores a persistent full-result directory summary.
+ v1.4.0 · 2026-08-24 · Adds non-destructive refresh progress.
+ v1.3.0 · 2026-08-24 · Links the intelligence finder.
+ v1.2.0 · 2026-08-24 · Defaults to current week and net return descending.
+ v1.1.0 · 2026-08-24 · Adds evidence filtering.
+ v1.0.0 · 2026-08-23 · Initial connected directory.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <title>DNA Strategy Directory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.2" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+    <style>
+      :root { --ink:#171913; --muted:#71766c; --paper:#f1f2eb; --surface:#fafbf6; --line:#d8dbd0; --acid:#d8ff3f; --green:#2c744e; --red:#a14c40; --shadow:0 24px 70px #24271c1b; }
+      * { box-sizing:border-box; }
+      html,body { max-width:100%; overflow-x:hidden; }
+      body { margin:0; background:radial-gradient(circle at 76% 0,#d8ff3f12,transparent 32rem),var(--paper); color:var(--ink); font:14px Manrope,sans-serif; }
+      button,input,select { font:inherit; color:inherit; }
+      button { cursor:pointer; }
+      .shell { width:100%; max-width:none; margin:0; padding:0 0 90px; }
+      .top { position:sticky; top:0; z-index:30; min-height:68px; margin:0; padding:0 24px; border:0; border-bottom:1px solid var(--line); background:#f1f2ebee; backdrop-filter:blur(12px); display:flex; align-items:center; justify-content:space-between; }
+      .brand { position:relative; display:inline-flex; align-items:center; gap:10px; color:var(--ink); font:500 10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+      .brand::before { content:""; width:25px; height:25px; flex:none; border-radius:5px; background:var(--acid); transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+      .brand::after { content:""; position:absolute; left:8px; top:8px; width:9px; height:9px; border-radius:1px; background:#0a0c0e; }
+      .brand:hover::before { transform:rotate(45deg); }
+      .nav-actions { gap:20px; align-items:center; }
+      .nav-actions a,.nav-actions span { color:var(--ink); font:500 9px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; text-decoration:none; }
+      .nav-actions a { border-bottom:1px solid transparent; }
+      .nav-actions a:hover { border-color:var(--ink); }
+      .nav-actions>span:last-child { color:var(--muted); }
+      .hero { min-height:0; margin:0; padding:34px max(24px,calc((100vw - 936px)/2)) 22px; border:0; border-radius:0; background:transparent; color:var(--ink); display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:40px; }
+      .hero .id { color:var(--muted); font:10px "DM Mono",monospace; letter-spacing:.11em; }
+      .hero h1 { max-width:760px; margin:10px 0 8px; color:var(--ink); font:700 clamp(34px,5vw,68px)/.94 Manrope,sans-serif; letter-spacing:-.065em; }
+      .hero p { max-width:72ch; margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+      .seal { width:116px; height:116px; border:1px solid var(--line); border-radius:50%; color:var(--green); background:transparent; font:500 9px/1.5 "DM Mono",monospace; }
+      .directory-summary,.period,.tools,.refresh-state,.grid { width:min(1180px,calc(100% - 48px)); margin-left:auto; margin-right:auto; }
+      .directory-summary { overflow:hidden; grid-template-columns:repeat(4,1fr); margin-top:0; margin-bottom:14px; padding:0; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .directory-summary article { min-height:94px; padding:20px 18px 16px; border:0; border-right:1px solid var(--line); background:transparent; }
+      .directory-summary article:last-child { border-right:0; }
+      .directory-summary span { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.1em; text-transform:uppercase; }
+      .directory-summary strong { margin-top:7px; color:var(--ink); font:700 30px/1 Manrope,sans-serif; letter-spacing:-.045em; }
+      .period { margin-top:0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .period-head { align-items:end; }
+      .period-head span,.period-dates label { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.09em; text-transform:uppercase; }
+      .period-head h2 { margin:4px 0 0; color:var(--ink); font:700 17px Manrope,sans-serif; letter-spacing:-.03em; }
+      .period-presets { gap:6px; }
+      .period-presets button { min-height:34px; padding:7px 11px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:10px; }
+      .period-presets button.active { border-color:var(--ink); background:var(--ink); color:#fff; }
+      .period-dates { grid-template-columns:1fr 1fr auto; gap:8px; margin-top:12px; }
+      .period-dates input { min-height:42px; margin-top:5px; border:1px solid var(--line); border-radius:7px; background:transparent; }
+      #applyPeriod,#load { border:0; border-radius:8px; background:var(--acid); color:#171913; font-weight:700; }
+      .tools { display:grid; grid-template-columns:minmax(220px,1fr) repeat(4,minmax(120px,auto)) auto; gap:8px; margin-top:14px; padding:8px; border-radius:12px; background:var(--ink); box-shadow:var(--shadow); }
+      .tools input,.tools select { min-height:43px; border:1px solid #ffffff20; border-radius:7px; background:#ffffff0b; color:#fff; padding:8px 11px; }
+      .tools input::placeholder { color:#aeb3aa; }
+      .tools option { color:#171913; background:#fafbf6; }
+      .tools #load { min-width:128px; }
+      .refresh-state { margin-top:10px; color:var(--muted); font:9px "DM Mono",monospace; }
+      .progress-track { height:3px; border-radius:0; background:var(--line); }
+      .grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:15px; }
+      .card { min-width:0; min-height:176px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); box-shadow:none; transition:transform .2s,border-color .2s,box-shadow .2s; animation:directoryRise .35s both; }
+      .card:hover { transform:translateY(-3px); border-color:#9ca391; box-shadow:0 16px 36px #24271c14; }
+      .card .id { color:var(--green); font:9px "DM Mono",monospace; letter-spacing:.035em; }
+      .card h2 { margin:13px 0 12px; color:var(--ink); font:700 18px/1.15 Manrope,sans-serif; letter-spacing:-.035em; }
+      .stats { grid-template-columns:repeat(4,1fr); gap:0; padding-top:11px; border-top:1px solid var(--line); }
+      .stat { padding:0 8px; border-right:1px solid var(--line); }
+      .stat:first-child { padding-left:0; }
+      .stat:last-child { border:0; }
+      .stat b { color:var(--ink); font:600 13px "DM Mono",monospace; }
+      .stat span,.evidence { color:var(--muted); font:8px "DM Mono",monospace; text-transform:uppercase; letter-spacing:.05em; }
+      .evidence { margin-top:15px; }
+      .notice { grid-column:1/-1; border:1px dashed var(--line); border-radius:10px; background:transparent; color:var(--muted); }
+      @keyframes directoryRise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+      html[data-theme="dark"] { color-scheme:dark; --ink:#f2f4eb; --muted:#a2a79e; --paper:#151712; --surface:#20231c; --line:#3b4036; --shadow:0 24px 70px #0008; }
+      html[data-theme="dark"] body { background:radial-gradient(circle at 76% 0,#d8ff3f0b,transparent 32rem),var(--paper); }
+      html[data-theme="dark"] .top { background:#151712ee; }
+      html[data-theme="dark"] .period-presets button.active { background:#f2f4eb; color:#171913; }
+      html[data-theme="dark"] .card:hover { border-color:#72796b; box-shadow:0 16px 36px #0005; }
+      @media(max-width:980px) { .nav-actions>span:last-child { display:none; } .hero { padding-left:28px; padding-right:28px; } .directory-summary,.period,.tools,.refresh-state,.grid { width:calc(100% - 40px); } .tools { grid-template-columns:minmax(220px,1fr) repeat(2,minmax(110px,1fr)); } .tools #load { min-height:43px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      @media(max-width:700px) { .top { min-height:60px; padding:0 16px; } .nav-actions { gap:10px; } .nav-actions a { font-size:8px; } .hero { grid-template-columns:1fr; padding:26px 16px 18px; } .hero h1 { font-size:39px; } .seal { display:none; } .directory-summary,.period,.tools,.refresh-state,.grid { width:calc(100% - 32px); } .directory-summary { grid-template-columns:repeat(2,1fr); } .directory-summary article:nth-child(2) { border-right:0; } .directory-summary article:nth-child(-n+2) { border-bottom:1px solid var(--line); } .period-head { align-items:flex-start; gap:14px; } .period-presets { overflow-x:auto; width:100%; } .period-presets button { flex:none; } .period-dates,.tools,.grid { grid-template-columns:1fr; } .tools { padding:10px; } .tools input,.tools select,.tools #load { width:100%; } .card { min-height:0; } }
+      @media(max-width:430px) { .brand { font-size:0; } .nav-actions a:nth-child(n+3) { display:none; } .directory-summary strong { font-size:25px; } .stats { grid-template-columns:repeat(2,1fr); row-gap:12px; } .stat:nth-child(2) { border-right:0; } }
+      @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+    </style>
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="top">
+        <span class="brand">DNA / Strategy Directory</span>
+        <span class="nav-actions"
+          ><a href="/intelligence.html">Ask the evidence</a
+          ><a href="/search.html">Intelligence workspace</a
+          ><a href="/regimes.html">Market context</a
+          ><a href="/account.html">Your intelligence</a
+          ><span>Evidence before allocation</span></span
+        >
+      </nav>
+      <section class="hero">
+        <div>
+          <span class="id">LIVE DIRECTORY · CLOSED-TRADE EVIDENCE</span>
+          <h1>Find a strategy<br />that earns its place.</h1>
+          <p>
+            Compare canonical DNA models using net return after included costs.
+            Select an evidence window to recalculate every statistic from the
+            underlying closed trades.
+          </p>
+        </div>
+        <div class="seal">LOCAL SQL FIRST<br />→<br />SAME API HOSTED</div>
+      </section>
+      <section class="directory-summary" id="directorySummary" aria-label="Directory summary" aria-live="polite" hidden>
+        <article><span>Strategies</span><strong id="summaryStrategies"></strong></article>
+        <article><span>Closed trades</span><strong id="summaryTrades"></strong></article>
+        <article><span>Profitable strategies</span><strong id="summaryProfitable"></strong></article>
+        <article><span>Evidence-ready</span><strong id="summaryReady"></strong></article>
+      </section>
+      <section class="period" aria-label="Evidence period">
+        <div class="period-head">
+          <div>
+            <span>Evidence window</span>
+            <h2 id="periodLabel">Current day</h2>
+          </div>
+          <div class="period-presets">
+            <button data-period="today" class="active">Current day</button
+            ><button data-period="week">Current week</button
+            ><button data-period="month">Current month</button
+            ><button data-period="all">All history</button>
+          </div>
+        </div>
+        <div class="period-dates">
+          <label>From<input type="date" id="dateFrom" /></label
+          ><label>To<input type="date" id="dateTo" /></label
+          ><button id="applyPeriod">Apply selected period</button>
+        </div>
+      </section>
+      <section class="tools">
+        <input id="search" placeholder="Search DNA_102001" /><select id="product" aria-label="Product">
+          <option value="">All products</option>
+        </select><select id="signal" aria-label="Signal">
+          <option value="" selected>BUY + SELL</option>
+          <option value="BUY">BUY only</option>
+          <option value="SELL">SELL only</option>
+        </select><select id="sort">
+          <option value="strategy_id">Strategy ID</option>
+          <option value="total_net_return" selected>Net return</option>
+          <option value="win_rate">Win rate</option>
+          <option value="profit_factor">Profit factor</option>
+          <option value="total_trades">Evidence volume</option></select
+        ><select id="direction">
+          <option value="asc">Ascending</option>
+          <option value="desc" selected>Descending</option></select
+        ><button id="load">Refresh evidence</button>
+      </section>
+      <div class="refresh-state" id="refreshState" role="status" aria-live="polite">
+        <div class="refresh-copy"><span id="status">Connecting to the directory API…</span><span id="progressValue">0%</span></div>
+        <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+      </div>
+      <section class="grid" id="grid" aria-live="polite"></section>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.5.0"></script>
+    <script src="/assets/period-filter.js?v=1.1.0"></script>
+    <script>
+      const fmt = (n) =>
+        n == null
+          ? "—"
+          : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
+      let backgroundPolls = 0,
+        refreshTimer = null,
+        refreshGeneration = 0;
+      async function refresh(isBackgroundPoll = false) {
+        if (!isBackgroundPoll) {
+          clearTimeout(refreshTimer);
+          backgroundPolls = 0;
+          refreshGeneration += 1;
+        }
+        const generation = refreshGeneration;
+        const s = document.querySelector("#status"),
+          g = document.querySelector("#grid"),
+          directorySummary = document.querySelector("#directorySummary"),
+          state = document.querySelector("#refreshState"),
+          bar = document.querySelector("#progressBar"),
+          value = document.querySelector("#progressValue"),
+          button = document.querySelector("#load");
+        let progress = 12;
+        state.className = "refresh-state loading";
+        s.textContent = "Refreshing evidence…";
+        value.textContent = `${progress}%`;
+        bar.style.width = `${progress}%`;
+        button.disabled = true;
+        button.textContent = "Refreshing…";
+        g.setAttribute("aria-busy", "true");
+        if (!isBackgroundPoll) {
+          directorySummary.hidden = true;
+          g.replaceChildren();
+        }
+        const progressTimer = setInterval(() => {
+          progress = Math.min(92, progress + Math.max(1, Math.round((92 - progress) / 5)));
+          value.textContent = `${progress}%`;
+          bar.style.width = `${progress}%`;
+        }, 140);
+        try {
+          const [p] = await Promise.all([
+            DnaDirectoryApi.list({
+              page_size: 100,
+              search: search.value,
+              product: product.value,
+              signal: signal.value,
+              sort: sort.value,
+              direction: direction.value,
+              ...DnaPeriod.params(),
+            }),
+            new Promise((resolve) => setTimeout(resolve, 450)),
+          ]);
+          if (generation !== refreshGeneration) return;
+          clearInterval(progressTimer);
+          bar.style.width = p.data.refresh_pending ? "95%" : "100%";
+          value.textContent = p.data.refresh_pending ? "Updating" : "100%";
+          s.textContent = p.data.refresh_pending
+            ? `${p.data.total} strategies displayed · live ${periodLabel.textContent.toLowerCase()} evidence is updating…`
+            : `${p.data.total} strategies refreshed · ${periodLabel.textContent}`;
+          state.className = p.data.refresh_pending ? "refresh-state loading" : "refresh-state complete";
+          const summary = p.data.summary;
+          if (p.data.refresh_pending) {
+            // Provisional aggregates are not evidence. Keep results hidden and
+            // communicate the running state exclusively through the status bar.
+            directorySummary.hidden = true;
+            g.replaceChildren();
+            s.textContent = `Calculating live ${periodLabel.textContent.toLowerCase()} evidence…`;
+            backgroundPolls += 1;
+            const delay = backgroundPolls < 8 ? 1200 : 2500;
+            refreshTimer = setTimeout(() => refresh(true), delay);
+            return;
+          }
+          summaryStrategies.textContent = fmt(summary.strategies);
+          summaryTrades.textContent = fmt(summary.closed_trades);
+          summaryProfitable.textContent = `${fmt(summary.profitable_percentage)}%`;
+          summaryReady.textContent = `${fmt(summary.evidence_ready)} / ${fmt(summary.strategies)}`;
+          directorySummary.hidden = false;
+          if (!p.data.items.length) {
+            g.innerHTML =
+              '<div class="notice">No closed DNA trades were found in this period.</div>';
+            return;
+          }
+          const period = new URLSearchParams(DnaPeriod.params()).toString();
+          g.innerHTML = p.data.items
+            .map(
+              (x) =>
+                `<a class="card" href="/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${period}"><span class="id">${esc(x.strategy_id)} · ${esc(x.quality_state)}</span><h2>${esc(x.descriptive_name || "Name pending")}</h2><div class="stats"><div class="stat"><b>${fmt(x.total_net_return)}</b><span>Net return</span></div><div class="stat"><b>${fmt(x.win_rate * 100)}%</b><span>Win rate</span></div><div class="stat"><b>${fmt(x.profit_factor)}</b><span>Profit factor</span></div><div class="stat"><b>${fmt(x.total_trades)}</b><span>Closed trades</span></div></div><div class="evidence">${esc(x.market)} · ${esc(x.evidence_start?.slice(0, 10) || "—")} → ${esc(x.evidence_end?.slice(0, 10) || "—")}</div></a>`,
+            )
+            .join("");
+          if (p.data.refresh_pending) {
+            backgroundPolls += 1;
+            const delay = backgroundPolls < 8 ? 1200 : 2500;
+            refreshTimer = setTimeout(() => refresh(true), delay);
+          } else if (!p.data.refresh_pending) {
+            backgroundPolls = 0;
+          }
+        } catch (e) {
+          clearInterval(progressTimer);
+          state.className = "refresh-state error";
+          value.textContent = "Failed";
+          bar.style.width = "100%";
+          s.textContent = e.message;
+          if (!g.children.length) g.innerHTML =
+            '<div class="notice">The evidence query could not be completed. Adjust the period or check API readiness.</div>';
+        } finally {
+          button.disabled = false;
+          button.textContent = "Refresh evidence";
+          g.removeAttribute("aria-busy");
+        }
+      }
+      load.onclick = refresh;
+      search.onkeydown = (e) => {
+        if (e.key === "Enter") refresh();
+      };
+      product.onchange = () => refresh();
+      signal.onchange = () => refresh();
+      document.addEventListener("periodchange", refresh);
+      // Establish the default evidence window before any asynchronous product
+      // catalogue request. This prevents an all-history/previous-period result
+      // from rendering while the Current day request is waiting to start.
+      DnaPeriod.setPreset("today");
+      DnaDirectoryApi.products().then((payload) => {
+        product.insertAdjacentHTML("beforeend", payload.items.map((value) =>
+          `<option value="${esc(value)}">${esc(value)}</option>`).join(""));
+      });
+    </script>
+  </body>
+</html>

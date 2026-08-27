@@ -1,0 +1,127 @@
+<!doctype html>
+<!-- Version history: 1.1.0 (2026-08-27) shared Tech Principle visual system; 1.0.0 (2026-08-24) canonical regime evidence and suitability investigation. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <link rel="icon" href="data:," />
+    <title>DNA regime intelligence</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.0.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+  </head>
+  <body class="tp-page tp-regimes">
+    <main class="shell">
+      <nav class="top">
+        <a href="/">← Directory</a
+        ><span>Point-in-time evidence · decision support only</span>
+      </nav>
+      <section class="finder-hero">
+        <div>
+          <span class="id">MARKET / REGIME INTELLIGENCE</span>
+          <h1>Context<br />before fit.</h1>
+          <p>
+            Inspect the current server-verified market state, then investigate
+            strategies whose historical evidence is valid in comparable regimes.
+          </p>
+        </div>
+        <div class="finder-index">
+          <b>01</b><span>Verify market</span><b>02</b><span>Apply risk</span
+          ><b>03</b><span>Investigate</span>
+        </div>
+      </section>
+      <section class="query-deck">
+        <div class="preference-row">
+          <label>Market<input id="market" value="FX" maxlength="40" /></label
+          ><label
+            >Maximum drawdown<input
+              id="risk"
+              type="number"
+              min="0"
+              step="any"
+              placeholder="Optional money limit" /></label
+          ><label
+            >Canonical strategy IDs<input
+              id="strategyIds"
+              placeholder="DNA_102001, DNA_102002" /></label
+          ><button id="run">Assess suitability</button>
+        </div>
+        <p class="status" id="status">
+          No browser-supplied feature, score, confidence or evidence label is
+          trusted.
+        </p>
+      </section>
+      <section class="panel" id="current">
+        <span class="id">CURRENT REGIME</span>
+        <h2>Waiting for a verified market selector.</h2>
+      </section>
+      <section class="finder-results">
+        <div class="result-head">
+          <div>
+            <span class="id">STRATEGIES TO INVESTIGATE</span>
+            <h2 id="resultTitle">No recommendation run yet.</h2>
+          </div>
+          <span class="result-count" id="count">—</span>
+        </div>
+        <div class="intelligence-grid" id="results"></div>
+      </section>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.5.0"></script>
+    <script>
+      const q = document.querySelector.bind(document),
+        esc = (value) =>
+          String(value ?? "").replace(
+            /[&<>"']/g,
+            (character) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[character],
+          );
+      q("#run").onclick = async () => {
+        const market = q("#market").value.trim(),
+          strategy_ids = [
+            ...new Set(
+              q("#strategyIds")
+                .value.split(",")
+                .map((value) => value.trim().toUpperCase())
+                .filter(Boolean),
+            ),
+          ],
+          risk_limit =
+            q("#risk").value === "" ? null : Number(q("#risk").value);
+        q("#status").textContent =
+          "Resolving immutable market features and canonical strategy evidence…";
+        try {
+          const [regime, response] = await Promise.all([
+            DnaDirectoryApi.regime(market),
+            DnaDirectoryApi.recommend({ market, strategy_ids, risk_limit }),
+          ]);
+          q("#current").innerHTML =
+            `<span class="id">CURRENT REGIME · ${esc(regime.source_version || "unavailable")}</span><h2>${esc(regime.state)}</h2><p>Confidence ${(Number(regime.confidence || 0) * 100).toFixed(1)}% · feature as of ${esc(regime.feature_as_of || "—")} · ${regime.fresh ? "fresh" : "not current"}</p>`;
+          q("#count").textContent = response.total;
+          q("#resultTitle").textContent = response.total
+            ? "Evidence-valid candidates in the selected context."
+            : `No evidence-valid candidates · ${esc(response.reason || "constraints or sample gates excluded all strategies")}`;
+          q("#results").innerHTML = response.items
+            .map(
+              (item) =>
+                `<article class="intel-card"><div class="intel-card-head"><span class="id">${esc(item.strategy_id)}</span><b>${Number(item.suitability_score).toFixed(1)}</b></div><h3>Investigate, do not auto-allocate.</h3><div class="why"><span>Supporting evidence</span>${item.why.map((reason) => `<em>${esc(reason)}</em>`).join("")}<span>Counter-evidence</span>${(item.counter_evidence.length ? item.counter_evidence : ["No material counter-evidence in this bounded profile."]).map((reason) => `<em>${esc(reason)}</em>`).join("")}</div><p>Sample ${esc(item.evidence.sample_count ?? "—")} · 95% interval ${esc(item.evidence.confidence_interval_95?.join(" to ") || "unavailable")}</p><a href="/strategy.html?id=${encodeURIComponent(item.strategy_id)}"><button>Inspect canonical evidence</button></a></article>`,
+            )
+            .join("");
+          q("#status").textContent =
+            `Fact-bound run · source ${response.source_version || "unavailable"} · methodology ${response.methodology_version}`;
+        } catch (error) {
+          q("#status").textContent = error.message;
+          q("#status").className = "status error";
+        }
+      };
+    </script>
+  </body>
+</html>

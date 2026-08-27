@@ -1,0 +1,134 @@
+{
+  "generated_at": "2026-08-24T15:12:28.887916+00:00",
+  "schema_version": "1.0.0",
+  "market_source": "European Central Bank EXR daily reference rates",
+  "market_source_version": "ecb-exr-daily-v1",
+  "strategy_source": "sanitized combined_trades_closed intelligence cache",
+  "methodology": {
+    "train_days": 14,
+    "test_days": 5,
+    "minimum_samples_per_regime": 2,
+    "selection_size": 10,
+    "selection": "top training-period mean net return within the point-in-time regime",
+    "baseline": "daily equal-weight mean across all strategies with closed trades",
+    "outcome": "signed net_return; costs and commission included",
+    "holdout": "last two chronological folds; calibration folds are reported but excluded from the release decision"
+  },
+  "calibration_folds": [
+    {
+      "trained_from": "2026-06-30",
+      "trained_through": "2026-07-17",
+      "evaluated_from": "2026-07-20",
+      "evaluated_through": "2026-07-24",
+      "candidate_return": -91.55799424005879,
+      "baseline_return": -94.70635425357517,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-07",
+      "trained_through": "2026-07-24",
+      "evaluated_from": "2026-07-27",
+      "evaluated_through": "2026-07-31",
+      "candidate_return": -84.04909264252575,
+      "baseline_return": -84.08866699834337,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-14",
+      "trained_through": "2026-07-31",
+      "evaluated_from": "2026-08-03",
+      "evaluated_through": "2026-08-07",
+      "candidate_return": -89.72249203210762,
+      "baseline_return": -89.72249203210762,
+      "candidate_days": 5,
+      "test_days": 5
+    }
+  ],
+  "holdout_folds": [
+    {
+      "trained_from": "2026-07-21",
+      "trained_through": "2026-08-07",
+      "evaluated_from": "2026-08-10",
+      "evaluated_through": "2026-08-14",
+      "candidate_return": -83.0585688905506,
+      "baseline_return": -83.0585688905506,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-28",
+      "trained_through": "2026-08-14",
+      "evaluated_from": "2026-08-17",
+      "evaluated_through": "2026-08-24",
+      "candidate_return": -88.94739133622899,
+      "baseline_return": -123.33217981507902,
+      "candidate_days": 5,
+      "test_days": 5
+    }
+  ],
+  "folds": [
+    {
+      "trained_from": "2026-06-30",
+      "trained_through": "2026-07-17",
+      "evaluated_from": "2026-07-20",
+      "evaluated_through": "2026-07-24",
+      "candidate_return": -91.55799424005879,
+      "baseline_return": -94.70635425357517,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-07",
+      "trained_through": "2026-07-24",
+      "evaluated_from": "2026-07-27",
+      "evaluated_through": "2026-07-31",
+      "candidate_return": -84.04909264252575,
+      "baseline_return": -84.08866699834337,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-14",
+      "trained_through": "2026-07-31",
+      "evaluated_from": "2026-08-03",
+      "evaluated_through": "2026-08-07",
+      "candidate_return": -89.72249203210762,
+      "baseline_return": -89.72249203210762,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-21",
+      "trained_through": "2026-08-07",
+      "evaluated_from": "2026-08-10",
+      "evaluated_through": "2026-08-14",
+      "candidate_return": -83.0585688905506,
+      "baseline_return": -83.0585688905506,
+      "candidate_days": 5,
+      "test_days": 5
+    },
+    {
+      "trained_from": "2026-07-28",
+      "trained_through": "2026-08-14",
+      "evaluated_from": "2026-08-17",
+      "evaluated_through": "2026-08-24",
+      "candidate_return": -88.94739133622899,
+      "baseline_return": -123.33217981507902,
+      "candidate_days": 5,
+      "test_days": 5
+    }
+  ],
+  "candidate_return": -172.0059602267796,
+  "baseline_return": -206.39074870562962,
+  "lift": 34.38478847885003,
+  "positive_lift_folds": 1,
+  "passed": true,
+  "limitations": [
+    "ECB reference rates are daily informational rates, not executable prices.",
+    "The available strategy cache bounds each model to its latest 1,000 closed trades.",
+    "A positive lift may mean a smaller loss than baseline; it is not necessarily a positive absolute return.",
+    "Results are decision-support evaluation, not a promise of future performance."
+  ]
+}

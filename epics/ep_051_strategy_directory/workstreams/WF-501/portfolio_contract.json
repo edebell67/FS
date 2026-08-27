@@ -1,0 +1,31 @@
+{
+  "contract_version": "1.0.0",
+  "version_history": [
+    {"version": "1.0.0", "date": "2026-08-23", "change": "Initial capital and portfolio request contract"}
+  ],
+  "request": {
+    "portfolio_currency": "GBP",
+    "capital": {"amount": 100000, "denominator": "net_liquidation_value"},
+    "sizing_policy": "fixed_fractional_risk",
+    "risk_budget": {"value": 0.01, "denominator": "net_liquidation_value_per_strategy"},
+    "margin_policy": {"maximum_fraction": 0.35, "denominator": "net_liquidation_value", "stress_multiplier": 1.5},
+    "objective": {"name": "risk_adjusted_diversification", "primary_metric": "expected_shortfall", "direction": "minimise"},
+    "constraints": {
+      "minimum_strategies": 3,
+      "maximum_strategies": 12,
+      "maximum_strategy_weight": 0.25,
+      "maximum_cluster_weight": 0.4,
+      "maximum_market_weight": 0.5,
+      "minimum_history_closed_trades": 30,
+      "eligible_quality_states": ["VALID"],
+      "allow_open_trade_metrics": false
+    }
+  },
+  "response_requirements": {
+    "include_feasibility": true,
+    "include_exclusion_reasons": true,
+    "include_denominators": true,
+    "include_sizing_policy": true,
+    "include_input_versions": true
+  }
+}

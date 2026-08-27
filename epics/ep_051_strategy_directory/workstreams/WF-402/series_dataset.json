@@ -1,0 +1,1 @@
+{"methodology_version":"1.0.0","frequency":"DAY","timezone":"UTC","calendar_policy":"complete eligible days; zero=no trade; null=incomplete source","sample":[{"date":"2026-01-01","DNA_102001":"3.00000000","DNA_102002":"0.00000000"},{"date":"2026-01-02","DNA_102001":null,"DNA_102002":"-1.00000000"}]}

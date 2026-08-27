@@ -1,0 +1,6602 @@
+[
+  {
+    "strategy_id": "DNA_102001",
+    "definition_version": 1,
+    "definition_hash": "efbd9fb192b0c8edfbd542d1915fed5e8efcea54476eec6f50d8f0b0f3f6dec9",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102001
+    },
+    "source_aliases": [
+      "DNA_102001_S",
+      "DNA_102001_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102002",
+    "definition_version": 1,
+    "definition_hash": "0437760f1a2449beea6fc24fcc5bb8a12ce9592148256c19410db6de9e4a7ed5",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102002
+    },
+    "source_aliases": [
+      "DNA_102002_S",
+      "DNA_102002_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102003",
+    "definition_version": 1,
+    "definition_hash": "73b325c8af977724f7f9e2ae2836e145f37d1fa267d1588f60eba6c6b5ee078e",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102003
+    },
+    "source_aliases": [
+      "DNA_102003_S",
+      "DNA_102003_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102004",
+    "definition_version": 1,
+    "definition_hash": "574287db46dcd7c62c9329f26dd4c7ee789741c225a47e27571cd058ad1cc36f",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102004
+    },
+    "source_aliases": [
+      "DNA_102004_S",
+      "DNA_102004_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102005",
+    "definition_version": 1,
+    "definition_hash": "e0bbbf374266fe26a2c4e6e6b4983d7a90a1fb4cb8c2dec0014069d3065a33af",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102005
+    },
+    "source_aliases": [
+      "DNA_102005_S",
+      "DNA_102005_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102006",
+    "definition_version": 1,
+    "definition_hash": "b0e350f8ca2a0f4e64544c2fadc75f03be14f30235b746e695891a2d62689ff2",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102006
+    },
+    "source_aliases": [
+      "DNA_102006_S",
+      "DNA_102006_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102007",
+    "definition_version": 1,
+    "definition_hash": "ce08dd6d014bb1db7e628c9bd0385442c7e7142ad51ccc11e0fdf8e894e2a62d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102007
+    },
+    "source_aliases": [
+      "DNA_102007_S",
+      "DNA_102007_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102008",
+    "definition_version": 1,
+    "definition_hash": "333bd2ddb3d1e8fcfd0846eb937ee7caafe1df28fe15a74b84dfa0d0563728d7",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102008
+    },
+    "source_aliases": [
+      "DNA_102008_S",
+      "DNA_102008_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102009",
+    "definition_version": 1,
+    "definition_hash": "d9f95e802926c709e4cf0ca0e6e6bb0ad8b70a84515e17795ad7044f092fc7ba",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102009
+    },
+    "source_aliases": [
+      "DNA_102009_S",
+      "DNA_102009_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102010",
+    "definition_version": 1,
+    "definition_hash": "32f9b6abcf095ac946cef4b883a1fe8a590635eb4a136022d5c88815ca5024fa",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102010
+    },
+    "source_aliases": [
+      "DNA_102010_S",
+      "DNA_102010_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102011",
+    "definition_version": 1,
+    "definition_hash": "48532ba56eaf9094e78963e8a1bcbda859a09da9fba9ddc5d6ea46cb54a0fb90",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102011
+    },
+    "source_aliases": [
+      "DNA_102011_S",
+      "DNA_102011_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102012",
+    "definition_version": 1,
+    "definition_hash": "7e68909002b6841be1e642557fb78a1cce6031ab0ae554083ef6497fc7872c45",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102012
+    },
+    "source_aliases": [
+      "DNA_102012_S",
+      "DNA_102012_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102013",
+    "definition_version": 1,
+    "definition_hash": "d190af4097b86b1311b5b7e5375d545f394f0c1ebd1d258b5e07e5cb8c94566f",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102013
+    },
+    "source_aliases": [
+      "DNA_102013_S",
+      "DNA_102013_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102014",
+    "definition_version": 1,
+    "definition_hash": "6239a2b3824666f4e2f66ca9d00721a8a2b67ff89df774dc9c6978f55434a0a1",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102014
+    },
+    "source_aliases": [
+      "DNA_102014_S",
+      "DNA_102014_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102015",
+    "definition_version": 1,
+    "definition_hash": "fec4a0c34517abf384d6b8b1b81117465f550e2dbc1cc14981c73f6b377e06e9",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102015
+    },
+    "source_aliases": [
+      "DNA_102015_S",
+      "DNA_102015_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102016",
+    "definition_version": 1,
+    "definition_hash": "9de60e57fc9c459cfe25944bf17fb410d0c0a208aa1702db72a3ef5c60771fa0",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102016
+    },
+    "source_aliases": [
+      "DNA_102016_S",
+      "DNA_102016_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102017",
+    "definition_version": 1,
+    "definition_hash": "4376f6b2c469cb2a1a4c9b02e263e45c72afefbf34010626914c2245a1cfbfb0",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102017
+    },
+    "source_aliases": [
+      "DNA_102017_S",
+      "DNA_102017_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102018",
+    "definition_version": 1,
+    "definition_hash": "60658146f83b8650935e6175abe9d6b612c74e3d7d2b99d1db5f9064485c7587",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102018
+    },
+    "source_aliases": [
+      "DNA_102018_S",
+      "DNA_102018_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102019",
+    "definition_version": 1,
+    "definition_hash": "16991185072103e8306017cf99ba9470889ef28e5726ef6de70443f7930ce98d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102019
+    },
+    "source_aliases": [
+      "DNA_102019_S",
+      "DNA_102019_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102020",
+    "definition_version": 1,
+    "definition_hash": "558711eea21010895313cab27de1660d5ca7a3a25bc1c3d08f4b6b34e3a2695a",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102020
+    },
+    "source_aliases": [
+      "DNA_102020_S",
+      "DNA_102020_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102021",
+    "definition_version": 1,
+    "definition_hash": "b801cdf3fc81ec7276c9fcc3e925f2e75be7548e92a5da6472090932af758ed8",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102021
+    },
+    "source_aliases": [
+      "DNA_102021_S",
+      "DNA_102021_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102022",
+    "definition_version": 1,
+    "definition_hash": "ef810446cbc85ede0ccda30753c0fb344fa2c800ce9b97320b27d44f7d646f2e",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102022
+    },
+    "source_aliases": [
+      "DNA_102022_S",
+      "DNA_102022_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102023",
+    "definition_version": 1,
+    "definition_hash": "49a65fe5c8959f3b1f7f9cb334a1061dace450ae588896e5a9c97c00e2fd5940",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102023
+    },
+    "source_aliases": [
+      "DNA_102023_S",
+      "DNA_102023_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102024",
+    "definition_version": 1,
+    "definition_hash": "ed860dac429701957fa3e84fcc9e9a7ea526ffee129787c9ce6d739f4a19ca52",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102024
+    },
+    "source_aliases": [
+      "DNA_102024_S",
+      "DNA_102024_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102025",
+    "definition_version": 1,
+    "definition_hash": "9ced50476db88d88d1e7c4727353492b238a6282e0e88d3ad7a41a212a28750e",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102025
+    },
+    "source_aliases": [
+      "DNA_102025_S",
+      "DNA_102025_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102026",
+    "definition_version": 1,
+    "definition_hash": "d3123a5cbcebdbec9f85094bb768f4e22eaab32ad456e5cb35de2bf9c7899cae",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102026
+    },
+    "source_aliases": [
+      "DNA_102026_S",
+      "DNA_102026_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102027",
+    "definition_version": 1,
+    "definition_hash": "3a15e96927bc1cceab7789e2f3a7367a7afaae1f6f95058a3e444bb181b3c2a8",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102027
+    },
+    "source_aliases": [
+      "DNA_102027_S",
+      "DNA_102027_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102028",
+    "definition_version": 1,
+    "definition_hash": "cbdd16de28aeeba72ef02899c09b625cad6b209aa5d0ee9ea280296de3156fb5",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102028
+    },
+    "source_aliases": [
+      "DNA_102028_S",
+      "DNA_102028_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102029",
+    "definition_version": 1,
+    "definition_hash": "49f6463bcea20cfbcb6bb1fa8f466e49a89d2559e233867f05172badbc3e9de0",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102029
+    },
+    "source_aliases": [
+      "DNA_102029_S",
+      "DNA_102029_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102030",
+    "definition_version": 1,
+    "definition_hash": "a25e5af5d6f1941513ea39277cf8f08925816cfc565bdec86734d64777ddda62",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102030
+    },
+    "source_aliases": [
+      "DNA_102030_S",
+      "DNA_102030_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102031",
+    "definition_version": 1,
+    "definition_hash": "06cfc507e9a8738f1c7b32e9a06a247ba8898b111f5842ed592e5f1f38a6aa8c",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102031
+    },
+    "source_aliases": [
+      "DNA_102031_S",
+      "DNA_102031_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102032",
+    "definition_version": 1,
+    "definition_hash": "7c1712cda13c3e629f8577a8d40d3a395efa7c8ac20e7af3d0c5e8a9dc474b34",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102032
+    },
+    "source_aliases": [
+      "DNA_102032_S",
+      "DNA_102032_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102033",
+    "definition_version": 1,
+    "definition_hash": "b5d29aee460200a17628b908ad64d53ab5544007995484892312f2e06e8411a2",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102033
+    },
+    "source_aliases": [
+      "DNA_102033_S",
+      "DNA_102033_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102034",
+    "definition_version": 1,
+    "definition_hash": "77852181b527a2265ae64fd0ce1875f72edf5147432c72efcc2af1294355388d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102034
+    },
+    "source_aliases": [
+      "DNA_102034_S",
+      "DNA_102034_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102035",
+    "definition_version": 1,
+    "definition_hash": "e11eaf544e6cb6e32d76578e17862eecdc63be3a937ca5bcb75c7123950bae08",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102035
+    },
+    "source_aliases": [
+      "DNA_102035_S",
+      "DNA_102035_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102036",
+    "definition_version": 1,
+    "definition_hash": "9cd266e4cc5d20aa9f41608f4ef15b9812cfdeec7b2d822108f3bc5787921996",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102036
+    },
+    "source_aliases": [
+      "DNA_102036_S",
+      "DNA_102036_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102037",
+    "definition_version": 1,
+    "definition_hash": "70e081f178bc0a211ac23cddfa0f158a9a1e46253a98ca3bdc283f6403b63750",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102037
+    },
+    "source_aliases": [
+      "DNA_102037_S",
+      "DNA_102037_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102038",
+    "definition_version": 1,
+    "definition_hash": "0f3fcb8763e304a5d3876186c73aafabe24b1000b6661f0e9f028e103046ffb3",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102038
+    },
+    "source_aliases": [
+      "DNA_102038_S",
+      "DNA_102038_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102039",
+    "definition_version": 1,
+    "definition_hash": "d77f575beca41b8ce71fdb32aa5a7f6dbf4826a022c93a49e8c818456536146e",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102039
+    },
+    "source_aliases": [
+      "DNA_102039_S",
+      "DNA_102039_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102040",
+    "definition_version": 1,
+    "definition_hash": "63d2b58ac27643e58f976d76afd52fd309e4ce353495edbbce40d510cceddf6c",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102040
+    },
+    "source_aliases": [
+      "DNA_102040_S",
+      "DNA_102040_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102041",
+    "definition_version": 1,
+    "definition_hash": "96720c95c7b17775bd4bb4102b4a703c1e0fe059fab09eabe9202f4d8621a8c6",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102041
+    },
+    "source_aliases": [
+      "DNA_102041_S",
+      "DNA_102041_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102042",
+    "definition_version": 1,
+    "definition_hash": "a7df4b00538647b39b76c3ac0cea7d7f1a799d031bd0654410e4621c2cb3e5d4",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102042
+    },
+    "source_aliases": [
+      "DNA_102042_S",
+      "DNA_102042_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102043",
+    "definition_version": 1,
+    "definition_hash": "c353db13b431ec3c72ed26a38b17e39aaaf5e937622971c67afaa5a353598349",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102043
+    },
+    "source_aliases": [
+      "DNA_102043_S",
+      "DNA_102043_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102044",
+    "definition_version": 1,
+    "definition_hash": "e1178f571363c0a72fdb144bcde36ffd923d349659bc8c388083eec331bf4c71",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102044
+    },
+    "source_aliases": [
+      "DNA_102044_S",
+      "DNA_102044_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102045",
+    "definition_version": 1,
+    "definition_hash": "0d8602de6c773b1cb50bca3bc1a5b4aadcd73985ca8efd5b2c0668b258ec058a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102045
+    },
+    "source_aliases": [
+      "DNA_102045_S",
+      "DNA_102045_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102046",
+    "definition_version": 1,
+    "definition_hash": "efec4d5c4d54f2bcf702b97a5ffc2e88ac3b9f5a80b1edfe4d9da5e0a8ba5e80",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102046
+    },
+    "source_aliases": [
+      "DNA_102046_S",
+      "DNA_102046_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102047",
+    "definition_version": 1,
+    "definition_hash": "2aa82abc924283fa6ce55b1a14ac4accd6c35dd9259f8c5b526746665a1856f7",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102047
+    },
+    "source_aliases": [
+      "DNA_102047_S",
+      "DNA_102047_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102048",
+    "definition_version": 1,
+    "definition_hash": "ffa7fd38b631f250e6dd49eb186c804642171ad864698ea8c0041cb07b7cc38f",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102048
+    },
+    "source_aliases": [
+      "DNA_102048_S",
+      "DNA_102048_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102049",
+    "definition_version": 1,
+    "definition_hash": "303f488924cb9fa16f6ae1812d522238c3529536cc54a4a4ca9d45561c3c170b",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102049
+    },
+    "source_aliases": [
+      "DNA_102049_S",
+      "DNA_102049_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102050",
+    "definition_version": 1,
+    "definition_hash": "ef03dc8d7139a7d06c7d0f14300084ad033e0148d63cd5d0c0030687c78e5f51",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102050
+    },
+    "source_aliases": [
+      "DNA_102050_S",
+      "DNA_102050_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102051",
+    "definition_version": 1,
+    "definition_hash": "a1fee8875fd87fc1860c9fd77657aefcfff851367562978321f93cb44d86685c",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102051
+    },
+    "source_aliases": [
+      "DNA_102051_S",
+      "DNA_102051_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102052",
+    "definition_version": 1,
+    "definition_hash": "7e65ab4c694fb6e95dfb0972e76ff51089e861b41b26126e228bf46d9bd00cae",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102052
+    },
+    "source_aliases": [
+      "DNA_102052_S",
+      "DNA_102052_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102053",
+    "definition_version": 1,
+    "definition_hash": "6d290c8b6210fac637c241ebae4f45939803535bea41fd7f6823963b30542e56",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102053
+    },
+    "source_aliases": [
+      "DNA_102053_S",
+      "DNA_102053_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102054",
+    "definition_version": 1,
+    "definition_hash": "ad478b9898030a37038f0a39a10a9322bd6517a2c29646e4b822a2f7eeb14f14",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102054
+    },
+    "source_aliases": [
+      "DNA_102054_S",
+      "DNA_102054_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102055",
+    "definition_version": 1,
+    "definition_hash": "8f18a271ec67862612961c3a8e88a92727e7349d33e2e01c27bcfeed957d7319",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102055
+    },
+    "source_aliases": [
+      "DNA_102055_S",
+      "DNA_102055_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102056",
+    "definition_version": 1,
+    "definition_hash": "1d1ed13dddd0e41a1a39b92654a1a41f2054890f5d219668f100dbd3d46710a7",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102056
+    },
+    "source_aliases": [
+      "DNA_102056_S",
+      "DNA_102056_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102057",
+    "definition_version": 1,
+    "definition_hash": "310a1062de09cd15a37409b1162ba4cbd669f2666a1376195c4932073763fd33",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102057
+    },
+    "source_aliases": [
+      "DNA_102057_S",
+      "DNA_102057_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102058",
+    "definition_version": 1,
+    "definition_hash": "372e8662c6a0a1b6b3630e54a3027955577abf236bc47eec76a15d86327c7589",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102058
+    },
+    "source_aliases": [
+      "DNA_102058_S",
+      "DNA_102058_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102059",
+    "definition_version": 1,
+    "definition_hash": "1caba82409f3afdecdaafa9e94c1ead2c4468ba248d1bacaa861153237347ec3",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102059
+    },
+    "source_aliases": [
+      "DNA_102059_S",
+      "DNA_102059_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102060",
+    "definition_version": 1,
+    "definition_hash": "8d58eb3ef02083d63251927504742d0f0a94bdb8311c30c275e106d4f87f88c3",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102060
+    },
+    "source_aliases": [
+      "DNA_102060_S",
+      "DNA_102060_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102061",
+    "definition_version": 1,
+    "definition_hash": "3fe4c94653df8afea99ffd53041919067e6a83ee2dd45b128f3e1b7719e21f89",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102061
+    },
+    "source_aliases": [
+      "DNA_102061_S",
+      "DNA_102061_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102062",
+    "definition_version": 1,
+    "definition_hash": "5429d644cb7dad1b59d7529687ffd4e4e05cf775efdea9f97f859d66b5b9223d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102062
+    },
+    "source_aliases": [
+      "DNA_102062_S",
+      "DNA_102062_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102063",
+    "definition_version": 1,
+    "definition_hash": "c250be19a6c3d608147b8431b1b1dab9877861a31562083007213c0a35afb074",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102063
+    },
+    "source_aliases": [
+      "DNA_102063_S",
+      "DNA_102063_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102064",
+    "definition_version": 1,
+    "definition_hash": "cf58a9340b540457b360c926c1543d80a7bde1ff1d330461a98c2ce5be2dd8f5",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102064
+    },
+    "source_aliases": [
+      "DNA_102064_S",
+      "DNA_102064_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102065",
+    "definition_version": 1,
+    "definition_hash": "c71bf6c714013dfe010ab0416bbdacf6459ef3deaed674cf69f0bef504a9281b",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102065
+    },
+    "source_aliases": [
+      "DNA_102065_S",
+      "DNA_102065_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102066",
+    "definition_version": 1,
+    "definition_hash": "f5811e972d3f57f6f2c2b5de5502eeeca60ce9a20e48471c3b4dd8e47f780ad0",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102066
+    },
+    "source_aliases": [
+      "DNA_102066_S",
+      "DNA_102066_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102067",
+    "definition_version": 1,
+    "definition_hash": "a8b52902b316c59afcc01d14d1165c5c2536486bc3a0bab17229fa89e84f01ee",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102067
+    },
+    "source_aliases": [
+      "DNA_102067_S",
+      "DNA_102067_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102068",
+    "definition_version": 1,
+    "definition_hash": "084c20cab2c3ad2823db794464861d90e8f458a73044f292b15dcc1efeeb2d7e",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102068
+    },
+    "source_aliases": [
+      "DNA_102068_S",
+      "DNA_102068_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102069",
+    "definition_version": 1,
+    "definition_hash": "691976463622ecf0f713b6b8c4c9fd6e0a11c32663e1b930aa03b25ac499e731",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102069
+    },
+    "source_aliases": [
+      "DNA_102069_S",
+      "DNA_102069_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102070",
+    "definition_version": 1,
+    "definition_hash": "a4535ed3bae52fc6de1163a1437cc2d12ffe6c52f243812221dfb65f4fd297fd",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102070
+    },
+    "source_aliases": [
+      "DNA_102070_S",
+      "DNA_102070_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102071",
+    "definition_version": 1,
+    "definition_hash": "c2b06a7815ed54c45b4e3810c353ed78a02f49a28cca04f8684ad09910af5da6",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102071
+    },
+    "source_aliases": [
+      "DNA_102071_S",
+      "DNA_102071_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102072",
+    "definition_version": 1,
+    "definition_hash": "b9616fbbaa1b84644cb55b7a1a961d0cd7ffd6299dbaa91d7bb70bd1e6070825",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102072
+    },
+    "source_aliases": [
+      "DNA_102072_S",
+      "DNA_102072_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102073",
+    "definition_version": 1,
+    "definition_hash": "c5b71b39680789e494321b5d3e2a889cbbb3a6556921305ba4ad0792b08698b8",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102073
+    },
+    "source_aliases": [
+      "DNA_102073_S",
+      "DNA_102073_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102074",
+    "definition_version": 1,
+    "definition_hash": "113898b141dd2357cb67313e521c60076f6df1b78e0278fe39fb242601afa6fc",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102074
+    },
+    "source_aliases": [
+      "DNA_102074_S",
+      "DNA_102074_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102075",
+    "definition_version": 1,
+    "definition_hash": "0960b51229ea7a57160cd6dd367fc7134bc434e8810d2dddc8498e533fe2d354",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102075
+    },
+    "source_aliases": [
+      "DNA_102075_S",
+      "DNA_102075_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102076",
+    "definition_version": 1,
+    "definition_hash": "356717c5d790736c9344006d593bfdc1f05ffba8a154e3a7df6cb67e8055a46c",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102076
+    },
+    "source_aliases": [
+      "DNA_102076_S",
+      "DNA_102076_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102077",
+    "definition_version": 1,
+    "definition_hash": "6c00dc65e32b5939ea79f98855918036bdfe12d17e4f012764f27b2108976dfb",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102077
+    },
+    "source_aliases": [
+      "DNA_102077_S",
+      "DNA_102077_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102078",
+    "definition_version": 1,
+    "definition_hash": "196f0c097979d47d485626692f3f520bc7326137ba247d077ef7cb228441c496",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102078
+    },
+    "source_aliases": [
+      "DNA_102078_S",
+      "DNA_102078_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102079",
+    "definition_version": 1,
+    "definition_hash": "be8cd012d904ea79c5d99a8afc46bd04c23c506b9f101d42136cf5cee02c51eb",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102079
+    },
+    "source_aliases": [
+      "DNA_102079_S",
+      "DNA_102079_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102080",
+    "definition_version": 1,
+    "definition_hash": "340ea677115024d33f9806132f131dc3ef7797be23da24945c31fa76ed1ff79d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102080
+    },
+    "source_aliases": [
+      "DNA_102080_S",
+      "DNA_102080_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102081",
+    "definition_version": 1,
+    "definition_hash": "4cac8b81b6375929f8e1c17fc3918fcbefdcfa4446830a0ea126c6157dbd79f4",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102081
+    },
+    "source_aliases": [
+      "DNA_102081_S",
+      "DNA_102081_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102082",
+    "definition_version": 1,
+    "definition_hash": "08c37d7da230888b9db1b8ad387a9a1afb37ff27ebd18a47ee5e82d16736a6df",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102082
+    },
+    "source_aliases": [
+      "DNA_102082_S",
+      "DNA_102082_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102083",
+    "definition_version": 1,
+    "definition_hash": "5dd2e1fa0c7d75e7de10d1cdae43c496372bc3b39f0a961e9935e42218506f97",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102083
+    },
+    "source_aliases": [
+      "DNA_102083_S",
+      "DNA_102083_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102084",
+    "definition_version": 1,
+    "definition_hash": "0c9b4fb58a57be217ebca78534a2ff378e96288692e140842a60c3a1fca78c50",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102084
+    },
+    "source_aliases": [
+      "DNA_102084_S",
+      "DNA_102084_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102085",
+    "definition_version": 1,
+    "definition_hash": "e99092c455f9cc4161d96746a3627da48a874d7f552508b3b1a5c5967deaca10",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102085
+    },
+    "source_aliases": [
+      "DNA_102085_S",
+      "DNA_102085_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102086",
+    "definition_version": 1,
+    "definition_hash": "61730545d3bb1edc4117c93610804f8f3f84aabce610dd4080dc3002c0a2ddd8",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102086
+    },
+    "source_aliases": [
+      "DNA_102086_S",
+      "DNA_102086_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102087",
+    "definition_version": 1,
+    "definition_hash": "d33be5028eddce0166ff0501c4e432f5d8c953c724af153bac51fac97f3bea52",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102087
+    },
+    "source_aliases": [
+      "DNA_102087_S",
+      "DNA_102087_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102088",
+    "definition_version": 1,
+    "definition_hash": "36566a05d72b8acc8355b8cab8881b7c603d1b2dd06c324455f7a03d2c3bb5da",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102088
+    },
+    "source_aliases": [
+      "DNA_102088_S",
+      "DNA_102088_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102089",
+    "definition_version": 1,
+    "definition_hash": "4eead2c5cd8a585961d420ab3a07ab4a2834236ba74f2ea4bf5f4139d458933a",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102089
+    },
+    "source_aliases": [
+      "DNA_102089_S",
+      "DNA_102089_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102090",
+    "definition_version": 1,
+    "definition_hash": "70ef6482feb47bb3006b3129a92c318958a7cb22ec828ade3edc697b87c211ac",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102090
+    },
+    "source_aliases": [
+      "DNA_102090_S",
+      "DNA_102090_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102091",
+    "definition_version": 1,
+    "definition_hash": "3d5a463307387ceaace3e07a1170ce1d37e7f479016275e85b3eb9c69f57da89",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102091
+    },
+    "source_aliases": [
+      "DNA_102091_S",
+      "DNA_102091_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102092",
+    "definition_version": 1,
+    "definition_hash": "05cf898f5aee82fadbaff1817a84cf030bf61204698892fbe422789edd03ddcb",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102092
+    },
+    "source_aliases": [
+      "DNA_102092_S",
+      "DNA_102092_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102093",
+    "definition_version": 1,
+    "definition_hash": "f976da4d0ae57722ef338eec28a53eaadda8b84f82895399e0ca1757bdffac96",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102093
+    },
+    "source_aliases": [
+      "DNA_102093_S",
+      "DNA_102093_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102094",
+    "definition_version": 1,
+    "definition_hash": "f339a88c4726bf1b4ccf21d1843161a5606c39165c4ec611c6edae7f22a4db94",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102094
+    },
+    "source_aliases": [
+      "DNA_102094_S",
+      "DNA_102094_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102095",
+    "definition_version": 1,
+    "definition_hash": "5883875f706cc2358349bceeeda068f8e989eb59c9c5cb1f70bcb14dd5f49705",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102095
+    },
+    "source_aliases": [
+      "DNA_102095_S",
+      "DNA_102095_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102096",
+    "definition_version": 1,
+    "definition_hash": "d058dc0aeb352b4cf18a235a5ac1ef7c724ed5ae497292ae4bfc2399e340b42d",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102096
+    },
+    "source_aliases": [
+      "DNA_102096_S",
+      "DNA_102096_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102097",
+    "definition_version": 1,
+    "definition_hash": "8a3129d12815f83ae621f8b4530bc70fa9e06b7a19250fecec181bb28368bb1f",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102097
+    },
+    "source_aliases": [
+      "DNA_102097_S",
+      "DNA_102097_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102098",
+    "definition_version": 1,
+    "definition_hash": "2f1b383015fa647d97f1c73b0635e7c7d37819a429e0de13a36cf0e7f4cb660d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102098
+    },
+    "source_aliases": [
+      "DNA_102098_S",
+      "DNA_102098_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102099",
+    "definition_version": 1,
+    "definition_hash": "9ebbf24cace06f9ab6be26c001a2deb215edf77b99ca1b7a5608218ac3c24521",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102099
+    },
+    "source_aliases": [
+      "DNA_102099_S",
+      "DNA_102099_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102100",
+    "definition_version": 1,
+    "definition_hash": "362f01c2e02d806f1241446109a1de588e37e2a81da40ebbfe5ef61397d45b35",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102100
+    },
+    "source_aliases": [
+      "DNA_102100_S",
+      "DNA_102100_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102101",
+    "definition_version": 1,
+    "definition_hash": "7b8456ff8996dfcbe8b642fb5532b0e830c6b5be4a6c07ec727c3082a493b703",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102101
+    },
+    "source_aliases": [
+      "DNA_102101_S",
+      "DNA_102101_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102102",
+    "definition_version": 1,
+    "definition_hash": "6293e5af2a70f7fa5c268b39b9632ec8051f60b2d8c5b22438344a82a73b5d85",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102102
+    },
+    "source_aliases": [
+      "DNA_102102_S",
+      "DNA_102102_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102103",
+    "definition_version": 1,
+    "definition_hash": "24ba8cd362821287bbb42e6c13111edb44049b897025b8c08ba8ccd44e1e5525",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102103
+    },
+    "source_aliases": [
+      "DNA_102103_S",
+      "DNA_102103_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102104",
+    "definition_version": 1,
+    "definition_hash": "0fee51216fc30b6e35d13fd7f12c5f4281263ca6d374c2fd023c9d217594913b",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102104
+    },
+    "source_aliases": [
+      "DNA_102104_S",
+      "DNA_102104_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102105",
+    "definition_version": 1,
+    "definition_hash": "5ee6e7e4a3f812ef3091ee8a7d29d6388594493606f2084607c5db2c8756339b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102105
+    },
+    "source_aliases": [
+      "DNA_102105_S",
+      "DNA_102105_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102106",
+    "definition_version": 1,
+    "definition_hash": "65a5c8d5fa8cd9c42c760f47ec34630892291cd7c1479f4defb40de4dc685b63",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102106
+    },
+    "source_aliases": [
+      "DNA_102106_S",
+      "DNA_102106_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102107",
+    "definition_version": 1,
+    "definition_hash": "3d460d7f783599085bd9a7d8d7ddb80b29054d5d0bafb96c62a274846b2c8dbd",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102107
+    },
+    "source_aliases": [
+      "DNA_102107_S",
+      "DNA_102107_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102108",
+    "definition_version": 1,
+    "definition_hash": "9322407ba9c2637f28e6bd2726200f5e675faff857bc09c782968ae4b2494f45",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102108
+    },
+    "source_aliases": [
+      "DNA_102108_S",
+      "DNA_102108_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102109",
+    "definition_version": 1,
+    "definition_hash": "c2a8111e9d8041abe6db6c8766130970b9d85fb0b0da9cfe5ef25d86c6c755cd",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102109
+    },
+    "source_aliases": [
+      "DNA_102109_S",
+      "DNA_102109_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102110",
+    "definition_version": 1,
+    "definition_hash": "8e4e5c530a2abcd524fd6b44529332a56dde1212f3ccce6a1ebee989a65ec852",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102110
+    },
+    "source_aliases": [
+      "DNA_102110_S",
+      "DNA_102110_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102111",
+    "definition_version": 1,
+    "definition_hash": "4d9c961e75e625f8fe6547cc344f275bc916a971f7f8f1fe30e3d4449fe84f5b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102111
+    },
+    "source_aliases": [
+      "DNA_102111_S",
+      "DNA_102111_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102112",
+    "definition_version": 1,
+    "definition_hash": "4c2e5c3d751eeea594ba339441ab46a00f4d7e7f33338c264dadb626db762727",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102112
+    },
+    "source_aliases": [
+      "DNA_102112_S",
+      "DNA_102112_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102113",
+    "definition_version": 1,
+    "definition_hash": "642b72dda6a7eaef9b4664f8a75a4c0371c844bbcbedeb154f8be96053f8f143",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102113
+    },
+    "source_aliases": [
+      "DNA_102113_S",
+      "DNA_102113_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102114",
+    "definition_version": 1,
+    "definition_hash": "100d88cf5bc6bc34442a841a55d9bf3bf0967994f2f423d25f30ff09ee5bc83a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102114
+    },
+    "source_aliases": [
+      "DNA_102114_S",
+      "DNA_102114_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102115",
+    "definition_version": 1,
+    "definition_hash": "243ee025945b5f0846b585ed8b0bb2ca67fb1f994d3ac10319b5b50e3aa72c04",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102115
+    },
+    "source_aliases": [
+      "DNA_102115_S",
+      "DNA_102115_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102116",
+    "definition_version": 1,
+    "definition_hash": "45df718cfe908337b4727155da617d478cfbcfc6b5622af1b6c5590e1bf9a991",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102116
+    },
+    "source_aliases": [
+      "DNA_102116_S",
+      "DNA_102116_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102117",
+    "definition_version": 1,
+    "definition_hash": "704e27e3408ab218e74fd6748018411ebe1ca44f6d0b046621be2e5676349d48",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102117
+    },
+    "source_aliases": [
+      "DNA_102117_S",
+      "DNA_102117_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102118",
+    "definition_version": 1,
+    "definition_hash": "ffa81b5722a451ddc9fdcf052388f3098420d4efe4a68f7d947d717da95ef1b9",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102118
+    },
+    "source_aliases": [
+      "DNA_102118_S",
+      "DNA_102118_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102119",
+    "definition_version": 1,
+    "definition_hash": "b80eb68190338c90f07f39d713bdc1c067e017e87d971030d5884870d27cdf20",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102119
+    },
+    "source_aliases": [
+      "DNA_102119_S",
+      "DNA_102119_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102120",
+    "definition_version": 1,
+    "definition_hash": "1ae07fac98640e82691867e66792f8903cdba62f49d0bc84bbcb81f31c1379ef",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102120
+    },
+    "source_aliases": [
+      "DNA_102120_S",
+      "DNA_102120_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102121",
+    "definition_version": 1,
+    "definition_hash": "36de1d0d731be1a4bbd30b70ad15e422c2dca2853360c4f0ca3d5421adb62221",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102121
+    },
+    "source_aliases": [
+      "DNA_102121_S",
+      "DNA_102121_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102122",
+    "definition_version": 1,
+    "definition_hash": "14a7d53945773dd73e87719105dba95bd406c3c3731c5b4d3a05de8ed75b40b7",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102122
+    },
+    "source_aliases": [
+      "DNA_102122_S",
+      "DNA_102122_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102123",
+    "definition_version": 1,
+    "definition_hash": "9037151a1150318caaec55d4cd44834cd26f6b355d3eb784a20a928891f5d451",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102123
+    },
+    "source_aliases": [
+      "DNA_102123_S",
+      "DNA_102123_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102124",
+    "definition_version": 1,
+    "definition_hash": "24be141e816ca96a97f11c510beea772db6c6f182bb0e8b34275a3721e9f0e1d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102124
+    },
+    "source_aliases": [
+      "DNA_102124_S",
+      "DNA_102124_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102125",
+    "definition_version": 1,
+    "definition_hash": "60b3819ef5e504dcdebc4badedc7fd2269c4f635c2be5cb37f370fe4f6b9e5a1",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102125
+    },
+    "source_aliases": [
+      "DNA_102125_S",
+      "DNA_102125_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102126",
+    "definition_version": 1,
+    "definition_hash": "bf266c6d7956ea99388a473395cf88f962645aa0aee1efea7c119177095ec7b4",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102126
+    },
+    "source_aliases": [
+      "DNA_102126_S",
+      "DNA_102126_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102127",
+    "definition_version": 1,
+    "definition_hash": "9d662c6fe82ee4f00d58d1299ad361a72068e5adbe015ccb8b3325081d1d2759",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102127
+    },
+    "source_aliases": [
+      "DNA_102127_S",
+      "DNA_102127_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102128",
+    "definition_version": 1,
+    "definition_hash": "53dcdf87433284737ea827c231a8988d46715c52fa016aa2e4e66af8959b27f7",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102128
+    },
+    "source_aliases": [
+      "DNA_102128_S",
+      "DNA_102128_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102129",
+    "definition_version": 1,
+    "definition_hash": "70894fbcdbf53b150a370021b95d30d50f44354e2a7734b2025b84817408a80d",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102129
+    },
+    "source_aliases": [
+      "DNA_102129_S",
+      "DNA_102129_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102130",
+    "definition_version": 1,
+    "definition_hash": "24104e9246b9a7c296e36e11d1016246386d38beb15312d84588c31ec0ec3e08",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102130
+    },
+    "source_aliases": [
+      "DNA_102130_S",
+      "DNA_102130_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102131",
+    "definition_version": 1,
+    "definition_hash": "71e9734f9ba79a98470ee11d74151d35670718042fd75fbe82e1295765c09a16",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102131
+    },
+    "source_aliases": [
+      "DNA_102131_S",
+      "DNA_102131_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102132",
+    "definition_version": 1,
+    "definition_hash": "f0282236ff14271f472a739151e5c4cb8877e25d123f11341b3705a7d13740b7",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102132
+    },
+    "source_aliases": [
+      "DNA_102132_S",
+      "DNA_102132_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102133",
+    "definition_version": 1,
+    "definition_hash": "d5d646e61b8b21dad25adb2a43a8ff1a942949b640182a102bf9a86eec802c50",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102133
+    },
+    "source_aliases": [
+      "DNA_102133_S",
+      "DNA_102133_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102134",
+    "definition_version": 1,
+    "definition_hash": "9490e8d40f91893e996b3b854464be219fa3cc2b17cef3b1113c1b568551929a",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102134
+    },
+    "source_aliases": [
+      "DNA_102134_S",
+      "DNA_102134_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102135",
+    "definition_version": 1,
+    "definition_hash": "f8b2c9189b0b4b019da9e2a003890d85bed7ebe4bd14a5d12cce148024bd1e48",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102135
+    },
+    "source_aliases": [
+      "DNA_102135_S",
+      "DNA_102135_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102136",
+    "definition_version": 1,
+    "definition_hash": "13d0a46170d4a3a3bcb4f948d8ef6d87aa1bb5edb9798b4be81371daa292f0de",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102136
+    },
+    "source_aliases": [
+      "DNA_102136_S",
+      "DNA_102136_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102137",
+    "definition_version": 1,
+    "definition_hash": "92b76932159f87d13dd347cefb4a3f3d646d587d6940d368e0088f081bcbbb2f",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102137
+    },
+    "source_aliases": [
+      "DNA_102137_S",
+      "DNA_102137_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102138",
+    "definition_version": 1,
+    "definition_hash": "855022a9bbd4da466120295fde5ab71fb13e855b3374767252e904eb732d982e",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102138
+    },
+    "source_aliases": [
+      "DNA_102138_S",
+      "DNA_102138_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102139",
+    "definition_version": 1,
+    "definition_hash": "7814c480fc653b16b5bdeb8dea9e94b480c3f9f559f2d3c0ca98936c779671df",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102139
+    },
+    "source_aliases": [
+      "DNA_102139_S",
+      "DNA_102139_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102140",
+    "definition_version": 1,
+    "definition_hash": "c0b464334bac46913a3426e46881ae970bd04af4a7f1ddfe80aee4bbdb68d388",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102140
+    },
+    "source_aliases": [
+      "DNA_102140_S",
+      "DNA_102140_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102141",
+    "definition_version": 1,
+    "definition_hash": "810e10a3714c415cf13edb88623a30756009ab27964ff8af6a12b62156bc4aea",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102141
+    },
+    "source_aliases": [
+      "DNA_102141_S",
+      "DNA_102141_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102142",
+    "definition_version": 1,
+    "definition_hash": "05f61481606622f988611b91f03f9fd861154f9b72762211a3c93c87a01e41d5",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102142
+    },
+    "source_aliases": [
+      "DNA_102142_S",
+      "DNA_102142_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102143",
+    "definition_version": 1,
+    "definition_hash": "7cf3fda0889469783eae16ef9d52b542de808e3320a5e2bdd362e37a4793b838",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102143
+    },
+    "source_aliases": [
+      "DNA_102143_S",
+      "DNA_102143_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102144",
+    "definition_version": 1,
+    "definition_hash": "7de8f289b4f1a6f858c70f2ed7d28e10077ac2ad007b4f58c608536eb6531102",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102144
+    },
+    "source_aliases": [
+      "DNA_102144_S",
+      "DNA_102144_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102145",
+    "definition_version": 1,
+    "definition_hash": "a1f6c1df7bd007631812c582e54c2fbef2fba42a2fe16975b06f80b5272e79af",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102145
+    },
+    "source_aliases": [
+      "DNA_102145_S",
+      "DNA_102145_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102146",
+    "definition_version": 1,
+    "definition_hash": "d15904f819a9c200a0cb98aaad59e97d9535939a49d8b174c3f9ec3a78f41cd0",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102146
+    },
+    "source_aliases": [
+      "DNA_102146_S",
+      "DNA_102146_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102147",
+    "definition_version": 1,
+    "definition_hash": "3a5819cc4f5ad2a6c052186b01a340c587cf1aa91551328a2707e4d25e12401b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102147
+    },
+    "source_aliases": [
+      "DNA_102147_S",
+      "DNA_102147_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102148",
+    "definition_version": 1,
+    "definition_hash": "ac2b9c26f4d639d08b7e63feda5040e3b071453f8a84fef355b32b315fa58390",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102148
+    },
+    "source_aliases": [
+      "DNA_102148_S",
+      "DNA_102148_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102149",
+    "definition_version": 1,
+    "definition_hash": "0bb931e1e19de4c584c523cb0abc69f33d359d294c5da3b3c6fb405c4253135c",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102149
+    },
+    "source_aliases": [
+      "DNA_102149_S",
+      "DNA_102149_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102150",
+    "definition_version": 1,
+    "definition_hash": "587e496cdf889737acf2d6d7ff25db1ea69affaa09a024e4a0c4a180b98f9931",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102150
+    },
+    "source_aliases": [
+      "DNA_102150_S",
+      "DNA_102150_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102151",
+    "definition_version": 1,
+    "definition_hash": "4897b2c74bacf60f6d5a7a6cfc8628a3b3f66df7469b10b5e61c0ece3fb4be97",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102151
+    },
+    "source_aliases": [
+      "DNA_102151_S",
+      "DNA_102151_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102152",
+    "definition_version": 1,
+    "definition_hash": "b971bd5eac7eb37c91859e60adb8071c95d8df260d05c5a79194ef5768a2d8d4",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102152
+    },
+    "source_aliases": [
+      "DNA_102152_S",
+      "DNA_102152_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102153",
+    "definition_version": 1,
+    "definition_hash": "dfc4df79245f39112a247253d516e06045484c1a2617094d0714526933f4df2b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102153
+    },
+    "source_aliases": [
+      "DNA_102153_S",
+      "DNA_102153_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102154",
+    "definition_version": 1,
+    "definition_hash": "ce980a6ed85acd44f3c8fe9694d49855b612902638723288a4ddea505ab86355",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102154
+    },
+    "source_aliases": [
+      "DNA_102154_S",
+      "DNA_102154_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102155",
+    "definition_version": 1,
+    "definition_hash": "27d79cb2125cdd148bf86b92881c31dda864e38da6efadb66f94e566a2478bba",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102155
+    },
+    "source_aliases": [
+      "DNA_102155_S",
+      "DNA_102155_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102156",
+    "definition_version": 1,
+    "definition_hash": "ffa23a0f3738157dbd57fac695298b83e5f9ef3e461ffd6d796923beb204d899",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102156
+    },
+    "source_aliases": [
+      "DNA_102156_S",
+      "DNA_102156_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102157",
+    "definition_version": 1,
+    "definition_hash": "4be2f5176d6b2f5431fd0c3b796bcabb4c6b8131c40b152deb1953f253e05478",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102157
+    },
+    "source_aliases": [
+      "DNA_102157_S",
+      "DNA_102157_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102158",
+    "definition_version": 1,
+    "definition_hash": "4f81aa8aefa8302beef1286264d3aab68d1296219ee51db6df6f88a4245a8c12",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102158
+    },
+    "source_aliases": [
+      "DNA_102158_S",
+      "DNA_102158_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102159",
+    "definition_version": 1,
+    "definition_hash": "ad905549fa9b999ccffe2e0ac96160485f0a36d17a21e528a1f6d2d08672a191",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102159
+    },
+    "source_aliases": [
+      "DNA_102159_S",
+      "DNA_102159_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102160",
+    "definition_version": 1,
+    "definition_hash": "d2f2b8b73a08ae9202b82e694558a5cf28201275dd934c35fec814c1e04a23dd",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102160
+    },
+    "source_aliases": [
+      "DNA_102160_S",
+      "DNA_102160_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102161",
+    "definition_version": 1,
+    "definition_hash": "3e8fa4b1cdbf48f10c94d227de2d5968eae2668755e84eb570387dcdf70d103d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102161
+    },
+    "source_aliases": [
+      "DNA_102161_S",
+      "DNA_102161_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102162",
+    "definition_version": 1,
+    "definition_hash": "2ae48fbfd87d15fd0e296940aa6c92f6a4f1f30fe0c2334129819b60313c1b48",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102162
+    },
+    "source_aliases": [
+      "DNA_102162_S",
+      "DNA_102162_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102163",
+    "definition_version": 1,
+    "definition_hash": "a21b37d6ed39f2652d8943272906480f303a360fa633f3ac6058ab3f3ea59a17",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102163
+    },
+    "source_aliases": [
+      "DNA_102163_S",
+      "DNA_102163_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102164",
+    "definition_version": 1,
+    "definition_hash": "b5fc2855fd347835cf492ef4f46411619e3731e90af0e090aeca392498bcbad5",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102164
+    },
+    "source_aliases": [
+      "DNA_102164_S",
+      "DNA_102164_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102165",
+    "definition_version": 1,
+    "definition_hash": "589b12dfe0cbcb1abe958d1c1cee1770289289e439942b8dc012a46893afe570",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102165
+    },
+    "source_aliases": [
+      "DNA_102165_S",
+      "DNA_102165_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102166",
+    "definition_version": 1,
+    "definition_hash": "bff053aa39975bab9c6f408cd9a00d409a43a1eca41970630c79f5eb64ce8beb",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102166
+    },
+    "source_aliases": [
+      "DNA_102166_S",
+      "DNA_102166_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102167",
+    "definition_version": 1,
+    "definition_hash": "95d0b0b76f1d1173d28e7233d25fe79ef62c94c711fa64fa12c26dff1b262f54",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102167
+    },
+    "source_aliases": [
+      "DNA_102167_S",
+      "DNA_102167_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102168",
+    "definition_version": 1,
+    "definition_hash": "b329fe207f47597cc1828b10b4cfb6924f2ab13e1112ce1dc94657d6a7832cc5",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102168
+    },
+    "source_aliases": [
+      "DNA_102168_S",
+      "DNA_102168_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102169",
+    "definition_version": 1,
+    "definition_hash": "c44a1425ce711d0fe5c86d4ea4202413a1e08cd3bb9f261721e273ea1c48e014",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102169
+    },
+    "source_aliases": [
+      "DNA_102169_S",
+      "DNA_102169_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102170",
+    "definition_version": 1,
+    "definition_hash": "4d080e8467028eb67bc62ac665057a0766269b7f889b089a0a8b3d476cb1992e",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102170
+    },
+    "source_aliases": [
+      "DNA_102170_S",
+      "DNA_102170_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102171",
+    "definition_version": 1,
+    "definition_hash": "d7df10fb3afca1bc340bdf24e05c77ef5dad905d2d9161c30b939a8534651f58",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102171
+    },
+    "source_aliases": [
+      "DNA_102171_S",
+      "DNA_102171_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102172",
+    "definition_version": 1,
+    "definition_hash": "9a0a19894db8d1064a2bb5dface3419dc223eed901b4222763d09500a1e5bb32",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102172
+    },
+    "source_aliases": [
+      "DNA_102172_S",
+      "DNA_102172_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102173",
+    "definition_version": 1,
+    "definition_hash": "ee2b5b2fcaafc468259a4a3485c0cc1a4f875f484501b18a76dd987b26e700ac",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102173
+    },
+    "source_aliases": [
+      "DNA_102173_S",
+      "DNA_102173_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102174",
+    "definition_version": 1,
+    "definition_hash": "355c5becfdd6bf6945d0c5816a8f3dd0b53d5ef3ea377bc3be328aa28684f843",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102174
+    },
+    "source_aliases": [
+      "DNA_102174_S",
+      "DNA_102174_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102175",
+    "definition_version": 1,
+    "definition_hash": "96568bd39e877d328f44e02d15ef8f71cfd378d29c6e1c94e91d5d58a6cf0361",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102175
+    },
+    "source_aliases": [
+      "DNA_102175_S",
+      "DNA_102175_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102176",
+    "definition_version": 1,
+    "definition_hash": "afcc366368890e6c9a1c1280394534dce90a2eec5a7a1d943fcd6d73e7b6f0b0",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102176
+    },
+    "source_aliases": [
+      "DNA_102176_S",
+      "DNA_102176_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102177",
+    "definition_version": 1,
+    "definition_hash": "95eefe932c87b7a1ca665349f395470b41213d4fee2943c27a01ca416b1e9a1b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102177
+    },
+    "source_aliases": [
+      "DNA_102177_S",
+      "DNA_102177_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102178",
+    "definition_version": 1,
+    "definition_hash": "e695189020d058a52aa68786e5298e60176f72cfad2fbba76249f4cb3840c16c",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102178
+    },
+    "source_aliases": [
+      "DNA_102178_S",
+      "DNA_102178_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102179",
+    "definition_version": 1,
+    "definition_hash": "dab2c6943309dba1b523f9df01837a346491f24d134bdc677bf8f2eb12966f88",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102179
+    },
+    "source_aliases": [
+      "DNA_102179_S",
+      "DNA_102179_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102180",
+    "definition_version": 1,
+    "definition_hash": "ebbe6b50b001b25efd1ccc0bb0e323e1d9d59c1c625091bf914ad147bc35be12",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102180
+    },
+    "source_aliases": [
+      "DNA_102180_S",
+      "DNA_102180_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102181",
+    "definition_version": 1,
+    "definition_hash": "77ff0de8bad6b752a3f7e6ce352412120bf3a2ff72a3da6820e83ae50c481c79",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102181
+    },
+    "source_aliases": [
+      "DNA_102181_S",
+      "DNA_102181_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102182",
+    "definition_version": 1,
+    "definition_hash": "f3ef76f7f5c1f3206fbcfe5098290a734a9375551e8d8d531461b2c6dc1af532",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102182
+    },
+    "source_aliases": [
+      "DNA_102182_S",
+      "DNA_102182_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102183",
+    "definition_version": 1,
+    "definition_hash": "0091a9b43653eefb63343b1f936bca0e9bc9f9204ad3e3adf27430548a9a270c",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102183
+    },
+    "source_aliases": [
+      "DNA_102183_S",
+      "DNA_102183_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102184",
+    "definition_version": 1,
+    "definition_hash": "22aafec93c1d996677404c4dfbb314d40d8bd67703fe053fb5616dd683d82c46",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102184
+    },
+    "source_aliases": [
+      "DNA_102184_S",
+      "DNA_102184_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102185",
+    "definition_version": 1,
+    "definition_hash": "e5938fcfaec772e03a1a36b8d848932c4a7c7d0e68c90e1713243941c1f41f2b",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102185
+    },
+    "source_aliases": [
+      "DNA_102185_S",
+      "DNA_102185_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102186",
+    "definition_version": 1,
+    "definition_hash": "870315592404dd5bd120f67fb337ecbfb7fe28c5dd4193eccffdbce056e89c0e",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102186
+    },
+    "source_aliases": [
+      "DNA_102186_S",
+      "DNA_102186_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102187",
+    "definition_version": 1,
+    "definition_hash": "5374203bfaa1533120fa8cf162c62be81766174e86331d1f5f9f1c479fe08abd",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102187
+    },
+    "source_aliases": [
+      "DNA_102187_S",
+      "DNA_102187_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102188",
+    "definition_version": 1,
+    "definition_hash": "f0b0bf7b8fafa5a7507e69c52e49e4e037fd3daae423ec789b3a483e579681bb",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102188
+    },
+    "source_aliases": [
+      "DNA_102188_S",
+      "DNA_102188_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102189",
+    "definition_version": 1,
+    "definition_hash": "3fce97884f7a9c0120f5158520adcf0a8e7328b59fefc3bd877be5a4f8b5a1ec",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102189
+    },
+    "source_aliases": [
+      "DNA_102189_S",
+      "DNA_102189_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102190",
+    "definition_version": 1,
+    "definition_hash": "b818788851876cef64f5d0b99702e7887b7f652d400d0980ef9700ee5c60dec2",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102190
+    },
+    "source_aliases": [
+      "DNA_102190_S",
+      "DNA_102190_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102191",
+    "definition_version": 1,
+    "definition_hash": "1292b952baf9da31ddc0af3df0b90a235b6d5ac844497c3efb7c12521998467b",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102191
+    },
+    "source_aliases": [
+      "DNA_102191_S",
+      "DNA_102191_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102192",
+    "definition_version": 1,
+    "definition_hash": "b4317c5ee06af9d80619a1d52629b466528a507549a84f8eb31540ac875e8b1a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102192
+    },
+    "source_aliases": [
+      "DNA_102192_S",
+      "DNA_102192_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102193",
+    "definition_version": 1,
+    "definition_hash": "bc06c97df62848e8c7633f0cde49f452a98cb48f3d3bf03b16c6b1525ad3ada8",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102193
+    },
+    "source_aliases": [
+      "DNA_102193_S",
+      "DNA_102193_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102194",
+    "definition_version": 1,
+    "definition_hash": "1dae2228ec2f7863f8b60ccaa56ad293d9b4c7b6681b02e74b6c399e9c51fd47",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102194
+    },
+    "source_aliases": [
+      "DNA_102194_S",
+      "DNA_102194_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102195",
+    "definition_version": 1,
+    "definition_hash": "6028e5bd57111b4abcf050e83ac91f07498cefbcebcda6fd741ca7b12ccdb74a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102195
+    },
+    "source_aliases": [
+      "DNA_102195_S",
+      "DNA_102195_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102196",
+    "definition_version": 1,
+    "definition_hash": "704989d73e52e08948d172dec88c852a9f1fbeafb344c6e53c2d0e55ffde5f91",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102196
+    },
+    "source_aliases": [
+      "DNA_102196_S",
+      "DNA_102196_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102197",
+    "definition_version": 1,
+    "definition_hash": "3395047622f317ce4ec088c4bc8188bd0fba682178c82b97b9831743363b601c",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102197
+    },
+    "source_aliases": [
+      "DNA_102197_S",
+      "DNA_102197_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102198",
+    "definition_version": 1,
+    "definition_hash": "304ffea21ea2e0dc039e284be7203a3b7a8195216e6581dd38cccbb528a67b4a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102198
+    },
+    "source_aliases": [
+      "DNA_102198_S",
+      "DNA_102198_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102199",
+    "definition_version": 1,
+    "definition_hash": "5c80998aa268eb6b2eac1e8683b4e1d9833b6dc5a28e0b5f5b236f0b83ca39c2",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102199
+    },
+    "source_aliases": [
+      "DNA_102199_S",
+      "DNA_102199_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102200",
+    "definition_version": 1,
+    "definition_hash": "3766af2d5d697da82ebfc93766ea060bdebfa79d4463a51c604389c622b4bef4",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102200
+    },
+    "source_aliases": [
+      "DNA_102200_S",
+      "DNA_102200_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102201",
+    "definition_version": 1,
+    "definition_hash": "563c4dc2e2a88aa27adedfd9799c954d2b0f83fdb78c681fdc5bb9860d7d4cbb",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102201
+    },
+    "source_aliases": [
+      "DNA_102201_S",
+      "DNA_102201_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102202",
+    "definition_version": 1,
+    "definition_hash": "bb0a1311a715da13ca2f5315c9d5f42f718aad2935ce28efaea4b46975a21463",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102202
+    },
+    "source_aliases": [
+      "DNA_102202_S",
+      "DNA_102202_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102203",
+    "definition_version": 1,
+    "definition_hash": "1080d1ad1393658bd49ded489bc746505ee72876663a8b34a5d685577be74030",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102203
+    },
+    "source_aliases": [
+      "DNA_102203_S",
+      "DNA_102203_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102204",
+    "definition_version": 1,
+    "definition_hash": "5b13850f92d77d357b08565bfc2fc2f87f8259a148938f670fc29e4cc6eb811d",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102204
+    },
+    "source_aliases": [
+      "DNA_102204_S",
+      "DNA_102204_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102205",
+    "definition_version": 1,
+    "definition_hash": "2a700591f1e3494ac728d4a8b677b2a9f8e900c3e706a8c2d9548a3988159c4e",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102205
+    },
+    "source_aliases": [
+      "DNA_102205_S",
+      "DNA_102205_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102206",
+    "definition_version": 1,
+    "definition_hash": "417cfe5caea15a325632247f61e0ea1571a71f7ed24b57bcd31a5fb9eea0ba10",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102206
+    },
+    "source_aliases": [
+      "DNA_102206_S",
+      "DNA_102206_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102207",
+    "definition_version": 1,
+    "definition_hash": "63b9008a21ff9f9eeba7f7a86cd03b08d97fdceb17ed397c80b04a3340d1eee1",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102207
+    },
+    "source_aliases": [
+      "DNA_102207_S",
+      "DNA_102207_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102208",
+    "definition_version": 1,
+    "definition_hash": "1aec9f92fa0b1e8f93c3c947d4da20846de87706f3354167183ab040005c5b03",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102208
+    },
+    "source_aliases": [
+      "DNA_102208_S",
+      "DNA_102208_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102209",
+    "definition_version": 1,
+    "definition_hash": "2e9b210698a4d229b4f3521020314de768201ac985862d2c006b467823e85656",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102209
+    },
+    "source_aliases": [
+      "DNA_102209_S",
+      "DNA_102209_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102210",
+    "definition_version": 1,
+    "definition_hash": "7782a5654ef5d7e6f39fe4b79791f7e0a06b480c57a23ef19332f3dbd64955fc",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102210
+    },
+    "source_aliases": [
+      "DNA_102210_S",
+      "DNA_102210_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102211",
+    "definition_version": 1,
+    "definition_hash": "39f01d96e6b31ee9196b2f7450904915d3004585a8d92c03a851ce6486fbc793",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102211
+    },
+    "source_aliases": [
+      "DNA_102211_S",
+      "DNA_102211_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102212",
+    "definition_version": 1,
+    "definition_hash": "07e85941965f046338bf09f182e60b0997f17b862fd78fc4dfc921622a62276a",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102212
+    },
+    "source_aliases": [
+      "DNA_102212_S",
+      "DNA_102212_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102213",
+    "definition_version": 1,
+    "definition_hash": "d43ca26b3e7e714eed678308e87c0d1b23da0ad99cf1852be77a9049f7541d6c",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102213
+    },
+    "source_aliases": [
+      "DNA_102213_S",
+      "DNA_102213_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102214",
+    "definition_version": 1,
+    "definition_hash": "b39d1b726219623a25b37032476ff3303704bb8a28efe7da8b55c5336368985b",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102214
+    },
+    "source_aliases": [
+      "DNA_102214_S",
+      "DNA_102214_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102215",
+    "definition_version": 1,
+    "definition_hash": "32dabe863aed02d5b646704417292687640c21cfd4ad86e8d7f4d4021e43e9f2",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102215
+    },
+    "source_aliases": [
+      "DNA_102215_S",
+      "DNA_102215_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102216",
+    "definition_version": 1,
+    "definition_hash": "ad1bfaba593c501af55039a51aa6cc5618573273bf0ccb0c8f2ecfb732979601",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102216
+    },
+    "source_aliases": [
+      "DNA_102216_S",
+      "DNA_102216_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102217",
+    "definition_version": 1,
+    "definition_hash": "75a90fbea34ec432c1eb879a1266b6ad4ef31bdb7299f6bbc7ca4892f1ac788a",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102217
+    },
+    "source_aliases": [
+      "DNA_102217_S",
+      "DNA_102217_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102218",
+    "definition_version": 1,
+    "definition_hash": "89fc2f2a716ba4c32c5151fb633aa736abc01218d5ef786eeebe1958b4266944",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102218
+    },
+    "source_aliases": [
+      "DNA_102218_S",
+      "DNA_102218_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102219",
+    "definition_version": 1,
+    "definition_hash": "d19293d2a4dee6208d077120d4bd87a937428372036d8aadc52317ae1061ba35",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102219
+    },
+    "source_aliases": [
+      "DNA_102219_S",
+      "DNA_102219_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102220",
+    "definition_version": 1,
+    "definition_hash": "e0ff572e8758f138906a4d39beaebbeb860b9e704ddeec1f71f714435cb1ca58",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102220
+    },
+    "source_aliases": [
+      "DNA_102220_S",
+      "DNA_102220_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102221",
+    "definition_version": 1,
+    "definition_hash": "26891d2776595f92eda75bbeb02353cd8b33cfa2a22f47148b6066ce0fa7c799",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102221
+    },
+    "source_aliases": [
+      "DNA_102221_S",
+      "DNA_102221_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102222",
+    "definition_version": 1,
+    "definition_hash": "4053cc6011cd4b69c9d4a4f295a571fd9599c7ac4830e1160627e198972be2c7",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102222
+    },
+    "source_aliases": [
+      "DNA_102222_S",
+      "DNA_102222_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102223",
+    "definition_version": 1,
+    "definition_hash": "2cad8760c9cee78aa8f8c986fbd2c59797789aefcb83d257a4608ff6336683c9",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102223
+    },
+    "source_aliases": [
+      "DNA_102223_S",
+      "DNA_102223_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102224",
+    "definition_version": 1,
+    "definition_hash": "450a7e65d32f3232293e2dca64f9c8532773a3e5854822ba64d69a590b557d52",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102224
+    },
+    "source_aliases": [
+      "DNA_102224_S",
+      "DNA_102224_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102225",
+    "definition_version": 1,
+    "definition_hash": "687c7edc941026668dfc33c4053ae0586685f687956f7f8a0aa43150215d6675",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102225
+    },
+    "source_aliases": [
+      "DNA_102225_S",
+      "DNA_102225_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102226",
+    "definition_version": 1,
+    "definition_hash": "4a46a155247c1a17b6e03e3583d45adef0a8c20e09fc915d9d9a2e53d9f25e69",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102226
+    },
+    "source_aliases": [
+      "DNA_102226_S",
+      "DNA_102226_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102227",
+    "definition_version": 1,
+    "definition_hash": "f0330b2f1c38522b1dd5f9dbb504ddab7573bf36d3d9dbd1302453d392d2f3fa",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102227
+    },
+    "source_aliases": [
+      "DNA_102227_S",
+      "DNA_102227_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102228",
+    "definition_version": 1,
+    "definition_hash": "f047a30d7d4df53b0867fd24bfadbc2fd3d2f0a392164a39d1e6bd5704441897",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102228
+    },
+    "source_aliases": [
+      "DNA_102228_S",
+      "DNA_102228_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102229",
+    "definition_version": 1,
+    "definition_hash": "319264079ad237e313332de97531a9f53954664952b38c0b8051c4e340bb40ab",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102229
+    },
+    "source_aliases": [
+      "DNA_102229_S",
+      "DNA_102229_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102230",
+    "definition_version": 1,
+    "definition_hash": "b0f8509ec8b03a89f93ee68a951ed4f4d0643be925732948d608ff77346fbf9a",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102230
+    },
+    "source_aliases": [
+      "DNA_102230_S",
+      "DNA_102230_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102231",
+    "definition_version": 1,
+    "definition_hash": "8b5b9fb2270b2205a71968c25460e8fe91e25caf2565e1580ec422d90687c391",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102231
+    },
+    "source_aliases": [
+      "DNA_102231_S",
+      "DNA_102231_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102232",
+    "definition_version": 1,
+    "definition_hash": "49889a1db4dc04c4057d9b8f9839fe22ec8824c2a1827cedb0e8208d09582afa",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102232
+    },
+    "source_aliases": [
+      "DNA_102232_S",
+      "DNA_102232_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102233",
+    "definition_version": 1,
+    "definition_hash": "07695fa03c5b0e4be7e6eebb01f4674f74fca2eb237fabbaa17c485c07651e4d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102233
+    },
+    "source_aliases": [
+      "DNA_102233_S",
+      "DNA_102233_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102234",
+    "definition_version": 1,
+    "definition_hash": "2b59ed31d782c8984e2da9ef44b3e44fcf7bc17224a771e9ddba444554b3a992",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102234
+    },
+    "source_aliases": [
+      "DNA_102234_S",
+      "DNA_102234_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102235",
+    "definition_version": 1,
+    "definition_hash": "aa1c1c229f6999acc9eae119be26e00ccb65cfac9b90cf926b83544a6c05fbf7",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102235
+    },
+    "source_aliases": [
+      "DNA_102235_S",
+      "DNA_102235_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102236",
+    "definition_version": 1,
+    "definition_hash": "6499a910a93ee081d3228b0565eafed5c3f91642a86f7129cd34ab04388ef67d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102236
+    },
+    "source_aliases": [
+      "DNA_102236_S",
+      "DNA_102236_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102237",
+    "definition_version": 1,
+    "definition_hash": "662197d294b303afe71391a00729bb721fed4340890f8bf4ebc881be6b347bdf",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102237
+    },
+    "source_aliases": [
+      "DNA_102237_S",
+      "DNA_102237_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102238",
+    "definition_version": 1,
+    "definition_hash": "248201c4925cd427c5e839d75bef117684a8458b132e6f1bd9dafe4cb5754366",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102238
+    },
+    "source_aliases": [
+      "DNA_102238_S",
+      "DNA_102238_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102239",
+    "definition_version": 1,
+    "definition_hash": "172cfab12de6905a737dec7343be19d743b381a0f524832a9d0a80bcb3e7b8f9",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102239
+    },
+    "source_aliases": [
+      "DNA_102239_S",
+      "DNA_102239_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102240",
+    "definition_version": 1,
+    "definition_hash": "73ff5d84cd7553e1103e852019fb465e46e62b01d1a80d39096cc26d65bf3d11",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102240
+    },
+    "source_aliases": [
+      "DNA_102240_S",
+      "DNA_102240_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102241",
+    "definition_version": 1,
+    "definition_hash": "13b105fc44b94fdca8cba154c451341e7fb82f1fa21065fea42e83b6050ce7a3",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102241
+    },
+    "source_aliases": [
+      "DNA_102241_S",
+      "DNA_102241_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102242",
+    "definition_version": 1,
+    "definition_hash": "96637802b932e8ef86e9b17edaf7ce3a4a92922bb549ba710a340ef60147dc5f",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102242
+    },
+    "source_aliases": [
+      "DNA_102242_S",
+      "DNA_102242_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102243",
+    "definition_version": 1,
+    "definition_hash": "38e9928cfa1fb3420cd8653852b6285cc1a4c3c3e7abb6c83008ed7b80f522a1",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102243
+    },
+    "source_aliases": [
+      "DNA_102243_S",
+      "DNA_102243_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102244",
+    "definition_version": 1,
+    "definition_hash": "cab53db9a3a5dc2855e17ff1f94af189417682d21d79737f76a043ac3db02ef3",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102244
+    },
+    "source_aliases": [
+      "DNA_102244_S",
+      "DNA_102244_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102245",
+    "definition_version": 1,
+    "definition_hash": "6173ef53e56761a85a2fef0c263c9e5e47878c31a74f65cdaa3262ff307b02cd",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102245
+    },
+    "source_aliases": [
+      "DNA_102245_S",
+      "DNA_102245_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102246",
+    "definition_version": 1,
+    "definition_hash": "c038c82e870f75d8d5a5f69497d4b3e3f447f06b695f4446f3d23eae9ab68025",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102246
+    },
+    "source_aliases": [
+      "DNA_102246_S",
+      "DNA_102246_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102247",
+    "definition_version": 1,
+    "definition_hash": "f728969f539f88590c68c842ee2be15a9bc054599779ce5355a02b6b00fa2aa2",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102247
+    },
+    "source_aliases": [
+      "DNA_102247_S",
+      "DNA_102247_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102248",
+    "definition_version": 1,
+    "definition_hash": "43fcd4e57f789d6731096b7abcc1e2301d80be117807f2927ff1b0df2840517c",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102248
+    },
+    "source_aliases": [
+      "DNA_102248_S",
+      "DNA_102248_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102249",
+    "definition_version": 1,
+    "definition_hash": "80f3ce30eb31ecd6a8229cfd6f156a34d52064683416e2ddf7e3781a264c0b0b",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102249
+    },
+    "source_aliases": [
+      "DNA_102249_S",
+      "DNA_102249_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102250",
+    "definition_version": 1,
+    "definition_hash": "397d1e59725d95d6075cd07712bd38ba93f9f4dfb5d196194ab3216560b186d5",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102250
+    },
+    "source_aliases": [
+      "DNA_102250_S",
+      "DNA_102250_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102251",
+    "definition_version": 1,
+    "definition_hash": "b739dc28b630c29a79bb6448af852a7dd324b1df777dcb001c6e698439c37858",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102251
+    },
+    "source_aliases": [
+      "DNA_102251_S",
+      "DNA_102251_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102252",
+    "definition_version": 1,
+    "definition_hash": "01a8ac312c79255958672be85c7355ed659fa23c8c024d58b6805f74b7c11862",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102252
+    },
+    "source_aliases": [
+      "DNA_102252_S",
+      "DNA_102252_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102253",
+    "definition_version": 1,
+    "definition_hash": "e22603e6d8c44356b0b0c80ad2b485732028c221b05e58c9046cbc3796e9f239",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102253
+    },
+    "source_aliases": [
+      "DNA_102253_S",
+      "DNA_102253_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102254",
+    "definition_version": 1,
+    "definition_hash": "535f218df2a26621cd8da5c417307167043d2b36802d586c517126749249c0d5",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102254
+    },
+    "source_aliases": [
+      "DNA_102254_S",
+      "DNA_102254_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102255",
+    "definition_version": 1,
+    "definition_hash": "8bb1e57aec05ac60b20a560dfe3674afcf180ea6ba7d2137bf18d748750db01a",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102255
+    },
+    "source_aliases": [
+      "DNA_102255_S",
+      "DNA_102255_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102256",
+    "definition_version": 1,
+    "definition_hash": "a3f8e0b2cc2a1ea0f14c931f8f7f1f65d163388ec27a07d0ca5fb60dd34c5dc7",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102256
+    },
+    "source_aliases": [
+      "DNA_102256_S",
+      "DNA_102256_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102257",
+    "definition_version": 1,
+    "definition_hash": "b0fc25d62307e184c1cd7a533eb384dfbaca96608e7040e189cf27d8f2f8caa3",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102257
+    },
+    "source_aliases": [
+      "DNA_102257_S",
+      "DNA_102257_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102258",
+    "definition_version": 1,
+    "definition_hash": "8f3e3ddb295c66106d3f7f731e657b3535fed1d7c521769d866f1bd5e2b64bdf",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102258
+    },
+    "source_aliases": [
+      "DNA_102258_S",
+      "DNA_102258_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102259",
+    "definition_version": 1,
+    "definition_hash": "b7cf02694403ea14c0bedd5f18085212ed9167ee5fe645f459d4704536ec01cd",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102259
+    },
+    "source_aliases": [
+      "DNA_102259_S",
+      "DNA_102259_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102260",
+    "definition_version": 1,
+    "definition_hash": "49f84e2aaf6812217d624eacde934c625072c82f84836ba4075996cb00dc7c0d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102260
+    },
+    "source_aliases": [
+      "DNA_102260_S",
+      "DNA_102260_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102261",
+    "definition_version": 1,
+    "definition_hash": "6fb76fdf447113d6d198ed1dee262a271a62b6a397c450cb11f233ed43797613",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102261
+    },
+    "source_aliases": [
+      "DNA_102261_S",
+      "DNA_102261_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102262",
+    "definition_version": 1,
+    "definition_hash": "c6b4913eec86249a59f7d8be89038f5f5c518010f9ed8341f1b26271b056a143",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102262
+    },
+    "source_aliases": [
+      "DNA_102262_S",
+      "DNA_102262_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102263",
+    "definition_version": 1,
+    "definition_hash": "4560138ade42e4ef6885a74f6b84c7befb524dfa02be29ea388f2b15739669b3",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102263
+    },
+    "source_aliases": [
+      "DNA_102263_S",
+      "DNA_102263_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102264",
+    "definition_version": 1,
+    "definition_hash": "7a8e619f31c359cc0477325554fc37970662432b535fbaaad8dd515ff1973061",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102264
+    },
+    "source_aliases": [
+      "DNA_102264_S",
+      "DNA_102264_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102265",
+    "definition_version": 1,
+    "definition_hash": "2050f40b40deb1eac5ddb807ee0ecec8df382e55a92edc4f40184d00be070049",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102265
+    },
+    "source_aliases": [
+      "DNA_102265_S",
+      "DNA_102265_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102266",
+    "definition_version": 1,
+    "definition_hash": "99649daf73da48c76e4e2c4aa2191bd34e489f8b8d29ab40eb303700bb6eea7b",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102266
+    },
+    "source_aliases": [
+      "DNA_102266_S",
+      "DNA_102266_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102267",
+    "definition_version": 1,
+    "definition_hash": "cb08b82b9283a04ff96b3a5a3f6e89576b5f9e4d95a13711b73808072586e87c",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102267
+    },
+    "source_aliases": [
+      "DNA_102267_S",
+      "DNA_102267_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102268",
+    "definition_version": 1,
+    "definition_hash": "6cdfe7cb15b7d2527ab0215f9aa25838b39135dd90f99063aaffadeea0d57346",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102268
+    },
+    "source_aliases": [
+      "DNA_102268_S",
+      "DNA_102268_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102269",
+    "definition_version": 1,
+    "definition_hash": "1bc2e7d25f23f7cf0ec3d85f791772b5da7f03b4c408148f21b1dce2c6768cab",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102269
+    },
+    "source_aliases": [
+      "DNA_102269_S",
+      "DNA_102269_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102270",
+    "definition_version": 1,
+    "definition_hash": "422de26010d37f2c2d747dee113efae151f9d212ddd212ced65ade0b0cde2a12",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102270
+    },
+    "source_aliases": [
+      "DNA_102270_S",
+      "DNA_102270_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102271",
+    "definition_version": 1,
+    "definition_hash": "b1e84396cf40a11c650eeb05c400a76a6ecaa1924b58ff0a04c727f96079501c",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102271
+    },
+    "source_aliases": [
+      "DNA_102271_S",
+      "DNA_102271_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102272",
+    "definition_version": 1,
+    "definition_hash": "e21b57de5ededbaef69495c9fbe589287a0a29b9616463fdf672155286c08ddf",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102272
+    },
+    "source_aliases": [
+      "DNA_102272_S",
+      "DNA_102272_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102273",
+    "definition_version": 1,
+    "definition_hash": "22b266fb5e7aa6fe20b4c5b1d7b80a0a569dae97abb3c0d14603d509ee1c73c4",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102273
+    },
+    "source_aliases": [
+      "DNA_102273_S",
+      "DNA_102273_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102274",
+    "definition_version": 1,
+    "definition_hash": "45e7a26d8b2731e81ec213a2487787c1ff526ae2b8e5addd8f6385633ce3377d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102274
+    },
+    "source_aliases": [
+      "DNA_102274_S",
+      "DNA_102274_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102275",
+    "definition_version": 1,
+    "definition_hash": "8b3ba9866a7ce10d88fd8f416fba3faf881f91c07ce9a558c7cf189db57dd876",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102275
+    },
+    "source_aliases": [
+      "DNA_102275_S",
+      "DNA_102275_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102276",
+    "definition_version": 1,
+    "definition_hash": "6d02978984da8680a949e542064c611d0df2a49d437c0c94f27a9834c72abcfc",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 30,
+      "market": "FX",
+      "definition_seed": 102276
+    },
+    "source_aliases": [
+      "DNA_102276_S",
+      "DNA_102276_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102277",
+    "definition_version": 1,
+    "definition_hash": "2eae416a0ee75e5bfd1ebcda6dd876e3b6a3f1afcdcefd1103c08faea920ec5f",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 35,
+      "market": "FX",
+      "definition_seed": 102277
+    },
+    "source_aliases": [
+      "DNA_102277_S",
+      "DNA_102277_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102278",
+    "definition_version": 1,
+    "definition_hash": "b688058ea671120452e9fae58cb0d9407bf6b8dc1e349e28aef0c9ae4adf2fb1",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 40,
+      "market": "FX",
+      "definition_seed": 102278
+    },
+    "source_aliases": [
+      "DNA_102278_S",
+      "DNA_102278_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102279",
+    "definition_version": 1,
+    "definition_hash": "6018b50c1fd6c4ad30a534ad02fc52aeb8b78555dc3f78f5a40e0c4bd284b109",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 45,
+      "market": "FX",
+      "definition_seed": 102279
+    },
+    "source_aliases": [
+      "DNA_102279_S",
+      "DNA_102279_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102280",
+    "definition_version": 1,
+    "definition_hash": "ae13c932b95125239543e4e79fb56d77091764de008e1088ec69d33a676935ec",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 50,
+      "market": "FX",
+      "definition_seed": 102280
+    },
+    "source_aliases": [
+      "DNA_102280_S",
+      "DNA_102280_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102281",
+    "definition_version": 1,
+    "definition_hash": "8de1aad5806bcefbfbc6816aa6a305016822c33614d5dc5644d0d72540828dce",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 25,
+      "target_boundary_bps": 55,
+      "market": "FX",
+      "definition_seed": 102281
+    },
+    "source_aliases": [
+      "DNA_102281_S",
+      "DNA_102281_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102282",
+    "definition_version": 1,
+    "definition_hash": "2b3099d1f2b90e2b45f9514bdb7f25d5351aada2a55340c7603353fb883df537",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 30,
+      "target_boundary_bps": 60,
+      "market": "FX",
+      "definition_seed": 102282
+    },
+    "source_aliases": [
+      "DNA_102282_S",
+      "DNA_102282_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102283",
+    "definition_version": 1,
+    "definition_hash": "2264dc25c4c1e0f06c804632633dbd83b59b09ec4168745d8c2886507011bdf1",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 35,
+      "target_boundary_bps": 65,
+      "market": "FX",
+      "definition_seed": 102283
+    },
+    "source_aliases": [
+      "DNA_102283_S",
+      "DNA_102283_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102284",
+    "definition_version": 1,
+    "definition_hash": "d04849c366e9998b0711d6ae86114e92c62743e625c596d88f01439b90646c2d",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 40,
+      "target_boundary_bps": 70,
+      "market": "FX",
+      "definition_seed": 102284
+    },
+    "source_aliases": [
+      "DNA_102284_S",
+      "DNA_102284_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102285",
+    "definition_version": 1,
+    "definition_hash": "e52889efb3bcdec88a3f5815bdfa12b67fecbe45764f89720a5835c3abc032b6",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 45,
+      "target_boundary_bps": 75,
+      "market": "FX",
+      "definition_seed": 102285
+    },
+    "source_aliases": [
+      "DNA_102285_S",
+      "DNA_102285_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102286",
+    "definition_version": 1,
+    "definition_hash": "acaae1ec20c0cc09f44834628dd1f997d3c8849267f384398d8509676ff90598",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 50,
+      "target_boundary_bps": 80,
+      "market": "FX",
+      "definition_seed": 102286
+    },
+    "source_aliases": [
+      "DNA_102286_S",
+      "DNA_102286_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102287",
+    "definition_version": 1,
+    "definition_hash": "541a55f64ef7fcbdcfaada99dfa6e14e3066856a4ff703d0b8aa3eb9512c88ed",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 55,
+      "target_boundary_bps": 85,
+      "market": "FX",
+      "definition_seed": 102287
+    },
+    "source_aliases": [
+      "DNA_102287_S",
+      "DNA_102287_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102288",
+    "definition_version": 1,
+    "definition_hash": "b04466e75304785b48c1a7da5502f7fa29ee925d36a18fab8b72a102f51a6bd5",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 60,
+      "target_boundary_bps": 90,
+      "market": "FX",
+      "definition_seed": 102288
+    },
+    "source_aliases": [
+      "DNA_102288_S",
+      "DNA_102288_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102289",
+    "definition_version": 1,
+    "definition_hash": "5e35bb7113d904c8b5b5398bfed5c01aaa348f963bfbda08f7b4e7356512d58a",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 12,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 65,
+      "target_boundary_bps": 95,
+      "market": "FX",
+      "definition_seed": 102289
+    },
+    "source_aliases": [
+      "DNA_102289_S",
+      "DNA_102289_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102290",
+    "definition_version": 1,
+    "definition_hash": "138c0f39fb9bc9714dcac94d0c352927da8970d1ac12abc8d76f966b75d5b274",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 24,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 70,
+      "target_boundary_bps": 100,
+      "market": "FX",
+      "definition_seed": 102290
+    },
+    "source_aliases": [
+      "DNA_102290_S",
+      "DNA_102290_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102291",
+    "definition_version": 1,
+    "definition_hash": "600a2cc931d8d9fa835aaa69bf86e7a52f87ad54982605d8b5eb97f653799da8",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 48,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 75,
+      "target_boundary_bps": 105,
+      "market": "FX",
+      "definition_seed": 102291
+    },
+    "source_aliases": [
+      "DNA_102291_S",
+      "DNA_102291_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102292",
+    "definition_version": 1,
+    "definition_hash": "5ac1a8e60349448446e9fa5587045499fab06bf8c45bee102444a421a4d4bace",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 72,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 80,
+      "target_boundary_bps": 110,
+      "market": "FX",
+      "definition_seed": 102292
+    },
+    "source_aliases": [
+      "DNA_102292_S",
+      "DNA_102292_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102293",
+    "definition_version": 1,
+    "definition_hash": "951ee846d5792232061a0f860e6ae7eee20d72910316941a551fb3a02ef08ceb",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 12,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 85,
+      "target_boundary_bps": 115,
+      "market": "FX",
+      "definition_seed": 102293
+    },
+    "source_aliases": [
+      "DNA_102293_S",
+      "DNA_102293_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102294",
+    "definition_version": 1,
+    "definition_hash": "5ea02786e2784be37774dd1d2d827e7d2721ea41be5a9f29a44c110c015ea714",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 24,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 90,
+      "target_boundary_bps": 120,
+      "market": "FX",
+      "definition_seed": 102294
+    },
+    "source_aliases": [
+      "DNA_102294_S",
+      "DNA_102294_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102295",
+    "definition_version": 1,
+    "definition_hash": "d680c2d7a33264f112e6205eba15c7668a06b2a7048a89a282c899560523f94d",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 48,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 95,
+      "target_boundary_bps": 125,
+      "market": "FX",
+      "definition_seed": 102295
+    },
+    "source_aliases": [
+      "DNA_102295_S",
+      "DNA_102295_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102296",
+    "definition_version": 1,
+    "definition_hash": "94eeb3d5d76670bfa450e14b040b64ce84666e8cd581756a24358e82b5975d31",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 72,
+      "exit_horizon": 6,
+      "risk_boundary_bps": 100,
+      "target_boundary_bps": 130,
+      "market": "FX",
+      "definition_seed": 102296
+    },
+    "source_aliases": [
+      "DNA_102296_S",
+      "DNA_102296_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102297",
+    "definition_version": 1,
+    "definition_hash": "84efaaab266e0a8d724754b946387d7f4c5bfcb58687cde0f612c4ed719ca729",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 12,
+      "exit_horizon": 12,
+      "risk_boundary_bps": 105,
+      "target_boundary_bps": 135,
+      "market": "FX",
+      "definition_seed": 102297
+    },
+    "source_aliases": [
+      "DNA_102297_S",
+      "DNA_102297_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102298",
+    "definition_version": 1,
+    "definition_hash": "ef506c2e6ac5f71b09848a7c6ac74246a3cce4e45c5876c108146c34780023d6",
+    "definition": {
+      "entry_family": "breakout",
+      "entry_lookback": 24,
+      "exit_horizon": 24,
+      "risk_boundary_bps": 110,
+      "target_boundary_bps": 140,
+      "market": "FX",
+      "definition_seed": 102298
+    },
+    "source_aliases": [
+      "DNA_102298_S",
+      "DNA_102298_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102299",
+    "definition_version": 1,
+    "definition_hash": "5c6b38855eb3db1f4fe39ae2e6ad7fcce5dba5a699b49a1fd7f30613da3470a6",
+    "definition": {
+      "entry_family": "mean_reversion",
+      "entry_lookback": 48,
+      "exit_horizon": 48,
+      "risk_boundary_bps": 115,
+      "target_boundary_bps": 145,
+      "market": "FX",
+      "definition_seed": 102299
+    },
+    "source_aliases": [
+      "DNA_102299_S",
+      "DNA_102299_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  },
+  {
+    "strategy_id": "DNA_102300",
+    "definition_version": 1,
+    "definition_hash": "b62d77d6b562ca0363cb6d159f92412abe2e1d13fe19c141b7fcd60891477853",
+    "definition": {
+      "entry_family": "momentum",
+      "entry_lookback": 72,
+      "exit_horizon": 96,
+      "risk_boundary_bps": 120,
+      "target_boundary_bps": 150,
+      "market": "FX",
+      "definition_seed": 102300
+    },
+    "source_aliases": [
+      "DNA_102300_S",
+      "DNA_102300_B"
+    ],
+    "descriptive_name": null,
+    "status": "DRAFT",
+    "visibility": "private",
+    "methodology_version": "1.0.0"
+  }
+]

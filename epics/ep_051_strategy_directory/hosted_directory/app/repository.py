@@ -1,0 +1,452 @@
+"""SQL Server source adapter and PostgreSQL snapshot repository.
+
+Version history:
+- 1.7.1 (2026-08-25): Filters combined_trades_closed on the indexed model_ix column instead of the
+  unindexed varchar(max) model column, avoiding a 1M+ row scan on every evidence query.
+- 1.7.0 (2026-08-25): Adds period execution counts across open and closed trades, deduplicated by guid.
+- 1.6.1 (2026-08-25): Exposes the exact constructed-model count from product_forex for reference totals.
+- 1.6.0 (2026-08-25): Defines the canonical directory population from product_forex and overlays closed-trade evidence.
+- 1.5.2 (2026-08-25): Supports Windows trusted authentication for local SQL Server when explicit credentials are absent.
+- 1.5.1 (2026-08-25): Adds streaming period aggregation so fresh day filters avoid SQL Server group-memory grants.
+- 1.5.0 (2026-08-24): Resolves canonical strategy names from product_forex.strategy_name.
+- 1.4.0 (2026-08-24): Adds one-query canonical equity-series loading for intelligence profiles.
+- 1.3.0 (2026-08-24): Publishes distinct source product names with strategy aggregates.
+- 1.2.0 (2026-08-24): Adds canonical, period-aware cumulative equity points for strategy charts.
+- 1.1.0 (2026-08-24): Adds bounded closed-date filtering for day, week, month and custom evidence periods.
+- 1.0.0 (2026-08-23): Read-only local aggregation and atomic hosted promotion.
+"""
+from __future__ import annotations
+
+from contextlib import closing
+from typing import Any
+
+from .contracts import Snapshot
+
+
+def rebase_equity_rows(rows):
+    equity=peak=0.0;output=[]
+    for number,row in enumerate(rows,1):
+        value=float(row["net_return"]);equity+=value;peak=max(peak,equity);output.append({**row,"trade_number":number,"equity":equity,"drawdown":equity-peak})
+    return output
+
+MAX_EQUITY_POINTS = 5000
+MAX_PROFILE_POINTS = 1000
+
+AGGREGATE_SQL = """
+WITH universe AS (
+ SELECT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END strategy_id,
+        MAX(NULLIF(LTRIM(RTRIM(strategy_name)),'')) descriptive_name
+ FROM dbo.product_forex
+ WHERE model LIKE 'DNA[_]%'
+ GROUP BY CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END
+), universe_products AS (
+ SELECT strategy_id, STRING_AGG(product, ', ') product_name
+ FROM (
+   SELECT DISTINCT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END strategy_id, product
+   FROM dbo.product_forex WHERE model LIKE 'DNA[_]%' AND product IS NOT NULL
+ ) source_products
+ GROUP BY strategy_id
+), canonical AS (
+ SELECT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END strategy_id,
+        CAST(net_return AS float) net_return, product, created, COALESCE(g_close_time,last_update,created) closed_at, guid
+ FROM dbo.combined_trades_closed
+ WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL
+   {date_filters}
+), evidence AS (
+ SELECT strategy_id, COUNT_BIG(*) total_trades,
+ SUM(CASE WHEN net_return>0 THEN 1 ELSE 0 END) wins,
+ SUM(CASE WHEN net_return<0 THEN 1 ELSE 0 END) losses,
+ SUM(CASE WHEN net_return=0 THEN 1 ELSE 0 END) breakevens,
+ SUM(net_return) total_net_return,
+ SUM(CASE WHEN net_return>0 THEN net_return ELSE 0 END) gross_profit,
+ ABS(SUM(CASE WHEN net_return<0 THEN net_return ELSE 0 END)) gross_loss,
+ MIN(created) evidence_start, MAX(closed_at) evidence_end
+ FROM canonical GROUP BY strategy_id
+)
+SELECT universe.strategy_id, universe.descriptive_name, universe_products.product_name,
+ COALESCE(evidence.total_trades,0) total_trades, COALESCE(evidence.wins,0) wins,
+ COALESCE(evidence.losses,0) losses, COALESCE(evidence.breakevens,0) breakevens,
+ CAST(COALESCE(evidence.total_net_return,0) AS decimal(28,8)) total_net_return,
+ CAST(COALESCE(CAST(evidence.wins AS decimal(28,10))/NULLIF(evidence.total_trades,0),0) AS decimal(18,10)) win_rate,
+ CAST(evidence.gross_profit/NULLIF(evidence.gross_loss,0) AS decimal(18,10)) profit_factor,
+ CAST(NULL AS decimal(28,8)) max_drawdown_money,
+ evidence.evidence_start, evidence.evidence_end
+FROM universe
+LEFT JOIN universe_products ON universe_products.strategy_id=universe.strategy_id
+LEFT JOIN evidence ON evidence.strategy_id=universe.strategy_id
+{strategy_filter}
+ORDER BY universe.strategy_id
+"""
+
+
+def sqlserver_connection(settings):
+    import pyodbc
+    if not settings.db_server:
+        raise RuntimeError("Missing local SQL setting: db_server")
+    value = ("DRIVER={ODBC Driver 17 for SQL Server};SERVER=" + settings.db_server +
+             ";DATABASE=" + settings.db_name)
+    if settings.db_user and settings.db_pass:
+        value += ";UID=" + settings.db_user + ";PWD=" + settings.db_pass
+    elif not settings.db_user and not settings.db_pass:
+        value += ";Trusted_Connection=yes"
+    else:
+        raise RuntimeError("Set both db_user and db_pass, or neither for Windows trusted authentication")
+    return pyodbc.connect(value, timeout=10)
+
+
+def local_constructed_strategy_count(settings) -> int:
+    """Count constructed DNA models exactly as stored in product_forex."""
+    with closing(sqlserver_connection(settings)) as conn:
+        row = conn.cursor().execute(
+            "SELECT COUNT_BIG(DISTINCT model) FROM dbo.product_forex WHERE model LIKE 'DNA[_]%'"
+        ).fetchone()
+    return int(row[0])
+
+
+def local_execution_summary(settings, date_from=None, date_to_exclusive=None) -> dict[str, int]:
+    """Count distinct executed models and trades opened within a half-open period."""
+    date_filters, date_params = [], []
+    if date_from is not None:
+        date_filters.append("created >= ?")
+        date_params.append(date_from)
+    if date_to_exclusive is not None:
+        date_filters.append("created < ?")
+        date_params.append(date_to_exclusive)
+    date_where = "".join(f" AND {clause}" for clause in date_filters)
+    # combined_trades_open has no model_ix column (table is small; scan cost is negligible).
+    # combined_trades_closed carries 1M+ rows, so its DNA prefix filter must use the indexed
+    # model_ix column instead of the unindexed varchar(max) model column.
+    open_where = "model LIKE 'DNA[_]%'" + date_where
+    closed_where = "model_ix LIKE 'DNA[_]%'" + date_where
+    query = f"""
+      WITH executed AS (
+        SELECT guid,model FROM dbo.combined_trades_open WITH (NOLOCK) WHERE {open_where}
+        UNION
+        SELECT guid,model FROM dbo.combined_trades_closed WITH (NOLOCK) WHERE {closed_where}
+      )
+      SELECT COUNT_BIG(DISTINCT model),COUNT_BIG(DISTINCT guid) FROM executed
+    """
+    with closing(sqlserver_connection(settings)) as conn:
+        row = conn.cursor().execute(query, *(date_params + date_params)).fetchone()
+    return {"strategies": int(row[0]), "trades": int(row[1])}
+
+
+def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical_strategy=None, signal=None) -> list[dict[str, Any]]:
+    """Aggregate canonical strategies within an optional half-open closed-date range."""
+    filters, params = [], []
+    if date_from is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        params.append(date_from)
+    if date_to_exclusive is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        params.append(date_to_exclusive)
+    if signal is not None:
+        filters.append("AND UPPER(LTRIM(RTRIM(signal))) = ?")
+        params.append(signal)
+    strategy_filter = ""
+    if canonical_strategy is not None:
+        strategy_filter = "WHERE universe.strategy_id = ?"
+        params.append(canonical_strategy)
+    query = AGGREGATE_SQL.format(date_filters=" ".join(filters), strategy_filter=strategy_filter)
+    with closing(sqlserver_connection(settings)) as conn:
+        cur = conn.cursor()
+        cur.execute(query, *params)
+        columns = [x[0] for x in cur.description]
+        rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+    for row in rows:
+        for key in ("total_net_return", "win_rate", "profit_factor", "max_drawdown_money"):
+            row[key] = float(row[key]) if row[key] is not None else None
+        row.update(market="FX", status="active",
+                   quality_state="VALID" if row["total_trades"] >= 30 else "COLLECTING")
+    return rows
+
+
+def local_products(settings) -> list[str]:
+    """Return canonical DNA product filter values from product_forex."""
+    query = """
+      SELECT DISTINCT UPPER(LTRIM(RTRIM(product))) product
+      FROM dbo.product_forex WITH (NOLOCK)
+      WHERE model LIKE 'DNA[_]%'
+        AND NULLIF(LTRIM(RTRIM(product)),'') IS NOT NULL
+      ORDER BY product
+    """
+    with closing(sqlserver_connection(settings)) as conn:
+        return [str(row[0]) for row in conn.cursor().execute(query).fetchall()]
+
+
+def local_period_strategies(settings, date_from, date_to_exclusive, canonical_strategy=None, signal=None) -> list[dict[str, Any]]:
+    """Return the population with evidence for trades entered in the period."""
+    # Directory periods are entry-date cohorts.  Using the close timestamp here
+    # made the headline disagree with direct combined_trades_closed entry-date
+    # counts and caused trades opened today but closed later to move periods.
+    filters = ["created >= ?", "created < ?"]
+    params = [date_from, date_to_exclusive]
+    if signal is not None:
+        filters.append("UPPER(LTRIM(RTRIM(signal))) = ?")
+        params.append(signal)
+    if canonical_strategy is not None:
+        filters.append("model IN (?,?,?)")
+        params.extend([canonical_strategy, canonical_strategy + "_B", canonical_strategy + "_S"])
+    query = f"""
+      SELECT model,product,CAST(net_return AS float) net_return,created,
+             COALESCE(g_close_time,last_update,created) closed_at
+      FROM dbo.combined_trades_closed WITH (NOLOCK)
+      WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL AND {' AND '.join(filters)}
+      OPTION (MAXDOP 1)
+    """
+    # Keep this as a grant-free row read. SQL Server can otherwise leave the
+    # directory waiting on RESOURCE_SEMAPHORE while STRING_AGG sorts the model
+    # catalogue alongside the live trade procedures.
+    population_query = """
+      SELECT model,NULLIF(LTRIM(RTRIM(strategy_name)),''),product
+      FROM dbo.product_forex WITH (NOLOCK)
+      WHERE model LIKE 'DNA[_]%'
+    """
+    population_params = []
+    if canonical_strategy is not None:
+        population_query += " AND model IN (?,?,?)"
+        population_params.extend([canonical_strategy, canonical_strategy + "_B", canonical_strategy + "_S"])
+    grouped = {}
+    with closing(sqlserver_connection(settings)) as conn:
+        cur = conn.cursor(); cur.execute(population_query, *population_params)
+        for model, descriptive_name, product in cur:
+            strategy_id = model[:-2] if model.endswith(("_B", "_S")) else model
+            row = grouped.setdefault(strategy_id, {
+                "strategy_id": strategy_id, "descriptive_name": None,
+                "products": set(), "total_trades": 0, "wins": 0,
+                "losses": 0, "breakevens": 0, "total_net_return": 0.0,
+                "gross_profit": 0.0, "gross_loss": 0.0,
+                "evidence_start": None, "evidence_end": None,
+            })
+            if descriptive_name: row["descriptive_name"] = descriptive_name
+            if product: row["products"].add(product)
+        cur.execute(query, *params)
+        for model, product, net_return, created, closed_at in cur:
+            strategy_id = model[:-2] if model.endswith(("_B", "_S")) else model
+            row = grouped.get(strategy_id)
+            if row is None: continue
+            value = float(net_return); row["total_trades"] += 1; row["total_net_return"] += value
+            row["wins"] += value > 0; row["losses"] += value < 0; row["breakevens"] += value == 0
+            row["gross_profit"] += max(value, 0); row["gross_loss"] += abs(min(value, 0))
+            if product: row["products"].add(product)
+            row["evidence_start"] = created if row["evidence_start"] is None else min(row["evidence_start"], created)
+            row["evidence_end"] = closed_at if row["evidence_end"] is None else max(row["evidence_end"], closed_at)
+    output = []
+    for row in grouped.values():
+        count = row["total_trades"]; gross_loss = row.pop("gross_loss"); gross_profit = row.pop("gross_profit")
+        products = row.pop("products")
+        row.update(product_name=", ".join(sorted(products)) or None, market="FX", status="active",
+                   win_rate=row["wins"] / count if count else 0.0,
+                   profit_factor=gross_profit / gross_loss if gross_loss else None,
+                   max_drawdown_money=None, quality_state="VALID" if count >= 30 else "COLLECTING")
+        output.append(row)
+    return sorted(output, key=lambda row: row["strategy_id"])
+
+
+def local_equity_curve(settings, strategy_id: str, date_from=None, date_to_exclusive=None) -> list[dict[str, Any]]:
+    """Return ordered cumulative net-return and drawdown points for one canonical strategy."""
+    filters, params = [], [MAX_EQUITY_POINTS, strategy_id, strategy_id + "_B", strategy_id + "_S"]
+    if date_from is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        params.append(date_from)
+    if date_to_exclusive is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        params.append(date_to_exclusive)
+    query = f"""
+    WITH trades AS (
+      SELECT TOP (?) COALESCE(g_close_time,last_update,created) closed_at, created opened_at, created, guid, CAST(net_return AS float) net_return
+      FROM dbo.combined_trades_closed
+      WHERE model_ix IN (?,?,?) AND net_return IS NOT NULL {' '.join(filters)}
+      ORDER BY COALESCE(g_close_time,last_update,created) DESC, created DESC, guid DESC
+    ), equity AS (
+      SELECT closed_at, opened_at, guid, net_return,
+        SUM(net_return) OVER(ORDER BY closed_at,created,guid ROWS UNBOUNDED PRECEDING) equity
+      FROM trades
+    ), curve AS (
+      SELECT closed_at,opened_at,guid,net_return,equity,
+        equity-CASE WHEN MAX(equity) OVER(ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING)>0 THEN MAX(equity) OVER(ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) ELSE 0 END drawdown,
+        ROW_NUMBER() OVER(ORDER BY closed_at,guid) trade_number
+      FROM equity
+    )
+    SELECT trade_number,opened_at,closed_at,net_return,equity,drawdown FROM curve ORDER BY trade_number
+    """
+    with closing(sqlserver_connection(settings)) as conn:
+        cur = conn.cursor(); cur.execute(query, *params)
+        columns = [x[0] for x in cur.description]
+        rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+    for row in rows:
+        row["closed_at"] = row["closed_at"].isoformat() if row["closed_at"] else None
+        row["opened_at"] = row["opened_at"].isoformat() if row["opened_at"] else None
+        for key in ("net_return", "equity", "drawdown"):
+            row[key] = float(row[key])
+    return rows
+
+
+def local_closed_trades(settings, strategy_id: str, date_from=None, date_to_exclusive=None, limit: int = 1000) -> list[dict[str, Any]]:
+    """Return the closed-trade ledger ordered from earliest to latest entry."""
+    filters, params = [], [limit, strategy_id, strategy_id + "_B", strategy_id + "_S"]
+    if date_from is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        params.append(date_from)
+    if date_to_exclusive is not None:
+        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        params.append(date_to_exclusive)
+    query = f"""
+      SELECT TOP (?) guid,product,UPPER(signal) signal,created entry_time,
+             CAST(entry_price AS float) entry_price,
+             COALESCE(g_close_time,last_update,created) exit_time,
+             CAST(latest_price AS float) exit_price,CAST(net_return AS float) net_return
+      FROM dbo.combined_trades_closed WITH (NOLOCK)
+      WHERE model_ix IN (CONVERT(varchar(200),?),CONVERT(varchar(200),?),CONVERT(varchar(200),?))
+        AND net_return IS NOT NULL {' '.join(filters)}
+      ORDER BY created ASC,COALESCE(g_close_time,last_update,created) ASC,guid ASC
+      OPTION (MAXDOP 1, RECOMPILE)
+    """
+    with closing(sqlserver_connection(settings)) as conn:
+        cur = conn.cursor(); cur.execute(query, *params)
+        columns = [item[0] for item in cur.description]
+        rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+    for row in rows:
+        for key in ("entry_time", "exit_time"):
+            row[key] = row[key].isoformat() if row[key] else None
+        for key in ("entry_price", "exit_price", "net_return"):
+            row[key] = float(row[key]) if row[key] is not None else None
+    return rows
+
+
+def local_equity_curves(settings,strategy_ids=None) -> dict[str,list[dict[str,Any]]]:
+    """Load every canonical DNA return series in one query for bounded directory intelligence work."""
+    strategy_ids=list(dict.fromkeys(strategy_ids or []));canonical="CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END"
+    strategy_filter="" if not strategy_ids else " AND "+canonical+" IN ("+",".join("?" for _ in strategy_ids)+")"
+    query=f"""
+    WITH ranked_trades AS (
+      SELECT {canonical} strategy_id,
+        COALESCE(g_close_time,last_update,created) closed_at,created opened_at,created,guid,CAST(net_return AS float) net_return,
+        ROW_NUMBER() OVER(PARTITION BY {canonical}
+          ORDER BY COALESCE(g_close_time,last_update,created) DESC,created DESC,guid DESC) reverse_number
+      FROM dbo.combined_trades_closed WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL {strategy_filter}
+    ), trades AS (
+      SELECT strategy_id,closed_at,opened_at,created,guid,net_return FROM ranked_trades WHERE reverse_number<={MAX_PROFILE_POINTS}
+    ), equity AS (
+      SELECT strategy_id,closed_at,opened_at,guid,net_return,
+        SUM(net_return) OVER(PARTITION BY strategy_id ORDER BY closed_at,created,guid ROWS UNBOUNDED PRECEDING) equity
+      FROM trades
+    ), curve AS (
+      SELECT strategy_id,closed_at,opened_at,guid,net_return,equity,
+        equity-CASE WHEN MAX(equity) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING)>0 THEN MAX(equity) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) ELSE 0 END drawdown,
+        ROW_NUMBER() OVER(PARTITION BY strategy_id ORDER BY closed_at,guid) trade_number
+      FROM equity
+    ) SELECT strategy_id,trade_number,opened_at,closed_at,net_return,equity,drawdown FROM curve ORDER BY strategy_id,trade_number
+    """
+    with closing(sqlserver_connection(settings)) as conn:
+        cur=conn.cursor();cur.execute(query,*strategy_ids);columns=[item[0] for item in cur.description]
+        rows=[dict(zip(columns,row)) for row in cur.fetchall()]
+    grouped={}
+    for row in rows:
+        strategy_id=row.pop("strategy_id");row["closed_at"]=row["closed_at"].isoformat() if row["closed_at"] else None;row["opened_at"]=row["opened_at"].isoformat() if row["opened_at"] else None
+        for key in ("net_return","equity","drawdown"):row[key]=float(row[key])
+        grouped.setdefault(strategy_id,[]).append(row)
+    return grouped
+
+
+class MemoryRepository:
+    def __init__(self): self.snapshots = {}; self.current_id = None
+    def promote(self, snapshot: Snapshot):
+        snapshot.verified()
+        existing=self.snapshots.get(snapshot.snapshot_id)
+        if existing is not None:
+            envelope=(existing.sha256,existing.schema_version,existing.methodology_version,existing.source_watermark,existing.generated_at,existing.item_count)
+            incoming=(snapshot.sha256,snapshot.schema_version,snapshot.methodology_version,snapshot.source_watermark,snapshot.generated_at,snapshot.item_count)
+            if envelope!=incoming:raise ValueError("snapshot ID already exists with different evidence")
+        else:self.snapshots[snapshot.snapshot_id]=snapshot
+        self.current_id = snapshot.snapshot_id
+    def current_items(self):
+        return [] if self.current_id is None else self.snapshots[self.current_id].items
+    def current_snapshot(self):
+        return None if self.current_id is None else self.snapshots[self.current_id]
+    def current_profiles(self):
+        snap=self.current_snapshot();return [] if snap is None else [item.model_dump(mode="json") for item in snap.intelligence_profiles]
+    def current_equity_curve(self,strategy_id,date_from=None,date_to_exclusive=None):
+        snap=self.current_snapshot();rows=[] if snap is None else [item for item in snap.return_series if item.strategy_id==strategy_id and (date_from is None or item.observed_at>=date_from) and (date_to_exclusive is None or item.observed_at<date_to_exclusive)]
+        return rebase_equity_rows([{"trade_number":item.trade_number,"opened_at":item.opened_at.isoformat() if item.opened_at else None,"closed_at":item.observed_at.isoformat(),"net_return":item.net_return,"equity":item.cumulative_net_return,"drawdown":item.drawdown} for item in rows])
+    def current_equity_curves(self):
+        return {item.strategy_id:self.current_equity_curve(item.strategy_id) for item in self.current_items()}
+    def current_daily_returns(self,strategy_ids,max_days=2000):
+        output={strategy_id:{} for strategy_id in strategy_ids};snap=self.current_snapshot()
+        for point in ([] if snap is None else snap.return_series):
+            if point.strategy_id in output:
+                day=point.observed_at.date().isoformat();output[point.strategy_id][day]=output[point.strategy_id].get(day,0)+point.net_return
+        return {strategy_id:[{"timestamp":day,"return":value} for day,value in sorted(days.items())[-max_days:]] for strategy_id,days in output.items()}
+    def rollback(self, snapshot_id: str):
+        if snapshot_id not in self.snapshots: raise KeyError(snapshot_id)
+        self.current_id = snapshot_id
+
+
+class PostgresRepository:
+    def __init__(self, database_url: str): self.database_url = database_url
+    def _connect(self):
+        import psycopg
+        return psycopg.connect(self.database_url)
+    def promote(self, snapshot: Snapshot):
+        snapshot.verified()
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute("SELECT source_watermark FROM directory_snapshot WHERE status='current' FOR UPDATE")
+            current = cur.fetchone()
+            if current and current[0].astimezone(snapshot.source_watermark.tzinfo) > snapshot.source_watermark: raise ValueError("stale source watermark")
+            cur.execute("SELECT schema_version,methodology_version,source_watermark,generated_at,item_count,sha256 FROM directory_snapshot WHERE snapshot_id=%s FOR UPDATE",(snapshot.snapshot_id,));existing=cur.fetchone()
+            incoming=(snapshot.schema_version,snapshot.methodology_version,snapshot.source_watermark,snapshot.generated_at,snapshot.item_count,snapshot.sha256)
+            if existing and tuple(existing)!=incoming:raise ValueError("snapshot ID already exists with different evidence")
+            if not existing:
+                cur.execute("""INSERT INTO directory_snapshot(snapshot_id,schema_version,methodology_version,source_watermark,generated_at,item_count,sha256,status)
+                  VALUES(%s,%s,%s,%s,%s,%s,%s,'staged')""",(snapshot.snapshot_id,*incoming))
+                for s in snapshot.items:cur.execute("INSERT INTO directory_strategy(snapshot_id,strategy_id,payload) VALUES(%s,%s,%s)",(snapshot.snapshot_id,s.strategy_id,s.model_dump_json()))
+                for profile in snapshot.intelligence_profiles:cur.execute("INSERT INTO directory_intelligence_profile(snapshot_id,strategy_id,payload) VALUES(%s,%s,%s)",(snapshot.snapshot_id,profile.identity.strategy_id,profile.model_dump_json()))
+                for point in snapshot.return_series:cur.execute("INSERT INTO directory_return_series(snapshot_id,strategy_id,observed_at,trade_id,payload) VALUES(%s,%s,%s,%s,%s)",(snapshot.snapshot_id,point.strategy_id,point.observed_at,point.trade_id,point.model_dump_json()))
+            cur.execute("UPDATE directory_snapshot SET status='retained' WHERE status='current'")
+            cur.execute("UPDATE directory_snapshot SET status='current',promoted_at=now() WHERE snapshot_id=%s", (snapshot.snapshot_id,))
+            cur.execute("INSERT INTO directory_current(singleton,snapshot_id) VALUES(TRUE,%s) ON CONFLICT(singleton) DO UPDATE SET snapshot_id=excluded.snapshot_id", (snapshot.snapshot_id,))
+    def current_snapshot(self):
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute("""SELECT s.snapshot_id,s.schema_version,s.methodology_version,s.source_watermark,s.generated_at,s.item_count,s.sha256,
+              COALESCE(jsonb_agg(d.payload ORDER BY d.strategy_id) FILTER (WHERE d.strategy_id IS NOT NULL),'[]')
+              FROM directory_current c JOIN directory_snapshot s ON s.snapshot_id=c.snapshot_id
+              LEFT JOIN directory_strategy d ON d.snapshot_id=s.snapshot_id GROUP BY s.snapshot_id""")
+            row = cur.fetchone()
+        if not row: return None
+        return Snapshot(snapshot_id=row[0],schema_version=row[1],methodology_version=row[2],source_watermark=row[3],generated_at=row[4],item_count=row[5],sha256=row[6],items=row[7])
+    def current_items(self):
+        snap = self.current_snapshot(); return [] if snap is None else snap.items
+    def current_profiles(self):
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("""SELECT p.payload FROM directory_current c JOIN directory_intelligence_profile p ON p.snapshot_id=c.snapshot_id ORDER BY p.strategy_id""");return [row[0] for row in cur.fetchall()]
+    def current_equity_curve(self,strategy_id,date_from=None,date_to_exclusive=None):
+        clauses=["p.strategy_id=%s"];params=[strategy_id]
+        if date_from is not None:clauses.append("p.observed_at>=%s");params.append(date_from)
+        if date_to_exclusive is not None:clauses.append("p.observed_at<%s");params.append(date_to_exclusive)
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("SELECT p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.observed_at,p.trade_id",params);rows=[row[0] for row in cur.fetchall()]
+        return rebase_equity_rows([{"trade_number":row["trade_number"],"opened_at":row.get("opened_at"),"closed_at":row["observed_at"],"net_return":row["net_return"],"equity":row["cumulative_net_return"],"drawdown":row["drawdown"]} for row in rows])
+    def current_equity_curves(self):
+        grouped={}
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("SELECT p.strategy_id,p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id ORDER BY p.strategy_id,p.observed_at,p.trade_id")
+            for strategy_id,payload in cur.fetchall():grouped.setdefault(strategy_id,[]).append({"trade_number":payload["trade_number"],"opened_at":payload.get("opened_at"),"closed_at":payload["observed_at"],"net_return":payload["net_return"],"equity":payload["cumulative_net_return"],"drawdown":payload["drawdown"]})
+        return grouped
+    def current_daily_returns(self,strategy_ids,max_days=2000):
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("""WITH daily AS (
+              SELECT p.strategy_id,date_trunc('day',p.observed_at) observed_day,SUM((p.payload->>'net_return')::numeric) net_return
+              FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id
+              WHERE p.strategy_id=ANY(%s) GROUP BY p.strategy_id,date_trunc('day',p.observed_at)
+            ), ranked AS (SELECT *,row_number() OVER(PARTITION BY strategy_id ORDER BY observed_day DESC) ordinal FROM daily)
+            SELECT strategy_id,observed_day,net_return FROM ranked WHERE ordinal<=%s ORDER BY strategy_id,observed_day""",(strategy_ids,max_days));rows=cur.fetchall()
+        output={strategy_id:[] for strategy_id in strategy_ids}
+        for strategy_id,day,value in rows:output[strategy_id].append({"timestamp":day.date().isoformat(),"return":float(value)})
+        return output
+    def rollback(self, snapshot_id: str):
+        with self._connect() as conn, conn.cursor() as cur:
+            cur.execute("SELECT 1 FROM directory_snapshot WHERE snapshot_id=%s", (snapshot_id,))
+            if not cur.fetchone(): raise KeyError(snapshot_id)
+            cur.execute("UPDATE directory_snapshot SET status='retained' WHERE status='current'")
+            cur.execute("UPDATE directory_snapshot SET status='current',promoted_at=now() WHERE snapshot_id=%s", (snapshot_id,))
+            cur.execute("UPDATE directory_current SET snapshot_id=%s WHERE singleton=TRUE", (snapshot_id,))

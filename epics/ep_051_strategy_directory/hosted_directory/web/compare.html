@@ -1,0 +1,97 @@
+<!doctype html>
+<!-- Version history: 2.2.0 (2026-08-27) shared Tech Principle visual system; 2.1.0 (2026-08-27) labels each relationship as Positive/Inverse/Independent/Insufficient evidence instead of a bare signed number, and shows correlation confidence; 2.0.0 (2026-08-24) canonical intelligence scores, correlations, similarity and comparability warnings; 1.0.0 connected comparison view. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <link rel="icon" href="data:," />
+    <title>Compare DNA strategies</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.0.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+  </head>
+  <body class="tp-page tp-compare">
+    <main class="shell">
+      <nav class="top">
+        <a href="/">← Directory</a><span>Comparison lab</span>
+      </nav>
+      <h1 class="page-title">Compare evidence.</h1>
+      <div class="panel">
+        <input
+          id="ids"
+          style="width: 100%"
+          placeholder="DNA_102001, DNA_102002"
+        /><button id="go" style="margin-top: 9px">Compare</button>
+      </div>
+      <div class="panel" id="content">Choose strategy IDs.</div>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js"></script>
+    <script>
+      ids.value = new URLSearchParams(location.search).get("ids") || "";
+      async function run() {
+        const wanted = ids.value
+          .split(",")
+          .map((x) => x.trim())
+          .filter(Boolean);
+        if (wanted.length < 2 || wanted.length > 5) {
+          content.textContent = "Enter 2 to 5 canonical DNA strategy IDs.";
+          return;
+        }
+        content.textContent =
+          "Aligning evidence, scores and return relationships…";
+        try {
+          const result = await DnaDirectoryApi.intelligenceCompare(wanted),
+            profiles = wanted.map((id) => result.profiles[id]);
+          const esc = (value) =>
+            String(value ?? "").replace(
+              /[&<>"']/g,
+              (char) =>
+                ({
+                  "&": "&amp;",
+                  "<": "&lt;",
+                  ">": "&gt;",
+                  '"': "&quot;",
+                  "'": "&#39;",
+                })[char],
+            );
+          const metric = (profile, name) => profile.metrics[name].value;
+          const number = (value, digits = 2) => value == null || !Number.isFinite(Number(value)) ? "—" : new Intl.NumberFormat("en-GB", { maximumFractionDigits: digits }).format(Number(value));
+          const rows = [
+            ["Quality score", (p) => number(p.score.quality_score)],
+            ["Evidence state", (p) => p.evidence.quality_state],
+            ["Closed trades", (p) => p.evidence.trade_count],
+            ["Annualized net return", (p) => number(metric(p, "annualized_return"))],
+            ["Win rate", (p) => `${(metric(p, "win_rate") * 100).toFixed(2)}%`],
+            ["Profit factor", (p) => number(metric(p, "profit_factor"))],
+            ["Sharpe", (p) => number(metric(p, "sharpe"))],
+            ["Maximum drawdown", (p) => number(metric(p, "max_drawdown"))],
+            ["Evidence start", (p) => p.evidence.start?.slice(0, 10) || "—"],
+            ["Evidence end", (p) => p.evidence.end?.slice(0, 10) || "—"],
+          ];
+          const warnings = result.warnings
+            .map((item) => `<div class="compare-warning">${esc(item)}</div>`)
+            .join("");
+          const table = `<div class="compare-scroll"><table class="table compare-table"><tr><th>Measure</th>${profiles.map((p) => `<th><a href="/strategy.html?id=${encodeURIComponent(p.identity.strategy_id)}">${esc(p.identity.strategy_id)}</a><small>${esc(p.classification.instruments.join(", "))}</small></th>`).join("")}</tr>${rows.map(([label, get]) => `<tr><th>${label}</th>${profiles.map((p) => `<td>${esc(get(p))}</td>`).join("")}</tr>`).join("")}</table></div>`;
+          const relationshipLabel = (value) => {
+            if (value == null) return { text: "Insufficient evidence", cls: "rel-unknown" };
+            if (value <= -0.2) return { text: "Inverse", cls: "rel-inverse" };
+            if (value >= 0.2) return { text: "Positive", cls: "rel-positive" };
+            return { text: "Independent", cls: "rel-independent" };
+          };
+          const relationships = `<h2>Return relationships</h2><div class="relationship-grid">${result.relationships.map((item) => {
+            const label = relationshipLabel(item.correlation.value);
+            return `<article><span class="id">${esc(item.left)} × ${esc(item.right)}</span><span class="rel-badge ${label.cls}">${label.text}</span><b>${item.correlation.value == null ? "—" : Number(item.correlation.value).toFixed(3)}</b><em>correlation · ${item.correlation.overlap} aligned observations · ${esc(item.correlation.confidence)} confidence</em><strong>${Number(item.similarity.similarity).toFixed(1)}</strong><em>behavioural similarity</em></article>`;
+          }).join("")}</div>`;
+          content.innerHTML = warnings + table + relationships;
+        } catch (error) {
+          content.textContent = error.message;
+        }
+      }
+      go.onclick = run;
+      if (ids.value) run();
+    </script>
+  </body>
+</html>

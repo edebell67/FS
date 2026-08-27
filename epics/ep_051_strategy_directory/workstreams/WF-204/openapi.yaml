@@ -1,0 +1,21 @@
+# workstreams/WF-204/openapi.yaml — Public strategy read API contract.
+# VERSION HISTORY
+# v1.1.0 · 2026-08-23 · Require owner-scoped authorization for open state.
+# v1.0.0 · 2026-08-23 · Initial version: defines versioned list/detail/period/regime/relationship/open routes and evidence envelope.
+openapi: 3.1.0
+info: {title: DNA Strategy Directory API, version: 1.0.0}
+paths:
+  /api/v1/strategies:
+    get: {operationId: listStrategies, parameters: [{name: cursor, in: query, schema: {type: string}}, {name: limit, in: query, schema: {type: integer, minimum: 1, maximum: 100}}, {name: sort, in: query, schema: {type: string}}], responses: {'200': {description: Evidence-aware strategy page}}}
+  /api/v1/strategies/{strategy_id}:
+    get: {operationId: getStrategy, parameters: [{name: strategy_id, in: path, required: true, schema: {type: string, pattern: '^DNA_[0-9]+$'}}], responses: {'200': {description: Strategy detail}, '404': {description: Not found}}}
+  /api/v1/strategies/{strategy_id}/periods:
+    get: {operationId: getStrategyPeriods, responses: {'200': {description: Period evidence}}}
+  /api/v1/strategies/{strategy_id}/regimes:
+    get: {operationId: getStrategyRegimes, responses: {'200': {description: Regime evidence}}}
+  /api/v1/strategies/{strategy_id}/relationships:
+    get: {operationId: getStrategyRelationships, responses: {'200': {description: Relationship evidence}}}
+  /api/v1/strategies/{strategy_id}/open-trades:
+    get: {operationId: getOpenTrades, description: Returns allowlisted current state scoped to the authenticated principal's account; operator/admin scopes are separately authorized., security: [{authenticatedUser: []}], responses: {'200': {description: Owner-scoped timestamped open state}, '403': {description: Forbidden or account scope missing}}}
+components:
+  securitySchemes: {authenticatedUser: {type: http, scheme: bearer}}

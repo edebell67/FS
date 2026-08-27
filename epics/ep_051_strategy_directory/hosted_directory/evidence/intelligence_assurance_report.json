@@ -1,0 +1,173 @@
+{
+  "generated_at": "2026-08-24T15:17:06.596004+00:00",
+  "schema_version": "1.0.0",
+  "evidence": {
+    "metrics": {
+      "passed": true,
+      "checks": [
+        {
+          "metric": "total_return",
+          "actual": 25.0,
+          "expected": 25,
+          "tolerance": 1e-12,
+          "passed": true
+        },
+        {
+          "metric": "win_rate",
+          "actual": 0.6666666666666666,
+          "expected": 0.6666666666666666,
+          "tolerance": 1e-12,
+          "passed": true
+        },
+        {
+          "metric": "profit_factor",
+          "actual": 6.0,
+          "expected": 6,
+          "tolerance": 1e-12,
+          "passed": true
+        }
+      ]
+    },
+    "discovery": {
+      "exact_match": 1.0,
+      "passed": true,
+      "cases": [
+        {
+          "id": "fx-win",
+          "exact": true,
+          "actual": {
+            "asset_class": "FX",
+            "min_win_rate": 0.55,
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "FX",
+            "min_win_rate": 0.55,
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        },
+        {
+          "id": "equity-risk",
+          "exact": true,
+          "actual": {
+            "asset_class": "equity",
+            "max_drawdown": 0.1,
+            "max_drawdown_unit": "fraction",
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "equity",
+            "max_drawdown": 0.1,
+            "max_drawdown_unit": "fraction",
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        },
+        {
+          "id": "sharpe",
+          "exact": true,
+          "actual": {
+            "asset_class": "FX",
+            "min_sharpe": 1.5,
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "FX",
+            "min_sharpe": 1.5,
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        },
+        {
+          "id": "track-record",
+          "exact": true,
+          "actual": {
+            "asset_class": "equity",
+            "min_track_record_years": 5.0,
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "equity",
+            "min_track_record_years": 5.0,
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        },
+        {
+          "id": "regime",
+          "exact": true,
+          "actual": {
+            "asset_class": "FX",
+            "regime": "high volatility",
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "FX",
+            "regime": "high volatility",
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        },
+        {
+          "id": "return",
+          "exact": true,
+          "actual": {
+            "asset_class": "crypto",
+            "min_annualized_return": 0.2,
+            "annualized_return_unit": "fraction/year",
+            "sort": "quality_score",
+            "direction": "desc"
+          },
+          "expected": {
+            "asset_class": "crypto",
+            "min_annualized_return": 0.2,
+            "annualized_return_unit": "fraction/year",
+            "sort": "quality_score",
+            "direction": "desc"
+          }
+        }
+      ],
+      "variance_and_protected_slices_passed": true
+    },
+    "regime": {
+      "passed": true,
+      "lift": 34.38478847885003,
+      "candidate": -172.0059602267796,
+      "baseline": -206.39074870562962,
+      "periods": 2,
+      "calibration_error": 0.02437541302275398,
+      "basis": "chronological walk-forward and confidence holdouts"
+    },
+    "security": {
+      "passed": true,
+      "scan_id": "cae01926-68c2-4708-8a02-41a27556228f",
+      "finding_count": 0
+    },
+    "operations": {
+      "passed": true,
+      "p95_ms": 308.428,
+      "requests": 400
+    },
+    "restore": {
+      "passed": true,
+      "basis": "shadow/canary/promotion/rollback drill"
+    },
+    "acceptance": {
+      "passed": true,
+      "pages": 7,
+      "console_errors": 0
+    }
+  },
+  "release_decision": {
+    "promote": true,
+    "missing": [],
+    "failed": [],
+    "evaluated_at_monotonic": 431480.6083558
+  }
+}

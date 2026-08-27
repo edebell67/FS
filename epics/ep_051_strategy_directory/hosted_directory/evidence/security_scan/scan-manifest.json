@@ -1,0 +1,95 @@
+{
+  "documentType": "codex-security.scan-manifest",
+  "scan": {
+    "artifacts": [
+      {
+        "mediaType": "application/json",
+        "path": "findings.json",
+        "sha256": "cfedf3c6862fcf900e445a1877cb0b9f40ce56ee70bc8b5ec615d59107aef936"
+      },
+      {
+        "mediaType": "application/json",
+        "path": "coverage.json",
+        "sha256": "14e475c4af3e79ecee63b03d5fbfc4c03935856bf6fc7d5a285c92e8252a1373"
+      }
+    ],
+    "completedAt": "2026-08-24T15:16:56.780230Z",
+    "coverageRef": "coverage.json",
+    "findingsRef": "findings.json",
+    "id": "cae01926-68c2-4708-8a02-41a27556228f",
+    "producer": {
+      "name": "codex-security-plugin",
+      "version": "0.1.21"
+    },
+    "scope": {
+      "artifactsReviewed": [
+        "app/",
+        "web/",
+        "migrations/",
+        "sync/",
+        "assurance/",
+        "tests/",
+        "contracts/",
+        "security/",
+        "Dockerfile",
+        "README.md",
+        ".env.example"
+      ],
+      "excludePaths": [],
+      "includePaths": [
+        "."
+      ],
+      "limitations": [
+        "Hosted PostgreSQL was not reachable; database controls were statically reviewed and exercised through repository, migration-contract, isolation and parity tests."
+      ],
+      "runtimeStatus": "81 tests, seven-page desktop/mobile browser acceptance, 400-request load test, parity and release rollback drills passed.",
+      "summary": "Final complete Standard review of current EP051 intelligence-layer code, migrations, browser surfaces, security boundaries and assurance automation.",
+      "validationMode": "standard static review, independent remediation reviews and runtime acceptance"
+    },
+    "sealedAt": "2026-08-24T15:16:56.780230Z",
+    "startedAt": "2026-08-24T15:16:05.709753Z",
+    "status": "completed",
+    "target": {
+      "displayName": "hosted_directory",
+      "kind": "git_worktree",
+      "revision": "59dcffb3bf421e6905d1b5b5289d3251189bb853",
+      "snapshotDigest": "codex-security-snapshot/v1:sha256:004d2950d963160cc4e66f8d15ade9c4a651ec70978e62678143e8d28587b08c",
+      "targetId": "target_sha256_ce45bafb846361711c6cbbce3203c57be7fbb7d12fd67deb6be46e9e8ce36011"
+    },
+    "threatModel": {
+      "assets": [
+        "canonical strategy evidence",
+        "market provenance",
+        "private tenant objects",
+        "credentials",
+        "release state"
+      ],
+      "attackerCapabilities": [
+        "public caller",
+        "malicious browser input",
+        "faulty publisher",
+        "cross-tenant user",
+        "misconfigured role"
+      ],
+      "securityObjectives": [
+        "immutability",
+        "tenant isolation",
+        "no lookahead",
+        "bounded resources",
+        "safe rendering",
+        "least privilege",
+        "fail-closed release"
+      ],
+      "summary": "Canonical public evidence and private user intelligence cross public, publisher, identity-edge, database, maintenance and cache boundaries.",
+      "trustBoundaries": [
+        "browser/API",
+        "publisher/ingestion",
+        "identity edge/private API",
+        "runtime/PostgreSQL",
+        "maintenance caller/retention function",
+        "cache/runtime"
+      ]
+    }
+  },
+  "schemaVersion": "1.0"
+}
