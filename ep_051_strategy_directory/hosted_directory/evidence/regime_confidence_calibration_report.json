@@ -1,0 +1,29 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:16.341240+00:00",
+  "calibration_version": "ecb-next-day-direction-2026-08-v1",
+  "target": "next-observation direction persistence",
+  "method": "0.10-wide model-margin bins with Laplace smoothing, fitted on first 80% and evaluated on final 20% chronologically",
+  "passed": true,
+  "checks": {
+    "chronological_split": true,
+    "deployed_mapping_matches_calibration_partition": true,
+    "holdout_observations_at_least_50": true,
+    "holdout_mean_absolute_calibration_error_below_0_10": true
+  },
+  "calibration_observations": 331,
+  "holdout_observations": 83,
+  "holdout_accuracy": 1.0,
+  "holdout_mean_absolute_calibration_error": 0.02437541302275398,
+  "fitted_mapping": {
+    "0": 0.9916666666666667,
+    "1": 0.9647887323943662,
+    "2": 0.8536585365853658,
+    "3": 0.8888888888888888,
+    "4": 0.5
+  },
+  "limitations": [
+    "Confidence measures next-observation direction persistence, not forecast return or profitability.",
+    "Daily ECB reference observations are informational and not executable prices."
+  ]
+}

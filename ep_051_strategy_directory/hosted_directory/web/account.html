@@ -1,0 +1,182 @@
+<!doctype html>
+<!-- Version history: 1.1.0 (2026-08-27) shared Tech Principle visual system; 1.0.0 (2026-08-24) private intelligence controls and portability. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <link rel="icon" href="data:," />
+    <title>Your DNA intelligence</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.0.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+  </head>
+  <body class="tp-page tp-account">
+    <main class="shell">
+      <nav class="top">
+        <a href="/">← Directory</a
+        ><span>Private by owner · portable by design</span>
+      </nav>
+      <section class="account-hero">
+        <span class="id">YOUR INTELLIGENCE</span>
+        <h1>Useful memory.<br />Under your control.</h1>
+        <p>
+          Watch strategies, replay canonical searches, organise evidence, and
+          decide whether interaction history may be retained.
+        </p>
+      </section>
+      <div id="authState" class="status">
+        Private data is loaded only after the hosting identity edge confirms your session.
+        <button id="loadAccount">Load my private intelligence</button>
+      </div>
+      <section class="account-grid" id="account" hidden>
+        <article class="panel">
+          <div class="stage-head">
+            <div>
+              <span class="id">WATCHLIST</span>
+              <h2>Evidence to revisit</h2>
+            </div>
+            <b id="watchCount">0</b>
+          </div>
+          <div id="watchlist"></div>
+        </article>
+        <article class="panel">
+          <span class="id">PRIVACY</span>
+          <h2>Consent and portability</h2>
+          <label class="consent-row"
+            ><input id="historyConsent" type="checkbox" /> Retain interaction
+            history for preference signals</label
+          >
+          <div class="actions">
+            <button id="downloadData">Download my data</button
+            ><button id="deleteData" class="quiet">Delete my data</button>
+          </div>
+        </article>
+        <article class="panel">
+          <span class="id">SAVED SEARCHES</span>
+          <h2>Canonical plans</h2>
+          <div id="searches"></div>
+        </article>
+        <article class="panel">
+          <span class="id">COLLECTIONS</span>
+          <h2>Named evidence sets</h2>
+          <div id="collections"></div>
+        </article>
+        <article class="panel account-wide">
+          <span class="id">EXPLICIT PREFERENCES</span>
+          <h2>What downstream ranking may use</h2>
+          <div class="preference-row">
+            <label
+              >Preferred market<input id="prefMarket" maxlength="40" /></label
+            ><label
+              >Risk posture<select id="prefRisk">
+                <option value="">Not set</option>
+                <option>conservative</option>
+                <option>balanced</option>
+                <option>adventurous</option>
+              </select></label
+            ><button id="savePreferences">Save explicit preferences</button>
+          </div>
+          <p id="preferenceTrace" class="status">
+            Inferred signals remain separate and resettable.
+          </p>
+        </article>
+      </section>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.5.0"></script>
+    <script>
+      const q = document.querySelector.bind(document),
+        esc = (value) =>
+          String(value ?? "").replace(
+            /[&<>"']/g,
+            (character) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[character],
+          );
+      let state;
+      function renderList(host, items, empty, renderer) {
+        q(host).innerHTML = items.length
+          ? items.map(renderer).join("")
+          : `<p class="notice">${esc(empty)}</p>`;
+      }
+      async function load() {
+        try {
+          state = await DnaDirectoryApi.userExport();
+          q("#authState").textContent = "Owner-scoped intelligence loaded.";
+          q("#account").hidden = false;
+          q("#watchCount").textContent = state.watchlist.length;
+          renderList(
+            "#watchlist",
+            state.watchlist,
+            "No watched strategies yet.",
+            (id) =>
+              `<a class="account-row" href="/strategy.html?id=${encodeURIComponent(id)}"><b>${esc(id)}</b><span>Inspect current evidence →</span></a>`,
+          );
+          renderList(
+            "#searches",
+            Object.values(state.searches),
+            "No saved canonical searches.",
+            (item) =>
+              `<div class="account-row"><b>${esc(item.name)}</b><span>${esc(
+                Object.keys(item.plan)
+                  .filter((key) => item.plan[key] != null)
+                  .join(" · "),
+              )}</span></div>`,
+          );
+          renderList(
+            "#collections",
+            Object.values(state.collections),
+            "No named collections.",
+            (item) =>
+              `<div class="account-row"><b>${esc(item.name)}</b><span>${esc(item.strategy_ids.join(", "))}</span></div>`,
+          );
+          q("#historyConsent").checked = Boolean(state.consent.history);
+          q("#prefMarket").value = state.preferences.market || "";
+          q("#prefRisk").value = state.preferences.risk || "";
+        } catch (error) {
+          q("#authState").textContent =
+            `Sign in through the hosted identity edge to use private intelligence. ${error.message}`;
+          q("#authState").className = "status error";
+        }
+      }
+      q("#historyConsent").onchange = async () => {
+        await DnaDirectoryApi.setConsent(q("#historyConsent").checked);
+        await load();
+      };
+      q("#downloadData").onclick = () => {
+        const blob = new Blob([JSON.stringify(state, null, 2)], {
+            type: "application/json",
+          }),
+          link = document.createElement("a");
+        link.href = URL.createObjectURL(blob);
+        link.download = "dna-intelligence-export.json";
+        link.click();
+        URL.revokeObjectURL(link.href);
+      };
+      q("#deleteData").onclick = async () => {
+        if (
+          !confirm("Delete every private intelligence object for this account?")
+        )
+          return;
+        await DnaDirectoryApi.deleteUser();
+        await load();
+      };
+      q("#savePreferences").onclick = async () => {
+        const trace = await DnaDirectoryApi.setPreferences({
+          market: q("#prefMarket").value.trim(),
+          risk: q("#prefRisk").value,
+        });
+        q("#preferenceTrace").textContent =
+          `Saved. Derivation ${trace.derivation_version}; every explicit input remains editable.`;
+      };
+      q("#loadAccount").onclick = load;
+    </script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "definition_version": "1.0.0",
+  "instrument": "EURUSD",
+  "fixtures": [
+    {"sma20": 1.11, "sma50": 1.10, "natr": 0.012, "p20": 0.006, "p80": 0.010, "expected": ["TREND_UP", "HIGH_VOLATILITY"]},
+    {"sma20": 1.09, "sma50": 1.10, "natr": 0.004, "p20": 0.006, "p80": 0.010, "expected": ["TREND_DOWN", "LOW_VOLATILITY"]},
+    {"sma20": null, "sma50": null, "natr": null, "p20": null, "p80": null, "expected": ["UNKNOWN", "UNKNOWN"]}
+  ]
+}

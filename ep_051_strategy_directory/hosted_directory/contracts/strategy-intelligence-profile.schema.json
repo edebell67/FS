@@ -1,0 +1,356 @@
+{
+  "$defs": {
+    "EvidenceProfile": {
+      "properties": {
+        "trade_count": {
+          "title": "Trade Count",
+          "type": "integer"
+        },
+        "start": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Start"
+        },
+        "end": {
+          "anyOf": [
+            {
+              "format": "date-time",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "End"
+        },
+        "years": {
+          "default": 0,
+          "title": "Years",
+          "type": "number"
+        },
+        "quality_state": {
+          "enum": [
+            "VALID",
+            "COLLECTING",
+            "UNAVAILABLE"
+          ],
+          "title": "Quality State",
+          "type": "string"
+        },
+        "confidence": {
+          "maximum": 1,
+          "minimum": 0,
+          "title": "Confidence",
+          "type": "number"
+        },
+        "freshness": {
+          "default": "UNKNOWN",
+          "enum": [
+            "CURRENT",
+            "STALE",
+            "UNKNOWN"
+          ],
+          "title": "Freshness",
+          "type": "string"
+        }
+      },
+      "required": [
+        "trade_count",
+        "quality_state",
+        "confidence"
+      ],
+      "title": "EvidenceProfile",
+      "type": "object"
+    },
+    "IntelligenceMetrics": {
+      "properties": {
+        "total_return": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "annualized_return": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "cagr": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "value_at_risk_95": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "volatility": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "max_drawdown": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "downside_deviation": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "sharpe": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "sortino": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "calmar": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "win_rate": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "profit_factor": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "expectancy": {
+          "$ref": "#/$defs/MetricValue"
+        },
+        "trades_per_year": {
+          "$ref": "#/$defs/MetricValue"
+        }
+      },
+      "required": [
+        "total_return",
+        "annualized_return",
+        "cagr",
+        "value_at_risk_95",
+        "volatility",
+        "max_drawdown",
+        "downside_deviation",
+        "sharpe",
+        "sortino",
+        "calmar",
+        "win_rate",
+        "profit_factor",
+        "expectancy",
+        "trades_per_year"
+      ],
+      "title": "IntelligenceMetrics",
+      "type": "object"
+    },
+    "MetricValue": {
+      "properties": {
+        "value": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Value"
+        },
+        "unit": {
+          "title": "Unit",
+          "type": "string"
+        },
+        "methodology_version": {
+          "default": "1.0.0",
+          "title": "Methodology Version",
+          "type": "string"
+        },
+        "evidence_state": {
+          "default": "VALID",
+          "enum": [
+            "VALID",
+            "COLLECTING",
+            "UNAVAILABLE"
+          ],
+          "title": "Evidence State",
+          "type": "string"
+        },
+        "source": {
+          "default": "combined_trades_closed.net_return",
+          "title": "Source",
+          "type": "string"
+        }
+      },
+      "required": [
+        "value",
+        "unit"
+      ],
+      "title": "MetricValue",
+      "type": "object"
+    },
+    "StrategyClassification": {
+      "properties": {
+        "asset_class": {
+          "default": "FX",
+          "title": "Asset Class",
+          "type": "string"
+        },
+        "instruments": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Instruments",
+          "type": "array"
+        },
+        "strategy_family": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Strategy Family"
+        },
+        "timeframe": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Timeframe"
+        },
+        "direction": {
+          "default": "both",
+          "enum": [
+            "long",
+            "short",
+            "both",
+            "unknown"
+          ],
+          "title": "Direction",
+          "type": "string"
+        },
+        "parameters": {
+          "additionalProperties": true,
+          "title": "Parameters",
+          "type": "object"
+        }
+      },
+      "title": "StrategyClassification",
+      "type": "object"
+    },
+    "StrategyIdentity": {
+      "properties": {
+        "strategy_id": {
+          "pattern": "^DNA_[A-Za-z0-9]+$",
+          "title": "Strategy Id",
+          "type": "string"
+        },
+        "name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Name"
+        },
+        "author": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Author"
+        },
+        "source": {
+          "default": "DNA",
+          "title": "Source",
+          "type": "string"
+        },
+        "version": {
+          "default": "1",
+          "title": "Version",
+          "type": "string"
+        },
+        "description": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Description"
+        }
+      },
+      "required": [
+        "strategy_id"
+      ],
+      "title": "StrategyIdentity",
+      "type": "object"
+    }
+  },
+  "properties": {
+    "schema_version": {
+      "default": "1.0.0",
+      "title": "Schema Version",
+      "type": "string"
+    },
+    "generated_at": {
+      "format": "date-time",
+      "title": "Generated At",
+      "type": "string"
+    },
+    "identity": {
+      "$ref": "#/$defs/StrategyIdentity"
+    },
+    "classification": {
+      "$ref": "#/$defs/StrategyClassification"
+    },
+    "metrics": {
+      "$ref": "#/$defs/IntelligenceMetrics"
+    },
+    "evidence": {
+      "$ref": "#/$defs/EvidenceProfile"
+    },
+    "robustness": {
+      "additionalProperties": true,
+      "title": "Robustness",
+      "type": "object"
+    },
+    "links": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Links",
+      "type": "object"
+    },
+    "methodology": {
+      "additionalProperties": {
+        "type": "string"
+      },
+      "title": "Methodology",
+      "type": "object"
+    }
+  },
+  "required": [
+    "generated_at",
+    "identity",
+    "classification",
+    "metrics",
+    "evidence",
+    "links",
+    "methodology"
+  ],
+  "title": "StrategyIntelligenceProfile",
+  "type": "object"
+}

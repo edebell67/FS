@@ -1,0 +1,12 @@
+{
+  "schema_version": "1.0.0",
+  "release_id": "EP051-YYYYMMDD-NNN",
+  "source_revision": "REQUIRED_IMMUTABLE_REVISION",
+  "environment": "beta",
+  "snapshot_id": "REQUIRED_SNAPSHOT_ID",
+  "database_migration_plan_sha256": "REQUIRED_SHA256",
+  "ci_evidence_sha256": "REQUIRED_SHA256",
+  "broker_profile": "disabled",
+  "approved_by": [],
+  "public_promotion": false
+}

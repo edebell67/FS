@@ -1,0 +1,77 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:15.309868+00:00",
+  "passed": true,
+  "checks": {
+    "load_slo": true,
+    "current_market_feed": true,
+    "healthy_state": true,
+    "alert_drill": true
+  },
+  "load": {
+    "generated_at": "2026-08-24T15:12:15.026792+00:00",
+    "base_url": "http://127.0.0.1:8012",
+    "requests": 400,
+    "concurrency": 20,
+    "p50_ms": 232.989,
+    "p95_ms": 308.428,
+    "max_ms": 378.352,
+    "server_failures": 0,
+    "slo": {
+      "p95_ms": 500,
+      "server_failures": 0
+    },
+    "passed": true
+  },
+  "healthy_monitor": {
+    "p95_latency_ms": 308.428,
+    "latency_ok": true,
+    "requests": 1,
+    "failures": 0,
+    "failure_rate": 0.0,
+    "freshness": {
+      "ecb_market_features": {
+        "age_seconds": 4335.309868,
+        "max_age_seconds": 129600,
+        "ok": true
+      }
+    },
+    "drift": {
+      "regime_lift": {
+        "delta": 0.0,
+        "threshold": 10,
+        "ok": true
+      }
+    },
+    "alerts": [],
+    "healthy": true
+  },
+  "alert_drill": {
+    "p95_latency_ms": 750.0,
+    "latency_ok": false,
+    "requests": 1,
+    "failures": 1,
+    "failure_rate": 1.0,
+    "freshness": {
+      "fixture": {
+        "age_seconds": 999,
+        "max_age_seconds": 60,
+        "ok": false
+      }
+    },
+    "drift": {
+      "fixture": {
+        "delta": 2.0,
+        "threshold": 1,
+        "ok": false
+      }
+    },
+    "alerts": [
+      "LATENCY_SLO_BREACH",
+      "ERROR_RATE_SLO_BREACH",
+      "STALE:fixture",
+      "DRIFT:fixture"
+    ],
+    "healthy": false
+  }
+}

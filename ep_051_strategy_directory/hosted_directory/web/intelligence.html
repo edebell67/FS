@@ -1,0 +1,271 @@
+<!doctype html>
+<!--
+ intelligence.html — Natural-language intelligence finder with editable canonical constraints.
+
+ VERSION HISTORY
+ v1.2.0 · 2026-08-27 · Applies the shared Tech Principle intelligence visual system.
+ v1.1.0 · 2026-08-27 · Replaces free-entry constraint inputs with premium, bounded selectors while preserving interpreted values and numeric API types.
+ v1.0.0 · 2026-08-24 · Initial canonical-plan intelligence finder.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <link rel="icon" href="data:," />
+    <title>DNA Intelligence Finder</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.3" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.0.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+  </head>
+  <body class="tp-page tp-intelligence">
+    <main class="shell intelligence-shell">
+      <nav class="top">
+        <a href="/">← Directory</a
+        ><span>Constraint before rank · evidence before allocation</span>
+      </nav>
+      <section class="finder-hero">
+        <div>
+          <span class="id">DNA / INTELLIGENCE FINDER</span>
+          <h1>Ask the<br />evidence.</h1>
+          <p>
+            Describe the strategy evidence you need. The finder translates your
+            request into visible, editable constraints before it ranks a single
+            result.
+          </p>
+        </div>
+        <div class="finder-index">
+          <b>01</b><span>Interpret</span><b>02</b><span>Verify</span><b>03</b
+          ><span>Investigate</span>
+        </div>
+      </section>
+      <section class="query-deck" aria-labelledby="finder-title">
+        <label id="finder-title" for="naturalQuery"
+          >What should the evidence prove?</label
+        >
+        <div class="query-row">
+          <textarea
+            id="naturalQuery"
+            rows="3"
+            placeholder="FX strategies with win rate above 55%, Sharpe above 1 and at least 1 year of evidence"
+          ></textarea
+          ><button id="interpretButton">Interpret request →</button>
+        </div>
+        <p class="status" id="queryStatus">
+          No hidden filters. You approve the plan before retrieval.
+        </p>
+      </section>
+      <section class="constraint-stage" id="constraintStage" hidden>
+        <div class="stage-head">
+          <div>
+            <span class="id">INTERPRETED QUERY PLAN</span>
+            <h2>Check the constraints.</h2>
+          </div>
+          <button id="runButton">Find qualifying strategies</button>
+        </div>
+        <div class="constraint-grid" id="constraintGrid"></div>
+        <div class="rank-controls">
+          <label
+            >Rank by<select id="rankBy">
+              <option value="quality_score">Quality score</option>
+              <option value="annualized_return">Annualized net return</option>
+              <option value="win_rate">Win rate</option>
+              <option value="sharpe">Sharpe</option>
+              <option value="max_drawdown">Drawdown</option>
+            </select></label
+          ><label
+            >Direction<select id="rankDirection">
+              <option value="desc">Highest first</option>
+              <option value="asc">Lowest first</option>
+            </select></label
+          >
+        </div>
+      </section>
+      <section class="finder-results">
+        <div class="result-head">
+          <div>
+            <span class="id">QUALIFYING EVIDENCE</span>
+            <h2 id="resultTitle">Results wait for your approval.</h2>
+          </div>
+          <span class="result-count" id="resultCount">—</span>
+        </div>
+        <div id="results" class="intelligence-grid">
+          <div class="notice">
+            Interpret a request to begin. Ranking is never allowed to override a
+            hard constraint.
+          </div>
+        </div>
+      </section>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.4.0"></script>
+    <script>
+      const q = document.querySelector.bind(document);
+      let activePlan = null;
+      const fields = [
+        ["asset_class", "Asset class", "text"],
+        ["instrument", "Instrument", "text"],
+        ["strategy_family", "Family", "text"],
+        ["timeframe", "Timeframe", "text"],
+        ["trade_direction", "Trade direction", "text"],
+        ["min_win_rate", "Minimum win rate (fraction)", "number"],
+        ["min_annualized_return", "Minimum annualized return", "number"],
+        ["annualized_return_unit", "Annual return unit", "text"],
+        ["max_drawdown", "Maximum drawdown", "number"],
+        ["max_drawdown_unit", "Drawdown unit", "text"],
+        ["min_sharpe", "Minimum Sharpe", "number"],
+        ["min_profit_factor", "Minimum profit factor", "number"],
+        ["min_evidence_confidence", "Minimum evidence confidence", "number"],
+        ["min_quality_score", "Minimum quality score", "number"],
+        ["min_track_record_years", "Minimum years", "number"],
+        ["regime", "Regime", "text"],
+      ];
+      const fieldOptions = {
+        asset_class: [["FX", "Forex"], ["equities", "Equities"], ["indices", "Indices"], ["commodities", "Commodities"], ["futures", "Futures"], ["crypto", "Crypto"]],
+        instrument: [["eur", "EUR"], ["gbp", "GBP"], ["aud", "AUD"], ["nzd", "NZD"], ["usd", "USD"], ["cad", "CAD"], ["chf", "CHF"], ["jpy", "JPY"]],
+        strategy_family: [["breakout", "Breakout"], ["trend", "Trend"], ["momentum", "Momentum"], ["mean_reversion", "Mean reversion"], ["carry", "Carry"], ["relative_value", "Relative value"]],
+        timeframe: [["30m", "30 minutes"], ["1h", "1 hour"], ["4h", "4 hours"], ["daily", "Daily"], ["weekly", "Weekly"]],
+        trade_direction: [["both", "Both"], ["buy", "Buy / long"], ["sell", "Sell / short"]],
+        min_win_rate: [[0.4, "40%"], [0.5, "50%"], [0.55, "55%"], [0.6, "60%"], [0.7, "70%"], [0.8, "80%"]],
+        min_annualized_return: [[0, "0"], [0.05, "0.05"], [0.1, "0.10"], [0.15, "0.15"], [0.25, "0.25"], [100, "100"], [500, "500"], [1000, "1,000"]],
+        annualized_return_unit: [["fraction/year", "Percentage / year"], ["money/year", "Money / year"]],
+        max_drawdown: [[0.02, "2%"], [0.05, "5%"], [0.1, "10%"], [0.15, "15%"], [0.2, "20%"], [0.25, "25%"], [100, "100"], [250, "250"], [500, "500"], [1000, "1,000"]],
+        max_drawdown_unit: [["fraction", "Percentage"], ["money", "Money"]],
+        min_sharpe: [[0, "0"], [0.5, "0.5"], [1, "1.0"], [1.5, "1.5"], [2, "2.0"], [2.5, "2.5"], [3, "3.0"]],
+        min_profit_factor: [[0, "0"], [1, "1.0"], [1.25, "1.25"], [1.5, "1.5"], [2, "2.0"], [2.5, "2.5"], [3, "3.0"]],
+        min_evidence_confidence: [[0, "0%"], [0.5, "50%"], [0.6, "60%"], [0.7, "70%"], [0.8, "80%"], [0.9, "90%"]],
+        min_quality_score: [[0, "0"], [40, "40"], [50, "50"], [60, "60"], [70, "70"], [80, "80"], [90, "90"]],
+        min_track_record_years: [[0, "No minimum"], [0.25, "3 months"], [0.5, "6 months"], [1, "1 year"], [2, "2 years"], [3, "3 years"], [5, "5 years"]],
+        regime: [["bull", "Bull"], ["bear", "Bear"], ["trend", "Trending"], ["sideways", "Sideways"], ["high_volatility", "High volatility"], ["low_volatility", "Low volatility"]],
+      };
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (char) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[char],
+        );
+      function syncUrl(plan) {
+        const state = new URLSearchParams();
+        state.set("q", q("#naturalQuery").value);
+        state.set("plan", JSON.stringify(plan));
+        history.replaceState(null, "", `${location.pathname}?${state}`);
+      }
+      function renderConstraintField(key, label, type, value) {
+        const options = fieldOptions[key] || [];
+        const current = value == null ? "" : String(value);
+        const known = options.some(([optionValue]) => String(optionValue) === current);
+        const retained = current && !known ? `<option value="${esc(current)}" selected>${esc(current)} · interpreted</option>` : "";
+        return `<label>${label}<select data-plan="${key}" data-value-type="${type}"><option value="">Any</option>${retained}${options.map(([optionValue, optionLabel]) => `<option value="${esc(optionValue)}" ${String(optionValue) === current ? "selected" : ""}>${esc(optionLabel)}</option>`).join("")}</select></label>`;
+      }
+      function renderPlan(plan, scroll = true) {
+        activePlan = plan;
+        q("#constraintStage").hidden = false;
+        q("#constraintGrid").innerHTML = fields
+          .map(([key, label, type]) => renderConstraintField(key, label, type, plan[key]))
+          .join("");
+        q("#rankBy").value = plan.sort || "quality_score";
+        q("#rankDirection").value = plan.direction || "desc";
+        syncUrl(plan);
+        if (scroll)
+          q("#constraintStage").scrollIntoView({
+            behavior: "smooth",
+            block: "center",
+          });
+      }
+      q("#interpretButton").onclick = async () => {
+        const text = q("#naturalQuery").value.trim();
+        if (text.length < 3) return;
+        q("#queryStatus").textContent = "Building a bounded query plan…";
+        try {
+          const response = await DnaDirectoryApi.interpret(text);
+          renderPlan(response.plan);
+          const caveats = response.clarifications?.length
+            ? ` ${response.clarifications.join(" ")}`
+            : "";
+          q("#queryStatus").textContent =
+            `Interpretation confidence ${(Number(response.confidence) * 100).toFixed(0)}%. Review every visible constraint.${caveats}`;
+        } catch (error) {
+          q("#queryStatus").textContent = error.message;
+        }
+      };
+      function editedPlan() {
+        const plan = { ...activePlan };
+        document.querySelectorAll("[data-plan]").forEach((input) => {
+          const key = input.dataset.plan,
+            value = input.value.trim();
+          plan[key] =
+            value === ""
+              ? null
+              : input.dataset.valueType === "number"
+                ? Number(value)
+                : value;
+        });
+        plan.sort = q("#rankBy").value;
+        plan.direction = q("#rankDirection").value;
+        return plan;
+      }
+      q("#runButton").onclick = async () => {
+        const plan = editedPlan();
+        activePlan = plan;
+        syncUrl(plan);
+        q("#resultTitle").textContent = "Applying constraints before rank…";
+        q("#results").innerHTML =
+          '<div class="notice">Recalculating canonical profiles from closed-trade evidence.</div>';
+        try {
+          const response = await DnaDirectoryApi.intelligenceSearch(plan);
+          q("#resultCount").textContent = response.total;
+          q("#resultTitle").textContent = response.total
+            ? `Strategies that satisfy every constraint · ${response.excluded_total} excluded.`
+            : "No strategy satisfies every constraint.";
+          q("#results").innerHTML = response.items.length
+            ? response.items
+                .map((item) => {
+                  const profile = item.profile,
+                    metrics = profile.metrics,
+                    score = profile.score;
+                  return `<article class="intel-card"><div class="intel-card-head"><span class="id">${esc(profile.identity.strategy_id)}</span><b>${Number(score.quality_score).toFixed(1)}</b></div><h3>${esc(profile.identity.name || "Descriptive name pending")}</h3><p>${esc(profile.classification.instruments.join(", ") || profile.classification.asset_class)}</p><div class="metric-strip"><span><b>${Number(metrics.annualized_return.value || 0).toLocaleString()}</b>net / year</span><span><b>${(Number(metrics.win_rate.value || 0) * 100).toFixed(1)}%</b>win rate</span><span><b>${metrics.sharpe.value == null ? "—" : Number(metrics.sharpe.value).toFixed(2)}</b>Sharpe</span><span><b>${Number(metrics.max_drawdown.value || 0).toLocaleString()}</b>drawdown</span></div><div class="why"><span>Why it qualified</span>${(item.why_matched.length ? item.why_matched : ["No optional constraint supplied"]).map((reason) => `<em>${esc(reason)}</em>`).join("")}<em>Rank: ${esc(item.rank_trace.objective)} ${esc(item.rank_trace.direction)} · ${esc(item.rank_trace.value ?? "unavailable")}</em></div><div class="actions"><a href="/strategy.html?id=${encodeURIComponent(profile.identity.strategy_id)}"><button>Inspect evidence</button></a><a href="/compare.html?ids=${encodeURIComponent(profile.identity.strategy_id)}"><button class="quiet">Compare</button></a><button class="quiet" data-watch="${esc(profile.identity.strategy_id)}">Watch</button></div></article>`;
+                })
+                .join("")
+            : '<div class="notice">Try relaxing one visible constraint. Nothing has been silently removed.</div>';
+          document.querySelectorAll("[data-watch]").forEach(
+            (button) =>
+              (button.onclick = async () => {
+                try {
+                  await DnaDirectoryApi.watch(button.dataset.watch);
+                  button.textContent = "Watching";
+                } catch (error) {
+                  button.textContent = "Sign in to watch";
+                  button.title = error.message;
+                }
+              }),
+          );
+        } catch (error) {
+          q("#resultTitle").textContent =
+            "The finder could not complete this request.";
+          q("#results").innerHTML =
+            `<div class="notice error">${esc(error.message)}</div>`;
+        }
+      };
+      q("#naturalQuery").addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter")
+          q("#interpretButton").click();
+      });
+      const initial = new URLSearchParams(location.search);
+      if (initial.get("q")) q("#naturalQuery").value = initial.get("q");
+      if (initial.get("plan")) {
+        try {
+          renderPlan(JSON.parse(initial.get("plan")), false);
+        } catch {
+          history.replaceState(null, "", location.pathname);
+        }
+      }
+    </script>
+  </body>
+</html>

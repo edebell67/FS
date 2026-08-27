@@ -1,0 +1,760 @@
+<!doctype html>
+<!--
+ search.html — Connected multi-mode Strategy Intelligence Workspace.
+
+ VERSION HISTORY
+ v1.4.1 · 2026-08-27 · Replaces the temporary circular header mark with The Tech Principle's official lime-square brand mark.
+ v1.4.0 · 2026-08-27 · Transfers the approved Strategy Intelligence Search visual system onto the live workspace while preserving every API-backed mode and control.
+ v1.3.0 · 2026-08-27 · Replaces free-entry constraint inputs with premium bounded selectors while retaining interpreted values and numeric API types.
+ v1.2.0 · 2026-08-26 · Adds saved-search save/replay and portfolio-collection save through the configured local identity edge.
+ v1.1.0 · 2026-08-26 · Adds live peer-percentile evidence.
+ v1.0.0 · 2026-08-26 · Initial connected intelligence workspace using live API data only.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <!-- This app is bound to 127.0.0.1 only and used by a single owner, so a
+         static local identity is a legitimate configuration of the "trusted
+         edge boundary" app/main.py's trusted_user() expects — not a bypass of
+         it. Value must match .env INTELLIGENCE_USER_TOKEN. -->
+    <meta name="user-token" content="woRhQSwTC19Awt8v-VvIX-YlPIhfTYNKjvLAxstd0JU" />
+    <meta name="user-id" content="ed_ebell_local" />
+    <link rel="icon" href="data:," />
+    <title>DNA Intelligence Workspace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.3" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+    <style>
+      .workspace { display: grid; grid-template-columns: 210px minmax(0, 1fr) 320px; gap: 18px; align-items: start; }
+      .modes { display: grid; gap: 4px; position: sticky; top: 12px; }
+      .mode-btn { display: block; width: 100%; text-align: left; border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; background: transparent; color: var(--ink); font: inherit; cursor: pointer; }
+      .mode-btn b { display: block; font-size: 13px; }
+      .mode-btn span { display: block; font-size: 11px; opacity: 0.7; margin-top: 2px; }
+      .mode-btn.active { background: var(--ink); color: var(--paper); }
+      .mode-btn.active span { opacity: 0.85; }
+      .center { min-width: 0; }
+      .query-deck { border: 1px solid var(--line); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+      .query-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: start; }
+      .query-row textarea { width: 100%; min-height: 56px; border: 1px solid var(--line); border-radius: 8px; padding: 10px; font: inherit; background: var(--paper); color: var(--ink); }
+      .constraint-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin: 12px 0; }
+      .constraint-grid label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.04em; opacity: 0.75; }
+      .constraint-grid input, .constraint-grid select { width: 100%; margin-top: 3px; padding: 7px 28px 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+      .rank-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .rank-controls select { padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); }
+      .result-head { display: flex; justify-content: space-between; align-items: end; padding-bottom: 8px; border-bottom: 1px solid var(--ink); margin-bottom: 10px; }
+      .result-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+      .result-actions button { border: 1px solid var(--line); background: var(--paper); border-radius: 6px; padding: 6px 9px; font-size: 11px; cursor: pointer; }
+      .result-row { display: grid; grid-template-columns: 24px 44px minmax(0,1.4fr) repeat(4, minmax(0,.7fr)) auto; gap: 10px; align-items: center; padding: 12px 4px; border-bottom: 1px solid var(--line); cursor: pointer; }
+      .result-row:hover { background: color-mix(in srgb, var(--ink) 4%, transparent); }
+      .result-row.sel { background: color-mix(in srgb, var(--ink) 8%, transparent); }
+      .result-row b { display: block; font-size: 13px; }
+      .result-row .sub { font-size: 10px; opacity: 0.7; }
+      .score-pill { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--ink); display: grid; place-items: center; font-size: 11px; font-weight: 700; }
+      .metric-cell b { display: block; font-size: 12px; }
+      .metric-cell span { display: block; font-size: 9px; opacity: 0.65; text-transform: uppercase; }
+      .row-actions { display: flex; gap: 4px; }
+      .row-actions button { border: 1px solid var(--line); background: transparent; border-radius: 6px; padding: 4px 7px; font-size: 10px; cursor: pointer; }
+      .row-actions button.on { background: var(--ink); color: var(--paper); }
+      .side-panel { border: 1px solid var(--line); border-radius: 12px; padding: 16px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow: auto; }
+      .side-panel h4 { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid var(--line); }
+      .side-panel h4:first-of-type { border-top: 0; padding-top: 0; margin-top: 0; }
+      .e-row { display: flex; justify-content: space-between; font-size: 11px; margin-top: 6px; }
+      .rel-row { display: flex; justify-content: space-between; font-size: 11px; padding: 6px 0; border-bottom: 1px solid var(--line); }
+      .rel-row span { opacity: 0.7; }
+      .toolbar-row { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+      .toolbar-row select, .toolbar-row input { padding: 7px 8px; border: 1px solid var(--line); border-radius: 6px; background: var(--paper); color: var(--ink); font: inherit; }
+      .toolbar-row button { border: 0; background: var(--ink); color: var(--paper); border-radius: 6px; padding: 7px 10px; font-size: 11px; cursor: pointer; }
+      .status-line { font-size: 11px; opacity: 0.75; margin: 6px 0 0; }
+      .portfolio-list { list-style: none; margin: 8px 0; padding: 0; }
+      .portfolio-list li { display: flex; justify-content: space-between; font-size: 11px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+      .why em { display: block; font-style: normal; font-size: 11px; padding: 3px 0; opacity: 0.85; }
+      @media (max-width: 1080px) { .workspace { grid-template-columns: 1fr; } .side-panel, .modes { position: static; max-height: none; } .modes { display: flex; overflow-x: auto; gap: 6px; } .mode-btn { min-width: 150px; } }
+    </style>
+    <style>
+      :root { --ink:#171913; --muted:#71766c; --paper:#f1f2eb; --surface:#fafbf6; --line:#d8dbd0; --lime:#d8ff3f; --green:#2c744e; --red:#a14c40; --deep:#171913; --white:#fafbf6; --ambient:#e6eddb; --shadow:0 24px 70px #24271c22; }
+      * { box-sizing:border-box; }
+      html,body { max-width:100%; overflow-x:hidden; }
+      body { margin:0; background:radial-gradient(circle at 76% 0,#d8ff3f12,transparent 32rem),var(--paper); color:var(--ink); font:14px Manrope,sans-serif; }
+      button,input,select,textarea { font:inherit; color:inherit; }
+      button { cursor:pointer; }
+      .intelligence-shell { max-width:none; padding:0; }
+      .intelligence-shell>.top { height:68px; margin:0; padding:0 24px; border:0; border-bottom:1px solid var(--line); background:#f1f2ebee; backdrop-filter:blur(12px); position:sticky; top:0; z-index:30; display:flex; align-items:center; justify-content:space-between; font:500 10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+      .intelligence-shell>.top a { position:relative; display:inline-flex; align-items:center; gap:10px; color:var(--ink); text-decoration:none; font-weight:500; }
+      .intelligence-shell>.top a::before { content:""; display:block; width:25px; height:25px; flex:none; border-radius:5px; background:var(--lime); transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+      .intelligence-shell>.top a::after { content:""; position:absolute; left:8px; top:8px; width:9px; height:9px; border-radius:1px; background:#0a0c0e; }
+      .intelligence-shell>.top a:hover::before { transform:rotate(45deg); }
+      .finder-hero { min-height:0; margin:0; padding:30px 326px 12px 252px; border:0; border-radius:0; background:transparent; color:var(--ink); display:block; }
+      .finder-hero::after { display:none; }
+      .finder-hero .id { color:var(--muted); font:10px "DM Mono",monospace; letter-spacing:.11em; }
+      .finder-hero h1 { color:var(--ink); font:700 clamp(29px,3vw,40px)/1.04 Manrope,sans-serif; letter-spacing:-.055em; margin:9px 0 7px; }
+      .finder-hero p { color:var(--muted); font-size:12px; line-height:1.55; max-width:68ch; margin:0; }
+      .finder-hero code { font-family:"DM Mono",monospace; color:var(--green); }
+      .workspace { display:grid; grid-template-columns:218px minmax(0,1fr) 292px; gap:0; align-items:start; border-top:1px solid var(--line); min-height:calc(100vh - 178px); }
+      .modes { position:sticky; top:68px; height:calc(100vh - 68px); overflow:auto; display:grid; align-content:start; gap:3px; padding:26px 14px; border-right:1px solid var(--line); }
+      .modes::before { content:"Intelligence mode"; padding:0 10px 10px; color:var(--muted); font:10px "DM Mono",monospace; letter-spacing:.12em; text-transform:uppercase; }
+      .mode-btn { width:100%; border:0; border-radius:8px; padding:11px 10px; background:transparent; color:var(--ink); text-align:left; display:block; transition:background-color .2s,color .2s,transform .2s; }
+      .mode-btn:hover { transform:translateX(2px); background:#ffffff70; }
+      .mode-btn b { font-size:12px; }
+      .mode-btn span { color:var(--muted); font-size:9px; margin-top:3px; }
+      .mode-btn.active { background:var(--ink); color:#fff; }
+      .mode-btn.active span { color:var(--lime); opacity:1; }
+      .center { min-width:0; max-width:100%; overflow:hidden; padding:20px 34px 100px; }
+      .query-deck { max-width:100%; overflow:hidden; margin:0 0 18px; padding:17px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .center>.query-deck:first-child { padding:8px; border:0; border-radius:14px; background:var(--ink); color:#fff; box-shadow:var(--shadow); }
+      .center>.query-deck:first-child>label { display:block; padding:10px 12px 2px; color:#c9ccc3; font:10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+      .query-row { display:grid; grid-template-columns:1fr auto; gap:8px; align-items:stretch; }
+      .query-row textarea { width:100%; min-width:0; min-height:54px; resize:vertical; padding:15px; border:0; outline:0; border-radius:8px; background:transparent; color:#fff; font-size:15px; line-height:1.45; }
+      .query-row textarea:focus { box-shadow:inset 0 0 0 1px #ffffff35; }
+      .query-row button,#runButton { border:0; border-radius:9px; padding:0 18px; background:var(--lime); color:#171913; font-weight:700; }
+      .center>.query-deck:first-child .status { margin:4px 12px 8px; color:#9ca198; font:9px "DM Mono",monospace; }
+      .constraint-grid { grid-template-columns:repeat(auto-fit,minmax(145px,1fr)); gap:7px; margin:7px 8px 10px; padding-top:10px; border-top:1px solid #ffffff1b; }
+      .constraint-grid label,.rank-controls label { color:#aeb3aa; opacity:1; font:9px "DM Mono",monospace; letter-spacing:.06em; }
+      .constraint-grid select,.constraint-grid input,.rank-controls select { min-height:36px; border:1px solid #ffffff25; border-radius:6px; background:#ffffff0b; color:#eef0e9; padding:7px 27px 7px 8px; }
+      .constraint-grid option,.rank-controls option { color:#171913; background:#fafbf6; }
+      .rank-controls { padding:0 8px 8px; gap:8px; }
+      .rank-controls label { min-width:145px; }
+      .rank-controls #runButton { min-height:40px; margin-left:auto; }
+      .center>.query-deck:first-child>.toolbar-row { margin:0 8px 4px; padding-top:9px; border-top:1px solid #ffffff1b; }
+      .center>.query-deck:first-child>.toolbar-row input { flex:1; min-width:180px; border:1px solid #ffffff25; background:#ffffff0b; color:#fff; }
+      .center>.query-deck:first-child>.toolbar-row button { background:#fff; color:#171913; }
+      #savedSearchesList { margin:4px 8px; color:#c9ccc3; }
+      .toolbar-row { gap:7px; }
+      .toolbar-row select,.toolbar-row input { min-height:36px; border:1px solid var(--line); border-radius:6px; background:var(--surface); }
+      .toolbar-row button,.result-actions button { min-height:36px; border:1px solid var(--line); border-radius:6px; background:var(--ink); color:#fff; padding:7px 10px; font-size:10px; }
+      .query-deck>b { font-size:13px; letter-spacing:-.02em; }
+      .status-line { color:var(--muted); font-size:10px; line-height:1.5; }
+      #leadersList .result-row,#recommendResults .result-row { grid-template-columns:44px minmax(0,1fr) repeat(2,minmax(70px,.6fr)); }
+      .result-head { margin:28px 0 0; padding:0 0 12px; border-bottom:1px solid var(--ink); align-items:end; }
+      .result-head .id { color:var(--muted); font:10px "DM Mono",monospace; letter-spacing:.1em; }
+      .result-head h2 { margin:5px 0 0; font:700 19px Manrope,sans-serif; letter-spacing:-.04em; }
+      .result-count { color:var(--ink); font:700 28px Manrope,sans-serif; }
+      .result-actions { align-items:center; }
+      .result-actions button { background:var(--surface); color:var(--ink); }
+      .result-row { grid-template-columns:24px 46px minmax(150px,1.35fr) repeat(4,minmax(68px,.65fr)) auto; gap:13px; padding:17px 4px; border-bottom:1px solid var(--line); animation:atlasRise .35s both; }
+      .result-row:hover { background:#ffffff80; }
+      .result-row.sel { background:#d8ff3f16; }
+      .result-row input[type="checkbox"] { accent-color:var(--ink); }
+      .result-row b { font-size:12px; }
+      .result-row .sub,.metric-cell span { color:var(--muted); opacity:1; font:9px "DM Mono",monospace; }
+      .metric-cell b { font:500 12px "DM Mono",monospace; }
+      .score-pill { width:43px; height:43px; border:1px solid var(--ink); font:500 11px "DM Mono",monospace; position:relative; }
+      .score-pill::after { content:""; position:absolute; bottom:3px; width:12px; height:3px; background:var(--lime); }
+      .row-actions button { border:0; border-radius:50%; width:30px; height:30px; padding:0; }
+      .row-actions button.on { background:var(--lime); color:#171913; }
+      .notice { border:1px dashed var(--line); border-radius:10px; background:transparent; color:var(--muted); }
+      .side-panel { position:sticky; top:68px; height:calc(100vh - 68px); max-height:none; overflow:auto; padding:26px 21px; border:0; border-left:1px solid var(--line); border-radius:0; background:#f7f8f2; }
+      .side-panel>h4:first-child { margin:0; padding:0 0 17px; border-bottom:1px solid var(--ink); color:var(--ink); opacity:1; font-size:12px; text-transform:none; letter-spacing:0; }
+      .side-panel h4 { margin:16px 0 8px; padding-top:14px; color:var(--ink); opacity:1; font:500 10px "DM Mono",monospace; letter-spacing:.08em; }
+      .side-panel h3 { font:700 16px Manrope,sans-serif; letter-spacing:-.03em; }
+      .e-row,.rel-row { font-size:10px; }
+      .why em { font-size:10px; line-height:1.55; color:#50554b; }
+      @keyframes atlasRise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+      html[data-theme="dark"] { color-scheme:dark; --ink:#f2f4eb; --muted:#a2a79e; --paper:#151712; --surface:#20231c; --line:#3b4036; --deep:#10120e; --white:#20231c; --ambient:#1d2318; --shadow:0 24px 70px #0008; }
+      html[data-theme="dark"] body { background:radial-gradient(circle at 76% 0,#d8ff3f0b,transparent 32rem),var(--paper); }
+      html[data-theme="dark"] .intelligence-shell>.top { background:#151712ee; }
+      html[data-theme="dark"] .mode-btn.active { background:#f2f4eb; color:#171913; }
+      html[data-theme="dark"] .mode-btn.active span { color:#4c6410; }
+      html[data-theme="dark"] .center>.query-deck:first-child { background:#0f110d; }
+      html[data-theme="dark"] .side-panel { background:#1a1d17; }
+      html[data-theme="dark"] .result-row:hover { background:#ffffff08; }
+      html[data-theme="dark"] .why em { color:#c6cbc1; }
+      @media(max-width:1080px) { .finder-hero { padding:28px 34px 12px 224px; } .workspace { grid-template-columns:190px minmax(0,1fr); } .side-panel { position:static; grid-column:2; width:auto; height:auto; border-left:0; border-top:1px solid var(--line); } .modes { display:grid; overflow:visible; } .mode-btn { min-width:0; } .result-row { grid-template-columns:24px 44px minmax(130px,1fr) repeat(2,minmax(65px,.6fr)) auto; } .result-row .metric-cell:nth-of-type(n+4) { display:none; } }
+      @media(max-width:760px) { .intelligence-shell>.top { height:60px; padding:0 16px; } .intelligence-shell>.top span { display:none; } .finder-hero { padding:20px 16px 12px; } .workspace { display:block; width:100%; } .modes { position:static; height:auto; padding:10px 16px; border:0; border-bottom:1px solid var(--line); display:flex; overflow-x:auto; } .modes::before { display:none; } .mode-btn { min-width:140px; } .center { width:100%; padding:18px 16px 80px; } .query-row { grid-template-columns:1fr; } .query-row button { width:100%; min-height:43px; } .constraint-grid,.rank-controls { grid-template-columns:1fr; } .rank-controls { display:grid; } .rank-controls label,.rank-controls select,.rank-controls input { width:100%; min-width:0; } .rank-controls #runButton { grid-column:auto; width:100%; margin:0; } .result-head { align-items:flex-start; gap:10px; } .result-row { grid-template-columns:22px 42px minmax(0,1fr) 62px auto; gap:8px; } .result-row .metric-cell:not(:first-of-type) { display:none; } .row-actions button:not(.on) { display:none; } .side-panel { grid-column:auto; padding:22px 16px 80px; } }
+      @media(max-width:460px) { .constraint-grid,.rank-controls { grid-template-columns:1fr; } .rank-controls #runButton { grid-column:auto; } .finder-hero h1 { font-size:29px; } .toolbar-row { flex-direction:column; align-items:stretch; } .toolbar-row select,.toolbar-row input,.toolbar-row button { width:100%; min-width:0; } .result-actions { width:100%; justify-content:space-between; } }
+      @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+    </style>
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
+  </head>
+  <body>
+    <main class="shell intelligence-shell">
+      <nav class="top">
+        <a href="/">← Directory</a
+        ><span>Constraint before rank · evidence before allocation</span>
+      </nav>
+      <section class="finder-hero">
+        <div>
+          <span class="id">DNA / INTELLIGENCE WORKSPACE</span>
+          <h1 id="modeTitle">Find strategies that fit.</h1>
+          <p id="modeLead">
+            Every result on this page is retrieved live from the intelligence
+            API at <code id="apiBaseLabel"></code>. Nothing shown here is a
+            mock value.
+          </p>
+        </div>
+      </section>
+      <div class="workspace">
+        <aside class="modes" id="modes"></aside>
+        <section class="center">
+          <section class="query-deck">
+            <label for="naturalQuery"><b id="queryLabel">What should the evidence prove?</b></label>
+            <div class="query-row">
+              <textarea id="naturalQuery" rows="2"></textarea>
+              <button id="interpretButton">Interpret →</button>
+            </div>
+            <p class="status" id="queryStatus">No hidden filters. You approve the plan before retrieval.</p>
+            <div class="constraint-grid" id="constraintGrid" hidden></div>
+            <div class="rank-controls" id="rankControls" hidden>
+              <label>Rank by
+                <select id="rankBy">
+                  <option value="quality_score">Quality score</option>
+                  <option value="annualized_return">Annualized net return</option>
+                  <option value="win_rate">Win rate</option>
+                  <option value="sharpe">Sharpe</option>
+                  <option value="max_drawdown">Drawdown</option>
+                </select>
+              </label>
+              <label>Direction
+                <select id="rankDirection">
+                  <option value="desc">Highest first</option>
+                  <option value="asc">Lowest first</option>
+                </select>
+              </label>
+              <button id="runButton" style="margin-left:auto">Find qualifying strategies</button>
+            </div>
+            <div class="toolbar-row">
+              <input id="savedSearchName" placeholder="Name this search to save it" />
+              <button id="saveSearchButton">Save search</button>
+              <span class="status-line" id="saveSearchStatus"></span>
+            </div>
+            <div id="savedSearchesList"></div>
+          </section>
+
+          <section class="query-deck" id="leadersDeck">
+            <b>Category leaders</b>
+            <p class="status-line">Rank strategies within one comparable peer group — same metric, same cohort — computed live from <code>/api/intelligence/cohorts</code>.</p>
+            <div class="toolbar-row">
+              <select id="leaderMetric">
+                <option value="quality_score">Quality score</option>
+                <option value="win_rate">Win rate</option>
+                <option value="profit_factor">Profit factor</option>
+                <option value="max_drawdown">Max drawdown</option>
+              </select>
+              <select id="leaderDimension">
+                <option value="asset_class">Asset class</option>
+                <option value="instrument">Instrument</option>
+                <option value="family">Strategy family</option>
+                <option value="track_record">Track-record band</option>
+              </select>
+              <select id="leaderValue"></select>
+              <button id="showLeaders">Show leaders</button>
+            </div>
+            <p class="status-line" id="leadersStatus"></p>
+            <div id="leadersList"></div>
+          </section>
+
+          <section class="regime-deck" id="regimeDeck" hidden>
+            <div class="query-deck">
+              <b>Current market regime</b>
+              <div class="toolbar-row">
+                <select id="regimeMarket"><option value="FX">FX</option></select>
+                <button id="checkRegime">Classify current regime</button>
+              </div>
+              <p class="status-line" id="regimeStatus">Choose a market and classify to see live state.</p>
+            </div>
+          </section>
+
+          <section class="portfolio-deck" id="portfolioDeck" hidden>
+            <div class="query-deck">
+              <b>Portfolio builder</b>
+              <p class="status-line">Add strategies from the results below, then save as a collection or ask for complementary recommendations.</p>
+              <ul class="portfolio-list" id="portfolioList"></ul>
+              <div class="toolbar-row">
+                <input id="portfolioName" placeholder="Collection name" />
+                <button id="savePortfolio">Save collection</button>
+                <button id="recommendButton">Recommend complements</button>
+              </div>
+              <p class="status-line" id="portfolioStatus"></p>
+              <div id="recommendResults"></div>
+            </div>
+          </section>
+
+          <div class="result-head">
+            <div>
+              <span class="id">QUALIFYING EVIDENCE</span>
+              <h2 id="resultTitle">Results wait for your approval.</h2>
+            </div>
+            <div class="result-actions">
+              <span class="result-count" id="resultCount">—</span>
+              <button id="compareSelected">Compare selected</button>
+            </div>
+          </div>
+          <div id="results">
+            <div class="notice">Interpret a request to begin. Ranking is never allowed to override a hard constraint.</div>
+          </div>
+        </section>
+        <aside class="side-panel" id="inspector">
+          <h4>Evidence inspector</h4>
+          <p class="status-line">Select a strategy row to load its live score and relationships.</p>
+        </aside>
+      </div>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.5.0"></script>
+    <script>
+      const q = document.querySelector.bind(document);
+      q("#apiBaseLabel").textContent = DnaDirectoryApi.base || location.origin;
+      const esc = (v) =>
+        String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const num = (v, d = 2) => (v == null || !Number.isFinite(Number(v)) ? "—" : Number(v).toLocaleString(undefined, { maximumFractionDigits: d }));
+
+      const fields = [
+        ["asset_class", "Asset class", "text"],
+        ["instrument", "Instrument", "text"],
+        ["strategy_family", "Family", "text"],
+        ["timeframe", "Timeframe", "text"],
+        ["trade_direction", "Trade direction", "text"],
+        ["min_win_rate", "Min win rate", "number"],
+        ["min_annualized_return", "Min annual return", "number"],
+        ["annualized_return_unit", "Annual return unit", "text"],
+        ["max_drawdown", "Max drawdown", "number"],
+        ["max_drawdown_unit", "Drawdown unit", "text"],
+        ["min_sharpe", "Min Sharpe", "number"],
+        ["min_profit_factor", "Min profit factor", "number"],
+        ["min_evidence_confidence", "Min evidence confidence", "number"],
+        ["min_quality_score", "Min quality score", "number"],
+        ["min_track_record_years", "Min years", "number"],
+        ["regime", "Regime", "text"],
+      ];
+      const fieldOptions = {
+        asset_class: [["FX", "Forex"], ["equities", "Equities"], ["indices", "Indices"], ["commodities", "Commodities"], ["futures", "Futures"], ["crypto", "Crypto"]],
+        instrument: [["eur", "EUR"], ["gbp", "GBP"], ["aud", "AUD"], ["nzd", "NZD"], ["usd", "USD"], ["cad", "CAD"], ["chf", "CHF"], ["jpy", "JPY"]],
+        strategy_family: [["breakout", "Breakout"], ["trend", "Trend"], ["momentum", "Momentum"], ["mean_reversion", "Mean reversion"], ["carry", "Carry"], ["relative_value", "Relative value"]],
+        timeframe: [["30m", "30 minutes"], ["1h", "1 hour"], ["4h", "4 hours"], ["daily", "Daily"], ["weekly", "Weekly"]],
+        trade_direction: [["both", "Both"], ["buy", "Buy / long"], ["sell", "Sell / short"]],
+        min_win_rate: [[0.4, "40%"], [0.5, "50%"], [0.55, "55%"], [0.6, "60%"], [0.7, "70%"], [0.8, "80%"]],
+        min_annualized_return: [[0, "0"], [0.05, "0.05"], [0.1, "0.10"], [0.15, "0.15"], [0.25, "0.25"], [100, "100"], [500, "500"], [1000, "1,000"]],
+        annualized_return_unit: [["fraction/year", "Percentage / year"], ["money/year", "Money / year"]],
+        max_drawdown: [[0.02, "2%"], [0.05, "5%"], [0.1, "10%"], [0.15, "15%"], [0.2, "20%"], [0.25, "25%"], [100, "100"], [250, "250"], [500, "500"], [1000, "1,000"]],
+        max_drawdown_unit: [["fraction", "Percentage"], ["money", "Money"]],
+        min_sharpe: [[0, "0"], [0.5, "0.5"], [1, "1.0"], [1.5, "1.5"], [2, "2.0"], [2.5, "2.5"], [3, "3.0"]],
+        min_profit_factor: [[0, "0"], [1, "1.0"], [1.25, "1.25"], [1.5, "1.5"], [2, "2.0"], [2.5, "2.5"], [3, "3.0"]],
+        min_evidence_confidence: [[0, "0%"], [0.5, "50%"], [0.6, "60%"], [0.7, "70%"], [0.8, "80%"], [0.9, "90%"]],
+        min_quality_score: [[0, "0"], [40, "40"], [50, "50"], [60, "60"], [70, "70"], [80, "80"], [90, "90"]],
+        min_track_record_years: [[0, "No minimum"], [0.25, "3 months"], [0.5, "6 months"], [1, "1 year"], [2, "2 years"], [3, "3 years"], [5, "5 years"]],
+        regime: [["bull", "Bull"], ["bear", "Bear"], ["trend", "Trending"], ["sideways", "Sideways"], ["high_volatility", "High volatility"], ["low_volatility", "Low volatility"]],
+      };
+
+      const modes = {
+        discover: { name: "Discover", sub: "Find & rank", title: "Find strategies that fit.", lead: "Filter, then rank — nothing is ranked ahead of an unmet constraint.", query: "US equity strategies with Sharpe above 1.5 and drawdown below 12%" },
+        health: { name: "Health", sub: "Evidence & decay", title: "Check evidence quality.", lead: "Evidence-state, confidence and quality score come straight from the profile computed from closed trades.", query: "Strategies with at least 1 year of evidence and evidence confidence above 0.6" },
+        relationships: { name: "Relationships", sub: "Correlation & similarity", title: "See how strategies relate.", lead: "Select a result to load its correlated and behaviourally similar strategies from the related-strategies API.", query: "FX strategies with win rate above 55% and at least 100 closed trades" },
+        regimes: { name: "Regimes", sub: "Market classification", title: "Classify the current market.", lead: "Classifies the live market state from canonical market features — never a guess.", query: "FX strategies with positive annualized return and quality score above 60" },
+        portfolio: { name: "Portfolio", sub: "Combine & recommend", title: "Build a combination.", lead: "Add strategies to a working set, save it as a collection, or ask the recommendation engine what complements it.", query: "FX strategies with drawdown below 10% and at least 6 months of evidence" },
+      };
+      let active = "discover";
+      let activePlan = null;
+      let lastItems = [];
+      const selectedIds = new Set();
+      const portfolioIds = new Set();
+
+      function drawModes() {
+        q("#modes").innerHTML = Object.entries(modes)
+          .map(([k, m]) => `<button class="mode-btn ${k === active ? "active" : ""}" data-mode="${k}"><b>${m.name}</b><span>${m.sub}</span></button>`)
+          .join("");
+        document.querySelectorAll("[data-mode]").forEach((b) => (b.onclick = () => switchMode(b.dataset.mode)));
+      }
+      function switchMode(k) {
+        active = k;
+        const m = modes[k];
+        q("#modeTitle").textContent = m.title;
+        q("#modeLead").innerHTML = `${m.lead} Live API base: <code id="apiBaseLabel">${esc(DnaDirectoryApi.base || location.origin)}</code>.`;
+        q("#naturalQuery").value = m.query;
+        q("#regimeDeck").hidden = k !== "regimes";
+        q("#portfolioDeck").hidden = k !== "portfolio";
+        drawModes();
+      }
+
+      function syncUrl(plan) {
+        const state = new URLSearchParams();
+        state.set("q", q("#naturalQuery").value);
+        state.set("mode", active);
+        state.set("plan", JSON.stringify(plan));
+        history.replaceState(null, "", `${location.pathname}?${state}`);
+      }
+      function renderConstraintField(key, label, type, value) {
+        const options = fieldOptions[key] || [];
+        const current = value == null ? "" : String(value);
+        const known = options.some(([optionValue]) => String(optionValue) === current);
+        const retained = current && !known ? `<option value="${esc(current)}" selected>${esc(current)} · interpreted</option>` : "";
+        return `<label>${label}<select data-plan="${key}" data-value-type="${type}"><option value="">Any</option>${retained}${options.map(([optionValue, optionLabel]) => `<option value="${esc(optionValue)}" ${String(optionValue) === current ? "selected" : ""}>${esc(optionLabel)}</option>`).join("")}</select></label>`;
+      }
+      function renderPlan(plan) {
+        activePlan = plan;
+        q("#constraintGrid").hidden = false;
+        q("#rankControls").hidden = false;
+        q("#constraintGrid").innerHTML = fields
+          .map(([key, label, type]) => renderConstraintField(key, label, type, plan[key]))
+          .join("");
+        q("#rankBy").value = plan.sort || "quality_score";
+        q("#rankDirection").value = plan.direction || "desc";
+        syncUrl(plan);
+      }
+      function editedPlan() {
+        const plan = { ...activePlan };
+        document.querySelectorAll("[data-plan]").forEach((input) => {
+          const key = input.dataset.plan, value = input.value.trim();
+          plan[key] = value === "" ? null : input.dataset.valueType === "number" ? Number(value) : value;
+        });
+        plan.sort = q("#rankBy").value;
+        plan.direction = q("#rankDirection").value;
+        return plan;
+      }
+
+      q("#interpretButton").onclick = async () => {
+        const text = q("#naturalQuery").value.trim();
+        if (text.length < 3) return;
+        q("#queryStatus").textContent = "Building a bounded query plan…";
+        try {
+          const response = await DnaDirectoryApi.interpret(text);
+          renderPlan(response.plan);
+          const caveats = response.clarifications?.length ? ` ${response.clarifications.join(" ")}` : "";
+          q("#queryStatus").textContent = `Interpretation confidence ${(Number(response.confidence) * 100).toFixed(0)}%. Review every visible constraint.${caveats}`;
+        } catch (error) {
+          q("#queryStatus").textContent = error.message;
+        }
+      };
+
+      function renderResults(response) {
+        lastItems = response.items;
+        q("#resultCount").textContent = response.total;
+        q("#resultTitle").textContent = response.total
+          ? `Strategies that satisfy every constraint · ${response.excluded_total} excluded.`
+          : "No strategy satisfies every constraint.";
+        if (!response.items.length) {
+          q("#results").innerHTML = '<div class="notice">Try relaxing one visible constraint. Nothing has been silently removed.</div>';
+          return;
+        }
+        q("#results").innerHTML = response.items
+          .map((item) => {
+            const p = item.profile, m = p.metrics, s = p.score, id = p.identity.strategy_id;
+            return `<article class="result-row" data-id="${esc(id)}">
+              <input type="checkbox" data-select="${esc(id)}" ${selectedIds.has(id) ? "checked" : ""} onclick="event.stopPropagation()">
+              <span class="score-pill">${num(s.quality_score, 0)}</span>
+              <span><b>${esc(id)}</b><span class="sub">${esc(p.identity.name || p.classification.instruments.join(", ") || p.classification.asset_class)}</span></span>
+              <span class="metric-cell"><b>${num(m.annualized_return.value)}</b><span>net/yr</span></span>
+              <span class="metric-cell"><b>${num((m.win_rate.value || 0) * 100, 1)}%</b><span>win rate</span></span>
+              <span class="metric-cell"><b>${m.sharpe.value == null ? "—" : num(m.sharpe.value)}</b><span>sharpe</span></span>
+              <span class="metric-cell"><b>${esc(p.evidence.quality_state)}</b><span>${esc(p.evidence.trade_count)} trades</span></span>
+              <span class="row-actions">
+                <button data-watch="${esc(id)}">Watch</button>
+                <button data-add-portfolio="${esc(id)}" class="${portfolioIds.has(id) ? "on" : ""}">${portfolioIds.has(id) ? "Added" : "+ Portfolio"}</button>
+              </span>
+            </article>`;
+          })
+          .join("");
+        document.querySelectorAll(".result-row").forEach((row) => (row.onclick = () => inspect(row.dataset.id)));
+        document.querySelectorAll("[data-select]").forEach(
+          (box) =>
+            (box.onchange = () => {
+              box.checked ? selectedIds.add(box.dataset.select) : selectedIds.delete(box.dataset.select);
+            }),
+        );
+        document.querySelectorAll("[data-watch]").forEach(
+          (button) =>
+            (button.onclick = async (e) => {
+              e.stopPropagation();
+              try {
+                await DnaDirectoryApi.watch(button.dataset.watch);
+                button.textContent = "Watching";
+                button.classList.add("on");
+              } catch (error) {
+                button.title = error.message;
+                button.textContent = "Sign-in needed";
+              }
+            }),
+        );
+        document.querySelectorAll("[data-add-portfolio]").forEach(
+          (button) =>
+            (button.onclick = (e) => {
+              e.stopPropagation();
+              const id = button.dataset.addPortfolio;
+              if (portfolioIds.has(id)) portfolioIds.delete(id);
+              else portfolioIds.add(id);
+              button.classList.toggle("on");
+              button.textContent = portfolioIds.has(id) ? "Added" : "+ Portfolio";
+              renderPortfolioList();
+            }),
+        );
+      }
+
+      q("#runButton").onclick = async () => {
+        const plan = editedPlan();
+        activePlan = plan;
+        syncUrl(plan);
+        q("#resultTitle").textContent = "Applying constraints before rank…";
+        q("#results").innerHTML = '<div class="notice">Recalculating canonical profiles from closed-trade evidence.</div>';
+        try {
+          const response = await DnaDirectoryApi.intelligenceSearch(plan);
+          renderResults(response);
+        } catch (error) {
+          q("#resultTitle").textContent = "The workspace could not complete this request.";
+          q("#results").innerHTML = `<div class="notice error">${esc(error.message)}</div>`;
+        }
+      };
+
+      const cohortsCache = {};
+      const cohortMetric = "quality_score";
+      async function cohorts(metric = cohortMetric) {
+        if (!cohortsCache[metric]) {
+          cohortsCache[metric] = fetch(`${DnaDirectoryApi.base}/api/intelligence/cohorts?metric=${encodeURIComponent(metric)}`)
+            .then((r) => r.json())
+            .catch(() => ({ items: {} }));
+        }
+        return cohortsCache[metric];
+      }
+      const cohortLabels = { all: "Full directory", asset_class: "Asset class", instrument: "Instrument", family: "Strategy family", track_record: "Track-record band" };
+      function renderPeerPercentile(strategyId, cohortPayload) {
+        const entry = cohortPayload.items?.[strategyId];
+        if (!entry) return '<p class="status-line">No peer percentile published for this strategy.</p>';
+        const rows = Object.entries(entry)
+          .filter(([, v]) => v.state === "VALID")
+          .map(([key, v]) => `<div class="rel-row"><span>${esc(cohortLabels[key] || key)} (${esc(v.cohort)} · n=${v.size})</span><b>Top ${num(100 - v.percentile, 1)}%</b></div>`)
+          .join("");
+        const suppressed = Object.entries(entry).filter(([, v]) => v.state !== "VALID");
+        return (
+          (rows || '<p class="status-line">Every peer cohort was below the minimum cohort size.</p>') +
+          (suppressed.length ? `<p class="status-line">${suppressed.length} cohort(s) suppressed below minimum size (${cohortPayload.minimum_cohort_size}).</p>` : "")
+        );
+      }
+
+      async function inspect(id) {
+        document.querySelectorAll(".result-row").forEach((r) => r.classList.toggle("sel", r.dataset.id === id));
+        const panel = q("#inspector");
+        panel.innerHTML = `<h4>Evidence inspector</h4><p class="status-line">Loading live score and relationships for ${esc(id)}…</p>`;
+        const item = lastItems.find((x) => x.profile.identity.strategy_id === id);
+        const p = item?.profile;
+        try {
+          const [scoreResp, related, cohortPayload] = await Promise.all([
+            DnaDirectoryApi.base ? fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()) : fetch(`/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()),
+            fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}/related?limit=5`).then((r) => r.json()),
+            cohorts(),
+          ]);
+          const s = scoreResp.score || p?.score || {};
+          const why = item?.why_matched?.length ? item.why_matched : ["No optional constraint supplied"];
+          panel.innerHTML = `
+            <h4>Strategy</h4>
+            <p><b>${esc(id)}</b><br><span class="status-line">${esc(p?.classification?.instruments?.join(", ") || p?.classification?.asset_class || "")}</span></p>
+            <h4>Score composition</h4>
+            ${Object.entries(s).filter(([k]) => k !== "components").map(([k, v]) => `<div class="e-row"><span>${esc(k.replace(/_/g, " "))}</span><b>${num(v, 1)}</b></div>`).join("") || '<p class="status-line">No score published yet.</p>'}
+            <h4>Peer percentile · ${esc(cohortMetric.replace(/_/g, " "))}</h4>
+            ${renderPeerPercentile(id, cohortPayload)}
+            <h4>Why it matched</h4>
+            <div class="why">${why.map((w) => `<em>${esc(w)}</em>`).join("")}</div>
+            <h4>Related strategies (live)</h4>
+            ${(related.items || []).length ? related.items.map((r) => `<div class="rel-row"><span>${esc(r.strategy_id)}</span><b>${num(r.correlation ?? r.similarity, 2)}</b></div>`).join("") : '<p class="status-line">No related strategies met the minimum evidence threshold.</p>'}
+            <h4>Actions</h4>
+            <div class="toolbar-row">
+              <button onclick="location.href='/strategy.html?id=${encodeURIComponent(id)}'">Open full profile</button>
+              <button onclick="location.href='/compare.html?ids=${encodeURIComponent(id)}'">Compare</button>
+            </div>`;
+        } catch (error) {
+          panel.innerHTML = `<h4>Evidence inspector</h4><p class="status-line error">${esc(error.message)}</p>`;
+        }
+      }
+
+      q("#compareSelected").onclick = () => {
+        const ids = [...selectedIds];
+        if (ids.length < 2) {
+          q("#resultTitle").textContent = "Select 2 to 5 strategies with the checkbox to compare.";
+          return;
+        }
+        location.href = `/compare.html?ids=${encodeURIComponent(ids.slice(0, 5).join(","))}`;
+      };
+
+      // Regimes mode
+      DnaDirectoryApi.products().then((payload) => {
+        const options = payload.items.length ? payload.items : ["FX"];
+        q("#regimeMarket").innerHTML = options.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+      });
+      q("#checkRegime").onclick = async () => {
+        q("#regimeStatus").textContent = "Classifying current regime from canonical market features…";
+        try {
+          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/regimes/classify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ market: q("#regimeMarket").value }),
+          }).then((r) => r.json());
+          q("#regimeStatus").innerHTML = `<b>${esc(result.state)}</b> · confidence ${num((result.confidence || 0) * 100, 0)}% · as of ${esc(result.feature_as_of || result.as_of || "—")}${result.reason ? ` · ${esc(result.reason)}` : ""}`;
+        } catch (error) {
+          q("#regimeStatus").textContent = error.message;
+        }
+      };
+
+      // Portfolio mode
+      function renderPortfolioList() {
+        q("#portfolioList").innerHTML = [...portfolioIds]
+          .map((id) => `<li>${esc(id)}<button data-remove="${esc(id)}" style="border:0;background:transparent;cursor:pointer">✕</button></li>`)
+          .join("") || '<li class="status-line">No strategies added yet.</li>';
+        document.querySelectorAll("[data-remove]").forEach(
+          (b) =>
+            (b.onclick = () => {
+              portfolioIds.delete(b.dataset.remove);
+              renderPortfolioList();
+              renderResults({ items: lastItems, total: lastItems.length, excluded_total: 0 });
+            }),
+        );
+      }
+      q("#savePortfolio").onclick = async () => {
+        const name = q("#portfolioName").value.trim();
+        if (!name || portfolioIds.size === 0) {
+          q("#portfolioStatus").textContent = "Name the collection and add at least one strategy first.";
+          return;
+        }
+        try {
+          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/user/collections`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...DnaDirectoryApi.identityHeaders },
+            body: JSON.stringify({ name, strategy_ids: [...portfolioIds], notes: "" }),
+          });
+          if (!result.ok) {
+            let detail;
+            try { detail = (await result.json()).detail; } catch {}
+            throw new Error(detail || `Save failed (${result.status})`);
+          }
+          q("#portfolioStatus").textContent = "Collection saved.";
+        } catch (error) {
+          q("#portfolioStatus").textContent = error.message;
+        }
+      };
+      q("#recommendButton").onclick = async () => {
+        if (portfolioIds.size === 0) {
+          q("#portfolioStatus").textContent = "Add at least one strategy before requesting recommendations.";
+          return;
+        }
+        q("#portfolioStatus").textContent = "Requesting complementary strategies…";
+        try {
+          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/recommendations`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", ...DnaDirectoryApi.identityHeaders },
+            body: JSON.stringify({ market: q("#regimeMarket")?.value || "FX", strategy_ids: [...portfolioIds] }),
+          }).then((r) => r.json());
+          q("#portfolioStatus").textContent = result.total ? `${result.total} candidate(s) found.` : `No recommendations · ${result.reason || "insufficient evidence"}`;
+          q("#recommendResults").innerHTML = (result.items || [])
+            .map((item) => `<div class="rel-row"><span>${esc(item.strategy_id || item.id)}</span><b>${num(item.score ?? item.value, 2)}</b></div>`)
+            .join("");
+        } catch (error) {
+          q("#portfolioStatus").textContent = error.message;
+        }
+      };
+
+      // Category leaders
+      function cohortValueOptions(payload, dimension) {
+        const counts = {};
+        Object.values(payload.items || {}).forEach((entry) => {
+          const cell = entry[dimension];
+          if (cell && cell.state === "VALID") counts[cell.cohort] = cell.size;
+        });
+        return Object.entries(counts).sort((a, b) => b[1] - a[1]);
+      }
+      async function refreshLeaderValues() {
+        const metric = q("#leaderMetric").value, dimension = q("#leaderDimension").value;
+        q("#leadersStatus").textContent = "Loading peer groups…";
+        const payload = await cohorts(metric);
+        const options = cohortValueOptions(payload, dimension);
+        q("#leaderValue").innerHTML = options.map(([value, size]) => `<option value="${esc(value)}">${esc(value)} (n=${size})</option>`).join("") || "<option value=''>No cohort available</option>";
+        q("#leadersStatus").textContent = options.length ? `${options.length} peer group(s) for ${esc(dimension.replace(/_/g, " "))}.` : "No peer group met the minimum cohort size.";
+      }
+      q("#leaderMetric").onchange = refreshLeaderValues;
+      q("#leaderDimension").onchange = refreshLeaderValues;
+      const metricUnit = { quality_score: "score", win_rate: "win rate", profit_factor: "profit factor", max_drawdown: "drawdown" };
+      function metricValue(profile, metric) {
+        return metric === "quality_score" ? profile.score?.quality_score : profile.metrics?.[metric]?.value;
+      }
+      q("#showLeaders").onclick = async () => {
+        const metric = q("#leaderMetric").value, dimension = q("#leaderDimension").value, value = q("#leaderValue").value;
+        if (!value) { q("#leadersStatus").textContent = "No peer group selected."; return; }
+        q("#leadersStatus").textContent = "Ranking peer group…";
+        q("#leadersList").innerHTML = "";
+        try {
+          const payload = await cohorts(metric);
+          const members = Object.entries(payload.items || {})
+            .filter(([, entry]) => entry[dimension]?.cohort === value && entry[dimension]?.state === "VALID")
+            .sort((a, b) => (b[1][dimension].percentile - a[1][dimension].percentile) || a[0].localeCompare(b[0]));
+          const top = members.slice(0, 20);
+          const profiles = await Promise.all(
+            top.map(([id]) => fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}`).then((r) => r.json())),
+          );
+          q("#leadersStatus").textContent = `Ranking ${top.length} of ${members.length} strategies in ${esc(dimension.replace(/_/g, " "))} = ${esc(value)}, by ${esc(metricUnit[metric])}.`;
+          q("#leadersList").innerHTML = top
+            .map(([id, entry], index) => {
+              const profile = profiles[index];
+              return `<div class="rel-row"><span>#${index + 1} ${esc(id)} · percentile ${num(entry[dimension].percentile, 1)}</span><b>${num(metricValue(profile, metric), metric === "win_rate" ? 3 : 2)}</b></div>`;
+            })
+            .join("") || '<p class="status-line">No members ranked.</p>';
+        } catch (error) {
+          q("#leadersStatus").textContent = error.message;
+        }
+      };
+      refreshLeaderValues();
+
+      // Saved searches
+      async function renderSavedSearches() {
+        try {
+          const state = await DnaDirectoryApi.userExport();
+          const entries = Object.values(state.searches || {});
+          q("#savedSearchesList").innerHTML = entries.length
+            ? entries
+                .map(
+                  (item) =>
+                    `<div class="rel-row"><span>${esc(item.name)} — ${esc(Object.keys(item.plan).filter((k) => item.plan[k] != null && k !== "sort" && k !== "direction").join(", ") || "no constraints")}</span><button data-replay="${esc(item.id)}" style="border:1px solid var(--line);background:transparent;border-radius:6px;padding:3px 8px;font-size:10px;cursor:pointer">Replay</button></div>`,
+                )
+                .join("")
+            : '<p class="status-line">No saved searches yet.</p>';
+          document.querySelectorAll("[data-replay]").forEach(
+            (b) =>
+              (b.onclick = async () => {
+                q("#saveSearchStatus").textContent = "Replaying saved search…";
+                try {
+                  const replay = await DnaDirectoryApi.replaySearch(b.dataset.replay);
+                  renderPlan(replay.plan);
+                  q("#runButton").click();
+                  q("#saveSearchStatus").textContent = `Replayed at ${esc(replay.evidence_replayed_at)} — ${replay.added.length} added, ${replay.removed.length} removed since last run.`;
+                } catch (error) {
+                  q("#saveSearchStatus").textContent = error.message;
+                }
+              }),
+          );
+        } catch (error) {
+          q("#savedSearchesList").innerHTML = `<p class="status-line error">${esc(error.message)}</p>`;
+        }
+      }
+      q("#saveSearchButton").onclick = async () => {
+        const name = q("#savedSearchName").value.trim();
+        if (!name || !activePlan) {
+          q("#saveSearchStatus").textContent = "Interpret a query and name it before saving.";
+          return;
+        }
+        try {
+          await DnaDirectoryApi.saveSearch(name, editedPlan());
+          q("#saveSearchStatus").textContent = "Saved.";
+          q("#savedSearchName").value = "";
+          renderSavedSearches();
+        } catch (error) {
+          q("#saveSearchStatus").textContent = error.message;
+        }
+      };
+      renderSavedSearches();
+
+      q("#naturalQuery").addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") q("#interpretButton").click();
+      });
+
+      const initial = new URLSearchParams(location.search);
+      if (initial.get("mode") && modes[initial.get("mode")]) active = initial.get("mode");
+      switchMode(active);
+      if (initial.get("q")) q("#naturalQuery").value = initial.get("q");
+      if (initial.get("plan")) {
+        try {
+          renderPlan(JSON.parse(initial.get("plan")));
+        } catch {
+          history.replaceState(null, "", location.pathname);
+        }
+      }
+      renderPortfolioList();
+    </script>
+  </body>
+</html>

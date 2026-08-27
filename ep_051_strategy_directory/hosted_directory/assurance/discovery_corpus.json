@@ -1,0 +1,8 @@
+[
+  {"id":"fx-win","query":"FX strategies with win rate above 55%","expected":{"asset_class":"FX","min_win_rate":0.55,"sort":"quality_score","direction":"desc"}},
+  {"id":"equity-risk","query":"equity strategies with drawdown below 10%","expected":{"asset_class":"equity","max_drawdown":0.1,"max_drawdown_unit":"fraction","sort":"quality_score","direction":"desc"}},
+  {"id":"sharpe","query":"forex Sharpe above 1.5","expected":{"asset_class":"FX","min_sharpe":1.5,"sort":"quality_score","direction":"desc"}},
+  {"id":"track-record","query":"stocks with at least 5 years of history","expected":{"asset_class":"equity","min_track_record_years":5.0,"sort":"quality_score","direction":"desc"}},
+  {"id":"regime","query":"FX strategies for high volatility","expected":{"asset_class":"FX","regime":"high volatility","sort":"quality_score","direction":"desc"}},
+  {"id":"return","query":"crypto annualized return above 20%","expected":{"asset_class":"crypto","min_annualized_return":0.2,"annualized_return_unit":"fraction/year","sort":"quality_score","direction":"desc"}}
+]

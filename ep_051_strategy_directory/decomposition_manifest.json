@@ -1,0 +1,814 @@
+{
+  "canonical_epic_slug": "ep_051_strategy_directory",
+  "epic_name": "EP051 DNA Strategy Directory",
+  "source_epic_path": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/dna_strategy_directory_implementation_workflow.md",
+  "decomposition_timestamp": "2026-08-23T17:39:08+01:00",
+  "epic_output_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory",
+  "visual_workflow": "C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html",
+  "ownership": {
+    "unassigned": "All 44 tasks; completed artifacts preserved and all unfinished work parked"
+  },
+  "rules": {
+    "node_link_format": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-NNN",
+    "broker_track": "WF-601 through WF-604 deferred and non-blocking",
+    "artifact_boundary": "C:/Users/edebe/eds/epics/ep_051_strategy_directory"
+  },
+  "workstreams": [
+    "Phase 0 — Product, contracts, and governance",
+    "Phase 1 — Data foundation",
+    "Phase 2 — Baseline analytics and serving layer",
+    "Phase 3 — Directory MVP",
+    "Phase 4 — Regime and relationship intelligence",
+    "Phase 5 — Portfolio intelligence",
+    "Phase 6 — Deferred broker/platform integration and operations",
+    "Phase 7 — Quality, beta, and public launch",
+    "Phase 8 — Multi-market expansion",
+    "Z — Infrastructure and DevOps"
+  ],
+  "original_task_list": [
+    {
+      "id": "WF-001",
+      "title": "Baseline requirements and traceability",
+      "phase": 0,
+      "owner": "unassigned",
+      "sequence": "1.1",
+      "depends_on": [],
+      "blocks": [
+        "WF-002",
+        "WF-003",
+        "WF-005"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/gemini/20260823_173908_ep051_997_wf_001_baseline_requirements_and_traceability.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-001",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-001"
+    },
+    {
+      "id": "WF-002",
+      "title": "Canonical identity and source contracts",
+      "phase": 0,
+      "owner": "unassigned",
+      "sequence": "2.1",
+      "depends_on": [
+        "WF-001"
+      ],
+      "blocks": [
+        "WF-003",
+        "WF-101",
+        "WF-102",
+        "WF-105"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/gemini/20260823_173909_ep051_997_wf_002_canonical_identity_and_source_contracts.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-002",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-002"
+    },
+    {
+      "id": "WF-003",
+      "title": "Metric dictionary and methodology governance",
+      "phase": 0,
+      "owner": "unassigned",
+      "sequence": "3.1",
+      "depends_on": [
+        "WF-001",
+        "WF-002"
+      ],
+      "blocks": [
+        "WF-004",
+        "WF-201",
+        "WF-501"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/gemini/20260823_173910_ep051_997_wf_003_metric_dictionary_and_methodology_governance.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-003",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-003"
+    },
+    {
+      "id": "WF-004",
+      "title": "Regime definition and anti-bias protocol",
+      "phase": 0,
+      "owner": "unassigned",
+      "sequence": "4.1",
+      "depends_on": [
+        "WF-003"
+      ],
+      "blocks": [
+        "WF-104"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/gemini/20260823_173911_ep051_997_wf_004_regime_definition_and_anti_bias_protocol.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-004",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-004"
+    },
+    {
+      "id": "WF-005",
+      "title": "Security, compliance, and public/private boundary",
+      "phase": 0,
+      "owner": "unassigned",
+      "sequence": "2.2",
+      "depends_on": [
+        "WF-001"
+      ],
+      "blocks": [
+        "WF-105",
+        "WF-204",
+        "WF-601",
+        "WF-702"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/gemini/20260823_173912_ep051_997_wf_005_security_compliance_and_public_private_boundary.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-005",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-005"
+    },
+    {
+      "id": "WF-101",
+      "title": "Strategy registry and immutable definitions",
+      "phase": 1,
+      "owner": "codex",
+      "sequence": "3.2",
+      "depends_on": [
+        "WF-002"
+      ],
+      "blocks": [
+        "WF-102"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173913_ep051_997_wf_101_strategy_registry_and_immutable_definitions.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-101",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-101"
+    },
+    {
+      "id": "WF-102",
+      "title": "Raw/canonical ingestion",
+      "phase": 1,
+      "owner": "codex",
+      "sequence": "4.2",
+      "depends_on": [
+        "WF-002",
+        "WF-101"
+      ],
+      "blocks": [
+        "WF-103",
+        "WF-201"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173914_ep051_997_wf_102_raw_canonical_ingestion.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-102",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-102"
+    },
+    {
+      "id": "WF-103",
+      "title": "Data-quality reconciliation",
+      "phase": 1,
+      "owner": "codex",
+      "sequence": "5.1",
+      "depends_on": [
+        "WF-102"
+      ],
+      "blocks": [
+        "WF-201",
+        "WF-604"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173915_ep051_997_wf_103_data_quality_reconciliation.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-103",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-103"
+    },
+    {
+      "id": "WF-104",
+      "title": "Market and regime data foundation",
+      "phase": 1,
+      "owner": "codex",
+      "sequence": "5.2",
+      "depends_on": [
+        "WF-004"
+      ],
+      "blocks": [
+        "WF-401"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173916_ep051_997_wf_104_market_and_regime_data_foundation.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-104",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-104"
+    },
+    {
+      "id": "WF-105",
+      "title": "Non-DNA research warehouse boundary",
+      "phase": 1,
+      "owner": "codex",
+      "sequence": "3.3",
+      "depends_on": [
+        "WF-002",
+        "WF-005"
+      ],
+      "blocks": [],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173917_ep051_997_wf_105_non_dna_research_warehouse_boundary.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-105",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-105"
+    },
+    {
+      "id": "WF-201",
+      "title": "Strategy headline analytics",
+      "phase": 2,
+      "owner": "codex",
+      "sequence": "6.1",
+      "depends_on": [
+        "WF-003",
+        "WF-102",
+        "WF-103"
+      ],
+      "blocks": [
+        "WF-202",
+        "WF-203",
+        "WF-204",
+        "WF-401",
+        "WF-604"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173918_ep051_997_wf_201_strategy_headline_analytics.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-201",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-201"
+    },
+    {
+      "id": "WF-202",
+      "title": "Period and rolling analytics",
+      "phase": 2,
+      "owner": "codex",
+      "sequence": "7.1",
+      "depends_on": [
+        "WF-201"
+      ],
+      "blocks": [
+        "WF-203",
+        "WF-204",
+        "WF-302",
+        "WF-402"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173919_ep051_997_wf_202_period_and_rolling_analytics.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-202",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-202"
+    },
+    {
+      "id": "WF-203",
+      "title": "Score calibration",
+      "phase": 2,
+      "owner": "codex",
+      "sequence": "8.1",
+      "depends_on": [
+        "WF-201",
+        "WF-202"
+      ],
+      "blocks": [
+        "WF-404"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173920_ep051_997_wf_203_score_calibration.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-203",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-203"
+    },
+    {
+      "id": "WF-204",
+      "title": "APIs and read models",
+      "phase": 2,
+      "owner": "codex",
+      "sequence": "8.2",
+      "depends_on": [
+        "WF-201",
+        "WF-202",
+        "WF-005"
+      ],
+      "blocks": [
+        "WF-205",
+        "WF-301",
+        "WF-302"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173921_ep051_997_wf_204_apis_and_read_models.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-204",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-204"
+    },
+    {
+      "id": "WF-205",
+      "title": "Cache, search, and performance",
+      "phase": 2,
+      "owner": "codex",
+      "sequence": "9.1",
+      "depends_on": [
+        "WF-204"
+      ],
+      "blocks": [
+        "WF-301"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173922_ep051_997_wf_205_cache_search_and_performance.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-205",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-205"
+    },
+    {
+      "id": "WF-301",
+      "title": "Directory listing and discovery",
+      "phase": 3,
+      "owner": "codex",
+      "sequence": "10.1",
+      "depends_on": [
+        "WF-204",
+        "WF-205"
+      ],
+      "blocks": [
+        "WF-303"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173923_ep051_997_wf_301_directory_listing_and_discovery.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-301",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-301"
+    },
+    {
+      "id": "WF-302",
+      "title": "Individual strategy screen",
+      "phase": 3,
+      "owner": "codex",
+      "sequence": "9.2",
+      "depends_on": [
+        "WF-202",
+        "WF-204"
+      ],
+      "blocks": [
+        "WF-303"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173924_ep051_997_wf_302_individual_strategy_screen.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-302",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-302"
+    },
+    {
+      "id": "WF-303",
+      "title": "Compare, watchlist, and explanation pattern",
+      "phase": 3,
+      "owner": "codex",
+      "sequence": "11.1",
+      "depends_on": [
+        "WF-301",
+        "WF-302"
+      ],
+      "blocks": [
+        "WF-504",
+        "WF-701"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173925_ep051_997_wf_303_compare_watchlist_and_explanation_pattern.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-303",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-303"
+    },
+    {
+      "id": "WF-401",
+      "title": "Regime analytics",
+      "phase": 4,
+      "owner": "codex",
+      "sequence": "7.2",
+      "depends_on": [
+        "WF-104",
+        "WF-201"
+      ],
+      "blocks": [
+        "WF-503",
+        "WF-701"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173926_ep051_997_wf_401_regime_analytics.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-401",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-401"
+    },
+    {
+      "id": "WF-402",
+      "title": "Aligned strategy return series",
+      "phase": 4,
+      "owner": "codex",
+      "sequence": "8.3",
+      "depends_on": [
+        "WF-202"
+      ],
+      "blocks": [
+        "WF-403"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173927_ep051_997_wf_402_aligned_strategy_return_series.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-402",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-402"
+    },
+    {
+      "id": "WF-403",
+      "title": "Correlation, downside, and drawdown overlap",
+      "phase": 4,
+      "owner": "codex",
+      "sequence": "9.3",
+      "depends_on": [
+        "WF-402"
+      ],
+      "blocks": [
+        "WF-404"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173928_ep051_997_wf_403_correlation_downside_and_drawdown_overlap.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-403",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-403"
+    },
+    {
+      "id": "WF-404",
+      "title": "Complementarity, clusters, and discovery",
+      "phase": 4,
+      "owner": "codex",
+      "sequence": "10.2",
+      "depends_on": [
+        "WF-403",
+        "WF-203"
+      ],
+      "blocks": [
+        "WF-501",
+        "WF-701"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173929_ep051_997_wf_404_complementarity_clusters_and_discovery.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-404",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-404"
+    },
+    {
+      "id": "WF-501",
+      "title": "Portfolio requirements and capital model",
+      "phase": 5,
+      "owner": "codex",
+      "sequence": "11.2",
+      "depends_on": [
+        "WF-003",
+        "WF-404"
+      ],
+      "blocks": [
+        "WF-502",
+        "WF-601"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173930_ep051_997_wf_501_portfolio_requirements_and_capital_model.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-501",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-501"
+    },
+    {
+      "id": "WF-502",
+      "title": "Portfolio search and optimizer",
+      "phase": 5,
+      "owner": "codex",
+      "sequence": "12.1",
+      "depends_on": [
+        "WF-501"
+      ],
+      "blocks": [
+        "WF-503",
+        "WF-504"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173931_ep051_997_wf_502_portfolio_search_and_optimizer.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-502",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-502"
+    },
+    {
+      "id": "WF-503",
+      "title": "Portfolio validation",
+      "phase": 5,
+      "owner": "codex",
+      "sequence": "13.1",
+      "depends_on": [
+        "WF-502",
+        "WF-401"
+      ],
+      "blocks": [
+        "WF-504"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173932_ep051_997_wf_503_portfolio_validation.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-503",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-503"
+    },
+    {
+      "id": "WF-504",
+      "title": "Portfolio builder UI and API",
+      "phase": 5,
+      "owner": "codex",
+      "sequence": "14.1",
+      "depends_on": [
+        "WF-502",
+        "WF-503",
+        "WF-303"
+      ],
+      "blocks": [
+        "WF-602",
+        "WF-701"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173933_ep051_997_wf_504_portfolio_builder_ui_and_api.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-504",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-504"
+    },
+    {
+      "id": "WF-601",
+      "title": "Broker abstraction and sandbox",
+      "phase": 6,
+      "owner": "codex",
+      "sequence": "12.2",
+      "depends_on": [
+        "WF-005",
+        "WF-501"
+      ],
+      "blocks": [
+        "WF-602"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173934_ep051_997_wf_601_broker_abstraction_and_sandbox.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-601",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-601"
+    },
+    {
+      "id": "WF-602",
+      "title": "Deployment preview and risk gates",
+      "phase": 6,
+      "owner": "codex",
+      "sequence": "15.1",
+      "depends_on": [
+        "WF-504",
+        "WF-601"
+      ],
+      "blocks": [
+        "WF-603"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173935_ep051_997_wf_602_deployment_preview_and_risk_gates.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-602",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-602"
+    },
+    {
+      "id": "WF-603",
+      "title": "Execution reconciliation and monitoring",
+      "phase": 6,
+      "owner": "codex",
+      "sequence": "16.1",
+      "depends_on": [
+        "WF-602"
+      ],
+      "blocks": [
+        "WF-604"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173936_ep051_997_wf_603_execution_reconciliation_and_monitoring.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-603",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-603"
+    },
+    {
+      "id": "WF-604",
+      "title": "Strategy lifecycle operations",
+      "phase": 6,
+      "owner": "codex",
+      "sequence": "17.1",
+      "depends_on": [
+        "WF-103",
+        "WF-201",
+        "WF-603"
+      ],
+      "blocks": [],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173937_ep051_997_wf_604_strategy_lifecycle_operations.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-604",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-604"
+    },
+    {
+      "id": "WF-701",
+      "title": "Full test and analytical assurance",
+      "phase": 7,
+      "owner": "codex",
+      "sequence": "15.2",
+      "depends_on": [
+        "WF-303",
+        "WF-401",
+        "WF-404",
+        "WF-504"
+      ],
+      "blocks": [
+        "WF-702",
+        "WF-703"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173938_ep051_997_wf_701_full_test_and_analytical_assurance.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-701",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-701"
+    },
+    {
+      "id": "WF-702",
+      "title": "Security and operational readiness",
+      "phase": 7,
+      "owner": "codex",
+      "sequence": "16.2",
+      "depends_on": [
+        "WF-005",
+        "WF-701"
+      ],
+      "blocks": [
+        "WF-703"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173939_ep051_997_wf_702_security_and_operational_readiness.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-702",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-702"
+    },
+    {
+      "id": "WF-703",
+      "title": "Private beta and evidence review",
+      "phase": 7,
+      "owner": "codex",
+      "sequence": "17.2",
+      "depends_on": [
+        "WF-701",
+        "WF-702"
+      ],
+      "blocks": [
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173940_ep051_997_wf_703_private_beta_and_evidence_review.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-703",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-703"
+    },
+    {
+      "id": "WF-704",
+      "title": "Public launch and rollback",
+      "phase": 7,
+      "owner": "codex",
+      "sequence": "18.1",
+      "depends_on": [
+        "WF-703"
+      ],
+      "blocks": [
+        "WF-801"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173941_ep051_997_wf_704_public_launch_and_rollback.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-704",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-704"
+    },
+    {
+      "id": "WF-801",
+      "title": "Canonical market adapter framework",
+      "phase": 8,
+      "owner": "codex",
+      "sequence": "19.1",
+      "depends_on": [
+        "WF-704"
+      ],
+      "blocks": [
+        "WF-802"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173942_ep051_997_wf_801_canonical_market_adapter_framework.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-801",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-801"
+    },
+    {
+      "id": "WF-802",
+      "title": "Futures/crypto pilot",
+      "phase": 8,
+      "owner": "codex",
+      "sequence": "20.1",
+      "depends_on": [
+        "WF-801"
+      ],
+      "blocks": [],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173943_ep051_997_wf_802_futures_crypto_pilot.md",
+      "workflow_node_url": "file:///C:/Users/edebe/eds/workstream/600_workflow/ep051/EP051_DNA_strategy_directory_implementation_workflow.html#WF-802",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/WF-802"
+    },
+    {
+      "id": "EP051-INF-001",
+      "title": "Runtime topology and deterministic setup",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-101",
+        "WF-102",
+        "WF-204",
+        "WF-301",
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173944_ep051_997_ep051_inf_001_runtime_topology_and_deterministic_setup.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-001"
+    },
+    {
+      "id": "EP051-INF-002",
+      "title": "Docker Compose service stack",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-101",
+        "WF-102",
+        "WF-204",
+        "WF-701"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173945_ep051_997_ep051_inf_002_docker_compose_service_stack.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-002"
+    },
+    {
+      "id": "EP051-INF-003",
+      "title": "README and operator documentation",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-001",
+        "WF-204",
+        "WF-701",
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173946_ep051_997_ep051_inf_003_readme_and_operator_documentation.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-003"
+    },
+    {
+      "id": "EP051-INF-004",
+      "title": "Environment template and secret boundaries",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-005",
+        "WF-204",
+        "WF-702"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173947_ep051_997_ep051_inf_004_environment_template_and_secret_boundaries.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-004"
+    },
+    {
+      "id": "EP051-INF-005",
+      "title": "Database initialization and migration runner",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-101",
+        "WF-102",
+        "WF-103",
+        "WF-201"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173948_ep051_997_ep051_inf_005_database_initialization_and_migration_runner.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-005"
+    },
+    {
+      "id": "EP051-INF-006",
+      "title": "Health checks and observability baseline",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-102",
+        "WF-103",
+        "WF-205",
+        "WF-702",
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173949_ep051_997_ep051_inf_006_health_checks_and_observability_baseline.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-006"
+    },
+    {
+      "id": "EP051-INF-007",
+      "title": "CI quality gates and evidence retention",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-701",
+        "WF-702",
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173950_ep051_997_ep051_inf_007_ci_quality_gates_and_evidence_retention.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-007"
+    },
+    {
+      "id": "EP051-INF-008",
+      "title": "Release environments backup and rollback",
+      "phase": "Z",
+      "owner": "codex",
+      "depends_on": [],
+      "blocks": [
+        "WF-703",
+        "WF-704"
+      ],
+      "readiness": "complete",
+      "task_file": "C:/Users/edebe/eds/workstream/300_complete/codex/20260823_173951_ep051_997_ep051_inf_008_release_environments_backup_and_rollback.md",
+      "destination_folder": "C:/Users/edebe/eds/epics/ep_051_strategy_directory/workstreams/EP051-INF-008"
+    }
+  ]
+}

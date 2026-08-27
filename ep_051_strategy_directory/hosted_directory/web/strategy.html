@@ -1,0 +1,204 @@
+<!doctype html>
+<!-- Version history: 1.4.0 (2026-08-27) applies the approved Tech Principle intelligence visual system; 1.3.0 (2026-08-24) displays source product identity; 1.2.0 premium live equity curve; 1.1.0 period filtering; 1.0.0 connected evidence page. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <title>Strategy evidence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+    <style>
+      :root { --ink:#171913; --muted:#71766c; --paper:#f1f2eb; --surface:#fafbf6; --line:#d8dbd0; --acid:#d8ff3f; --green:#2c744e; --red:#a14c40; --shadow:0 24px 70px #24271c1b; }
+      * { box-sizing:border-box; }
+      html,body { max-width:100%; overflow-x:hidden; }
+      body { margin:0; background:radial-gradient(circle at 76% 0,#d8ff3f12,transparent 32rem),var(--paper); color:var(--ink); font:14px Manrope,sans-serif; }
+      button,input { font:inherit; color:inherit; }
+      button { cursor:pointer; }
+      .shell { width:100%; max-width:none; margin:0; padding:0 0 90px; }
+      .top { position:sticky; top:0; z-index:30; min-height:68px; margin:0; padding:0 24px; border:0; border-bottom:1px solid var(--line); background:#f1f2ebee; backdrop-filter:blur(12px); display:flex; align-items:center; justify-content:space-between; }
+      .top a { position:relative; display:inline-flex; align-items:center; gap:10px; color:var(--ink); font:500 10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; text-decoration:none; }
+      .top a::before { content:""; width:25px; height:25px; flex:none; border-radius:5px; background:var(--acid); transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+      .top a::after { content:""; position:absolute; left:8px; top:8px; width:9px; height:9px; border-radius:1px; background:#0a0c0e; }
+      .top a:hover::before { transform:rotate(45deg); }
+      .top>span { color:var(--muted); font:500 9px "DM Mono",monospace; letter-spacing:.1em; text-transform:uppercase; }
+      .page-title,.period,.equity-panel,#content,.trade-ledger { width:min(1180px,calc(100% - 48px)); margin-left:auto; margin-right:auto; }
+      .page-title { margin-top:34px; margin-bottom:22px; color:var(--ink); font:700 clamp(40px,5.2vw,70px)/.95 Manrope,sans-serif; letter-spacing:-.065em; }
+      .period { margin-top:0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .period-head { align-items:end; }
+      .period-head span,.period-dates label { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.09em; text-transform:uppercase; }
+      .period-head h2 { margin:4px 0 0; color:var(--ink); font:700 17px Manrope,sans-serif; letter-spacing:-.03em; }
+      .period-presets { gap:6px; }
+      .period-presets button { min-height:34px; padding:7px 11px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:10px; }
+      .period-presets button.active { border-color:var(--ink); background:var(--ink); color:#fff; }
+      .period-dates { grid-template-columns:1fr 1fr auto; gap:8px; margin-top:12px; }
+      .period-dates input { min-height:42px; margin-top:5px; border:1px solid var(--line); border-radius:7px; background:transparent; }
+      #applyPeriod { border:0; border-radius:8px; background:var(--acid); color:#171913; font-weight:700; }
+      .equity-panel { margin-top:14px; padding:18px; border:0; border-radius:14px; background:#111a15; color:#fff; box-shadow:var(--shadow); }
+      .equity-head { align-items:end; }
+      .equity-head .id { color:#87a594; font:9px "DM Mono",monospace; letter-spacing:.1em; }
+      .equity-head h2 { margin:4px 0 0; color:#fff; font:700 clamp(26px,3vw,38px)/1 Manrope,sans-serif; letter-spacing:-.045em; }
+      .equity-head p { color:#87a594; font:9px "DM Mono",monospace; text-transform:uppercase; }
+      #equityChart { margin-top:15px; border:1px solid #ffffff14; border-radius:10px; overflow:hidden; }
+      .chart-summary { border-color:#ffffff18; }
+      #content.panel,.trade-ledger.panel { margin-top:14px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .identity-line { gap:7px; }
+      .pill,.product-mark { min-height:22px; border-radius:999px; padding:5px 9px; font:500 9px "DM Mono",monospace; letter-spacing:.04em; }
+      .pill { background:#d8ff3f2c; color:var(--green); }
+      .product-mark { background:var(--ink); color:var(--acid); }
+      #content h2 { margin:13px 0; color:var(--ink); font:700 22px Manrope,sans-serif; letter-spacing:-.035em; }
+      .table { border-top:1px solid var(--line); }
+      .table th,.table td { padding:10px 8px; border-bottom:1px solid var(--line); font-size:11px; }
+      .table th { color:var(--muted); font:500 9px "DM Mono",monospace; text-transform:uppercase; letter-spacing:.05em; }
+      #content .status { color:var(--muted); font-size:11px; line-height:1.55; }
+      .actions { gap:8px; }
+      .actions button { min-height:38px; border:0; border-radius:7px; padding:8px 13px; background:var(--acid); color:#171913; font-weight:700; }
+      .ledger-head { padding-bottom:13px; border-bottom:1px solid var(--ink); }
+      .ledger-head .id { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.1em; }
+      .ledger-head h2 { margin:4px 0 0; color:var(--ink); font:700 25px Manrope,sans-serif; letter-spacing:-.04em; }
+      .ledger-count { border:1px solid var(--line); border-radius:999px; padding:6px 9px; color:var(--muted); font:9px "DM Mono",monospace; text-transform:uppercase; }
+      .trade-table { font-size:10px; }
+      .trade-table th { color:var(--muted); font:500 8px "DM Mono",monospace; letter-spacing:.06em; text-transform:uppercase; }
+      .trade-table th,.trade-table td { padding:11px 8px; border-bottom:1px solid var(--line); }
+      .signal { border-radius:999px; font:500 8px "DM Mono",monospace; }
+      html[data-theme="dark"] { color-scheme:dark; --ink:#f2f4eb; --muted:#a2a79e; --paper:#151712; --surface:#20231c; --line:#3b4036; --shadow:0 24px 70px #0008; }
+      html[data-theme="dark"] body { background:radial-gradient(circle at 76% 0,#d8ff3f0b,transparent 32rem),var(--paper); }
+      html[data-theme="dark"] .top { background:#151712ee; }
+      html[data-theme="dark"] .period-presets button.active { background:#f2f4eb; color:#171913; }
+      html[data-theme="dark"] .product-mark { background:#f2f4eb; color:#31410d; }
+      @media(max-width:760px) { .top { min-height:60px; padding:0 16px; } .page-title,.period,.equity-panel,#content,.trade-ledger { width:calc(100% - 32px); } .page-title { margin-top:27px; margin-bottom:18px; font-size:41px; } .period-head { align-items:flex-start; gap:14px; } .period-presets { overflow-x:auto; width:100%; } .period-presets button { flex:none; } .period-dates { grid-template-columns:1fr; } #applyPeriod { min-height:44px; } .equity-panel { padding:14px; } .equity-head { align-items:flex-start; gap:8px; } #content.panel,.trade-ledger.panel { padding:15px; } .table th,.table td { display:table-cell; } .trade-table thead { display:none; } .trade-table,.trade-table tbody,.trade-table tr,.trade-table td { display:block; width:100%; } .trade-table tr { padding:10px 0; border-bottom:1px solid var(--line); } .trade-table td { display:grid; grid-template-columns:110px 1fr; gap:10px; padding:6px 0; border:0; text-align:left!important; } .trade-table td::before { content:attr(data-label); color:var(--muted); font:8px "DM Mono",monospace; text-transform:uppercase; } }
+      @media(max-width:430px) { .top>span { display:none; } .page-title { font-size:35px; overflow-wrap:anywhere; } .equity-head p { display:none; } }
+      @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+    </style>
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="top">
+        <a href="/">← Directory</a><span>Canonical evidence</span>
+      </nav>
+      <h1 class="page-title" id="title">Loading…</h1>
+      <section class="period" aria-label="Evidence period">
+        <div class="period-head">
+          <div>
+            <span>Evidence window</span>
+            <h2 id="periodLabel">All available history</h2>
+          </div>
+          <div class="period-presets">
+            <button data-period="today">Current day</button
+            ><button data-period="week">Current week</button
+            ><button data-period="month">Current month</button
+            ><button data-period="all" class="active">All history</button>
+          </div>
+        </div>
+        <div class="period-dates">
+          <label>From<input type="date" id="dateFrom" /></label
+          ><label>To<input type="date" id="dateTo" /></label
+          ><button id="applyPeriod">Apply selected period</button>
+        </div>
+      </section>
+      <section class="equity-panel">
+        <div class="equity-head">
+          <div>
+            <span class="id">CUMULATIVE NET RETURN</span>
+            <h2>Equity curve</h2>
+          </div>
+          <p id="curvePeriod">Selected evidence window</p>
+        </div>
+        <div id="equityChart">
+          <div class="chart-empty">Loading the equity ledger…</div>
+        </div>
+      </section>
+      <div id="content" class="panel">Connecting to verified evidence.</div>
+      <section class="trade-ledger panel" aria-labelledby="tradeLedgerTitle">
+        <div class="ledger-head">
+          <div><span class="id">CLOSED-TRADE EVIDENCE</span><h2 id="tradeLedgerTitle">Trade ledger</h2></div>
+          <span id="tradeCount" class="ledger-count">Loading…</span>
+        </div>
+        <div id="tradeLedger" class="ledger-loading" aria-live="polite">Loading closed trades…</div>
+      </section>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.3.0"></script>
+    <script src="/assets/period-filter.js?v=1.0.0"></script>
+    <script src="/assets/equity-chart.js?v=1.0.0"></script>
+    <script>
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
+      const query = new URLSearchParams(location.search),
+        id = query.get("id") || "";
+      title.textContent = id || "Strategy not selected";
+      if (query.get("date_from")) dateFrom.value = query.get("date_from");
+      if (query.get("date_to")) dateTo.value = query.get("date_to");
+      let refreshSequence = 0;
+      const money = (value) => {
+        if (value == null || !Number.isFinite(Number(value))) return "—";
+        return new Intl.NumberFormat("en-GB", { maximumFractionDigits: 2 }).format(Number(value));
+      };
+      const ratio = (value) => value == null || !Number.isFinite(Number(value)) ? "—" : Number(value).toFixed(2);
+      const product = (value) => String(value || "").toUpperCase() || "Not supplied";
+      const price = (value) => value == null || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString("en-GB", { maximumFractionDigits: 8 });
+      const stamp = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value)) : "—";
+      function renderTrades(payload) {
+        tradeCount.textContent = `${payload.total} closed trade${payload.total === 1 ? "" : "s"}`;
+        if (!payload.items.length) {
+          tradeLedger.className = "ledger-empty";
+          tradeLedger.textContent = "No closed trades in the selected evidence window.";
+          return;
+        }
+        tradeLedger.className = "ledger-scroll";
+        tradeLedger.innerHTML = `<table class="trade-table"><thead><tr><th>Product</th><th>Signal</th><th>Entry time</th><th class="number">Entry price</th><th>Exit time</th><th class="number">Exit price</th><th class="number">Net return</th></tr></thead><tbody>${payload.items.map((trade) => `<tr><td data-label="Product"><strong>${esc(product(trade.product))}</strong></td><td data-label="Signal"><span class="signal signal-${esc(String(trade.signal || "").toLowerCase())}">${esc(trade.signal || "—")}</span></td><td data-label="Entry time">${esc(stamp(trade.entry_time))}</td><td data-label="Entry price" class="number">${esc(price(trade.entry_price))}</td><td data-label="Exit time">${esc(stamp(trade.exit_time))}</td><td data-label="Exit price" class="number">${esc(price(trade.exit_price))}</td><td data-label="Net return" class="number return-${Number(trade.net_return) >= 0 ? "positive" : "negative"}">${esc(money(trade.net_return))}</td></tr>`).join("")}</tbody></table>`;
+      }
+      async function refresh() {
+        const sequence = ++refreshSequence,
+          params = DnaPeriod.params();
+        content.textContent = "Recalculating strategy evidence…";
+        equityChart.innerHTML =
+          '<div class="chart-empty">Building the equity curve from closed trades…</div>';
+        curvePeriod.textContent = periodLabel.textContent;
+        tradeCount.textContent = "Loading…";
+        tradeLedger.className = "ledger-loading";
+        tradeLedger.textContent = "Loading closed trades…";
+        try {
+          const [p, curve, trades] = await Promise.all([
+            DnaDirectoryApi.list({ search: id, page_size: 1, ...params }),
+            DnaDirectoryApi.equityCurve(id, params),
+            DnaDirectoryApi.trades(id, params),
+          ]);
+          if (sequence !== refreshSequence) return;
+          const x = p.data.items.find((v) => v.strategy_id === id);
+          if (!x)
+            throw Error(
+              "No closed trades for this strategy in the selected period",
+            );
+          DnaEquityChart.render(equityChart, curve);
+          renderTrades(trades);
+          content.innerHTML = `<div class="identity-line"><span class="pill">${esc(x.quality_state)}</span><span class="product-mark">${esc(product(x.product_name))}</span></div><h2>${esc(x.descriptive_name || "Descriptive name pending")}</h2><table class="table"><tr><th>Product</th><td><strong>${esc(product(x.product_name))}</strong></td></tr><tr><th>Selected period</th><td>${esc(periodLabel.textContent)}</td></tr><tr><th>Closed trades</th><td>${Number(x.total_trades)}</td></tr><tr><th>Net return</th><td>${money(x.total_net_return)}</td></tr><tr><th>Win rate</th><td>${(Number(x.win_rate) * 100).toFixed(2)}%</td></tr><tr><th>Profit factor</th><td>${ratio(x.profit_factor)}</td></tr><tr><th>Maximum drawdown</th><td>${money(x.max_drawdown_money)}</td></tr><tr><th>Evidence observed</th><td>${esc(x.evidence_start || "—")} → ${esc(x.evidence_end || "—")}</td></tr></table><p class="status">Outcome is derived from signed net_return. “Target reached” is not treated as a win. Costs and commission are already included.</p><div class="actions"><a href="/compare.html?ids=${encodeURIComponent(id)}"><button>Compare</button></a><a href="/builder.html?ids=${encodeURIComponent(id)}"><button>Add to portfolio</button></a></div>`;
+        } catch (e) {
+          if (sequence !== refreshSequence) return;
+          content.innerHTML = `<span class="error">${esc(e.message)}</span>`;
+          equityChart.innerHTML = `<div class="chart-empty">${esc(e.message)}</div>`;
+          tradeCount.textContent = "Unavailable";
+          tradeLedger.className = "ledger-empty";
+          tradeLedger.textContent = e.message;
+        }
+      }
+      document.addEventListener("periodchange", refresh);
+      if (query.get("date_from") || query.get("date_to")) applyPeriod.click();
+      else refresh();
+    </script>
+  </body>
+</html>

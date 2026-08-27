@@ -1,0 +1,122 @@
+<!doctype html>
+<!-- Version history: 1.1.0 (2026-08-27) shared Tech Principle visual system; 1.0.0 (2026-08-23) evidence-aware portfolio shortlist. -->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <title>DNA portfolio builder</title>
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.0.0" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+  </head>
+  <body class="tp-page tp-builder">
+    <main class="shell">
+      <nav class="top">
+        <a href="/">← Directory</a><span>Portfolio evidence collection</span>
+      </nav>
+      <h1 class="page-title">Build deliberately.</h1>
+      <div class="panel">
+        <p>
+          Create a named collection from verified strategy evidence. Correlation
+          and similarity remain visible in comparison before allocation.
+        </p>
+        <input
+          id="ids"
+          style="width: 100%"
+          placeholder="DNA_102001, DNA_102002"
+        />
+        <div class="preference-row">
+          <label
+            >Collection name<input
+              id="collectionName"
+              maxlength="80"
+              placeholder="Core FX evidence" /></label
+          ><label
+            >Notes<input
+              id="collectionNotes"
+              maxlength="2000"
+              placeholder="Why these strategies belong together" /></label
+          ><button id="saveCollection">Save collection</button>
+        </div>
+        <div class="actions">
+          <button id="go">Review shortlist</button
+          ><a id="compareSelection" href="/compare.html"
+            ><button class="quiet">Compare relationships</button></a
+          >
+        </div>
+        <p id="saveState" class="status">
+          Saved collections are private and carry evidence-version references.
+        </p>
+      </div>
+      <div class="grid" id="content"></div>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js"></script>
+    <script>
+      const esc = (value) =>
+        String(value ?? "").replace(
+          /[&<>"']/g,
+          (character) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            })[character],
+        );
+      ids.value = new URLSearchParams(location.search).get("ids") || "";
+      const wanted = () => [
+        ...new Set(
+          ids.value
+            .split(",")
+            .map((x) => x.trim().toUpperCase())
+            .filter((x) => /^DNA_[A-Z0-9]+$/.test(x)),
+        ),
+      ];
+      async function run() {
+        const selected = wanted();
+        compareSelection.href = `/compare.html?ids=${encodeURIComponent(selected.join(","))}`;
+        const p = await DnaDirectoryApi.list({ page_size: 100 });
+        const rows = p.data.items.filter((x) =>
+          selected.includes(x.strategy_id),
+        );
+        content.innerHTML =
+          rows
+            .map(
+              (x) =>
+                `<article class="card"><span class="id">${esc(x.strategy_id)}</span><h2>${esc(x.descriptive_name || "Name pending")}</h2><p>${Number(x.total_trades)} trades · ${(Number(x.win_rate) * 100).toFixed(1)}% win rate · ${Number(x.total_net_return)} net return</p></article>`,
+            )
+            .join("") ||
+          '<div class="notice">Add one or more canonical strategy IDs.</div>';
+      }
+      go.onclick = run;
+      saveCollection.onclick = async () => {
+        try {
+          const selected = wanted();
+          if (!collectionName.value.trim() || !selected.length)
+            throw Error(
+              "Add a collection name and at least one canonical strategy ID.",
+            );
+          const versions = Object.fromEntries(
+            selected.map((id) => [id, "current"]),
+          );
+          await DnaDirectoryApi.createCollection({
+            name: collectionName.value.trim(),
+            strategy_ids: selected,
+            notes: collectionNotes.value.trim(),
+            evidence_versions: versions,
+          });
+          saveState.textContent =
+            "Collection saved to your private intelligence.";
+        } catch (error) {
+          saveState.textContent = error.message;
+          saveState.className = "status error";
+        }
+      };
+      if (ids.value) run();
+    </script>
+  </body>
+</html>

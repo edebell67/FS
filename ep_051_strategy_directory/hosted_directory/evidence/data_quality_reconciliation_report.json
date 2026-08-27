@@ -1,0 +1,55 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:15.961022+00:00",
+  "passed": true,
+  "checks": {
+    "intelligence_cache_digest_schema_age_and_full_reconciliation": true,
+    "market_cache_digest_schema_chronology_finiteness_and_no_future_rows": true,
+    "catalogue_size_is_500": true,
+    "profile_and_curve_membership_match": true,
+    "canonical_strategy_ids": true,
+    "golden_metric_fixture": true,
+    "machine_readable_contracts_present": true,
+    "cost_basis_declared_in_api_contract": true,
+    "winner_outcome_derived_from_signed_net_return": true
+  },
+  "catalogue": {
+    "profiles": 500,
+    "curves": 500,
+    "curve_points": 7666
+  },
+  "market": {
+    "source": "European Central Bank EXR daily reference rates",
+    "source_version": "ecb-exr-daily-v1",
+    "observations": 415,
+    "first_as_of": "2025-01-08T15:00:00+00:00",
+    "last_as_of": "2026-08-24T14:00:00+00:00"
+  },
+  "golden_metrics": {
+    "input": [
+      10,
+      -5,
+      20
+    ],
+    "actual": {
+      "total_return": 25.0,
+      "win_rate": 0.6666666666666666,
+      "profit_factor": 6.0
+    },
+    "expected": {
+      "total_return": 25,
+      "win_rate": 0.6666666666666666,
+      "profit_factor": 6
+    },
+    "checks": {
+      "total_return": true,
+      "win_rate": true,
+      "profit_factor": true
+    }
+  },
+  "contracts": [
+    "openapi.json",
+    "strategy-intelligence-profile.schema.json",
+    "strategy-query.schema.json"
+  ]
+}

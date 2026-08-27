@@ -1,0 +1,14 @@
+# Version history: 1.0.0 (2026-08-27) preserves the EP051 public-source boundary after moving the project into the epics repository root.
+# Local credentials
+.env
+.env.*
+!.env.example
+# Generated runtime/test/browser artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.playwright-cli/
+.test-tmp/
+hosted_directory/output/
+node_modules/
+.DS_Store

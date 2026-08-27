@@ -1,0 +1,53 @@
+# EP051 hosted directory — Render Blueprint.
+# Version 1.0.0 (2026-08-27).
+#
+# Deploys the FastAPI app in hosted_directory/ (image built from
+# hosted_directory/Dockerfile) against a managed Render Postgres database.
+# Redis is intentionally omitted: nothing in app/ imports it — the "cache"
+# service in deploy/docker-compose.yml is unused by the running code.
+#
+# Apply from the Render dashboard: New > Blueprint > point at this repo,
+# root directory epics/ep_051_strategy_directory. Render reads this file
+# from deploy/render.yaml if you set the Blueprint's "render.yaml path"
+# accordingly, or copy it to the repo root if your Render setup expects
+# that default location.
+
+databases:
+  - name: ep051-db
+    plan: starter
+    postgresMajorVersion: "16"
+    ipAllowList: []  # private network only; no public DB exposure
+
+services:
+  - type: web
+    name: ep051-directory
+    runtime: docker
+    dockerfilePath: ./hosted_directory/Dockerfile
+    dockerContext: ./hosted_directory
+    plan: starter
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATA_BACKEND
+        value: postgres
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ep051-db
+          property: connectionString
+      # MAINTENANCE_DATABASE_URL must point at the same database using the
+      # dedicated ep051_retention_owner-scoped role created by migration 007.
+      # Render's default DB user is not that role — create it manually (see
+      # render_deploy_package.md) and set this value by hand, not via
+      # fromDatabase.
+      - key: MAINTENANCE_DATABASE_URL
+        sync: false
+      - key: SYNC_TOKEN
+        generateValue: true
+      # Leave unset until the OIDC identity edge (see
+      # hosted_directory/evidence/identity_access_decision.md) is actually
+      # in front of this service. Without it, private intelligence routes
+      # correctly stay unloaded and only public directory/finder/compare
+      # screens serve traffic.
+      - key: INTELLIGENCE_USER_TOKEN
+        sync: false
+      - key: ALLOWED_ORIGINS
+        value: https://ep051-directory.onrender.com
