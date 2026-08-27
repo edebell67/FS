@@ -6,6 +6,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY app app
 COPY web web
+COPY migrations migrations
+COPY scripts scripts
 USER 65532
 EXPOSE 8080
-CMD ["uvicorn","app.main:app","--host","0.0.0.0","--port","8080"]
+CMD ["sh","-c","python scripts/apply_hosted_migrations.py && exec uvicorn app.main:app --host 0.0.0.0 --port 8080"]
