@@ -1,6 +1,6 @@
 (() => {
   'use strict';
-  const ARENA_OWNER = 'https://ep052-agentic-arena.onrender.com/owner';
+  const ARENA_OWNER = 'https://www.thetechprinciple.com/epic/ep052/owner/';
   const PREVIEW_BOUNDARY = 'Preview only: no real agent, skill assignment, Arena join or trading action has been executed.';
   const state = { phase: 'FINDER_IDLE', selectedStrategy: null, agent: null, query: '' };
   const strategies = [

@@ -19,7 +19,8 @@ test('Finder exposes the complete Find → Select → Give → Join → Watch lo
   assert.match(html, /Use Existing Agent/);
   assert.match(html, /Create New Agent/);
   assert.match(html, /Watch Agent/);
-  assert.match(html, /https:\/\/ep052-agentic-arena\.onrender\.com\/owner/);
+  assert.match(html, /https:\/\/www\.thetechprinciple\.com\/epic\/ep052\/owner\//);
+  assert.doesNotMatch(html, /ep052-agentic-arena\.onrender\.com/);
   assert.match(js, /FINDER_IDLE/);
   assert.match(js, /ASSIGN_SKILL/);
   assert.match(js, /JOIN_ARENA/);
