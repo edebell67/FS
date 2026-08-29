@@ -32,7 +32,8 @@ test('Fantasy Challenge demonstrates Finder, agent import, invitation, Arena and
   assert.match(html, /id="importAgent"/);
   assert.match(html, /id="inviteFriend"/);
   assert.match(html, /id="sendToAgent"/);
-  assert.match(js, /172\.22\.108\.121:8054/);
+  assert.match(js, /https:\/\/ep053-strategy-finder-ai\.onrender\.com\//);
+  assert.doesNotMatch(js, /172\.22\.108\.121:8054/);
   assert.match(html, /ep052-agentic-arena/);
   for (const token of ['INVITE_CREATED', 'AGENT_SKILL_ATTACHED', 'ARENA_JOINED', 'LEADERBOARD_UPDATED']) {
     assert.match(js, new RegExp(token));
