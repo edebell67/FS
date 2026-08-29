@@ -14,8 +14,8 @@ test('Arena floor and Owner View use the real local TTP icon in their product sh
     assert.match(page, /assets\/thetechprinciple-icon-180\.png/);
     assert.match(page, /https:\/\/thetechprinciple\.com\//);
   }
-  assert.match(html, /class="brand-logo" src="assets\/thetechprinciple-icon-180\.png"/);
-  assert.match(arenaHtml, /class="brand-logo" src="assets\/thetechprinciple-icon-180\.png"/);
+  assert.match(html, /class="brand-logo"[^>]+width="30"[^>]+height="30"/);
+  assert.match(arenaHtml, /class="brand-logo"[^>]+width="30"[^>]+height="30"/);
   assert.ok(fs.existsSync(path.join(root, 'assets', 'thetechprinciple-icon-180.png')));
   assert.match(css, /\.brand-logo/);
   assert.match(css, /\.ttp-product-footer/);
