@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: ep054-strategy-fantasy-challenge
+    runtime: python
+    rootDir: epics/ep_054_strategy_fantasy_challenge
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: false
+    plan: starter
