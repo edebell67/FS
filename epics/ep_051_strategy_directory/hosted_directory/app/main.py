@@ -1,6 +1,7 @@
 """Container-ready directory API and screen host.
 
 Version history:
+- 2.1.2 (2026-08-28): Allows caller-selected evidence trade-count threshold, default 5, independently of result filtering.
 - 2.1.1 (2026-08-27): Serves the shared Tech Principle screen-theme stylesheet.
 - 2.1.0 (2026-08-27): Adds profitable-strategy count and percentage to the selected-period directory summary.
 - 2.0.0 (2026-08-25): Defines headline strategies as models executed within the selected period.
@@ -27,7 +28,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse,Response
 
 from .config import Settings, get_settings
-from .contracts import Snapshot, Strategy
+from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
 from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_strategies
 from .intelligence.profile import UNITS, build_profile, build_summary_profile
 from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
@@ -99,7 +100,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
 
     @app.middleware("http")
     async def headers(request: Request, call_next):
-        if request.url.path=="/internal/snapshots":
+        if request.url.path=="/internal/snapshots" or request.url.path.startswith("/internal/snapshots/"):
             raw=request.headers.get("content-length")
             if raw is None:raise HTTPException(411,"Content-Length is required")
             try:size=int(raw)
@@ -319,6 +320,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     @app.get("/api/dna/strategies")
     def strategies(page:int=Query(1,ge=1),page_size:int=Query(50,ge=1,le=100),search:str|None=Query(None,max_length=32,pattern=r"^[A-Za-z0-9_]*$"),
                    product:str|None=Query(None,max_length=32,pattern=r"^[A-Za-z0-9_]*$"),
+                   evidence_min_trades:int=Query(5,ge=1,le=1000000),
                    minimum_trades:int=Query(0,ge=0),sort:str=Query("strategy_id",pattern=r"^(strategy_id|total_trades|total_net_return|win_rate|profit_factor|max_drawdown_money)$"),
                    direction:str=Query("asc",pattern=r"^(asc|desc)$"),
                    signal:str|None=Query(None,pattern=r"^(BUY|SELL)$"),
@@ -345,7 +347,8 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             "total_net_return":sum(float(row.total_net_return or 0) for row in rows),
             "profitable_strategies":profitable_strategies,
             "profitable_percentage":round(profitable_strategies/headline_total*100,2) if headline_total else 0.0,
-            "evidence_ready":sum(row.quality_state=="VALID" for row in rows),
+            "evidence_ready":sum(row.total_trades>=evidence_min_trades for row in rows),
+            "evidence_min_trades":evidence_min_trades,
             "collecting":sum(row.quality_state=="COLLECTING" for row in rows),
         }
         if cfg.data_backend=="sqlserver" and not search and minimum_trades==0:
@@ -618,6 +621,40 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         try: snapshot.verified(); app.state.repository.promote(snapshot);app.state.profile_cache={"at":0.0,"profiles":None,"curves":None}
         except ValueError as exc: raise HTTPException(422,str(exc))
         return {"accepted":True,"snapshot_id":snapshot.snapshot_id,"items":snapshot.item_count}
+
+    # Staged, batched ingestion (PUB-04) - builds one snapshot across several
+    # small requests instead of one large POST /internal/snapshots body.
+    # begin declares the envelope; batch inserts a chunk of rows (repeatable,
+    # idempotent per batch_index); finalize reassembles the full snapshot from
+    # staged rows, runs the same verified() reconciliation, and does the same
+    # staged->current/retained flip promote() always did.
+    @app.post("/internal/snapshots/{snapshot_id}/begin",status_code=202)
+    def begin_snapshot(envelope:SnapshotEnvelope, snapshot_id:str=ApiPath(pattern=r"^[A-Za-z0-9._:-]+$"), _:None=Depends(trusted_publisher)):
+        if envelope.snapshot_id != snapshot_id: raise HTTPException(400,"snapshot_id path/body mismatch")
+        if envelope.item_count > cfg.max_snapshot_items: raise HTTPException(413,"Snapshot item limit exceeded")
+        now=datetime.now(timezone.utc)
+        if envelope.generated_at>now+timedelta(minutes=5) or envelope.source_watermark>now+timedelta(minutes=5):raise HTTPException(422,"Snapshot timestamp is in the future")
+        if now-envelope.source_watermark>timedelta(hours=cfg.snapshot_max_age_hours):raise HTTPException(422,"Snapshot source watermark is stale")
+        try: app.state.repository.begin_snapshot(envelope)
+        except ValueError as exc: raise HTTPException(422,str(exc))
+        return {"accepted":True,"snapshot_id":snapshot_id,"status":"staged"}
+
+    @app.post("/internal/snapshots/{snapshot_id}/batch",status_code=202)
+    def add_snapshot_batch(batch:SnapshotBatch, snapshot_id:str=ApiPath(pattern=r"^[A-Za-z0-9._:-]+$"), _:None=Depends(trusted_publisher), idempotency_key:str|None=Header(None)):
+        if idempotency_key != f"{snapshot_id}:{batch.batch_index}": raise HTTPException(400,"Idempotency key mismatch")
+        try: app.state.repository.add_snapshot_batch(snapshot_id,batch.items,batch.intelligence_profiles,batch.return_series)
+        except KeyError: raise HTTPException(404,"Snapshot has not been started - call begin first")
+        except ValueError as exc: raise HTTPException(422,str(exc))
+        return {"accepted":True,"snapshot_id":snapshot_id,"batch_index":batch.batch_index}
+
+    @app.post("/internal/snapshots/{snapshot_id}/finalize",status_code=202)
+    def finalize_snapshot(snapshot_id:str=ApiPath(pattern=r"^[A-Za-z0-9._:-]+$"), _:None=Depends(trusted_publisher), idempotency_key:str|None=Header(None)):
+        if idempotency_key != snapshot_id: raise HTTPException(400,"Idempotency key mismatch")
+        try: app.state.repository.finalize_snapshot(snapshot_id)
+        except KeyError: raise HTTPException(404,"Snapshot has not been started - call begin first")
+        except ValueError as exc: raise HTTPException(422,str(exc))
+        app.state.profile_cache={"at":0.0,"profiles":None,"curves":None}
+        return {"accepted":True,"snapshot_id":snapshot_id,"status":"current"}
 
     @app.post("/internal/intelligence/refresh",status_code=202)
     def refresh_intelligence_profiles(_:None=Depends(trusted_publisher)):
