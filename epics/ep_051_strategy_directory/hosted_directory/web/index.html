@@ -61,8 +61,11 @@
       .period-presets { gap:6px; }
       .period-presets button { min-height:34px; padding:7px 11px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:10px; }
       .period-presets button.active { border-color:var(--ink); background:var(--ink); color:#fff; }
-      .period-dates { grid-template-columns:1fr 1fr auto; gap:8px; margin-top:12px; }
+      .period-dates { grid-template-columns:1fr 1fr auto auto; gap:8px; margin-top:12px; align-items:end; }
       .period-dates input { min-height:42px; margin-top:5px; border:1px solid var(--line); border-radius:7px; background:transparent; }
+      .day-scroll { display:flex; gap:4px; }
+      .day-scroll button { min-width:38px; min-height:42px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:16px; line-height:1; cursor:pointer; }
+      .day-scroll button:hover { border-color:var(--ink); }
       #applyPeriod,#load { border:0; border-radius:8px; background:var(--acid); color:#171913; font-weight:700; }
       .tools { display:grid; grid-template-columns:minmax(220px,1fr) repeat(4,minmax(120px,auto)) auto; gap:8px; margin-top:14px; padding:8px; border-radius:12px; background:var(--ink); box-shadow:var(--shadow); }
       .tools input,.tools select { min-height:43px; border:1px solid #ffffff20; border-radius:7px; background:#ffffff0b; color:#fff; padding:8px 11px; }
@@ -143,6 +146,10 @@
         <div class="period-dates">
           <label>From<input type="date" id="dateFrom" /></label
           ><label>To<input type="date" id="dateTo" /></label
+          ><span class="day-scroll"
+            ><button id="dayBack" type="button" aria-label="Shift period back one day" title="Shift back one day">‹</button
+            ><button id="dayForward" type="button" aria-label="Shift period forward one day" title="Shift forward one day">›</button
+          ></span
           ><button id="applyPeriod">Apply selected period</button>
         </div>
       </section>

@@ -1,7 +1,20 @@
-"""Build point-in-time FX regime features from official ECB daily EXR observations."""
+"""Build point-in-time FX regime features from official ECB daily EXR observations.
+
+Version history:
+- 1.1.0 (2026-08-30): Adds --interval/--once loop mode (mirrors
+  scripts/refresh_directory_summary_cache.py's pattern) so this can run
+  supervised under _one_run_single.ps1 - AUTO-04/LOC-03's blocker. Default
+  interval is once/day since ECB only publishes once per business day.
+  Note: unlike LOC-01/LOC-02, the local app process still needs a manual
+  restart to pick up a freshly-written file - app/main.py loads the
+  market-feature cache once into app.state at startup with no mtime
+  recheck, so this loop keeps the file current but does not itself make
+  new data visible to a running local app.
+- 1.0.0: Original one-shot fetch/build/write/optional-publish script.
+"""
 from __future__ import annotations
 
-import argparse,asyncio,csv,hashlib,io,json,math,statistics
+import argparse,asyncio,csv,hashlib,io,json,math,statistics,time
 from datetime import date,datetime,timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -50,14 +63,27 @@ async def publish(features,url,token):
             response=await client.post(url.rstrip("/")+"/internal/intelligence/market-features",headers={"Authorization":f"Bearer {token}"},json=feature);response.raise_for_status()
 
 
-def main():
-    parser=argparse.ArgumentParser();parser.add_argument("--start",default="2000-01-01");parser.add_argument("--end",default=date.today().isoformat());parser.add_argument("--output",default="runtime/market_features.json");parser.add_argument("--publish-url");parser.add_argument("--token");args=parser.parse_args()
-    text,source_url=asyncio.run(fetch(args.start,args.end));features=build_features(load_csv(text));payload={"schema_version":"1.0.0","generated_at":datetime.now(timezone.utc).isoformat(),"market":"FX","source":"European Central Bank EXR daily reference rates","source_url":source_url,"source_version":SOURCE_VERSION,"features":features};payload["sha256"]=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",",":")).encode()).hexdigest()
+def refresh(args):
+    # Recomputed fresh each call, not captured once at parse time - a
+    # long-running loop must fetch each new day's data as it publishes,
+    # not keep asking for the same --end date the loop started on.
+    end=args.end or date.today().isoformat()
+    text,source_url=asyncio.run(fetch(args.start,end));features=build_features(load_csv(text));payload={"schema_version":"1.0.0","generated_at":datetime.now(timezone.utc).isoformat(),"market":"FX","source":"European Central Bank EXR daily reference rates","source_url":source_url,"source_version":SOURCE_VERSION,"features":features};payload["sha256"]=hashlib.sha256(json.dumps(payload,sort_keys=True,separators=(",",":")).encode()).hexdigest()
     target=Path(args.output);target=target if target.is_absolute() else ROOT/target;target.parent.mkdir(parents=True,exist_ok=True);temporary=target.with_suffix(".tmp");temporary.write_text(json.dumps(payload,separators=(",",":")),encoding="utf-8");temporary.replace(target)
     if args.publish_url:
         if not args.token:raise SystemExit("--token is required with --publish-url")
         asyncio.run(publish(features,args.publish_url,args.token))
-    print(json.dumps({"output":str(target),"features":len(features),"first":features[0]["as_of"] if features else None,"last":features[-1]["as_of"] if features else None,"sha256":payload["sha256"]}))
+    print(json.dumps({"output":str(target),"features":len(features),"first":features[0]["as_of"] if features else None,"last":features[-1]["as_of"] if features else None,"sha256":payload["sha256"]}),flush=True)
+
+
+def main():
+    parser=argparse.ArgumentParser();parser.add_argument("--start",default="2000-01-01");parser.add_argument("--end",default=None);parser.add_argument("--output",default="runtime/market_features.json");parser.add_argument("--publish-url");parser.add_argument("--token")
+    parser.add_argument("--interval",type=int,default=86400);parser.add_argument("--once",action="store_true");args=parser.parse_args()
+    while True:
+        try:refresh(args)
+        except Exception as exc:print(f"ECB market feature refresh failed: {exc}",flush=True)
+        if args.once:return
+        time.sleep(max(3600,args.interval))
 
 
 if __name__=="__main__":main()
