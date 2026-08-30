@@ -68,6 +68,11 @@ class IntelligenceReturnPoint(BaseModel):
     net_return: float
     cumulative_net_return: float
     drawdown: float
+    # Optional fields retain compatibility with snapshots published earlier.
+    product: str | None = Field(default=None, max_length=500)
+    signal: str | None = Field(default=None, max_length=10)
+    entry_price: float | None = None
+    exit_price: float | None = None
 
     @field_validator("net_return","cumulative_net_return","drawdown")
     @classmethod

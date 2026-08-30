@@ -40,7 +40,7 @@ def main():
     settings=get_settings();selected=select_snapshot_items(local_strategies(settings));items=[item.model_dump() for item in selected];curves=local_equity_curves(settings,[item.strategy_id for item in selected])
     profiles=[build_profile(item,curves.get(item["strategy_id"],[])) for item in items];series=[]
     for strategy_id,points in curves.items():
-        for point in points:series.append({"strategy_id":strategy_id,"trade_id":str(point.get("guid") or point["trade_number"]),"trade_number":point["trade_number"],"opened_at":point.get("opened_at"),"observed_at":point["closed_at"],"net_return":point["net_return"],"cumulative_net_return":point["equity"],"drawdown":point["drawdown"]})
+        for point in points:series.append({"strategy_id":strategy_id,"trade_id":str(point.get("guid") or point["trade_number"]),"trade_number":point["trade_number"],"opened_at":point.get("opened_at"),"observed_at":point["closed_at"],"net_return":point["net_return"],"cumulative_net_return":point["equity"],"drawdown":point["drawdown"],"product":point.get("product"),"signal":point.get("signal"),"entry_price":point.get("entry_price"),"exit_price":point.get("exit_price")})
     snapshot = build_snapshot(items,watermark,profiles=profiles,return_series=series)
     target = Path(args.output); target.write_text(snapshot.model_dump_json(indent=2), encoding="utf-8")
     print(json.dumps({"snapshot_id": snapshot.snapshot_id, "items": snapshot.item_count, "sha256": snapshot.sha256}))
