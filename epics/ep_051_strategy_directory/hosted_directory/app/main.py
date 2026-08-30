@@ -19,7 +19,7 @@ Version history:
 - 1.0.0 (2026-08-23): Local SQL and hosted snapshot modes, ingestion and screens.
 """
 from __future__ import annotations
-import base64,hashlib,hmac, json,re,secrets, time as clock
+import base64,hashlib,hmac, json,os,re,secrets,subprocess, time as clock
 from threading import Lock,Thread
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -42,6 +42,28 @@ from .intelligence.assurance import OperationsMonitor,ReleaseManager
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
 WEB = Path(__file__).resolve().parents[1] / "web"
+
+
+def _detect_build_sha() -> str | None:
+    """Identifies exactly which commit this running process was built from,
+    so a local checkout and a live deploy can be compared directly instead of
+    guessed at - the source-boundary confusion around PUB-04's rollout (two
+    different GitHub repos, stale branches) made this worth having. Render
+    auto-injects RENDER_GIT_COMMIT for git-backed deploys; falls back to
+    asking git directly for a local dev run."""
+    sha = os.environ.get("RENDER_GIT_COMMIT") or os.environ.get("GIT_COMMIT_SHA")
+    if sha:
+        return sha
+    try:
+        return subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=Path(__file__).resolve().parents[1],
+            stderr=subprocess.DEVNULL, timeout=2,
+        ).decode().strip()
+    except Exception:
+        return None
+
+
+BUILD_SHA = _detect_build_sha()
 
 
 def html_signature():
@@ -258,9 +280,14 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                             candidates=[Strategy.model_validate(x) for x in local_strategies(cfg)];candidates.sort(key=lambda item:(-item.total_trades,item.strategy_id));app.state.strategy_cache=candidates
                 return [item for item in app.state.strategy_cache if canonical_strategy is None or item.strategy_id==canonical_strategy]
             return [Strategy.model_validate(x) for x in local_strategies(cfg,start.replace(tzinfo=None) if start else None,end.replace(tzinfo=None) if end else None,canonical_strategy)]
-        if date_from or date_to:
-            raise HTTPException(501, "Hosted period aggregates have not been published yet")
         if app.state.repository is None: raise HTTPException(503, "Directory repository is not configured")
+        if date_from or date_to:
+            # Published trade-level return_series carries no per-trade BUY/SELL
+            # signal, unlike the local SQL Server source - a signal-filtered
+            # period query cannot be answered hosted yet.
+            if signal is not None: raise HTTPException(501, "Signal-filtered period evidence has not been published yet")
+            rows=app.state.repository.period_items(start,end,canonical_strategy)
+            return [Strategy.model_validate(x) for x in rows]
         snap=hosted_snapshot();return [] if snap is None else snap.items
 
     def trusted_user(authorization:str|None=Header(None),x_user_id:str|None=Header(None,alias="X-User-ID")):
@@ -327,7 +354,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return next((profile for profile in all_profiles() if profile["identity"]["strategy_id"]==strategy_id),None)
 
     @app.get("/healthz")
-    def health(): return {"status":"ok"}
+    def health(): return {"status":"ok","build_sha":BUILD_SHA[:12] if BUILD_SHA else None}
 
     @app.get("/favicon.ico",include_in_schema=False)
     def favicon():return Response(status_code=204)
