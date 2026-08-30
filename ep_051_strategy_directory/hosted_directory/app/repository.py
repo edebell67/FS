@@ -469,6 +469,32 @@ class MemoryRepository:
         return rebase_equity_rows([{"trade_number":item.trade_number,"opened_at":item.opened_at.isoformat() if item.opened_at else None,"closed_at":item.observed_at.isoformat(),"net_return":item.net_return,"equity":item.cumulative_net_return,"drawdown":item.drawdown} for item in rows])
     def current_equity_curves(self):
         return {item.strategy_id:self.current_equity_curve(item.strategy_id) for item in self.current_items()}
+    def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
+        snap=self.current_snapshot()
+        if snap is None:return []
+        identity={item.strategy_id:item for item in snap.items};grouped={}
+        for point in snap.return_series:
+            if canonical_strategy is not None and point.strategy_id!=canonical_strategy:continue
+            if date_from is not None and point.observed_at<date_from:continue
+            if date_to_exclusive is not None and point.observed_at>=date_to_exclusive:continue
+            grouped.setdefault(point.strategy_id,[]).append(point)
+        results=[]
+        for strategy_id,points in grouped.items():
+            wins=losses=breakevens=0;gross_profit=gross_loss=equity=0.0
+            for point in points:
+                net=point.net_return;equity+=net
+                if net>0:wins+=1;gross_profit+=net
+                elif net<0:losses+=1;gross_loss+=abs(net)
+                else:breakevens+=1
+            base=identity.get(strategy_id);total=len(points)
+            results.append({"strategy_id":strategy_id,"descriptive_name":base.descriptive_name if base else None,
+                "product_name":base.product_name if base else None,"market":base.market if base else "FX",
+                "status":base.status if base else "active","total_trades":total,"wins":wins,"losses":losses,
+                "breakevens":breakevens,"total_net_return":equity,"win_rate":wins/total if total else 0.0,
+                "profit_factor":gross_profit/gross_loss if gross_loss else None,"max_drawdown_money":None,
+                "evidence_start":min(point.opened_at or point.observed_at for point in points),
+                "evidence_end":max(point.observed_at for point in points),"quality_state":"VALID" if total>=30 else "COLLECTING"})
+        return results
     def current_daily_returns(self,strategy_ids,max_days=2000):
         output={strategy_id:{} for strategy_id in strategy_ids};snap=self.current_snapshot()
         for point in ([] if snap is None else snap.return_series):
@@ -583,6 +609,35 @@ class PostgresRepository:
             cur.execute("SELECT p.strategy_id,p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id ORDER BY p.strategy_id,p.observed_at,p.trade_id")
             for strategy_id,payload in cur.fetchall():grouped.setdefault(strategy_id,[]).append({"trade_number":payload["trade_number"],"opened_at":payload.get("opened_at"),"closed_at":payload["observed_at"],"net_return":payload["net_return"],"equity":payload["cumulative_net_return"],"drawdown":payload["drawdown"]})
         return grouped
+    def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
+        """Summarise current hosted return-series rows in a close-time period."""
+        clauses=["1=1"];params=[]
+        if date_from is not None:clauses.append("p.observed_at>=%s");params.append(date_from)
+        if date_to_exclusive is not None:clauses.append("p.observed_at<%s");params.append(date_to_exclusive)
+        if canonical_strategy is not None:clauses.append("p.strategy_id=%s");params.append(canonical_strategy)
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("SELECT p.strategy_id,p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.strategy_id",params)
+            grouped={}
+            for strategy_id,payload in cur.fetchall():grouped.setdefault(strategy_id,[]).append(payload)
+            if not grouped:return []
+            cur.execute("SELECT d.strategy_id,d.payload FROM directory_current c JOIN directory_strategy d ON d.snapshot_id=c.snapshot_id WHERE d.strategy_id = ANY(%s)",(list(grouped),))
+            identity={strategy_id:payload for strategy_id,payload in cur.fetchall()}
+        results=[]
+        for strategy_id,points in grouped.items():
+            wins=losses=breakevens=0;gross_profit=gross_loss=equity=0.0
+            for point in points:
+                net=point["net_return"];equity+=net
+                if net>0:wins+=1;gross_profit+=net
+                elif net<0:losses+=1;gross_loss+=abs(net)
+                else:breakevens+=1
+            base=identity.get(strategy_id,{});total=len(points)
+            results.append({"strategy_id":strategy_id,"descriptive_name":base.get("descriptive_name"),
+                "product_name":base.get("product_name"),"market":base.get("market","FX"),"status":base.get("status","active"),
+                "total_trades":total,"wins":wins,"losses":losses,"breakevens":breakevens,"total_net_return":equity,
+                "win_rate":wins/total if total else 0.0,"profit_factor":gross_profit/gross_loss if gross_loss else None,
+                "max_drawdown_money":None,"evidence_start":min(point.get("opened_at") or point["observed_at"] for point in points),
+                "evidence_end":max(point["observed_at"] for point in points),"quality_state":"VALID" if total>=30 else "COLLECTING"})
+        return results
     def current_daily_returns(self,strategy_ids,max_days=2000):
         with self._connect() as conn,conn.cursor() as cur:
             cur.execute("""WITH daily AS (
