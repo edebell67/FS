@@ -91,6 +91,7 @@ def test_public_directory_contract_supports_search_sort_and_paging(
         "profitable_strategies": profitable,
         "profitable_percentage": float(profitable * 100),
         "evidence_ready": int(body["data"]["items"][0]["quality_state"] == "VALID"),
+        "evidence_min_trades": 5,
         "collecting": int(body["data"]["items"][0]["quality_state"] == "COLLECTING"),
     }
     assert body["methodology_version"] == "1.0.0"

@@ -1,6 +1,13 @@
 """Public and ingestion contracts.
 
 Version history:
+- 1.2.0 (2026-08-28): Adds SnapshotEnvelope/SnapshotBatch for the staged, batched
+  ingestion path (see PUB-04 in the EP051 data-sync workflow doc) - replaces
+  a single large POST /internal/snapshots body with begin/batch/finalize
+  calls that build one staged snapshot across several small requests. The
+  full-snapshot Snapshot contract and its verified() reconciliation are
+  unchanged; finalize reassembles one from the staged rows and runs the
+  exact same check before promoting.
 - 1.1.0 (2026-08-24): Adds the source product name to public strategy evidence.
 - 1.0.0 (2026-08-23): Stable strategy and snapshot contracts.
 """
@@ -84,9 +91,7 @@ class Snapshot(BaseModel):
     @field_validator("source_watermark", "generated_at")
     @classmethod
     def aware_timestamp(cls, value: datetime) -> datetime:
-        if value.tzinfo is None or value.utcoffset() is None:
-            raise ValueError("timestamp must include a timezone")
-        return value.astimezone(timezone.utc)
+        return _aware_timestamp(value)
 
     @field_validator("items")
     @classmethod
@@ -132,6 +137,40 @@ class Snapshot(BaseModel):
         if self.sha256 != snapshot_hash(self.items,self.intelligence_profiles,self.return_series):
             raise ValueError("snapshot hash mismatch")
         return self
+
+
+def _aware_timestamp(value: datetime) -> datetime:
+    if value.tzinfo is None or value.utcoffset() is None:
+        raise ValueError("timestamp must include a timezone")
+    return value.astimezone(timezone.utc)
+
+
+class SnapshotEnvelope(BaseModel):
+    """Declares a snapshot's identity/counts before any rows arrive. Posted
+    to POST /internal/snapshots/{snapshot_id}/begin to start a staged
+    snapshot that /batch calls then fill in and /finalize reconciles."""
+    schema_version: Literal["1.0.0"] = "1.0.0"
+    methodology_version: str = Field(default="1.0.0", min_length=1, max_length=80)
+    snapshot_id: str = Field(min_length=1, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$")
+    source_watermark: datetime
+    generated_at: datetime
+    item_count: int = Field(ge=0, le=MAX_SNAPSHOT_ITEMS)
+    sha256: str = Field(pattern=r"^[a-f0-9]{64}$")
+
+    @field_validator("source_watermark", "generated_at")
+    @classmethod
+    def aware_timestamp(cls, value: datetime) -> datetime:
+        return _aware_timestamp(value)
+
+
+class SnapshotBatch(BaseModel):
+    """One chunk of a staged snapshot's rows. batch_index makes each batch
+    POST idempotent (Idempotency-Key = '{snapshot_id}:{batch_index}') so a
+    retried batch never double-inserts."""
+    batch_index: int = Field(ge=0)
+    items: list[Strategy] = Field(default_factory=list, max_length=MAX_SNAPSHOT_ITEMS)
+    intelligence_profiles: list[StrategyIntelligenceProfile] = Field(default_factory=list, max_length=MAX_SNAPSHOT_ITEMS)
+    return_series: list[IntelligenceReturnPoint] = Field(default_factory=list, max_length=MAX_RETURN_SERIES_POINTS)
 
 
 def _json_default(value):
