@@ -68,6 +68,13 @@ class IntelligenceReturnPoint(BaseModel):
     net_return: float
     cumulative_net_return: float
     drawdown: float
+    # Optional - absent on snapshots published before this field existed.
+    # Lets the hosted trade-ledger view show what the local SQL Server view
+    # always could (entry/exit price, product, signal), not just net_return.
+    product: str | None = Field(default=None, max_length=500)
+    signal: str | None = Field(default=None, max_length=10)
+    entry_price: float | None = None
+    exit_price: float | None = None
 
     @field_validator("net_return","cumulative_net_return","drawdown")
     @classmethod

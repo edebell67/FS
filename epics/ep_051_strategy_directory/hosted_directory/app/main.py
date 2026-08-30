@@ -460,12 +460,14 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             raise HTTPException(422, "date_from must be on or before date_to")
         start = datetime.combine(date_from, time.min,timezone.utc) if date_from else None
         end = datetime.combine(date_to + timedelta(days=1), time.min,timezone.utc) if date_to else None
-        if cfg.data_backend != "sqlserver":
-            raise HTTPException(501,"The raw trade ledger is not available from this data backend")
-        if date_from==datetime.now(timezone.utc).date() and date_to==date_from:
-            trades=current_directory_cache(date_from).get("trades_by_strategy",{}).get(strategy_id,[])[:limit]
+        if cfg.data_backend == "sqlserver":
+            if date_from==datetime.now(timezone.utc).date() and date_to==date_from:
+                trades=current_directory_cache(date_from).get("trades_by_strategy",{}).get(strategy_id,[])[:limit]
+            else:
+                trades=local_closed_trades(cfg,strategy_id,start,end,limit)
         else:
-            trades=local_closed_trades(cfg,strategy_id,start,end,limit)
+            if app.state.repository is None: raise HTTPException(503,"Directory repository is not configured")
+            trades=app.state.repository.current_closed_trades(strategy_id,start,end,limit)
         return {"strategy_id":strategy_id,"items":trades,"total":len(trades),"limit":limit,
                 "period":{"date_from":date_from.isoformat() if date_from else None,
                           "date_to":date_to.isoformat() if date_to else None},
