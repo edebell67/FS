@@ -76,6 +76,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     app.state.operations=OperationsMonitor();app.state.releases=ReleaseManager()
     app.state.csp_cache={"signature":None,"value":None};app.state.csp_cache_lock=Lock()
     app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};app.state.profile_cache_lock=Lock()
+    app.state.snapshot_cache={"snapshot":None};app.state.snapshot_cache_lock=Lock()
     app.state.strategy_cache=None;app.state.strategy_cache_lock=Lock()
     app.state.local_snapshot_cache=None
     app.state.local_snapshot_cache_mtime=None
@@ -114,6 +115,26 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         response.headers["X-Content-Type-Options"] = "nosniff"; response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Content-Security-Policy"]=current_csp();response.headers["Permissions-Policy"]="camera=(), microphone=(), geolocation=()"
         return response
+
+    def hosted_snapshot():
+        # current_snapshot() re-runs a full jsonb_agg reconstruction of every
+        # item on each call - expensive with 2000 strategies and was being
+        # invoked twice per /api/dna/strategies request with zero caching.
+        # Cached here and invalidated on every successful promote/finalize,
+        # matching the pattern local_snapshot() already uses for the SQL
+        # Server backend.
+        if app.state.repository is None:return None
+        cached=app.state.snapshot_cache["snapshot"]
+        if cached is not None:return cached
+        with app.state.snapshot_cache_lock:
+            cached=app.state.snapshot_cache["snapshot"]
+            if cached is not None:return cached
+            snapshot=app.state.repository.current_snapshot()
+            app.state.snapshot_cache["snapshot"]=snapshot
+            return snapshot
+
+    def invalidate_snapshot_cache():
+        with app.state.snapshot_cache_lock:app.state.snapshot_cache["snapshot"]=None
 
     def local_snapshot():
         if cfg.data_backend!="sqlserver":return None
@@ -240,7 +261,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         if date_from or date_to:
             raise HTTPException(501, "Hosted period aggregates have not been published yet")
         if app.state.repository is None: raise HTTPException(503, "Directory repository is not configured")
-        return app.state.repository.current_items()
+        snap=hosted_snapshot();return [] if snap is None else snap.items
 
     def trusted_user(authorization:str|None=Header(None),x_user_id:str|None=Header(None,alias="X-User-ID")):
         """Trust user identity only behind the configured shared edge boundary."""
@@ -358,7 +379,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             refresh_key=period_cache_key(date_from,date_to,exact_strategy)
             with app.state.period_strategy_cache_lock:refresh_pending=refresh_key in app.state.period_refreshing
         rows=rows[(page-1)*page_size:page*page_size]
-        snap=app.state.repository.current_snapshot() if cfg.data_backend=="postgres" and app.state.repository else None
+        snap=hosted_snapshot() if cfg.data_backend=="postgres" else None
         return {"data":{"items":[x.model_dump(mode="json") for x in rows],"page":page,"page_size":page_size,"total":total,"summary":summary,"refresh_pending":refresh_pending},
                 "as_of":(snap.generated_at if snap else datetime.now(timezone.utc)).isoformat(),
                 "basis":"net return; costs and commission already included","methodology_version":snap.methodology_version if snap else "1.0.0",
@@ -370,7 +391,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         if cfg.data_backend == "sqlserver":
             values=local_products(cfg)
         else:
-            values=sorted({part.strip().upper() for item in app.state.repository.current_items()
+            snap=hosted_snapshot();values=sorted({part.strip().upper() for item in ([] if snap is None else snap.items)
                            for part in (item.product_name or "").split(",") if part.strip()})
         return {"items":values,"total":len(values)}
 
@@ -618,7 +639,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         now=datetime.now(timezone.utc)
         if snapshot.generated_at>now+timedelta(minutes=5) or snapshot.source_watermark>now+timedelta(minutes=5):raise HTTPException(422,"Snapshot timestamp is in the future")
         if now-snapshot.source_watermark>timedelta(hours=cfg.snapshot_max_age_hours):raise HTTPException(422,"Snapshot source watermark is stale")
-        try: snapshot.verified(); app.state.repository.promote(snapshot);app.state.profile_cache={"at":0.0,"profiles":None,"curves":None}
+        try: snapshot.verified(); app.state.repository.promote(snapshot);app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};invalidate_snapshot_cache()
         except ValueError as exc: raise HTTPException(422,str(exc))
         return {"accepted":True,"snapshot_id":snapshot.snapshot_id,"items":snapshot.item_count}
 
@@ -653,7 +674,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         try: app.state.repository.finalize_snapshot(snapshot_id)
         except KeyError: raise HTTPException(404,"Snapshot has not been started - call begin first")
         except ValueError as exc: raise HTTPException(422,str(exc))
-        app.state.profile_cache={"at":0.0,"profiles":None,"curves":None}
+        app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};invalidate_snapshot_cache()
         return {"accepted":True,"snapshot_id":snapshot_id,"status":"current"}
 
     @app.post("/internal/intelligence/refresh",status_code=202)
@@ -707,7 +728,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return FileResponse(WEB/f"{screen}.html",headers=no_store)
     @app.get("/assets/{name}")
     def asset(name:str):
-        if name not in {"styles.css","tech-principle-theme.css","api-client.js","period-filter.js","equity-chart.js","button-feedback.js","theme-toggle.js"}: raise HTTPException(404)
+        if name not in {"styles.css","tech-principle-theme.css","thetechprinciple-icon-180.png","api-client.js","period-filter.js","equity-chart.js","button-feedback.js","theme-toggle.js"}: raise HTTPException(404)
         return FileResponse(WEB/name,headers=no_store)
     return app
 
