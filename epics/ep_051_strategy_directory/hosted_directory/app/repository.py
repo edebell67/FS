@@ -37,7 +37,6 @@ Version history:
 """
 from __future__ import annotations
 
-from bisect import bisect_right
 from contextlib import closing
 from typing import Any
 
@@ -177,48 +176,58 @@ def local_open_trade_summary(settings, canonical_strategy=None) -> dict[str, dic
 
 
 def local_rank_journey(settings, strategy_id, date_from, date_to_exclusive) -> list[dict[str, Any]]:
-    """For one canonical strategy, its exact rank among every strategy
-    active in [date_from, date_to_exclusive) at the instant right after
-    each of its own trades closed - a point-in-time leaderboard position,
-    not just the periodic dbo.ep051_strategy_rank_history snapshots
-    (scripts/capture_strategy_rank_history.py). Entry-date cohort filter,
-    same convention as local_period_strategies(); rank is computed from
-    close-time cumulative net_return, matching current_equity_curve()'s
-    convention for ordering trades within a day."""
+    """For one canonical strategy, its rank as of each of its own trade
+    closes in [date_from, date_to_exclusive) - read from the periodic
+    dbo.ep051_strategy_rank_history snapshots (captured every ~30 minutes
+    by usp_ep051_capture_strategy_rank_history, run inside
+    sp_loop_create_trades_v2) rather than computed live.
+
+    Originally this ran the full cross-strategy cumulative-return
+    computation on every request (see git history), giving an exact
+    instant-of-close rank. That query cost ~150s under the SQL Server
+    instance's ongoing RESOURCE_SEMAPHORE contention (shared with the live
+    trading system), making the on-demand endpoint unusable in practice.
+    Reading the snapshot table trades exact precision for something that
+    actually returns: each trade gets the most recent snapshot at or
+    before its close time, so resolution is only as fine as the capture
+    cadence (~30 min) - a trade closing between two captures shows the
+    rank as of the last capture before it, not its true instant-of-close
+    rank."""
     query = """
-      SELECT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END strategy_id,
-             CAST(net_return AS float) net_return, COALESCE(g_close_time,last_update,created) closed_at
-      FROM dbo.combined_trades_closed WITH (NOLOCK)
-      WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL AND created >= ? AND created < ?
+      WITH target_trades AS (
+        SELECT ROW_NUMBER() OVER (ORDER BY closed_at) trade_number, closed_at
+        FROM (
+            SELECT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END strategy_id,
+                   COALESCE(g_close_time,last_update,created) closed_at
+            FROM dbo.combined_trades_closed WITH (NOLOCK)
+            WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL AND created >= ? AND created < ?
+        ) t
+        WHERE strategy_id = ?
+      )
+      SELECT tt.trade_number, tt.closed_at, snap.captured_at, snap.rank_position, snap.total_strategies
+      FROM target_trades tt
+      OUTER APPLY (
+        SELECT TOP 1 h.captured_at, h.rank_position,
+               (SELECT COUNT(*) FROM dbo.ep051_strategy_rank_history h2 WHERE h2.captured_at = h.captured_at) total_strategies
+        FROM dbo.ep051_strategy_rank_history h
+        WHERE h.strategy_id = ? AND h.captured_at <= tt.closed_at
+        ORDER BY h.captured_at DESC
+      ) snap
+      ORDER BY tt.trade_number
       OPTION (MAXDOP 1)
     """
     with closing(sqlserver_connection(settings)) as conn:
-        cur = conn.cursor(); cur.execute(query, date_from, date_to_exclusive)
+        cur = conn.cursor()
+        cur.execute(query, date_from, date_to_exclusive, strategy_id, strategy_id)
         rows = cur.fetchall()
-    by_strategy: dict[str, list] = {}
-    for sid, net_return, closed_at in rows:
-        by_strategy.setdefault(sid, []).append((closed_at, net_return))
-    cumulative: dict[str, tuple[list, list]] = {}
-    for sid, points in by_strategy.items():
-        points.sort(key=lambda p: p[0])
-        times = [p[0] for p in points]
-        running = 0.0; cum = []
-        for _, net_return in points:
-            running += net_return; cum.append(running)
-        cumulative[sid] = (times, cum)
-    target_times, target_cum = cumulative.get(strategy_id, ([], []))
     journey = []
-    for index, closed_at in enumerate(target_times):
-        target_value = target_cum[index]
-        higher = 0
-        for sid, (times, cum) in cumulative.items():
-            position = bisect_right(times, closed_at) - 1
-            if position >= 0 and cum[position] > target_value:
-                higher += 1
+    for trade_number, closed_at, captured_at, rank_position, total_strategies in rows:
+        if captured_at is None:
+            continue
         journey.append({
-            "trade_number": index + 1, "closed_at": closed_at.isoformat(),
-            "cumulative_net_return": target_value,
-            "rank_position": higher + 1, "total_strategies": len(cumulative),
+            "trade_number": trade_number, "closed_at": closed_at.isoformat(),
+            "as_of_snapshot": captured_at.isoformat(),
+            "rank_position": rank_position, "total_strategies": total_strategies,
         })
     return journey
 
