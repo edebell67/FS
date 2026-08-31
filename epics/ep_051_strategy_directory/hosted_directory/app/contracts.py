@@ -1,6 +1,21 @@
 """Public and ingestion contracts.
 
 Version history:
+- 1.2.1 (2026-08-31): Reverts an open_trades/open_net_return addition to
+  Strategy made and deployed-locally-only within hours of each other on
+  2026-08-31. Adding them broke hosted sync for ~4.5 hours: Strategy.model_
+  validate() sets undeclared-but-present dict keys to their default (None)
+  rather than omitting them, so even though export_snapshot.py stripped
+  the raw dict first, the resulting Strategy objects still serialized
+  "open_trades": null / "open_net_return": null - changing this snapshot's
+  sha256 in a way the currently-deployed (older) hosted server's own
+  reconciliation couldn't reproduce, failing every /finalize with 422.
+  Local/Arena open-position display never needed this field on Strategy at
+  all - it reads app.repository.local_open_trade_summary()'s plain dict
+  output directly (see arena/server.py), bypassing this contract entirely.
+  If/when hosted has genuinely caught up and this is worth re-adding to
+  the shared contract, coordinate the local commit and the hosted deploy
+  in the same session, not sequentially.
 - 1.2.0 (2026-08-28): Adds SnapshotEnvelope/SnapshotBatch for the staged, batched
   ingestion path (see PUB-04 in the EP051 data-sync workflow doc) - replaces
   a single large POST /internal/snapshots body with begin/batch/finalize
@@ -44,13 +59,6 @@ class Strategy(BaseModel):
     evidence_start: datetime | None = None
     evidence_end: datetime | None = None
     quality_state: Literal["VALID", "COLLECTING", "STALE"] = "VALID"
-    # Currently-open (unrealized) positions - a live, current-moment count,
-    # not evidence within any historical window. None where not computed
-    # (period-scoped queries, or the hosted/published backend, which has no
-    # visibility into open positions at all - only sync.export_snapshot's
-    # local SQL Server source does).
-    open_trades: int | None = Field(default=None, ge=0)
-    open_net_return: float | None = None
 
     @field_validator("strategy_id")
     @classmethod
@@ -59,7 +67,7 @@ class Strategy(BaseModel):
             raise ValueError("direction suffix is not canonical")
         return value
 
-    @field_validator("total_net_return","win_rate","profit_factor","max_drawdown_money","open_net_return")
+    @field_validator("total_net_return","win_rate","profit_factor","max_drawdown_money")
     @classmethod
     def finite_numbers(cls,value):
         if value is not None and not math.isfinite(float(value)):raise ValueError("strategy numeric evidence must be finite")
