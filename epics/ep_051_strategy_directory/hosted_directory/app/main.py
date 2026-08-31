@@ -476,16 +476,14 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     @app.get("/api/dna/strategies/{strategy_id}/rank-journey")
     def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
                      date_from:date|None=Query(None),date_to:date|None=Query(None)):
-        """This strategy's rank as of each of its own trade closes in the
-        window, read from the periodic dbo.ep051_strategy_rank_history
-        snapshots (captured ~every 30 minutes inside sp_loop_create_trades_v2)
-        rather than computed live - a prior version computed the exact
-        instant-of-close rank on every request, but that full cross-strategy
-        scan cost ~150s under the shared SQL Server instance's contention,
-        making the endpoint unusable in practice. Local (SQL Server) only;
-        the hosted/published snapshot has no rank-history table to serve
-        this from. Defaults to current day, matching
-        dbo.ep051_strategy_rank_history's own ranking window."""
+        """This strategy's exact rank among every strategy active in the
+        window, at the instant right after each of its own trades closed -
+        computed live from a single plain scan of the day's closed trades
+        (see local_rank_journey()'s docstring for why a snapshot-table
+        read and several SQL-side rewrites were tried and dropped in
+        favor of this). Local (SQL Server) only; the hosted/published
+        snapshot has no per-trade rank data to serve this from. Defaults
+        to current day."""
         if cfg.data_backend != "sqlserver":
             raise HTTPException(501,"Rank journey is not available from this data backend")
         if date_from and date_to and date_from > date_to:
@@ -496,7 +494,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         journey=local_rank_journey(cfg,strategy_id,start,end)
         return {"strategy_id":strategy_id,"items":journey,"total":len(journey),
                 "period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},
-                "basis":"rank as of the most recent ~30-minute snapshot at or before each trade's close, out of the number of strategies currently holding an open trade"}
+                "basis":"rank among strategies active in the selected period, by cumulative net return at each close"}
 
     @app.get("/api/intelligence/strategies/{strategy_id}")
     def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
