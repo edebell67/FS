@@ -1418,3 +1418,170 @@ The central growth insight is:
 
 The product should make this flywheel visible in the experience itself
 --- not merely describe it in a business plan.
+
+------------------------------------------------------------------------
+
+## 39. Strategy Directory Group-Booth Integration (Current Build Requirement)
+
+### 39.1 Purpose and boundary
+
+The 3D Arena floor must consume the public Strategy Directory as a
+**read-only strategy-evidence source**. A visual booth represents a
+group of Directory strategies rather than necessarily one strategy.
+
+- The Arena must not write to the Strategy Directory, its snapshot store,
+  the Trading Engine, or a live trading system.
+- Existing Arena agents, portfolio decisions, prices, fees and holdings
+  remain explicitly **simulated** unless a separately approved live
+  integration changes that boundary.
+- Do not represent a Directory refresh as a live market execution or
+  imply guaranteed/verified future performance.
+
+The public Strategy Directory fields available to this build include
+strategy identity/name, product, market/product type, total trades, win
+rate, net return, profit factor, drawdown, evidence dates and quality
+state.
+
+Where browser CORS prevents direct API access, the Arena must use its
+own read-only same-origin bridge to the public Directory API.
+
+### 39.2 Grouping modes
+
+The operator/user must be able to group Directory strategies by:
+
+**Persistent groups**
+
+1. Product (`product_name`).
+2. Product type (`market`). Only one product type may currently be
+   present, but the model must support additional types without redesign.
+
+**Dynamic groups**
+
+1. Win-rate range.
+2. Net-return range.
+3. Count-of-trades range.
+
+**Range construction rules**
+
+1. **Net return:** use each strategy's combined `closed_net_return + open_net_return`. Take the highest strategy total, round it **up** to the nearest multiple of the selected booth count, then divide by that count. Ranges begin at zero and the resulting range text is the booth flag name. Example: maximum `600` with 12 booths gives `50` increments and flags `0–50` through `550–600`; maximum `575` rounds to `576`, producing `48` increments.
+2. **Win rate:** divide the fixed `0–100%` scale by the selected booth count using the integer quotient; carry the remainder into the final band so the final label ends exactly at `100%`. With 12 booths: `0–8%`, `8–16%`, …, `88–100%`. On the roof flag, show only this range text—never the redundant `Win rate` prefix—because the active grouping control provides that context.
+3. **Target profit:** once source target-profit attributes are published, use the largest available target-profit value, round the ceiling up to a multiple of the selected booth count, and divide into zero-based ranges.
+4. **Target loss:** once source target-loss attributes are published, use the largest **absolute loss magnitude**, not the largest signed loss, round the ceiling up to a multiple of the selected booth count, and divide into zero-based ranges.
+5. A strategy belongs to the range containing its relevant value; endpoint values belong to the upper/final range so no strategy is excluded.
+
+**Attribute groups**
+
+1. Target profit.
+2. Target loss.
+
+The present public Directory summary contract does not publish explicit
+target-profit or target-loss values. Until that contract is extended,
+these choices must remain visibly available but labelled **unavailable /
+awaiting Directory attributes**. The Arena must not infer targets from
+strategy names, return values or unrelated fields, and must not silently
+substitute another grouping.
+
+### 39.3 Booth count and group identity
+
+- Default expected booth count is **24**.
+- Booth count must be configurable and always normalized to an **even** valid number.
+- Booths must always occupy a complete, uniform rectangular grid—never a partial final row. For example, 12 booths use a balanced `4 × 3` grid (or a declared equivalent complete factor grid), and 24 booths use `6 × 4`; a `5 + 5 + 2` arrangement is not acceptable.
+- For persistent groups, render only real meaningful groups; do not
+  invent live groups to fill unused capacity.
+- For dynamic range groups, the configured number of ordered bands must
+  be created and every loaded strategy must belong to exactly one band.
+
+Every visual booth must have a persistent, readable identity label in
+the 3D scene. The label must match the **currently selected live
+Directory grouping**, not the previous grouping mode, a simulated
+instrument name or a generic placeholder.
+
+Each visible booth label must include:
+
+- stable floor identifier, for example `GROUP 01`;
+- the exact current group label, for example `GBP`, `FX`, `Win rate
+  50–54%`, `Net return band 03`, or `Trade count band 08`;
+- strategy count and aggregate trade count;
+- grouping mode/data-state in the accessible/selected-booth detail.
+
+Changing grouping mode or booth count must refresh labels atomically so
+that a tower, its inspector and its label all identify the same live
+Directory group.
+
+### 39.4 3D visual requirements
+
+The Arena must retain its perspective 3D visual identity:
+
+- Booths are tangible, compact-footprint **octagonal** exchange towers on the floor, not flat replacement cards. Both closed and open net-return tower segments must use the same eight-sided footprint. Their base footprint must remain narrow enough to reveal the floor grid and circulation space while preserving the return-ranked tower height.
+- Tower height ranks groups by aggregate `total_net_return`: most profitable loaded group tallest, descending to least profitable.
+- Each booth is a narrow two-part net-return block: the bottom/base segment shows aggregate **closed/current net return** and the top segment shows aggregate **open/new net return**. Both segments must display their own signed value and use distinct positive/negative treatment.
+- Total tower height must remain ranked by combined `closed_net_return + open_net_return`; splitting the block must not change comparative height between groups.
+- Each booth requires a physical roof-mounted flag on a visible pole. The flag must show the exact current live grouping name (for example `GBP`, `FX`, or `Win rate 50–54%`) and update whenever the grouping changes. The flag’s physical width and height must be **50% larger** than the original compact booth flag, and its high-contrast roof-label font must be enlarged for readable group identification at normal floor viewing distance.
+- Losing, collecting and weak groups remain visible; height is a current
+  evidence visualization, not a recommendation or promise.
+- Existing orbit, zoom, pointer, keyboard and reduced-motion behaviour
+  must remain usable.
+
+### 39.5 Activity and rings
+
+When a Directory refresh shows an increase in a group's aggregate trade
+count, its matching booth must pulse to show newly observed activity.
+
+When a refresh also shows a net group outcome change associated with the
+newly observed trades:
+
+- pulse **green** for a positive/profitable net change;
+- pulse **red** for a negative/loss net change.
+
+The public summary API is not a per-trade event stream. Therefore this
+initial implementation may compare consecutive group aggregates:
+
+- increased `total_trades` = newly observed Directory activity;
+- change in aggregate `total_net_return` = positive/negative outcome
+  colour.
+
+Copy must describe this honestly as a **Directory refresh change**, not
+as an identified individual real-time trade event.
+
+The three groups with the highest aggregate trade counts must maintain
+continuous pulsing rings. These rings are distinct from one-time
+green/red refresh pulses. Reduced-motion mode must retain an equivalent,
+non-animated top-three activity marker.
+
+### 39.6 Controls, loading and failure state
+
+Provide a mobile-first Directory-booth control area containing:
+
+- grouping-mode selector;
+- configurable even booth-count selector;
+- refresh action;
+- clear loading, loaded and unavailable status;
+- explicit target-attribute unavailable status where applicable.
+
+At 375px width, controls must remain readable/tappable without horizontal
+page overflow. The floor must visibly distinguish real loaded Directory
+groups from the fallback simulated-only Arena view if Directory access
+fails.
+
+### 39.7 Acceptance criteria
+
+Automated tests must cover:
+
+- 24 default booths and even-number normalization;
+- aggregation by product/product type;
+- complete, non-overlapping allocation across dynamic bands;
+- truthful unavailable target attribute modes;
+- height ranking by aggregate net return;
+- top-three activity selection by group trade count;
+- refresh-diff activity and green/red outcome state;
+- label identity matching the active grouping mode and group object.
+
+Browser verification must confirm at desktop and 375 × 812:
+
+- complete paginated Directory loading through the Arena bridge;
+- correct current group labels on the rendered towers;
+- group selector and booth-count controls update the 3D floor;
+- active top-three rings and refresh-change state render without hiding
+  labels;
+- no console errors or horizontal overflow;
+- reduced-motion mode preserves all status meaning.

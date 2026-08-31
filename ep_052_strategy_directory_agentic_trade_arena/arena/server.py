@@ -2,9 +2,12 @@
 from __future__ import annotations
 
 from contextlib import asynccontextmanager
+import json
 import os
 from pathlib import Path
 from typing import Protocol
+from urllib.parse import urlencode
+from urllib.request import urlopen
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -60,6 +63,13 @@ def create_app(waitlist_store: WaitlistStore | None = None) -> FastAPI:
     @app.get("/health")
     def health() -> dict[str, str]:
         return {"status": "ok", "service": "agentic-arena"}
+
+    @app.get("/api/directory/strategies")
+    def directory_strategies(page: int = 1, page_size: int = 100) -> dict:
+        """Read-only same-origin bridge for public Strategy Directory data."""
+        query = urlencode({"page": max(1, page), "page_size": min(100, max(1, page_size))})
+        with urlopen(f"https://ep051-directory.onrender.com/api/dna/strategies?{query}", timeout=30) as response:
+            return json.loads(response.read())
 
     @app.post("/api/waitlist", status_code=201)
     async def register_waitlist(payload: dict) -> dict[str, bool | str]:
