@@ -4,6 +4,9 @@ other strategy - not just its own equity curve, but where it stood in the
 field at each point in time.
 
 Version history:
+- 1.2.0 (2026-08-31): Default cadence 3600s -> 900s (15 min), now that the
+  current-day-scoped query (see 1.1.0) is cheap enough to run that often
+  without adding meaningfully to database load.
 - 1.1.0 (2026-08-31): Changes the ranking window from all-time to current
   day (entry-date cohort, same COALESCE-free `created` convention as
   local_period_strategies() - "Directory periods are entry-date cohorts",
@@ -75,7 +78,7 @@ def capture() -> int:
 
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--interval", type=int, default=3600)
+    parser.add_argument("--interval", type=int, default=900)
     parser.add_argument("--once", action="store_true")
     args = parser.parse_args()
     while True:
