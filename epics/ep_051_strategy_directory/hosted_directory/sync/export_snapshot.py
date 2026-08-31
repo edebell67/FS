@@ -33,6 +33,17 @@ def main():
     parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--watermark")
     args = parser.parse_args(); watermark = args.watermark or datetime.now(timezone.utc).isoformat()
     settings=get_settings();items=local_strategies(settings)
+    # local_strategies() now also attaches open_trades/open_net_return (live
+    # local-only fields, see app/repository.py). Strip them before publish:
+    # the currently-deployed hosted server doesn't have those fields on its
+    # Strategy contract yet, so including them changes this snapshot's
+    # sha256 in a way the server's own reconciliation can't reproduce,
+    # causing every finalize() to fail with a hash-mismatch 422. Remove this
+    # once the open-trade contract change (commit 1453f83f) is confirmed
+    # deployed hosted - see agent board topic ep051-hosted-publish.
+    for item in items:
+        item.pop("open_trades", None)
+        item.pop("open_net_return", None)
     # The Snapshot contract caps a publish at MAX_SNAPSHOT_ITEMS. Select the
     # busiest strategies by trade count deterministically (same ordering
     # convention as sync.warm_local_intelligence) rather than truncating in
