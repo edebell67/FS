@@ -44,6 +44,13 @@ class Strategy(BaseModel):
     evidence_start: datetime | None = None
     evidence_end: datetime | None = None
     quality_state: Literal["VALID", "COLLECTING", "STALE"] = "VALID"
+    # Currently-open (unrealized) positions - a live, current-moment count,
+    # not evidence within any historical window. None where not computed
+    # (period-scoped queries, or the hosted/published backend, which has no
+    # visibility into open positions at all - only sync.export_snapshot's
+    # local SQL Server source does).
+    open_trades: int | None = Field(default=None, ge=0)
+    open_net_return: float | None = None
 
     @field_validator("strategy_id")
     @classmethod
@@ -52,7 +59,7 @@ class Strategy(BaseModel):
             raise ValueError("direction suffix is not canonical")
         return value
 
-    @field_validator("total_net_return","win_rate","profit_factor","max_drawdown_money")
+    @field_validator("total_net_return","win_rate","profit_factor","max_drawdown_money","open_net_return")
     @classmethod
     def finite_numbers(cls,value):
         if value is not None and not math.isfinite(float(value)):raise ValueError("strategy numeric evidence must be finite")

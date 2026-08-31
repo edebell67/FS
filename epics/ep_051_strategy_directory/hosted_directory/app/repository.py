@@ -137,6 +137,35 @@ def local_execution_summary(settings, date_from=None, date_to_exclusive=None) ->
     return {"strategies": int(row[0]), "trades": int(row[1])}
 
 
+def local_open_trade_summary(settings, canonical_strategy=None) -> dict[str, dict[str, Any]]:
+    """Aggregate currently-open positions per canonical strategy: count and
+    unrealized (mark-to-market) net_return. Open positions have no close
+    date, so this has no period-filtering concept - it's always a
+    current-moment snapshot, unlike the closed-trade evidence queries above.
+    combined_trades_open has no model_ix column (small table; unindexed
+    LIKE scan cost is negligible, unlike the 1M+ row combined_trades_closed)."""
+    filters, params = [], []
+    if canonical_strategy is not None:
+        filters.append("AND model IN (?,?,?)")
+        params.extend([canonical_strategy, canonical_strategy + "_B", canonical_strategy + "_S"])
+    query = f"""
+      SELECT model,CAST(net_return AS float) net_return
+      FROM dbo.combined_trades_open WITH (NOLOCK)
+      WHERE model LIKE 'DNA[_]%' AND net_return IS NOT NULL {' '.join(filters)}
+      OPTION (MAXDOP 1)
+    """
+    grouped: dict[str, dict[str, Any]] = {}
+    with closing(sqlserver_connection(settings)) as conn:
+        cur = conn.cursor()
+        cur.execute(query, *params)
+        for model, net_return in cur:
+            strategy_id = model[:-2] if model.endswith(("_B", "_S")) else model
+            row = grouped.setdefault(strategy_id, {"open_trades": 0, "open_net_return": 0.0})
+            row["open_trades"] += 1
+            row["open_net_return"] += float(net_return)
+    return grouped
+
+
 def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical_strategy=None, signal=None) -> list[dict[str, Any]]:
     """Aggregate canonical strategies within an optional half-open closed-date range."""
     if canonical_strategy is not None:
@@ -168,6 +197,13 @@ def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical
             row[key] = row[key].isoformat() if row.get(key) else None
         row.update(market="FX", status="active",
                    quality_state="VALID" if row["total_trades"] >= 30 else "COLLECTING")
+    if date_from is None and date_to_exclusive is None:
+        # Open positions have no close date - only attach them to the
+        # unfiltered "current state" view, not a historical evidence window.
+        open_summary = local_open_trade_summary(settings)
+        for row in rows:
+            open_row = open_summary.get(row["strategy_id"], {"open_trades": 0, "open_net_return": 0.0})
+            row.update(open_row)
     return rows
 
 
