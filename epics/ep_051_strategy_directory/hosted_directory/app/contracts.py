@@ -90,6 +90,17 @@ class IntelligenceReturnPoint(BaseModel):
     signal: str | None = Field(default=None, max_length=10)
     entry_price: float | None = None
     exit_price: float | None = None
+    # Optional - absent on snapshots published before these fields existed.
+    # alt_net_return mirrors local's own /trades ledger; rank_position/
+    # total_strategies is this trade's rank among every exported strategy's
+    # cumulative net_return at this same instant, precomputed once at
+    # export time (see sync/export_snapshot.py) - hosted has no live SQL
+    # Server access to compute this per-request the way local's
+    # /rank-journey endpoint does, so this is necessarily an all-time
+    # ranking over the exported population, not local's current-day one.
+    alt_net_return: float | None = None
+    rank_position: int | None = None
+    total_strategies: int | None = None
 
     @field_validator("net_return","cumulative_net_return","drawdown")
     @classmethod

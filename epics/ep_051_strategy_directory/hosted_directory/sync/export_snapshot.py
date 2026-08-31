@@ -1,6 +1,19 @@
 """Create deterministic allowlisted directory snapshots.
 
 Version history:
+- 1.3.0 (2026-08-31): Adds alt_net_return, rank_position, and
+  total_strategies to every return_series point, closing the gap where
+  hosted's trade ledger showed "ALT NET RETURN" and "Position after
+  close" columns that local's did (the fields existed in local's own
+  live API responses, but were either never selected in
+  local_equity_curves()'s SQL - alt_net_return - or had no export/hosted
+  read path at all - rank_position/total_strategies, which local computes
+  live per-request via /rank-journey, something hosted has no SQL Server
+  connection to do). rank_position/total_strategies is necessarily an
+  all-time ranking computed once here over the exported/selected
+  population (see _rank_at_each_point()), not local's current-day-scoped
+  live one - the closest hosted can get without per-request recomputation
+  capability it doesn't have.
 - 1.2.0 (2026-08-31): Derives every item's trade stats (total_trades, wins/
   losses/breakevens, total_net_return, win_rate, profit_factor, evidence_
   start/end) directly from the same local_equity_curves() read used to
@@ -20,6 +33,7 @@ Version history:
 """
 from __future__ import annotations
 import argparse, json, uuid
+from bisect import bisect_right
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -53,6 +67,34 @@ def _stats_from_points(points):
         "evidence_start": min((p.get("opened_at") or p["closed_at"]) for p in ordered) if ordered else None,
         "evidence_end": max(p["closed_at"] for p in ordered) if ordered else None,
     }
+
+
+def _rank_at_each_point(curves):
+    """For every (strategy_id, point) in curves, that strategy's rank among
+    every OTHER strategy in curves by cumulative net_return, at the same
+    instant - the hosted equivalent of local's live /rank-journey endpoint,
+    precomputed once at export time since hosted has no SQL Server to
+    compute this per-request. Necessarily an all-time ranking over
+    whatever population curves already holds (the exported/selected
+    strategies), not local's current-day-scoped one - hosted has no
+    per-request date-window recomputation capability either. Returns
+    {strategy_id: [(rank_position, total_strategies), ...]} aligned 1:1
+    with each strategy's own points list, in the same order."""
+    timelines = {sid: ([p["closed_at"] for p in points], [p["equity"] for p in points]) for sid, points in curves.items()}
+    total_strategies = len(timelines)
+    ranks = {}
+    for strategy_id, points in curves.items():
+        strategy_ranks = []
+        for point in points:
+            at = point["closed_at"]; value = point["equity"]
+            higher = 0
+            for sid, (times, cum) in timelines.items():
+                position = bisect_right(times, at) - 1
+                if position >= 0 and cum[position] > value:
+                    higher += 1
+            strategy_ranks.append((higher + 1, total_strategies))
+        ranks[strategy_id] = strategy_ranks
+    return ranks
 
 
 def build_snapshot(items, source_watermark: str | datetime, generated_at: datetime | None = None,profiles=None,return_series=None) -> Snapshot:
@@ -93,8 +135,11 @@ def main():
         })
     curves=dict(selected)
     profiles=[build_profile(item,curves.get(item["strategy_id"],[])) for item in items];series=[]
+    ranks=_rank_at_each_point(curves)
     for strategy_id,points in curves.items():
-        for point in points:series.append({"strategy_id":strategy_id,"trade_id":str(point.get("guid") or point["trade_number"]),"trade_number":point["trade_number"],"opened_at":point.get("opened_at"),"observed_at":point["closed_at"],"net_return":point["net_return"],"cumulative_net_return":point["equity"],"drawdown":point["drawdown"],"product":point.get("product"),"signal":point.get("signal"),"entry_price":point.get("entry_price"),"exit_price":point.get("exit_price")})
+        strategy_ranks=ranks[strategy_id]
+        for point,(rank_position,total_strategies) in zip(points,strategy_ranks):
+            series.append({"strategy_id":strategy_id,"trade_id":str(point.get("guid") or point["trade_number"]),"trade_number":point["trade_number"],"opened_at":point.get("opened_at"),"observed_at":point["closed_at"],"net_return":point["net_return"],"cumulative_net_return":point["equity"],"drawdown":point["drawdown"],"product":point.get("product"),"signal":point.get("signal"),"entry_price":point.get("entry_price"),"exit_price":point.get("exit_price"),"alt_net_return":point.get("alt_net_return"),"rank_position":rank_position,"total_strategies":total_strategies})
     snapshot = build_snapshot(items,watermark,profiles=profiles,return_series=series)
     target = Path(args.output); target.write_text(snapshot.model_dump_json(indent=2), encoding="utf-8")
     print(json.dumps({"snapshot_id": snapshot.snapshot_id, "items": snapshot.item_count, "sha256": snapshot.sha256}))

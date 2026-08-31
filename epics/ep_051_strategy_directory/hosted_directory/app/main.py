@@ -476,25 +476,38 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     @app.get("/api/dna/strategies/{strategy_id}/rank-journey")
     def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
                      date_from:date|None=Query(None),date_to:date|None=Query(None)):
-        """This strategy's exact rank among every strategy active in the
-        window, at the instant right after each of its own trades closed -
-        computed live from a single plain scan of the day's closed trades
-        (see local_rank_journey()'s docstring for why a snapshot-table
-        read and several SQL-side rewrites were tried and dropped in
-        favor of this). Local (SQL Server) only; the hosted/published
-        snapshot has no per-trade rank data to serve this from. Defaults
-        to current day."""
-        if cfg.data_backend != "sqlserver":
-            raise HTTPException(501,"Rank journey is not available from this data backend")
+        """This strategy's rank among every strategy active in the window,
+        at the instant right after each of its own trades closed.
+
+        Local (SQL Server): computed live from a single plain scan of the
+        day's closed trades (see local_rank_journey()'s docstring for why
+        a snapshot-table read and several SQL-side rewrites were tried and
+        dropped in favor of this) - current-day-scoped by the date_from/
+        date_to window, exact.
+
+        Hosted: read from rank_position/total_strategies stamped on each
+        return-series point at export time (sync/export_snapshot.py,
+        current_rank_journey()) - hosted has no SQL Server connection to
+        compute this per-request. Necessarily an all-time ranking over
+        whatever population the last export selected, not scoped to
+        date_from/date_to the way local's is - those params still filter
+        which of the target's OWN trades are returned, just not the
+        ranking population itself."""
         if date_from and date_to and date_from > date_to:
             raise HTTPException(422, "date_from must be on or before date_to")
         today=datetime.now(timezone.utc).date()
         start=datetime.combine(date_from or today, time.min,timezone.utc)
         end=datetime.combine((date_to or today) + timedelta(days=1), time.min,timezone.utc)
-        journey=local_rank_journey(cfg,strategy_id,start,end)
+        if cfg.data_backend=="sqlserver":
+            journey=local_rank_journey(cfg,strategy_id,start,end)
+            basis="rank among strategies active in the selected period, by cumulative net return at each close"
+        else:
+            if app.state.repository is None: raise HTTPException(503,"Directory repository is not configured")
+            journey=app.state.repository.current_rank_journey(strategy_id,start,end)
+            basis="rank among strategies in the last published snapshot, by all-time cumulative net return at each close - not scoped to the selected period"
         return {"strategy_id":strategy_id,"items":journey,"total":len(journey),
                 "period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},
-                "basis":"rank among strategies active in the selected period, by cumulative net return at each close"}
+                "basis":basis}
 
     @app.get("/api/intelligence/strategies/{strategy_id}")
     def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),

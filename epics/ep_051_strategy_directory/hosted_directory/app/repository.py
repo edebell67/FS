@@ -529,21 +529,22 @@ def local_equity_curves(settings,strategy_ids=None) -> dict[str,list[dict[str,An
       SELECT {canonical} strategy_id,
         COALESCE(g_close_time,last_update,created) closed_at,created opened_at,created,CAST(guid AS char(36)) guid,CAST(net_return AS float) net_return,
         product,UPPER(LTRIM(RTRIM(signal))) signal,CAST(entry_price AS float) entry_price,CAST(latest_price AS float) exit_price,
+        CAST(alt_net_return AS float) alt_net_return,
         ROW_NUMBER() OVER(PARTITION BY {canonical}
           ORDER BY COALESCE(g_close_time,last_update,created) DESC,created DESC,CAST(guid AS char(36)) DESC) reverse_number
       FROM dbo.combined_trades_closed WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL {strategy_filter}
     ), trades AS (
-      SELECT strategy_id,closed_at,opened_at,created,guid,net_return,product,signal,entry_price,exit_price FROM ranked_trades WHERE reverse_number<={MAX_PROFILE_POINTS}
+      SELECT strategy_id,closed_at,opened_at,created,guid,net_return,product,signal,entry_price,exit_price,alt_net_return FROM ranked_trades WHERE reverse_number<={MAX_PROFILE_POINTS}
     ), equity AS (
-      SELECT strategy_id,closed_at,opened_at,guid,net_return,product,signal,entry_price,exit_price,
+      SELECT strategy_id,closed_at,opened_at,guid,net_return,product,signal,entry_price,exit_price,alt_net_return,
         SUM(net_return) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) equity
       FROM trades
     ), curve AS (
-      SELECT strategy_id,closed_at,opened_at,guid,net_return,product,signal,entry_price,exit_price,equity,
+      SELECT strategy_id,closed_at,opened_at,guid,net_return,product,signal,entry_price,exit_price,alt_net_return,equity,
         equity-CASE WHEN MAX(equity) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING)>0 THEN MAX(equity) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) ELSE 0 END drawdown,
         ROW_NUMBER() OVER(PARTITION BY strategy_id ORDER BY closed_at,guid) trade_number
       FROM equity
-    ) SELECT strategy_id,trade_number,opened_at,closed_at,guid,net_return,equity,drawdown,product,signal,entry_price,exit_price FROM curve ORDER BY strategy_id,trade_number
+    ) SELECT strategy_id,trade_number,opened_at,closed_at,guid,net_return,equity,drawdown,product,signal,entry_price,exit_price,alt_net_return FROM curve ORDER BY strategy_id,trade_number
     """
     with closing(sqlserver_connection(settings)) as conn:
         cur=conn.cursor();cur.execute(query,*strategy_ids);columns=[item[0] for item in cur.description]
@@ -553,7 +554,7 @@ def local_equity_curves(settings,strategy_ids=None) -> dict[str,list[dict[str,An
         strategy_id=row.pop("strategy_id");row["closed_at"]=row["closed_at"].isoformat() if row["closed_at"] else None;row["opened_at"]=row["opened_at"].isoformat() if row["opened_at"] else None
         row["guid"]=str(row["guid"]).strip() if row.get("guid") else None
         for key in ("net_return","equity","drawdown"):row[key]=float(row[key])
-        for key in ("entry_price","exit_price"):row[key]=float(row[key]) if row.get(key) is not None else None
+        for key in ("entry_price","exit_price","alt_net_return"):row[key]=float(row[key]) if row.get(key) is not None else None
         grouped.setdefault(strategy_id,[]).append(row)
     return grouped
 
@@ -612,7 +613,22 @@ class MemoryRepository:
         return [{"guid":p.trade_id,"product":p.product,"signal":p.signal,
                  "entry_time":p.opened_at.isoformat() if p.opened_at else None,"entry_price":p.entry_price,
                  "exit_time":p.observed_at.isoformat(),"exit_price":p.exit_price,
-                 "net_return":p.net_return,"alt_net_return":None} for p in rows[:limit]]
+                 "net_return":p.net_return,"alt_net_return":p.alt_net_return} for p in rows[:limit]]
+    def current_rank_journey(self,strategy_id,date_from=None,date_to_exclusive=None):
+        """Reads the rank_position/total_strategies stamped on each return-
+        series point at export time (sync/export_snapshot.py) - an
+        all-time ranking over the exported population, not local's live
+        current-day-scoped /rank-journey computation. Points from
+        snapshots published before these fields existed have
+        rank_position=None and are skipped, same convention local's own
+        basis-column-guarded snapshot lookups already use."""
+        snap=self.current_snapshot()
+        if snap is None:return []
+        rows=[p for p in snap.return_series if p.strategy_id==strategy_id and p.rank_position is not None and (date_from is None or p.observed_at>=date_from) and (date_to_exclusive is None or p.observed_at<date_to_exclusive)]
+        rows.sort(key=lambda p:(p.observed_at,p.trade_id))
+        return [{"trade_number":p.trade_number,"closed_at":p.observed_at.isoformat(),
+                 "cumulative_net_return":p.cumulative_net_return,
+                 "rank_position":p.rank_position,"total_strategies":p.total_strategies} for p in rows]
     def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
         snap=self.current_snapshot()
         if snap is None:return []
@@ -809,7 +825,20 @@ class PostgresRepository:
         return [{"guid":row["trade_id"],"product":row.get("product"),"signal":row.get("signal"),
                  "entry_time":row.get("opened_at"),"entry_price":row.get("entry_price"),
                  "exit_time":row["observed_at"],"exit_price":row.get("exit_price"),
-                 "net_return":row["net_return"],"alt_net_return":None} for row in rows]
+                 "net_return":row["net_return"],"alt_net_return":row.get("alt_net_return")} for row in rows]
+    def current_rank_journey(self,strategy_id,date_from=None,date_to_exclusive=None):
+        """See MemoryRepository.current_rank_journey() - same all-time,
+        export-time-precomputed semantics, read from the stored jsonb
+        payload instead of an in-memory Pydantic object."""
+        clauses=["p.strategy_id=%s","(p.payload->>'rank_position') IS NOT NULL"];params=[strategy_id]
+        if date_from is not None:clauses.append("p.observed_at>=%s");params.append(date_from)
+        if date_to_exclusive is not None:clauses.append("p.observed_at<%s");params.append(date_to_exclusive)
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("SELECT p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.observed_at,p.trade_id",params)
+            rows=[row[0] for row in cur.fetchall()]
+        return [{"trade_number":row["trade_number"],"closed_at":row["observed_at"],
+                 "cumulative_net_return":row["cumulative_net_return"],
+                 "rank_position":row.get("rank_position"),"total_strategies":row.get("total_strategies")} for row in rows]
     def current_daily_returns(self,strategy_ids,max_days=2000):
         with self._connect() as conn,conn.cursor() as cur:
             cur.execute("""WITH daily AS (
