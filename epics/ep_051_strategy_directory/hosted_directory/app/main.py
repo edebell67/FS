@@ -496,7 +496,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         journey=local_rank_journey(cfg,strategy_id,start,end)
         return {"strategy_id":strategy_id,"items":journey,"total":len(journey),
                 "period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},
-                "basis":"rank as of the most recent ~30-minute snapshot at or before each trade's close"}
+                "basis":"rank as of the most recent ~30-minute snapshot at or before each trade's close, out of the number of strategies currently holding an open trade"}
 
     @app.get("/api/intelligence/strategies/{strategy_id}")
     def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),

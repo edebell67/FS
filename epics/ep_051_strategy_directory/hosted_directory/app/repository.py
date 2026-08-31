@@ -192,7 +192,26 @@ def local_rank_journey(settings, strategy_id, date_from, date_to_exclusive) -> l
     before its close time, so resolution is only as fine as the capture
     cadence (~30 min) - a trade closing between two captures shows the
     rank as of the last capture before it, not its true instant-of-close
-    rank."""
+    rank.
+
+    dbo.ep051_strategy_rank_history also holds older rows captured by the
+    retired all-time-basis Python script (scripts/capture_strategy_rank_history.py,
+    before its 1.1.0 current-day-cohort change), which rank against the
+    entire ~8000+ strategy universe rather than today's cohort - mixing
+    those into a "today" journey silently produced wrong-looking rank
+    numbers (e.g. "#1462" for an early trade next to "#7" for a later one
+    on the same day, from two different-sized populations).
+    dbo.ep051_rank_capture_run_log only has rows from the new current-day-
+    basis stored procedure (usp_ep051_capture_strategy_rank_history), so
+    rank_position lookups are restricted to captured_at on or after that
+    table's first successful run - trades closing before that point get
+    no snapshot (shown as "-") rather than an all-time-basis rank.
+
+    total_strategies is not read from the snapshot at all - it's a single
+    live count of strategies with an open trade right now (same "how many
+    are in the game" idea as the rank denominator, without the all-time/
+    current-day snapshot ambiguity above), shared across every row in the
+    journey rather than looked up per trade."""
     query = """
       WITH target_trades AS (
         SELECT ROW_NUMBER() OVER (ORDER BY closed_at) trade_number, closed_at
@@ -203,14 +222,23 @@ def local_rank_journey(settings, strategy_id, date_from, date_to_exclusive) -> l
             WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL AND created >= ? AND created < ?
         ) t
         WHERE strategy_id = ?
+      ),
+      current_day_basis_start AS (
+        SELECT MIN(started_at) cutover FROM dbo.ep051_rank_capture_run_log WHERE status = 'success'
+      ),
+      open_strategy_count AS (
+        -- combined_trades_open has no model_ix column (table is small; unindexed LIKE scan is negligible).
+        SELECT COUNT(DISTINCT CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END) total_strategies
+        FROM dbo.combined_trades_open WITH (NOLOCK)
+        WHERE model LIKE 'DNA[_]%'
       )
-      SELECT tt.trade_number, tt.closed_at, snap.captured_at, snap.rank_position, snap.total_strategies
+      SELECT tt.trade_number, tt.closed_at, snap.captured_at, snap.rank_position, open_strategy_count.total_strategies
       FROM target_trades tt
+      CROSS JOIN open_strategy_count
       OUTER APPLY (
-        SELECT TOP 1 h.captured_at, h.rank_position,
-               (SELECT COUNT(*) FROM dbo.ep051_strategy_rank_history h2 WHERE h2.captured_at = h.captured_at) total_strategies
-        FROM dbo.ep051_strategy_rank_history h
-        WHERE h.strategy_id = ? AND h.captured_at <= tt.closed_at
+        SELECT TOP 1 h.captured_at, h.rank_position
+        FROM dbo.ep051_strategy_rank_history h, current_day_basis_start cutover
+        WHERE h.strategy_id = ? AND h.captured_at <= tt.closed_at AND h.captured_at >= cutover.cutover
         ORDER BY h.captured_at DESC
       ) snap
       ORDER BY tt.trade_number
