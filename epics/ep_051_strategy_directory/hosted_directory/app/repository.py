@@ -149,7 +149,7 @@ def local_open_trade_summary(settings, canonical_strategy=None) -> dict[str, dic
         filters.append("AND model IN (?,?,?)")
         params.extend([canonical_strategy, canonical_strategy + "_B", canonical_strategy + "_S"])
     query = f"""
-      SELECT model,CAST(net_return AS float) net_return
+      SELECT model,product,NULLIF(LTRIM(RTRIM(strategy_name)),''),CAST(net_return AS float) net_return
       FROM dbo.combined_trades_open WITH (NOLOCK)
       WHERE model LIKE 'DNA[_]%' AND net_return IS NOT NULL {' '.join(filters)}
       OPTION (MAXDOP 1)
@@ -158,11 +158,15 @@ def local_open_trade_summary(settings, canonical_strategy=None) -> dict[str, dic
     with closing(sqlserver_connection(settings)) as conn:
         cur = conn.cursor()
         cur.execute(query, *params)
-        for model, net_return in cur:
+        for model, product, descriptive_name, net_return in cur:
             strategy_id = model[:-2] if model.endswith(("_B", "_S")) else model
-            row = grouped.setdefault(strategy_id, {"open_trades": 0, "open_net_return": 0.0})
+            row = grouped.setdefault(strategy_id, {"open_trades": 0, "open_net_return": 0.0, "products": set(), "descriptive_name": None})
             row["open_trades"] += 1
             row["open_net_return"] += float(net_return)
+            if product: row["products"].add(product)
+            if descriptive_name: row["descriptive_name"] = descriptive_name
+    for row in grouped.values():
+        row["product_name"] = ", ".join(sorted(row.pop("products"))) or None
     return grouped
 
 
@@ -201,9 +205,28 @@ def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical
         # Open positions have no close date - only attach them to the
         # unfiltered "current state" view, not a historical evidence window.
         open_summary = local_open_trade_summary(settings)
+        seen = set()
         for row in rows:
-            open_row = open_summary.get(row["strategy_id"], {"open_trades": 0, "open_net_return": 0.0})
-            row.update(open_row)
+            seen.add(row["strategy_id"])
+            open_row = open_summary.get(row["strategy_id"])
+            row["open_trades"] = open_row["open_trades"] if open_row else 0
+            row["open_net_return"] = open_row["open_net_return"] if open_row else 0.0
+        # A strategy can have open positions but zero closed trades ever -
+        # it would otherwise be entirely absent, since `universe` above is
+        # built exclusively from combined_trades_closed. Synthesize a
+        # zero-closed-evidence row for it instead of silently dropping it.
+        for strategy_id, open_row in open_summary.items():
+            if strategy_id in seen:
+                continue
+            rows.append({
+                "strategy_id": strategy_id, "descriptive_name": open_row.get("descriptive_name"),
+                "product_name": open_row.get("product_name"), "market": "FX", "status": "active",
+                "total_trades": 0, "wins": 0, "losses": 0, "breakevens": 0,
+                "total_net_return": 0.0, "win_rate": 0.0, "profit_factor": None,
+                "max_drawdown_money": None, "evidence_start": None, "evidence_end": None,
+                "quality_state": "COLLECTING",
+                "open_trades": open_row["open_trades"], "open_net_return": open_row["open_net_return"],
+            })
     return rows
 
 
