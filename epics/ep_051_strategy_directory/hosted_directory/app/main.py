@@ -29,7 +29,7 @@ from fastapi.responses import FileResponse,Response
 
 from .config import Settings, get_settings
 from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
-from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_strategies
+from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies
 from .intelligence.profile import UNITS, build_profile, build_summary_profile
 from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
 from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, exclusion_trace, facet_counts, interpret_with_trace, retrieve
@@ -472,6 +472,26 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "period":{"date_from":date_from.isoformat() if date_from else None,
                           "date_to":date_to.isoformat() if date_to else None},
                 "basis":"closed trades; net return includes costs and commission"}
+
+    @app.get("/api/dna/strategies/{strategy_id}/rank-journey")
+    def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
+                     date_from:date|None=Query(None),date_to:date|None=Query(None)):
+        """This strategy's exact rank among every strategy active in the
+        window, at the instant right after each of its own trades closed -
+        local (SQL Server) only; the hosted/published snapshot has no
+        per-trade rank data to serve this from. Defaults to current day,
+        matching dbo.ep051_strategy_rank_history's own ranking window."""
+        if cfg.data_backend != "sqlserver":
+            raise HTTPException(501,"Rank journey is not available from this data backend")
+        if date_from and date_to and date_from > date_to:
+            raise HTTPException(422, "date_from must be on or before date_to")
+        today=datetime.now(timezone.utc).date()
+        start=datetime.combine(date_from or today, time.min,timezone.utc)
+        end=datetime.combine((date_to or today) + timedelta(days=1), time.min,timezone.utc)
+        journey=local_rank_journey(cfg,strategy_id,start,end)
+        return {"strategy_id":strategy_id,"items":journey,"total":len(journey),
+                "period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},
+                "basis":"rank among strategies active in the selected period, by cumulative net return at each close"}
 
     @app.get("/api/intelligence/strategies/{strategy_id}")
     def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),

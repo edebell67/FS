@@ -1,4 +1,5 @@
-/* Version history: 1.5.0 (2026-08-26) reads optional user-token/user-id meta tags and attaches them as identity headers on every private request, so pages can opt into the trusted-user identity edge declaratively.
+/* Version history: 1.6.0 (2026-08-31) adds rankJourney() - a strategy's exact rank among all active strategies after each of its own trades closed.
+ * 1.5.0 (2026-08-26) reads optional user-token/user-id meta tags and attaches them as identity headers on every private request, so pages can opt into the trusted-user identity edge declaratively.
  * 1.4.0 (2026-08-24) adds intelligence finder and comparison clients.
  * 1.3.0 (2026-08-24) adds the canonical period-aware equity-curve client.
  * 1.2.0 (2026-08-24) allows slow first-run SQL aggregates up to three minutes.
@@ -70,6 +71,21 @@
     const payload = await response.json();
     if (!Array.isArray(payload.items))
       throw new Error("Unexpected trade ledger response");
+    return payload;
+  }
+  async function rankJourney(strategyId, params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== "" && v != null),
+    );
+    const response = await fetch(
+      `${base}/api/dna/strategies/${encodeURIComponent(strategyId)}/rank-journey?${query}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!response.ok)
+      throw new Error(`Rank journey request failed (${response.status})`);
+    const payload = await response.json();
+    if (!Array.isArray(payload.items))
+      throw new Error("Unexpected rank journey response");
     return payload;
   }
   // Identity is read from page meta tags, never hardcoded here, so it stays a
@@ -167,6 +183,7 @@
     products,
     equityCurve,
     trades,
+    rankJourney,
     interpret,
     intelligenceSearch,
     intelligenceCompare,

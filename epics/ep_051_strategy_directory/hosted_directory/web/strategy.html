@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- Version 1.5.0 (2026-08-31): adds a "Position after close" column to the trade ledger, showing this strategy's exact rank among all active strategies at the instant each trade closed (local backend only; overlay, doesn't block the ledger if unavailable). -->
 <!-- Version history: 1.4.0 (2026-08-27) applies the approved Tech Principle intelligence visual system; 1.3.0 (2026-08-24) displays source product identity; 1.2.0 premium live equity curve; 1.1.0 period filtering; 1.0.0 connected evidence page. -->
 <html lang="en">
   <head>
@@ -152,6 +153,7 @@
       const product = (value) => String(value || "").toUpperCase() || "Not supplied";
       const price = (value) => value == null || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString("en-GB", { maximumFractionDigits: 8 });
       const stamp = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value)) : "—";
+      let latestPositionsByCloseTime = null;
       function renderTrades(payload) {
         tradeCount.textContent = `${payload.total} closed trade${payload.total === 1 ? "" : "s"}`;
         if (!payload.items.length) {
@@ -160,7 +162,11 @@
           return;
         }
         tradeLedger.className = "ledger-scroll";
-        tradeLedger.innerHTML = `<table class="trade-table"><thead><tr><th>Product</th><th>Signal</th><th>Entry time</th><th class="number">Entry price</th><th>Exit time</th><th class="number">Exit price</th><th class="number">Net return</th></tr></thead><tbody>${payload.items.map((trade) => `<tr><td data-label="Product"><strong>${esc(product(trade.product))}</strong></td><td data-label="Signal"><span class="signal signal-${esc(String(trade.signal || "").toLowerCase())}">${esc(trade.signal || "—")}</span></td><td data-label="Entry time">${esc(stamp(trade.entry_time))}</td><td data-label="Entry price" class="number">${esc(price(trade.entry_price))}</td><td data-label="Exit time">${esc(stamp(trade.exit_time))}</td><td data-label="Exit price" class="number">${esc(price(trade.exit_price))}</td><td data-label="Net return" class="number return-${Number(trade.net_return) >= 0 ? "positive" : "negative"}">${esc(money(trade.net_return))}</td></tr>`).join("")}</tbody></table>`;
+        const position = (trade) => {
+          const row = latestPositionsByCloseTime?.get(trade.exit_time);
+          return row ? `#${row.rank_position} of ${row.total_strategies}` : "—";
+        };
+        tradeLedger.innerHTML = `<table class="trade-table"><thead><tr><th>Product</th><th>Signal</th><th>Entry time</th><th class="number">Entry price</th><th>Exit time</th><th class="number">Exit price</th><th class="number">Net return</th><th class="number">Position after close</th></tr></thead><tbody>${payload.items.map((trade) => `<tr><td data-label="Product"><strong>${esc(product(trade.product))}</strong></td><td data-label="Signal"><span class="signal signal-${esc(String(trade.signal || "").toLowerCase())}">${esc(trade.signal || "—")}</span></td><td data-label="Entry time">${esc(stamp(trade.entry_time))}</td><td data-label="Entry price" class="number">${esc(price(trade.entry_price))}</td><td data-label="Exit time">${esc(stamp(trade.exit_time))}</td><td data-label="Exit price" class="number">${esc(price(trade.exit_price))}</td><td data-label="Net return" class="number return-${Number(trade.net_return) >= 0 ? "positive" : "negative"}">${esc(money(trade.net_return))}</td><td data-label="Position after close" class="number">${esc(position(trade))}</td></tr>`).join("")}</tbody></table>`;
       }
       async function refresh() {
         const sequence = ++refreshSequence,
@@ -173,10 +179,14 @@
         tradeLedger.className = "ledger-loading";
         tradeLedger.textContent = "Loading closed trades…";
         try {
-          const [p, curve, trades] = await Promise.all([
+          const [p, curve, trades, journey] = await Promise.all([
             DnaDirectoryApi.list({ search: id, page_size: 1, ...params }),
             DnaDirectoryApi.equityCurve(id, params),
             DnaDirectoryApi.trades(id, params),
+            // Position data is an overlay on the trade ledger, not required
+            // for it to be useful (e.g. hosted backend has no per-trade
+            // rank data) - never let its failure break the whole page.
+            DnaDirectoryApi.rankJourney(id, params).catch(() => ({ items: [] })),
           ]);
           if (sequence !== refreshSequence) return;
           const x = p.data.items.find((v) => v.strategy_id === id);
@@ -185,6 +195,7 @@
               "No closed trades for this strategy in the selected period",
             );
           DnaEquityChart.render(equityChart, curve);
+          latestPositionsByCloseTime = new Map(journey.items.map((item) => [item.closed_at, item]));
           renderTrades(trades);
           content.innerHTML = `<div class="identity-line"><span class="pill">${esc(x.quality_state)}</span><span class="product-mark">${esc(product(x.product_name))}</span></div><h2>${esc(x.descriptive_name || "Descriptive name pending")}</h2><table class="table"><tr><th>Product</th><td><strong>${esc(product(x.product_name))}</strong></td></tr><tr><th>Selected period</th><td>${esc(periodLabel.textContent)}</td></tr><tr><th>Closed trades</th><td>${Number(x.total_trades)}</td></tr><tr><th>Net return</th><td>${money(x.total_net_return)}</td></tr><tr><th>Win rate</th><td>${(Number(x.win_rate) * 100).toFixed(2)}%</td></tr><tr><th>Profit factor</th><td>${ratio(x.profit_factor)}</td></tr><tr><th>Maximum drawdown</th><td>${money(x.max_drawdown_money)}</td></tr><tr><th>Evidence observed</th><td>${esc(x.evidence_start || "—")} → ${esc(x.evidence_end || "—")}</td></tr></table><p class="status">Outcome is derived from signed net_return. “Target reached” is not treated as a win. Costs and commission are already included.</p><div class="actions"><a href="/compare.html?ids=${encodeURIComponent(id)}"><button>Compare</button></a><a href="/builder.html?ids=${encodeURIComponent(id)}"><button>Add to portfolio</button></a></div>`;
         } catch (e) {
