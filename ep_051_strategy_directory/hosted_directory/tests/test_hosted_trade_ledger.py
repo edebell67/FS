@@ -81,3 +81,28 @@ def test_api_trade_ledger_no_longer_501s_on_hosted_backend(snapshot_kwargs):
     assert body["total"] == 2
     assert body["items"][1]["entry_price"] == 0.63895
     assert body["items"][1]["exit_price"] == 0.6378
+
+
+def test_hosted_ledger_and_rank_journey_return_exported_optional_fields(snapshot_kwargs):
+    base_snapshot = _snapshot_with_priced_trades(snapshot_kwargs)
+    series = []
+    for index, point in enumerate(base_snapshot.return_series, start=1):
+        row = point.model_dump(mode="json")
+        row.update(alt_net_return=point.net_return + 0.5, rank_position=index, total_strategies=2)
+        series.append(row)
+    snapshot = build_snapshot(base_snapshot.items, return_series=series, **snapshot_kwargs)
+    repository = MemoryRepository()
+    repository.promote(snapshot)
+    client = _client(repository)
+
+    ledger = client.get("/api/dna/strategies/DNA_301001/trades")
+    assert ledger.status_code == 200
+    assert ledger.json()["items"][0]["alt_net_return"] == -49.5
+
+    journey = client.get("/api/dna/strategies/DNA_301001/rank-journey?date_from=2026-08-27&date_to=2026-08-28")
+    assert journey.status_code == 200
+    body = journey.json()
+    assert body["total"] == 2
+    assert body["items"][0]["rank_position"] == 1
+    assert body["items"][0]["total_strategies"] == 2
+    assert "last published snapshot" in body["basis"]

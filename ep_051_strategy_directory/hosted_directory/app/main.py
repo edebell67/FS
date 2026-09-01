@@ -445,6 +445,14 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                           "date_to":date_to.isoformat() if date_to else None},
                 "basis":"closed trades; net return includes costs and commission"}
 
+    @app.get("/api/dna/strategies/{strategy_id}/rank-journey")
+    def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),date_from:date|None=Query(None),date_to:date|None=Query(None)):
+        if date_from and date_to and date_from>date_to:raise HTTPException(422,"date_from must be on or before date_to")
+        today=datetime.now(timezone.utc).date();start=datetime.combine(date_from or today,time.min,timezone.utc);end=datetime.combine((date_to or today)+timedelta(days=1),time.min,timezone.utc)
+        if app.state.repository is None:raise HTTPException(503,"Directory repository is not configured")
+        journey=app.state.repository.current_rank_journey(strategy_id,start,end)
+        return {"strategy_id":strategy_id,"items":journey,"total":len(journey),"period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},"basis":"rank among strategies in the last published snapshot, by all-time cumulative net return at each close - not scoped to the selected period"}
+
     @app.get("/api/intelligence/strategies/{strategy_id}")
     def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
                              date_from:date|None=Query(None),date_to:date|None=Query(None),fields:str|None=Query(None,max_length=120,pattern=r"^[a-z_,]*$")):

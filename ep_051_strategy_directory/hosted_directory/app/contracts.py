@@ -73,6 +73,11 @@ class IntelligenceReturnPoint(BaseModel):
     signal: str | None = Field(default=None, max_length=10)
     entry_price: float | None = None
     exit_price: float | None = None
+    # Optional: absent on snapshots published before enriched ledger/rank data.
+    alt_net_return: float | None = None
+    # Export-time, all-history rank across the last published population.
+    rank_position: int | None = None
+    total_strategies: int | None = None
 
     @field_validator("net_return","cumulative_net_return","drawdown")
     @classmethod

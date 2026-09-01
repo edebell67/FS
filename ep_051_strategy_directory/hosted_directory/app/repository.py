@@ -476,7 +476,13 @@ class MemoryRepository:
         if snap is None:return []
         rows=[p for p in snap.return_series if p.strategy_id==strategy_id and (date_from is None or p.observed_at>=date_from) and (date_to_exclusive is None or p.observed_at<date_to_exclusive)]
         rows.sort(key=lambda p:(p.observed_at,p.trade_id))
-        return [{"guid":p.trade_id,"product":p.product,"signal":p.signal,"entry_time":p.opened_at.isoformat() if p.opened_at else None,"entry_price":p.entry_price,"exit_time":p.observed_at.isoformat(),"exit_price":p.exit_price,"net_return":p.net_return,"alt_net_return":None} for p in rows[:limit]]
+        return [{"guid":p.trade_id,"product":p.product,"signal":p.signal,"entry_time":p.opened_at.isoformat() if p.opened_at else None,"entry_price":p.entry_price,"exit_time":p.observed_at.isoformat(),"exit_price":p.exit_price,"net_return":p.net_return,"alt_net_return":p.alt_net_return} for p in rows[:limit]]
+    def current_rank_journey(self,strategy_id,date_from=None,date_to_exclusive=None):
+        snap=self.current_snapshot()
+        if snap is None:return []
+        rows=[p for p in snap.return_series if p.strategy_id==strategy_id and p.rank_position is not None and (date_from is None or p.observed_at>=date_from) and (date_to_exclusive is None or p.observed_at<date_to_exclusive)]
+        rows.sort(key=lambda p:(p.observed_at,p.trade_id))
+        return [{"trade_number":p.trade_number,"closed_at":p.observed_at.isoformat(),"cumulative_net_return":p.cumulative_net_return,"rank_position":p.rank_position,"total_strategies":p.total_strategies} for p in rows]
     def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
         snap=self.current_snapshot()
         if snap is None:return []
@@ -624,7 +630,15 @@ class PostgresRepository:
         with self._connect() as conn,conn.cursor() as cur:
             cur.execute("SELECT p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.observed_at,p.trade_id LIMIT %s",params+[limit])
             rows=[row[0] for row in cur.fetchall()]
-        return [{"guid":row["trade_id"],"product":row.get("product"),"signal":row.get("signal"),"entry_time":row.get("opened_at"),"entry_price":row.get("entry_price"),"exit_time":row["observed_at"],"exit_price":row.get("exit_price"),"net_return":row["net_return"],"alt_net_return":None} for row in rows]
+        return [{"guid":row["trade_id"],"product":row.get("product"),"signal":row.get("signal"),"entry_time":row.get("opened_at"),"entry_price":row.get("entry_price"),"exit_time":row["observed_at"],"exit_price":row.get("exit_price"),"net_return":row["net_return"],"alt_net_return":row.get("alt_net_return")} for row in rows]
+    def current_rank_journey(self,strategy_id,date_from=None,date_to_exclusive=None):
+        clauses=["p.strategy_id=%s","(p.payload->>'rank_position') IS NOT NULL"];params=[strategy_id]
+        if date_from is not None:clauses.append("p.observed_at>=%s");params.append(date_from)
+        if date_to_exclusive is not None:clauses.append("p.observed_at<%s");params.append(date_to_exclusive)
+        with self._connect() as conn,conn.cursor() as cur:
+            cur.execute("SELECT p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.observed_at,p.trade_id",params)
+            rows=[row[0] for row in cur.fetchall()]
+        return [{"trade_number":row["trade_number"],"closed_at":row["observed_at"],"cumulative_net_return":row["cumulative_net_return"],"rank_position":row.get("rank_position"),"total_strategies":row.get("total_strategies")} for row in rows]
     def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
         """Summarise current hosted return-series rows in a close-time period."""
         clauses=["1=1"];params=[]
