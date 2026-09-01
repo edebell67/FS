@@ -4,8 +4,16 @@
     {
       "name": "thetechprinciple-site",
       "runtimeExecutable": "python",
-      "runtimeArgs": ["-m", "http.server", "8130", "--directory", "epics/ep_046_thetechprinciple/site"],
-      "port": 8130
+      "runtimeArgs": ["-c", "import http.server,socketserver,os; port=int(os.environ.get('PORT','8130')); os.chdir('epics/ep_046_thetechprinciple/site'); socketserver.TCPServer.allow_reuse_address=True; socketserver.TCPServer(('',port),http.server.SimpleHTTPRequestHandler).serve_forever()"],
+      "port": 8130,
+      "autoPort": true
+    },
+    {
+      "name": "thetechprinciple-site-restructure",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-c", "import http.server,socketserver,os; port=int(os.environ.get('PORT','8131')); os.chdir('epics/ep_046_thetechprinciple/site_restructure'); socketserver.TCPServer.allow_reuse_address=True; socketserver.TCPServer(('',port),http.server.SimpleHTTPRequestHandler).serve_forever()"],
+      "port": 8131,
+      "autoPort": true
     },
     {
       "name": "ai-website-assistant-framework",
@@ -18,6 +26,48 @@
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev", "--prefix", "epics/ep_047_directory_app"],
       "port": 8140
+    },
+    {
+      "name": "ep044-web-apps",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8150", "--directory", "epics/ep_044_web_apps"],
+      "port": 8150
+    },
+    {
+      "name": "workstream-html",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8160", "--directory", "workstream/600_workflow"],
+      "port": 8160
+    },
+    {
+      "name": "ep050-operational-console",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["epics/ep_050_distribution_engine/implementation/operational_console_claude/server.py"],
+      "port": 8060
+    },
+    {
+      "name": "agent-message-board-viewer",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8061", "--directory", "agent_board"],
+      "port": 8061
+    },
+    {
+      "name": "agent-message-board-viewer-fresh",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8062", "--directory", "agent_board"],
+      "port": 8062
+    },
+    {
+      "name": "ep052-agentic-arena",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--app-dir", "epics/ep_052_strategy_directory_agentic_trade_arena/arena", "--host", "0.0.0.0", "--port", "8058"],
+      "port": 8058
+    },
+    {
+      "name": "ep054-strategy-fantasy-challenge",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "uvicorn", "server:app", "--app-dir", "epics/ep_054_strategy_fantasy_challenge", "--host", "0.0.0.0", "--port", "8064"],
+      "port": 8064
     }
   ]
 }
