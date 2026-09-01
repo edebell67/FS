@@ -72,6 +72,21 @@
       throw new Error("Unexpected trade ledger response");
     return payload;
   }
+  async function rankJourney(strategyId, params = {}) {
+    const query = new URLSearchParams(
+      Object.entries(params).filter(([, v]) => v !== "" && v != null),
+    );
+    const response = await fetch(
+      `${base}/api/dna/strategies/${encodeURIComponent(strategyId)}/rank-journey?${query}`,
+      { headers: { Accept: "application/json" } },
+    );
+    if (!response.ok)
+      throw new Error(`Rank journey request failed (${response.status})`);
+    const payload = await response.json();
+    if (!Array.isArray(payload.items))
+      throw new Error("Unexpected rank journey response");
+    return payload;
+  }
   // Identity is read from page meta tags, never hardcoded here, so it stays a
   // per-deployment configuration choice. A page with no "user-token" meta tag
   // sends no identity headers and behaves exactly as before (public endpoints
@@ -167,6 +182,7 @@
     products,
     equityCurve,
     trades,
+    rankJourney,
     interpret,
     intelligenceSearch,
     intelligenceCompare,

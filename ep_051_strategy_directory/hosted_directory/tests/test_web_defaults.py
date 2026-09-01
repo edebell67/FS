@@ -40,6 +40,19 @@ def test_day_shift_controls_are_safe_for_shared_strategy_pages():
     assert "/assets/period-filter.js" in strategy
 
 
+def test_strategy_detail_renders_exported_alt_return_and_rank_journey():
+    web = Path(__file__).parents[1] / "web"
+    strategy = (web / "strategy.html").read_text(encoding="utf-8")
+    client = (web / "api-client.js").read_text(encoding="utf-8")
+
+    assert "ALT NET RETURN" in strategy
+    assert "POSITION AFTER CLOSE" in strategy
+    assert "trade.alt_net_return" in strategy
+    assert "DnaDirectoryApi.rankJourney(id, params)" in strategy
+    assert "/rank-journey?${query}" in client
+    assert "rankJourney," in client
+
+
 def test_shared_theme_asset_is_served():
     from fastapi.testclient import TestClient
     from app.main import create_app
