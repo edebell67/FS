@@ -38,7 +38,8 @@ from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceSt
 from .intelligence.regime import classify, recommend, strategy_regime_profile
 from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
 from .intelligence.contracts import (ChainRequest, CollectionRequest, ConsentRequest, PreferenceRequest,
-    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, TimeTravelRequest, TimeTravelSeriesRequest)
+    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest)
+from .intelligence import regime_shape
 from .intelligence.assurance import OperationsMonitor,ReleaseManager
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
@@ -471,6 +472,49 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         consistency=series_consistency(series)
         return {"plan":request.plan.model_dump(mode="json"),"forward_days":request.forward_days,"days_evaluated":len(series),"series":series,"consistency":consistency,
                 "notice":"A day is omitted when its forward window would extend past today. Robustness fields are all-time, not re-windowed per as_of.",
+                "schema_version":"1.0.0"}
+
+    def regime_index_path(instrument):
+        index_dir=Path(cfg.regime_shape_index_dir);index_dir=index_dir if index_dir.is_absolute() else Path(__file__).resolve().parents[1]/index_dir
+        return index_dir/f"{instrument.upper()}.json"
+
+    @app.post("/api/intelligence/regime/similar-days")
+    def regime_similar_days(request:SimilarDaysRequest):
+        """Find historical days whose intraday price shape (24 hourly
+        [open%,high%,low%] periods relative to that day's open, for whichever
+        instrument the strategy trades) is closest to a target day - a full
+        day, or an in-progress one truncated at through_hour - then reports
+        how the strategy actually performed on each matched day. Reads only
+        the pre-built index (sync/warm_regime_shape_index.py); an uncached
+        target day (e.g. today) is built fresh from the raw tick capture."""
+        profile=resolved_profile(request.strategy_id)
+        if profile is None:raise HTTPException(404,"Strategy evidence was not found")
+        instruments=profile["classification"].get("instruments") or []
+        if not instruments:raise HTTPException(422,"Strategy has no traded instrument to build a regime shape from")
+        instrument=instruments[0].upper()
+        cache_path=regime_index_path(instrument)
+        index=regime_shape.load_index(cache_path)
+        if not index:raise HTTPException(503,f"No regime-shape index for {instrument} yet; run: python -m sync.warm_regime_shape_index --instrument {instrument}")
+        as_of=request.as_of or date.today();as_of_str=as_of.isoformat()
+        if as_of_str in index and request.through_hour is None:
+            target=index[as_of_str]
+        elif as_of_str in index:
+            target=index[as_of_str][:request.through_hour+1]
+        else:
+            root=cfg.regime_price_capture_root
+            if not root or not Path(root).exists():raise HTTPException(503,f"{as_of_str} is not indexed and the price-capture source is not reachable")
+            target=regime_shape.build_day_vector_for_date(Path(root),instrument,as_of,request.through_hour)
+            if target is None:raise HTTPException(404,f"No price-capture data for {instrument} on {as_of_str}")
+        candidates={day:vector for day,vector in index.items() if day!=as_of_str}
+        ranked=regime_shape.find_similar_days(target,candidates,min_periods=cfg.regime_shape_min_periods)[:request.top_n]
+        for row in ranked:
+            day=date.fromisoformat(row["date"]);start=datetime.combine(day,time.min,timezone.utc);end=start+timedelta(days=1)
+            points=cached_points(request.strategy_id,start,end) or []
+            computed=calculate_metrics([float(p["net_return"]) for p in points]) if points else None
+            row["strategy_performance"]={"trade_count":len(points),"net_return":computed["total_return"] if computed else None,"win_rate":computed["win_rate"] if computed else None}
+        return {"strategy_id":request.strategy_id,"instrument":instrument,"as_of":as_of_str,"through_hour":request.through_hour,
+                "target_periods":sum(1 for p in target if p is not None),"index_size":len(index),"similar_days":ranked,
+                "notice":"Distance is Euclidean over whichever hourly periods both days have (min "+str(cfg.regime_shape_min_periods)+" overlapping periods required). strategy_performance is that day's actual, real trades - not a prediction.",
                 "schema_version":"1.0.0"}
 
     @app.get("/healthz")

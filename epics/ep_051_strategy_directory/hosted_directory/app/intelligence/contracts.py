@@ -55,6 +55,21 @@ class TimeTravelSeriesRequest(BaseModel):
         return self
 
 
+class SimilarDaysRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9]+$")
+    as_of: date | None = Field(None, description="Target day; defaults to today.")
+    through_hour: int | None = Field(None, ge=0, le=23, description="Compare only p0..p<through_hour> (an in-progress day); omit for a full day.")
+    top_n: int = Field(10, ge=1, le=50)
+
+    @field_validator("as_of")
+    @classmethod
+    def as_of_not_future(cls, value):
+        if value is not None and value > date.today():
+            raise ValueError("as_of cannot be in the future")
+        return value
+
+
 class SavedSearchRequest(BaseModel):
     name: str = Field(min_length=1,max_length=80)
     plan: StrategyQuery
