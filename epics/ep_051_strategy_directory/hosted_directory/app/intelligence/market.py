@@ -5,6 +5,7 @@ v1.0.0 · 2026-08-24 · Adds immutable feature snapshots, freshness gates and as
 """
 from __future__ import annotations
 from datetime import datetime,timezone
+from bisect import bisect_right
 import hashlib,json,math
 
 
@@ -134,3 +135,24 @@ def join_regimes_without_lookahead(returns,regime_rows):
         at=_time(item["timestamp"]);eligible=[row for row in labels if _time(row["as_of"])<=at]
         if eligible:joined.append({**item,"regime":eligible[-1]["state"],"regime_as_of":_time(eligible[-1]["as_of"]).isoformat()})
     return joined
+
+
+def join_regimes_bisect(returns,sorted_labels):
+    """Same no-lookahead semantics as join_regimes_without_lookahead, but
+    O(n log m) via bisect instead of O(n*m) - needed to join many strategies'
+    trade points against a long (years of daily rows) regime-label history in
+    one bulk pass without it becoming the dominant cost. `sorted_labels` must
+    already be sorted by as_of (build once per request, reuse across every
+    strategy) - pass the return value of build_regime_label_index()."""
+    times,states=sorted_labels;joined=[]
+    for item in sorted(returns,key=lambda row:_time(row["timestamp"])):
+        at=_time(item["timestamp"]);idx=bisect_right(times,at)-1
+        if idx>=0:joined.append({**item,"regime":states[idx],"regime_as_of":times[idx].isoformat()})
+    return joined
+
+
+def build_regime_label_index(regime_rows):
+    """Sort a market's classified regime-label history once into parallel
+    (times, states) arrays for join_regimes_bisect to bisect against."""
+    ordered=sorted(regime_rows,key=lambda row:_time(row["as_of"]))
+    return [_time(row["as_of"]) for row in ordered],[row["state"] for row in ordered]

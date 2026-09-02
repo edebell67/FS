@@ -10,34 +10,44 @@ from datetime import datetime, timezone
 from .metrics import METHOD_VERSION, calculate, confidence_components, evidence_years
 from .models import EvidenceProfile, IntelligenceMetrics, MetricValue, StrategyClassification, StrategyIdentity, StrategyIntelligenceProfile
 from .metrics import period_returns
-from .robustness import live_backtest_divergence,parameter_sensitivity,trade_behaviour,walk_forward
+from .robustness import divergence_split_from_points,live_backtest_divergence,parameter_sensitivity,trade_behaviour,walk_forward,walk_forward_folds_from_points
 
 UNITS={"total_return":"money","annualized_return":"money/year","cagr":"fraction/year","value_at_risk_95":"money/trade","volatility":"money/year","max_drawdown":"money",
        "downside_deviation":"money/year","sharpe":"ratio","sortino":"ratio","calmar":"ratio","win_rate":"fraction",
        "profit_factor":"ratio","expectancy":"money/trade","trades_per_year":"trades/year"}
 
 
-def build_profile(summary: dict, points: list[dict]) -> StrategyIntelligenceProfile:
-    timestamps=[datetime.fromisoformat(p["closed_at"]) for p in points if p.get("closed_at")]
+def outcomes(points:list[dict],return_basis:str="net_return")->list[float]:
+    """Extract the selected outcome column from trade points, skipping rows
+    where that basis wasn't recorded (e.g. alt_net_return is nullable) rather
+    than treating a missing value as zero."""
+    return [float(p[return_basis]) for p in points if p.get(return_basis) is not None]
+
+
+def build_profile(summary: dict, points: list[dict], return_basis: str = "net_return") -> StrategyIntelligenceProfile:
+    valid_points=[p for p in points if p.get(return_basis) is not None]
+    timestamps=[datetime.fromisoformat(p["closed_at"]) for p in valid_points if p.get("closed_at")]
     start=min(timestamps) if timestamps else None; end=max(timestamps) if timestamps else None
-    computed=calculate([p["net_return"] for p in points],timestamps,summary.get("starting_capital"))
-    years=evidence_years(start,end); count=len(points); state="VALID" if count>=30 else "COLLECTING" if count else "UNAVAILABLE"
-    def metric(key): return MetricValue(value=computed[key],unit=UNITS[key],methodology_version=METHOD_VERSION,evidence_state=state if computed[key] is not None else "UNAVAILABLE")
+    returns=outcomes(valid_points,return_basis)
+    computed=calculate(returns,timestamps,summary.get("starting_capital"))
+    years=evidence_years(start,end); count=len(valid_points); state="VALID" if count>=30 else "COLLECTING" if count else "UNAVAILABLE"
+    def metric(key): return MetricValue(value=computed[key],unit=UNITS[key],methodology_version=METHOD_VERSION,evidence_state=state if computed[key] is not None else "UNAVAILABLE",source=f"combined_trades_closed.{return_basis}")
     instruments=[x.strip() for x in (summary.get("product_name") or "").split(",") if x.strip()]
-    confidence=confidence_components(count,years,[p["net_return"] for p in points],timestamps)
+    confidence=confidence_components(count,years,returns,timestamps)
     return StrategyIntelligenceProfile(generated_at=datetime.now(timezone.utc),
       identity=StrategyIdentity(strategy_id=summary["strategy_id"],name=summary.get("descriptive_name"),author=summary.get("author"),source=summary.get("source") or "DNA",version=str(summary.get("definition_version") or "1"),description=summary.get("description")),
       classification=StrategyClassification(asset_class=summary.get("market") or "FX",instruments=instruments,strategy_family=summary.get("strategy_family"),timeframe=summary.get("timeframe"),direction=summary.get("direction") or "both",parameters=summary.get("parameters") or {}),
       metrics=IntelligenceMetrics(**{key:metric(key) for key in UNITS}),
       evidence=EvidenceProfile(trade_count=count,start=start,end=end,years=years,quality_state=state,
                                confidence=confidence["confidence"],confidence_components=confidence,freshness="CURRENT" if end else "UNKNOWN"),
-      robustness={"trade_behaviour":trade_behaviour(points),"period_returns":period_returns([p["net_return"] for p in points],timestamps),
-                  "parameter_sensitivity":parameter_sensitivity(summary.get("parameter_runs") or []),"walk_forward":walk_forward(summary.get("walk_forward_folds") or []),
-                  "live_backtest_divergence":live_backtest_divergence(summary.get("backtest_returns") or [],summary.get("live_returns") or []),
+      robustness={"trade_behaviour":trade_behaviour(valid_points),"period_returns":period_returns(returns,timestamps),
+                  "parameter_sensitivity":parameter_sensitivity(summary.get("parameter_runs") or []),
+                  "walk_forward":walk_forward(summary.get("walk_forward_folds") or walk_forward_folds_from_points(valid_points,return_basis=return_basis)),
+                  "live_backtest_divergence":live_backtest_divergence(*(([summary["backtest_returns"],summary["live_returns"]]) if summary.get("backtest_returns") and summary.get("live_returns") else divergence_split_from_points(valid_points,return_basis=return_basis))),
                   "series_window":{"returned_points":count,"maximum_points":1000,"truncated":count>=1000}},
       links={"directory":"/","equity_curve":f"/api/dna/strategies/{summary['strategy_id']}/equity-curve",
              "detail":f"/strategy.html?id={summary['strategy_id']}"},
-      methodology={"metric_registry":METHOD_VERSION,"outcome":"signed net_return","cost_basis":"costs and commission included"})
+      methodology={"metric_registry":METHOD_VERSION,"outcome":f"signed {return_basis}","cost_basis":"costs and commission included","return_basis":return_basis})
 
 
 def build_summary_profile(summary:dict)->StrategyIntelligenceProfile:

@@ -4,15 +4,55 @@ VERSION HISTORY
 v1.0.0 · 2026-08-24 · Introduces bounded, non-executable service request schemas.
 """
 from __future__ import annotations
-from datetime import datetime
+from datetime import date, datetime
 from math import isfinite
 from typing import Any
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from .discovery import StrategyQuery
 
 
 class SearchRequest(BaseModel):
     plan: StrategyQuery
+
+
+class ChainRequest(BaseModel):
+    stages: list[StrategyQuery] = Field(min_length=1,max_length=10)
+
+
+class TimeTravelRequest(BaseModel):
+    plan: StrategyQuery
+    as_of: date = Field(description="Evaluate the query using only evidence up to and including this date.")
+    forward_to: date | None = Field(None,description="End of the forward-test window; defaults to today.")
+
+    @field_validator("as_of")
+    @classmethod
+    def as_of_not_future(cls,value):
+        if value>date.today():raise ValueError("as_of cannot be in the future")
+        return value
+
+    @model_validator(mode="after")
+    def forward_after_as_of(self):
+        if self.forward_to is not None and self.forward_to<=self.as_of:raise ValueError("forward_to must be after as_of")
+        return self
+
+
+class TimeTravelSeriesRequest(BaseModel):
+    plan: StrategyQuery
+    as_of_from: date = Field(description="First as-of date in the daily series.")
+    as_of_to: date = Field(description="Last as-of date in the daily series.")
+    forward_days: int = Field(7,ge=1,le=180,description="Fixed forward-test window applied after each as-of date.")
+
+    @field_validator("as_of_to")
+    @classmethod
+    def as_of_to_not_future(cls,value):
+        if value>date.today():raise ValueError("as_of_to cannot be in the future")
+        return value
+
+    @model_validator(mode="after")
+    def range_is_valid(self):
+        if self.as_of_from>self.as_of_to:raise ValueError("as_of_from must be on or before as_of_to")
+        if (self.as_of_to-self.as_of_from).days>90:raise ValueError("as_of range cannot exceed 90 days per request")
+        return self
 
 
 class SavedSearchRequest(BaseModel):

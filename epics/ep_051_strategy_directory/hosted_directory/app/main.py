@@ -19,7 +19,7 @@ Version history:
 - 1.0.0 (2026-08-23): Local SQL and hosted snapshot modes, ingestion and screens.
 """
 from __future__ import annotations
-import base64,hashlib,hmac, json,os,re,secrets,subprocess, time as clock
+import base64,hashlib,hmac, json,os,re,secrets,statistics,subprocess, time as clock
 from threading import Lock,Thread
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -31,13 +31,14 @@ from .config import Settings, get_settings
 from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
 from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies
 from .intelligence.profile import UNITS, build_profile, build_summary_profile
+from .intelligence.metrics import calculate as calculate_metrics
 from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
-from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, exclusion_trace, facet_counts, interpret_with_trace, retrieve
+from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, retrieve
 from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceStore, preference_trace
 from .intelligence.regime import classify, recommend, strategy_regime_profile
-from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, freshness_limit,join_regimes_without_lookahead,validate_market_cache
-from .intelligence.contracts import (CollectionRequest, ConsentRequest, PreferenceRequest,
-    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest)
+from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
+from .intelligence.contracts import (ChainRequest, CollectionRequest, ConsentRequest, PreferenceRequest,
+    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, TimeTravelRequest, TimeTravelSeriesRequest)
 from .intelligence.assurance import OperationsMonitor,ReleaseManager
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
@@ -353,6 +354,125 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             return build_profile(summaries[0],local_equity_curve(cfg,strategy_id,start,end)).model_dump(mode="json")
         return next((profile for profile in all_profiles() if profile["identity"]["strategy_id"]==strategy_id),None)
 
+    def basis_profiles(end,return_basis="net_return"):
+        """Bulk profiles built directly from the cached local snapshot's
+        per-trade curves (no DB round trip), under the requested return_basis
+        and bounded to trades closed on or before `end` (None = full history).
+        Strategies with zero eligible trades in that window/basis are excluded
+        - they weren't evidenced under that basis, so a screen correctly
+        cannot have selected them. alt_net_return reverses every trade, so
+        this is also how a query answers 'would fading this have worked'."""
+        if cfg.data_backend!="sqlserver":return None
+        snapshot=local_snapshot()
+        if snapshot is None:return None
+        out=[]
+        for source in snapshot["profiles"]:
+            strategy_id=source["identity"]["strategy_id"];points=points_from_snapshot(snapshot,strategy_id,None,end)
+            points=[p for p in points if p.get(return_basis) is not None]
+            if not points:continue
+            profile=build_profile(cached_summary(source,points).model_dump(mode="json"),points,return_basis).model_dump(mode="json")
+            profile["score"]=score_profile(profile);out.append(profile)
+        return out
+
+    def forward_performance(strategy_ids,start,end,return_basis="net_return"):
+        results=[]
+        for strategy_id in strategy_ids:
+            points=cached_points(strategy_id,start,end)
+            if points is None:continue
+            points=[p for p in points if p.get(return_basis) is not None]
+            computed=calculate_metrics([float(p[return_basis]) for p in points])
+            results.append({"strategy_id":strategy_id,"forward_trade_count":len(points),"forward_net_return":computed["total_return"],"forward_win_rate":computed["win_rate"]})
+        traded=[r for r in results if r["forward_trade_count"]>0]
+        positive_rate=round(sum(r["forward_net_return"]>0 for r in traded)/len(traded),4) if traded else None
+        aggregate={"strategy_count":len(results),"traded_count":len(traded),
+                   "mean_forward_net_return":round(statistics.mean(r["forward_net_return"] for r in traded),4) if traded else None,
+                   "positive_rate":positive_rate,"effectiveness_pct":round(positive_rate*100,1) if positive_rate is not None else None}
+        return results,aggregate
+
+    def run_timetravel(plan,as_of,forward_to):
+        """Evaluate `plan` using only evidence available on `as_of`, then measure
+        how the matched strategies actually performed afterwards (as_of, forward_to],
+        against a same-window baseline of the whole as-of-eligible universe.
+        Uses plan.return_basis throughout, so an alt_net_return plan measures
+        forward performance of the reversed trades too."""
+        as_of_end=datetime.combine(as_of+timedelta(days=1),time.min,timezone.utc)
+        universe=basis_profiles(as_of_end,plan.return_basis)
+        if universe is None:
+            if not cfg.allow_synchronous_local_fallback:raise HTTPException(503,"Local intelligence snapshot is missing or stale; run the operator warm-up")
+            raise HTTPException(503,"Local intelligence snapshot is missing or stale")
+        matched=retrieve(universe,plan);matched=matched[:cfg.intelligence_max_query_results]
+        matched_ids=[item["profile"]["identity"]["strategy_id"] for item in matched]
+        names={item["profile"]["identity"]["strategy_id"]:item["profile"]["identity"].get("name") for item in matched}
+        as_of_metrics={item["profile"]["identity"]["strategy_id"]:{key:item["profile"]["metrics"][key]["value"] for key in ("win_rate","sharpe","profit_factor","max_drawdown")} for item in matched}
+        forward_end=datetime.combine(forward_to+timedelta(days=1),time.min,timezone.utc)
+        matched_forward,matched_aggregate=forward_performance(matched_ids,as_of_end,forward_end,plan.return_basis)
+        for row in matched_forward:row["name"]=names.get(row["strategy_id"]);row["as_of_metrics"]=as_of_metrics.get(row["strategy_id"])
+        universe_ids=[p["identity"]["strategy_id"] for p in universe]
+        _,baseline_aggregate=forward_performance(universe_ids,as_of_end,forward_end,plan.return_basis)
+        lift=(round(matched_aggregate["mean_forward_net_return"]-baseline_aggregate["mean_forward_net_return"],4)
+              if matched_aggregate["mean_forward_net_return"] is not None and baseline_aggregate["mean_forward_net_return"] is not None else None)
+        return {"as_of":as_of,"query_universe_size":len(universe),
+                "matched_at_as_of":{"count":len(matched_ids),"strategy_ids":matched_ids},
+                "forward_window":{"from":as_of_end.date().isoformat(),"to":forward_to.isoformat()},
+                "forward_performance":{"matched":matched_aggregate,"baseline_all_as_of_strategies":baseline_aggregate,"lift_vs_baseline":lift,"per_strategy":matched_forward}}
+
+    CONSISTENCY_WEIGHTS={"outperform_rate":0.6,"stability":0.4}
+    CONSISTENCY_METHOD_VERSION="1.0.0"
+
+    def series_consistency(series):
+        """A query that behaves the same way day after day is more trustworthy
+        than one that happened to work once. consistency_score blends how often
+        the matched cohort beat the baseline (outperform_rate) with how tightly
+        daily effectiveness_pct clusters (stability = 1 - stdev/100), mirroring
+        the weighted-component confidence pattern used elsewhere in this API
+        (see intelligence/metrics.py confidence_components)."""
+        days=[d for d in series if d["effectiveness_pct"] is not None]
+        if not days:return {"days_with_data":0,"consistency_score":None,"confidence_band":"insufficient evidence","methodology_version":CONSISTENCY_METHOD_VERSION}
+        values=[d["effectiveness_pct"] for d in days];lifts=[d["lift_vs_baseline"] for d in days if d["lift_vs_baseline"] is not None]
+        stdev=statistics.pstdev(values) if len(values)>1 else 0.0
+        stability=max(0.0,1-stdev/100)
+        outperform_rate=round(sum(value>0 for value in lifts)/len(lifts),4) if lifts else None
+        score=CONSISTENCY_WEIGHTS["outperform_rate"]*(outperform_rate or 0)+CONSISTENCY_WEIGHTS["stability"]*stability
+        band="insufficient evidence" if len(days)<3 else "high" if score>=0.75 else "medium" if score>=0.5 else "low"
+        return {"days_with_data":len(days),"mean_effectiveness_pct":round(statistics.mean(values),1),"stdev_effectiveness_pct":round(stdev,1),
+                "min_effectiveness_pct":min(values),"max_effectiveness_pct":max(values),"days_beating_baseline":sum(value>0 for value in lifts) if lifts else None,
+                "outperform_rate":outperform_rate,"consistency_score":round(score,4),"confidence_band":band,
+                "weights":CONSISTENCY_WEIGHTS,"methodology_version":CONSISTENCY_METHOD_VERSION}
+
+    @app.post("/api/intelligence/query/timetravel")
+    def timetravel_query(request:TimeTravelRequest):
+        """Point-in-time query backtest for a single as-of date."""
+        if cfg.data_backend!="sqlserver":raise HTTPException(501,"Point-in-time replay is only available on the local SQL Server-backed deployment")
+        forward_to=request.forward_to or datetime.now(timezone.utc).date()
+        result=run_timetravel(request.plan,request.as_of,forward_to)
+        return {"plan":request.plan.model_dump(mode="json"),**result,
+                "notice":"Point-in-time replay uses only the local SQL Server snapshot's trade evidence. walk_forward and live_backtest_divergence are re-windowed to as_of; parameter_sensitivity still requires a separately tracked parameter-run table and stays COLLECTING.",
+                "schema_version":"1.0.0"}
+
+    @app.post("/api/intelligence/query/timetravel/series")
+    def timetravel_series(request:TimeTravelSeriesRequest):
+        """Day-by-day point-in-time backtest: for every as-of date in
+        [as_of_from, as_of_to], evaluate `plan` as of that day and measure the
+        matched strategies' effectiveness over the following `forward_days` -
+        e.g. '20 Aug: 50% effective, 21 Aug: 52%, 22 Aug: 67%'. Each day is
+        independent: strategies are re-screened fresh, not carried forward."""
+        if cfg.data_backend!="sqlserver":raise HTTPException(501,"Point-in-time replay is only available on the local SQL Server-backed deployment")
+        series=[];cursor=request.as_of_from
+        while cursor<=request.as_of_to:
+            forward_to=cursor+timedelta(days=request.forward_days)
+            if forward_to>date.today():break
+            result=run_timetravel(request.plan,cursor,forward_to)
+            series.append({"as_of":cursor.isoformat(),"matched_count":result["matched_at_as_of"]["count"],
+                           "effectiveness_pct":result["forward_performance"]["matched"]["effectiveness_pct"],
+                           "mean_forward_net_return":result["forward_performance"]["matched"]["mean_forward_net_return"],
+                           "baseline_effectiveness_pct":result["forward_performance"]["baseline_all_as_of_strategies"]["effectiveness_pct"],
+                           "lift_vs_baseline":result["forward_performance"]["lift_vs_baseline"]})
+            cursor+=timedelta(days=1)
+        consistency=series_consistency(series)
+        return {"plan":request.plan.model_dump(mode="json"),"forward_days":request.forward_days,"days_evaluated":len(series),"series":series,"consistency":consistency,
+                "notice":"A day is omitted when its forward window would extend past today. Robustness fields are all-time, not re-windowed per as_of.",
+                "schema_version":"1.0.0"}
+
     @app.get("/healthz")
     def health(): return {"status":"ok","build_sha":BUILD_SHA[:12] if BUILD_SHA else None}
 
@@ -595,11 +715,88 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return {"query":request.query,"plan":plan.model_dump(mode="json"),**result,"schema_version":"1.0.0",
                 "notice":"The plan is validated and must be applied before ranking."}
 
+    def attach_regimes(profiles,curves,return_basis="net_return"):
+        """Populate profile["regimes"] the same way /recommendations already
+        does per-strategy (join_regimes_without_lookahead + strategy_regime_profile),
+        but in bulk across a whole profile pool via a bisect join so
+        StrategyQuery.regime works as a real filter/rank input on
+        /query/search and /query/chain, not just on an explicit <=20-id list.
+        Mutates profiles in place: for the cached net_return pool this doubles
+        as a cache (computed once, reused by later requests until the
+        snapshot itself is rebuilt); basis_profiles() pools are already
+        freshly built per request, so mutating them costs nothing extra."""
+        if not profiles:return profiles
+        now=datetime.now(timezone.utc);by_market={}
+        for profile in profiles:
+            if profile.get("regimes"):continue
+            by_market.setdefault(profile["classification"].get("asset_class") or "FX",[]).append(profile)
+        for market,group in by_market.items():
+            history=app.state.market_features.history(market,through=now)
+            if not history:
+                for profile in group:profile["regimes"]={}
+                continue
+            labels=[{"as_of":row["as_of"],"state":classify(row["features"])["state"]} for row in history]
+            index=build_regime_label_index(labels)
+            for profile in group:
+                strategy_id=profile["identity"]["strategy_id"]
+                points=[point for point in curves.get(strategy_id,[]) if point.get(return_basis) is not None]
+                returns=[{"timestamp":point["closed_at"],"return":float(point[return_basis])} for point in points]
+                joined=join_regimes_bisect(returns,index)
+                profile["regimes"]=strategy_regime_profile(joined,minimum=cfg.intelligence_min_regime_samples)
+        return profiles
+
+    def query_pool(return_basis="net_return"):
+        """The candidate universe a query/chain runs against: the fast cached
+        net_return profiles for the default basis, or a rebuild from cached
+        curves (still no DB round trip) when alt_net_return is requested.
+        Regime evidence is attached in both cases so StrategyQuery.regime is
+        a real filter, not the always-empty one it used to be."""
+        if return_basis=="net_return":
+            profiles=all_profiles();curves=app.state.profile_cache.get("curves") or {}
+            return attach_regimes(profiles,curves,return_basis)
+        pool=basis_profiles(None,return_basis)
+        if pool is None:raise HTTPException(501,"alt_net_return querying is only available on the local SQL Server-backed deployment")
+        snapshot=local_snapshot();curves=(snapshot or {}).get("curves") or {}
+        return attach_regimes(pool,curves,return_basis)
+
     @app.post("/api/intelligence/query/search")
     def search_intelligence(request:SearchRequest):
-        profiles=all_profiles();all_results=retrieve(profiles,request.plan);results=all_results[:cfg.intelligence_max_query_results];all_exclusions=exclusion_trace(profiles,request.plan)
+        profiles=query_pool(request.plan.return_basis);all_results=retrieve(profiles,request.plan);results=all_results[:cfg.intelligence_max_query_results];all_exclusions=exclusion_trace(profiles,request.plan)
         return {"plan":request.plan.model_dump(mode="json"),"items":results,"total":len(all_results),"facets":facet_counts([item["profile"] for item in all_results]),"exclusions":all_exclusions[:cfg.intelligence_max_query_results],"excluded_total":len(all_exclusions),
                 "constraint_order":"filter-before-rank","schema_version":"1.0.0"}
+
+    @app.post("/api/intelligence/query/chain")
+    def chain_intelligence_query(request:ChainRequest):
+        """Apply up to 10 StrategyQuery stages as a narrowing funnel: each stage's
+        survivors feed the next. Same filter/rank semantics as /query/search, just
+        composed. Returns per-stage survivor/elimination counts plus the final
+        ranked result of the last stage. Callers (human or agent) persist the
+        result via the existing POST /api/intelligence/user/collections using the
+        returned strategy_ids. The first stage's return_basis selects the
+        candidate universe for the whole chain; later stages should match it."""
+        profiles=query_pool(request.stages[0].return_basis);result=chain(profiles,request.stages);items=result["items"][:cfg.intelligence_max_query_results]
+        return {"stages":result["stages"],"final_total":result["final_count"],"items":items,
+                "strategy_ids":[item["profile"]["identity"]["strategy_id"] for item in items],
+                "strategies":[{"strategy_id":item["profile"]["identity"]["strategy_id"],"name":item["profile"]["identity"].get("name")} for item in items],
+                "constraint_order":"filter-before-rank, sequential per stage","schema_version":"1.0.0"}
+
+    @app.get("/api/intelligence/query/schema")
+    def query_schema():
+        """Machine-readable description of every queryable field, for an
+        automated caller (agent) to introspect available screens without
+        reading source. Mirrors StrategyQuery/ChainRequest 1:1."""
+        return {"single_query_endpoint":"/api/intelligence/query/search","chain_endpoint":"/api/intelligence/query/chain",
+                "timetravel_endpoint":"/api/intelligence/query/timetravel","timetravel_series_endpoint":"/api/intelligence/query/timetravel/series",
+                "chain_max_stages":10,"timetravel_series_max_range_days":90,"strategy_query_schema":StrategyQuery.model_json_schema(),
+                "notes":["Each field on StrategyQuery is an independent AND constraint; omit a field to leave it unconstrained.",
+                         "min_walk_forward_positive_fold_rate, require_no_divergence_alert and require_parameter_stable read profile.robustness evidence and only pass when that evidence's state is VALID (COLLECTING/UNAVAILABLE strategies are excluded, not treated as passing).",
+                         "For /query/chain, POST {\"stages\":[StrategyQuery, StrategyQuery, ...]}; the survivors of stage N become the candidate pool for stage N+1.",
+                         "For /query/timetravel, POST {\"plan\":StrategyQuery,\"as_of\":date,\"forward_to\":date} to see how strategies matching the query as of a past date actually performed afterwards, vs a same-window baseline.",
+                         "For /query/timetravel/series, POST {\"plan\":StrategyQuery,\"as_of_from\":date,\"as_of_to\":date,\"forward_days\":int} for a daily effectiveness_pct series (local SQL Server backend only, max 90-day range).",
+                         "return_basis (default net_return) selects the outcome every metric/filter/rank/robustness check is computed from. alt_net_return is not an alternate cost basis - it is every trade in the ledger reversed (opposite side), so a query with return_basis=alt_net_return answers 'would fading this strategy have worked', over the same universe and evidence rules as net_return.",
+                         "alt_net_return querying is local SQL Server-backend only and rebuilds the candidate pool from cached trade curves per request (no cached fast-path exists for it yet), so it is slower than the default net_return query.",
+                         "Persist a result as a watchlist via POST /api/intelligence/user/collections with the returned strategy_ids."],
+                "schema_version":"1.0.0"}
 
     @app.get("/api/intelligence/user")
     def user_export(user_id:str=Depends(trusted_user)):
