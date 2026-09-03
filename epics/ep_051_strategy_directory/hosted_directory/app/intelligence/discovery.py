@@ -36,6 +36,12 @@ class StrategyQuery(BaseModel):
     min_walk_forward_positive_fold_rate: float | None = Field(None,ge=0,le=1)
     require_no_divergence_alert: bool | None = None
     require_parameter_stable: bool | None = None
+    min_trade_count: int | None = Field(None,ge=0,description="Minimum closed trades within the evidence window (lookback_hours if set, else since inception).")
+    lookback_hours: float | None = Field(None,gt=0,le=8760,description=
+        "Restrict the evidence window to the trailing N hours from now, instead of "
+        "since-inception - e.g. lookback_hours=3 + min_trade_count=6 answers 'top "
+        "performers in the last 3 hours with more than 5 trades'. Local SQL Server "
+        "backend only. Every metric/filter/rank is recomputed from just that window.")
     return_basis: Literal["net_return","alt_net_return"] = Field("net_return",
         description="Outcome column every metric, robustness check and rank is computed from. "
                     "net_return is the trade as actually taken; alt_net_return is the same trade "
@@ -112,6 +118,7 @@ def matches(profile:dict,plan:StrategyQuery)->tuple[bool,list[str]]:
       (plan.min_value_at_risk_95,value("value_at_risk_95"),lambda a,b:b is not None and b>=a,"95% VaR"),
       (plan.min_profit_factor,value("profit_factor"),lambda a,b:b is not None and b>=a,"profit factor"),
       (plan.min_track_record_years,evidence.get("years"),lambda a,b:b is not None and b>=a,"track record"),
+      (plan.min_trade_count,evidence.get("trade_count"),lambda a,b:b is not None and b>=a,"trade count"),
       (plan.min_evidence_confidence,evidence.get("confidence"),lambda a,b:b is not None and b>=a,"evidence confidence"),
       (plan.min_quality_score,score.get("quality_score"),lambda a,b:b is not None and b>=a,"quality score"),
       (plan.min_walk_forward_positive_fold_rate,walk_forward,lambda a,b:b.get("state")=="VALID" and b.get("positive_fold_rate") is not None and b["positive_fold_rate"]>=a,"walk-forward positive-fold rate"),

@@ -448,21 +448,22 @@ def local_equity_curve(settings, strategy_id: str, date_from=None, date_to_exclu
         params.append(date_to_exclusive)
     query = f"""
     WITH trades AS (
-      SELECT TOP (?) COALESCE(g_close_time,last_update,created) closed_at, created opened_at, created, guid, CAST(net_return AS float) net_return
+      SELECT TOP (?) COALESCE(g_close_time,last_update,created) closed_at, created opened_at, created, guid, CAST(net_return AS float) net_return,
+        UPPER(LTRIM(RTRIM(signal))) signal
       FROM dbo.combined_trades_closed
       WHERE model_ix IN (?,?,?) AND net_return IS NOT NULL {' '.join(filters)}
       ORDER BY COALESCE(g_close_time,last_update,created) DESC, created DESC, guid DESC
     ), equity AS (
-      SELECT closed_at, opened_at, guid, net_return,
+      SELECT closed_at, opened_at, guid, net_return, signal,
         SUM(net_return) OVER(ORDER BY closed_at,created,guid ROWS UNBOUNDED PRECEDING) equity
       FROM trades
     ), curve AS (
-      SELECT closed_at,opened_at,guid,net_return,equity,
+      SELECT closed_at,opened_at,guid,net_return,signal,equity,
         equity-CASE WHEN MAX(equity) OVER(ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING)>0 THEN MAX(equity) OVER(ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) ELSE 0 END drawdown,
         ROW_NUMBER() OVER(ORDER BY closed_at,guid) trade_number
       FROM equity
     )
-    SELECT trade_number,opened_at,closed_at,net_return,equity,drawdown FROM curve ORDER BY trade_number
+    SELECT trade_number,opened_at,closed_at,net_return,signal,equity,drawdown FROM curve ORDER BY trade_number
     """
     with closing(sqlserver_connection(settings)) as conn:
         cur = conn.cursor(); cur.execute(query, *params)
@@ -602,7 +603,7 @@ class MemoryRepository:
         snap=self.current_snapshot();return [] if snap is None else [item.model_dump(mode="json") for item in snap.intelligence_profiles]
     def current_equity_curve(self,strategy_id,date_from=None,date_to_exclusive=None):
         snap=self.current_snapshot();rows=[] if snap is None else [item for item in snap.return_series if item.strategy_id==strategy_id and (date_from is None or item.observed_at>=date_from) and (date_to_exclusive is None or item.observed_at<date_to_exclusive)]
-        return rebase_equity_rows([{"trade_number":item.trade_number,"opened_at":item.opened_at.isoformat() if item.opened_at else None,"closed_at":item.observed_at.isoformat(),"net_return":item.net_return,"equity":item.cumulative_net_return,"drawdown":item.drawdown} for item in rows])
+        return rebase_equity_rows([{"trade_number":item.trade_number,"opened_at":item.opened_at.isoformat() if item.opened_at else None,"closed_at":item.observed_at.isoformat(),"net_return":item.net_return,"signal":item.signal,"equity":item.cumulative_net_return,"drawdown":item.drawdown} for item in rows])
     def current_equity_curves(self):
         return {item.strategy_id:self.current_equity_curve(item.strategy_id) for item in self.current_items()}
     def current_closed_trades(self,strategy_id,date_from=None,date_to_exclusive=None,limit=1000):
@@ -768,12 +769,12 @@ class PostgresRepository:
         if date_to_exclusive is not None:clauses.append("p.observed_at<%s");params.append(date_to_exclusive)
         with self._connect() as conn,conn.cursor() as cur:
             cur.execute("SELECT p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id WHERE "+" AND ".join(clauses)+" ORDER BY p.observed_at,p.trade_id",params);rows=[row[0] for row in cur.fetchall()]
-        return rebase_equity_rows([{"trade_number":row["trade_number"],"opened_at":row.get("opened_at"),"closed_at":row["observed_at"],"net_return":row["net_return"],"equity":row["cumulative_net_return"],"drawdown":row["drawdown"]} for row in rows])
+        return rebase_equity_rows([{"trade_number":row["trade_number"],"opened_at":row.get("opened_at"),"closed_at":row["observed_at"],"net_return":row["net_return"],"signal":row.get("signal"),"equity":row["cumulative_net_return"],"drawdown":row["drawdown"]} for row in rows])
     def current_equity_curves(self):
         grouped={}
         with self._connect() as conn,conn.cursor() as cur:
             cur.execute("SELECT p.strategy_id,p.payload FROM directory_current c JOIN directory_return_series p ON p.snapshot_id=c.snapshot_id ORDER BY p.strategy_id,p.observed_at,p.trade_id")
-            for strategy_id,payload in cur.fetchall():grouped.setdefault(strategy_id,[]).append({"trade_number":payload["trade_number"],"opened_at":payload.get("opened_at"),"closed_at":payload["observed_at"],"net_return":payload["net_return"],"equity":payload["cumulative_net_return"],"drawdown":payload["drawdown"]})
+            for strategy_id,payload in cur.fetchall():grouped.setdefault(strategy_id,[]).append({"trade_number":payload["trade_number"],"opened_at":payload.get("opened_at"),"closed_at":payload["observed_at"],"net_return":payload["net_return"],"signal":payload.get("signal"),"equity":payload["cumulative_net_return"],"drawdown":payload["drawdown"]})
         return grouped
     def period_items(self,date_from=None,date_to_exclusive=None,canonical_strategy=None):
         """Per-strategy summaries recomputed from directory_return_series

@@ -6,7 +6,7 @@ v1.0.0 · 2026-08-24 · Introduces bounded, non-executable service request schem
 from __future__ import annotations
 from datetime import date, datetime
 from math import isfinite
-from typing import Any
+from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from .discovery import StrategyQuery
 
@@ -68,6 +68,15 @@ class SimilarDaysRequest(BaseModel):
         if value is not None and value > date.today():
             raise ValueError("as_of cannot be in the future")
         return value
+
+
+class TopPerformersRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    lookback_hours: float = Field(3, gt=0, le=8760, description="Trailing window from now, e.g. 3 for 'the last 3 hours'.")
+    min_trade_count: int = Field(1, ge=0, description="Only strategies with at least this many closed trades in the window.")
+    top_n: int = Field(3, ge=1, le=100)
+    sort: Literal["annualized_return", "win_rate", "sharpe", "quality_score"] = "annualized_return"
+    return_basis: Literal["net_return", "alt_net_return"] = "net_return"
 
 
 class SavedSearchRequest(BaseModel):

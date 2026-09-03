@@ -611,6 +611,59 @@ button:disabled { cursor: wait; opacity: .68; }
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.equity-line.buy-line {
+  stroke: #22c55e;
+}
+.equity-line.sell-line {
+  stroke: #b3121f;
+}
+.chart-mode-toggle {
+  display: flex;
+  gap: 1px;
+  background: #ffffff18;
+  border: 1px solid #ffffff18;
+  width: max-content;
+  margin: 0 0 14px;
+  border-radius: 6px;
+  overflow: hidden;
+}
+.chart-mode-toggle button {
+  background: #132a23;
+  color: #9fb5ac;
+  border: 0;
+  font: 10px ui-monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 8px 14px;
+  cursor: pointer;
+}
+.chart-mode-toggle button.active {
+  background: var(--lime);
+  color: var(--ink);
+}
+.chart-legend {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  margin-top: 12px;
+  font: 10px ui-monospace;
+  color: #9fb5ac;
+  text-transform: uppercase;
+}
+.chart-legend .swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+.chart-legend .swatch.buy {
+  background: #22c55e;
+}
+.chart-legend .swatch.sell {
+  background: #b3121f;
+  margin-left: 12px;
+}
 .chart-cross {
   stroke: #fff;
   stroke-width: 1;

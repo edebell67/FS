@@ -29,16 +29,16 @@ from fastapi.responses import FileResponse,Response
 
 from .config import Settings, get_settings
 from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
-from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies
+from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies, rebase_equity_rows
 from .intelligence.profile import UNITS, build_profile, build_summary_profile
 from .intelligence.metrics import calculate as calculate_metrics
 from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
-from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, retrieve
+from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, matches as query_matches, rank_value, retrieve
 from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceStore, preference_trace
 from .intelligence.regime import classify, recommend, strategy_regime_profile
 from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
 from .intelligence.contracts import (ChainRequest, CollectionRequest, ConsentRequest, PreferenceRequest,
-    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest)
+    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest, TopPerformersRequest)
 from .intelligence import regime_shape
 from .intelligence.assurance import OperationsMonitor,ReleaseManager
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
@@ -355,20 +355,57 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             return build_profile(summaries[0],local_equity_curve(cfg,strategy_id,start,end)).model_dump(mode="json")
         return next((profile for profile in all_profiles() if profile["identity"]["strategy_id"]==strategy_id),None)
 
-    def basis_profiles(end,return_basis="net_return"):
-        """Bulk profiles built directly from the cached local snapshot's
-        per-trade curves (no DB round trip), under the requested return_basis
-        and bounded to trades closed on or before `end` (None = full history).
-        Strategies with zero eligible trades in that window/basis are excluded
-        - they weren't evidenced under that basis, so a screen correctly
-        cannot have selected them. alt_net_return reverses every trade, so
-        this is also how a query answers 'would fading this have worked'."""
+    def today_points_by_strategy():
+        """Today's trades from the frequently-refreshed current-day cache
+        (directory_summary_cache.json), not the intelligence snapshot - that
+        one is only rebuilt by an operator-run warm-up (sync/warm_local_intelligence.py)
+        that can sit hours stale, which silently starves a short lookback_hours
+        window of nearly all its evidence. Returns {} if today's cache isn't
+        available rather than raising, so callers can fall back to whatever
+        the (possibly stale) snapshot has."""
+        try:
+            cache=current_directory_cache(datetime.now(timezone.utc).date())
+        except HTTPException:
+            return {}
+        out={}
+        for strategy_id,rows in (cache.get("trades_by_strategy") or {}).items():
+            points=[{**row,"closed_at":row["exit_time"]} for row in rows if row.get("exit_time")]
+            out[strategy_id]=points
+        return out
+
+    def _parse_ts(value):
+        stamp=datetime.fromisoformat(str(value).replace("Z","+00:00"));return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
+
+    def basis_profiles(end,return_basis="net_return",start=None):
+        """Bulk profiles built directly from cached trade data, under the
+        requested return_basis and bounded to trades closed in [start, end)
+        (start=None = since inception, end=None = through now). Strategies
+        with zero eligible trades in that window/basis are excluded - they
+        weren't evidenced under that basis, so a screen correctly cannot have
+        selected them. alt_net_return reverses every trade, so this is also
+        how a query answers 'would fading this have worked'. A `start` bound
+        is what turns this into a trailing-window screen (e.g. lookback_hours
+        on StrategyQuery); whenever that window reaches into today, today's
+        portion is sourced from the fast current-day cache instead of the
+        slower-to-refresh intelligence snapshot, so a short lookback isn't
+        silently starved by a stale warm-up."""
         if cfg.data_backend!="sqlserver":return None
         snapshot=local_snapshot()
         if snapshot is None:return None
+        today_start=datetime.combine(datetime.now(timezone.utc).date(),time.min,timezone.utc)
+        use_fresh_today=start is not None and (end is None or end>today_start)
+        fresh=today_points_by_strategy() if use_fresh_today else {}
         out=[]
         for source in snapshot["profiles"]:
-            strategy_id=source["identity"]["strategy_id"];points=points_from_snapshot(snapshot,strategy_id,None,end)
+            strategy_id=source["identity"]["strategy_id"]
+            if use_fresh_today:
+                historical_end=min(end,today_start) if end is not None else today_start
+                historical_raw=[point for point in snapshot["curves"].get(strategy_id,[]) if (start is None or _parse_ts(point["closed_at"])>=start) and _parse_ts(point["closed_at"])<historical_end]
+                today_raw=[point for point in fresh.get(strategy_id,[])
+                           if (start is None or _parse_ts(point["closed_at"])>=start) and (end is None or _parse_ts(point["closed_at"])<end)]
+                points=rebase_equity_rows(sorted(historical_raw+today_raw,key=lambda point:_parse_ts(point["closed_at"])))
+            else:
+                points=points_from_snapshot(snapshot,strategy_id,start,end) or []
             points=[p for p in points if p.get(return_basis) is not None]
             if not points:continue
             profile=build_profile(cached_summary(source,points).model_dump(mode="json"),points,return_basis).model_dump(mode="json")
@@ -600,7 +637,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             for number,row in enumerate(ordered,1):
                 equity+=float(row["net_return"]);peak=max(peak,equity)
                 points.append({"trade_number":number,"opened_at":row["entry_time"],"closed_at":row["exit_time"],
-                               "net_return":row["net_return"],"equity":equity,"drawdown":equity-peak})
+                               "net_return":row["net_return"],"signal":row.get("signal"),"equity":equity,"drawdown":equity-peak})
             return {"strategy_id":strategy_id,"points":points,"total_points":len(points),
                     "period":{"date_from":date_from.isoformat(),"date_to":date_to.isoformat()},
                     "basis":"cached cumulative net return; costs and commission already included"}
@@ -789,25 +826,55 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 profile["regimes"]=strategy_regime_profile(joined,minimum=cfg.intelligence_min_regime_samples)
         return profiles
 
-    def query_pool(return_basis="net_return"):
-        """The candidate universe a query/chain runs against: the fast cached
-        net_return profiles for the default basis, or a rebuild from cached
-        curves (still no DB round trip) when alt_net_return is requested.
-        Regime evidence is attached in both cases so StrategyQuery.regime is
-        a real filter, not the always-empty one it used to be."""
-        if return_basis=="net_return":
+    def query_pool(return_basis="net_return",lookback_hours=None):
+        """The candidate universe a query/chain runs against. lookback_hours
+        (None = since inception) makes this a trailing-window pool - every
+        metric/filter/rank recomputed from just the last N hours, via the
+        same basis_profiles() used for alt_net_return - so it always bypasses
+        the cached net_return snapshot (which is since-inception by
+        definition) even when return_basis is net_return. Regime evidence is
+        attached in both cases so StrategyQuery.regime is a real filter."""
+        if lookback_hours is None and return_basis=="net_return":
             profiles=all_profiles();curves=app.state.profile_cache.get("curves") or {}
             return attach_regimes(profiles,curves,return_basis)
-        pool=basis_profiles(None,return_basis)
-        if pool is None:raise HTTPException(501,"alt_net_return querying is only available on the local SQL Server-backed deployment")
+        start=datetime.now(timezone.utc)-timedelta(hours=lookback_hours) if lookback_hours is not None else None
+        pool=basis_profiles(None,return_basis,start=start)
+        if pool is None:raise HTTPException(501,"alt_net_return and lookback_hours querying are only available on the local SQL Server-backed deployment")
         snapshot=local_snapshot();curves=(snapshot or {}).get("curves") or {}
         return attach_regimes(pool,curves,return_basis)
 
     @app.post("/api/intelligence/query/search")
     def search_intelligence(request:SearchRequest):
-        profiles=query_pool(request.plan.return_basis);all_results=retrieve(profiles,request.plan);results=all_results[:cfg.intelligence_max_query_results];all_exclusions=exclusion_trace(profiles,request.plan)
+        profiles=query_pool(request.plan.return_basis,request.plan.lookback_hours);all_results=retrieve(profiles,request.plan);results=all_results[:cfg.intelligence_max_query_results];all_exclusions=exclusion_trace(profiles,request.plan)
         return {"plan":request.plan.model_dump(mode="json"),"items":results,"total":len(all_results),"facets":facet_counts([item["profile"] for item in all_results]),"exclusions":all_exclusions[:cfg.intelligence_max_query_results],"excluded_total":len(all_exclusions),
                 "constraint_order":"filter-before-rank","schema_version":"1.0.0"}
+
+    @app.post("/api/intelligence/query/top-performers")
+    def top_performers(request:TopPerformersRequest):
+        """Canned answer to the single most common recent-performance ask -
+        'top N strategies in the last H hours with at least M trades' - as
+        one call instead of an agent assembling a StrategyQuery by hand.
+        Filters via the same StrategyQuery/matches() every other query
+        endpoint uses, but ranks by the raw metric value across every match -
+        unlike /query/search's retrieve(), it does NOT bucket eligible ahead
+        of rank_eligible=False strategies first. That gate needs complete
+        risk/consistency metrics, which a window this short rarely has yet;
+        applying it here would let a worse performer that happened to clear
+        the gate outrank a genuinely better one that hasn't accumulated
+        enough evidence for sharpe/drawdown to be computed."""
+        plan=StrategyQuery(lookback_hours=request.lookback_hours,min_trade_count=request.min_trade_count,
+                            sort=request.sort,direction="desc",return_basis=request.return_basis)
+        profiles=query_pool(plan.return_basis,plan.lookback_hours)
+        matched=[]
+        for profile in profiles:
+            ok,reasons=query_matches(profile,plan)
+            if ok:matched.append({"profile":profile,"why_matched":reasons,"rank_trace":{"objective":plan.sort,"direction":"desc","value":rank_value(profile,plan.sort)}})
+        matched.sort(key=lambda item:item["rank_trace"]["value"] if item["rank_trace"]["value"] is not None else float("-inf"),reverse=True)
+        results=matched[:request.top_n]
+        return {"lookback_hours":request.lookback_hours,"min_trade_count":request.min_trade_count,"sort":request.sort,
+                "window_universe_size":len(profiles),"total_matched":len(matched),"items":results,
+                "notice":"Ranked purely by the chosen metric's raw value across every matched strategy - the quality-score rank-eligibility gate /query/search applies is deliberately skipped here, since almost nothing clears it on a window this short. Evidence is recomputed from just the trailing window, not the full trade history.",
+                "schema_version":"1.0.0"}
 
     @app.post("/api/intelligence/query/chain")
     def chain_intelligence_query(request:ChainRequest):
@@ -816,9 +883,10 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         composed. Returns per-stage survivor/elimination counts plus the final
         ranked result of the last stage. Callers (human or agent) persist the
         result via the existing POST /api/intelligence/user/collections using the
-        returned strategy_ids. The first stage's return_basis selects the
-        candidate universe for the whole chain; later stages should match it."""
-        profiles=query_pool(request.stages[0].return_basis);result=chain(profiles,request.stages);items=result["items"][:cfg.intelligence_max_query_results]
+        returned strategy_ids. The first stage's return_basis/lookback_hours
+        select the candidate universe for the whole chain; later stages
+        should match them."""
+        profiles=query_pool(request.stages[0].return_basis,request.stages[0].lookback_hours);result=chain(profiles,request.stages);items=result["items"][:cfg.intelligence_max_query_results]
         return {"stages":result["stages"],"final_total":result["final_count"],"items":items,
                 "strategy_ids":[item["profile"]["identity"]["strategy_id"] for item in items],
                 "strategies":[{"strategy_id":item["profile"]["identity"]["strategy_id"],"name":item["profile"]["identity"].get("name")} for item in items],
@@ -831,14 +899,18 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         reading source. Mirrors StrategyQuery/ChainRequest 1:1."""
         return {"single_query_endpoint":"/api/intelligence/query/search","chain_endpoint":"/api/intelligence/query/chain",
                 "timetravel_endpoint":"/api/intelligence/query/timetravel","timetravel_series_endpoint":"/api/intelligence/query/timetravel/series",
+                "top_performers_endpoint":"/api/intelligence/query/top-performers",
                 "chain_max_stages":10,"timetravel_series_max_range_days":90,"strategy_query_schema":StrategyQuery.model_json_schema(),
+                "top_performers_schema":TopPerformersRequest.model_json_schema(),
                 "notes":["Each field on StrategyQuery is an independent AND constraint; omit a field to leave it unconstrained.",
                          "min_walk_forward_positive_fold_rate, require_no_divergence_alert and require_parameter_stable read profile.robustness evidence and only pass when that evidence's state is VALID (COLLECTING/UNAVAILABLE strategies are excluded, not treated as passing).",
                          "For /query/chain, POST {\"stages\":[StrategyQuery, StrategyQuery, ...]}; the survivors of stage N become the candidate pool for stage N+1.",
                          "For /query/timetravel, POST {\"plan\":StrategyQuery,\"as_of\":date,\"forward_to\":date} to see how strategies matching the query as of a past date actually performed afterwards, vs a same-window baseline.",
                          "For /query/timetravel/series, POST {\"plan\":StrategyQuery,\"as_of_from\":date,\"as_of_to\":date,\"forward_days\":int} for a daily effectiveness_pct series (local SQL Server backend only, max 90-day range).",
+                         "lookback_hours + min_trade_count on StrategyQuery restrict the evidence window to the trailing N hours from now instead of since-inception, so /query/search and /query/chain can answer recent-performance questions directly (e.g. 'strategies with >5 trades in the last 3 hours'), local SQL Server backend only.",
+                         "POST /query/top-performers is a fixed-shape convenience wrapper over exactly that: {lookback_hours, min_trade_count, top_n, sort, return_basis} -> ranked top_n, for the single most common recent-performance ask without assembling a full StrategyQuery.",
                          "return_basis (default net_return) selects the outcome every metric/filter/rank/robustness check is computed from. alt_net_return is not an alternate cost basis - it is every trade in the ledger reversed (opposite side), so a query with return_basis=alt_net_return answers 'would fading this strategy have worked', over the same universe and evidence rules as net_return.",
-                         "alt_net_return querying is local SQL Server-backend only and rebuilds the candidate pool from cached trade curves per request (no cached fast-path exists for it yet), so it is slower than the default net_return query.",
+                         "alt_net_return and lookback_hours querying are local SQL Server-backend only and rebuild the candidate pool from cached trade curves per request (no cached fast-path exists for either yet), so they are slower than the default since-inception net_return query.",
                          "Persist a result as a watchlist via POST /api/intelligence/user/collections with the returned strategy_ids."],
                 "schema_version":"1.0.0"}
 
