@@ -79,6 +79,23 @@ class TopPerformersRequest(BaseModel):
     return_basis: Literal["net_return", "alt_net_return"] = "net_return"
 
 
+class TimeWindowRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    before: str | None = Field(None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$", description="Local HH:MM; only trades before this clock time today are considered.")
+    after: str | None = Field(None, pattern=r"^([01]\d|2[0-3]):[0-5]\d$", description="Local HH:MM; only trades at/after this clock time today are considered.")
+    min_trade_count: int = Field(1, ge=0, description="Minimum trades within the time-of-day window itself (not the whole day).")
+    min_win_rate: float | None = Field(None, ge=0, le=1, description="e.g. 1.0 for a perfect win rate within the window.")
+    sort: Literal["win_rate", "net_return", "trade_count"] = "win_rate"
+    top_n: int = Field(5, ge=1, le=100)
+    return_basis: Literal["net_return", "alt_net_return"] = "net_return"
+
+    @model_validator(mode="after")
+    def validate_range(self):
+        if self.before and self.after and self.after >= self.before:
+            raise ValueError("after must be earlier than before when both are given")
+        return self
+
+
 class SavedSearchRequest(BaseModel):
     name: str = Field(min_length=1,max_length=80)
     plan: StrategyQuery

@@ -40,6 +40,8 @@ class Settings(BaseSettings):
     regime_price_capture_root: str | None = r"X:\EDS\TradeApps\breakout\fs\json\live\forex"
     regime_shape_index_dir: str = "runtime/regime_shape_index"
     regime_shape_min_periods: int = 6
+    ep052_intelligence_token: str | None = None
+    arena_deliveries_path: str = "runtime/arena_intelligence_deliveries.sqlite"
 
     @property
     def cors_origins(self) -> list[str]:

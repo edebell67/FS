@@ -38,8 +38,9 @@ from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceSt
 from .intelligence.regime import classify, recommend, strategy_regime_profile
 from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
 from .intelligence.contracts import (ChainRequest, CollectionRequest, ConsentRequest, PreferenceRequest,
-    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest, TopPerformersRequest)
+    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest, TimeWindowRequest, TopPerformersRequest)
 from .intelligence import regime_shape
+from . import arena_provider
 from .intelligence.assurance import OperationsMonitor,ReleaseManager
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
@@ -915,6 +916,39 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "notice":"min_trade_count is evaluated against today's TOTAL trades, not just trades inside the lookback window; window_return/window_win_rate are computed only from trades inside the lookback window. sort=sharpe/quality_score are not meaningful on a window this short and fall back to window_return.",
                 "schema_version":"1.0.0"}
 
+    @app.post("/api/intelligence/query/time-window")
+    def time_window_query(request:TimeWindowRequest):
+        """Screen today's strategies by performance within a fixed local
+        clock-time window - 'before 10:00', 'between 09:00 and 14:00' -
+        distinct from /query/top-performers' trailing lookback_hours from
+        now. Unlike top-performers, min_trade_count/min_win_rate here apply
+        to trades strictly INSIDE the time-of-day window, not the whole day
+        - the window itself is the activity period being asked about, not
+        just a ranking scope layered on a separate day-wide activity gate."""
+        if cfg.data_backend!="sqlserver":raise HTTPException(501,"time-window querying is only available on the local SQL Server-backed deployment")
+        fresh=today_points_by_strategy();today=data_now(fresh).date()
+        before_dt=datetime.combine(today,datetime.strptime(request.before,"%H:%M").time()) if request.before else None
+        after_dt=datetime.combine(today,datetime.strptime(request.after,"%H:%M").time()) if request.after else None
+        snapshot=local_snapshot();names={p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
+        candidates=[]
+        for strategy_id,points in fresh.items():
+            valid=[p for p in points if p.get(request.return_basis) is not None]
+            windowed=[p for p in valid if (before_dt is None or _local_ts(p["closed_at"])<before_dt) and (after_dt is None or _local_ts(p["closed_at"])>=after_dt)]
+            if len(windowed)<request.min_trade_count:continue
+            wins=sum(1 for p in windowed if float(p[request.return_basis])>0)
+            win_rate=wins/len(windowed) if windowed else None
+            if request.min_win_rate is not None and (win_rate is None or win_rate<request.min_win_rate):continue
+            net=sum(float(p[request.return_basis]) for p in windowed)
+            candidates.append({"strategy_id":strategy_id,"name":names.get(strategy_id),"trade_count":len(windowed),
+                                "win_rate":round(win_rate,4) if win_rate is not None else None,"net_return":round(net,4)})
+        candidates.sort(key=lambda row:(row[request.sort] if row[request.sort] is not None else float("-inf")),reverse=True)
+        results=candidates[:request.top_n]
+        return {"date":today.isoformat(),"before":request.before,"after":request.after,"time_basis":"local time, as recorded in the trade data - not UTC",
+                "min_trade_count":request.min_trade_count,"min_win_rate":request.min_win_rate,"sort":request.sort,
+                "candidates_meeting_criteria":len(candidates),"items":results,
+                "notice":"min_trade_count and min_win_rate are evaluated over trades strictly inside the [after, before) time-of-day window, not the whole day - unlike /query/top-performers, which gates trade count on the whole day instead.",
+                "schema_version":"1.0.0"}
+
     @app.post("/api/intelligence/query/chain")
     def chain_intelligence_query(request:ChainRequest):
         """Apply up to 10 StrategyQuery stages as a narrowing funnel: each stage's
@@ -938,9 +972,9 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         reading source. Mirrors StrategyQuery/ChainRequest 1:1."""
         return {"single_query_endpoint":"/api/intelligence/query/search","chain_endpoint":"/api/intelligence/query/chain",
                 "timetravel_endpoint":"/api/intelligence/query/timetravel","timetravel_series_endpoint":"/api/intelligence/query/timetravel/series",
-                "top_performers_endpoint":"/api/intelligence/query/top-performers",
+                "top_performers_endpoint":"/api/intelligence/query/top-performers","time_window_endpoint":"/api/intelligence/query/time-window",
                 "chain_max_stages":10,"timetravel_series_max_range_days":90,"strategy_query_schema":StrategyQuery.model_json_schema(),
-                "top_performers_schema":TopPerformersRequest.model_json_schema(),
+                "top_performers_schema":TopPerformersRequest.model_json_schema(),"time_window_schema":TimeWindowRequest.model_json_schema(),
                 "notes":["Each field on StrategyQuery is an independent AND constraint; omit a field to leave it unconstrained.",
                          "min_walk_forward_positive_fold_rate, require_no_divergence_alert and require_parameter_stable read profile.robustness evidence and only pass when that evidence's state is VALID (COLLECTING/UNAVAILABLE strategies are excluded, not treated as passing).",
                          "For /query/chain, POST {\"stages\":[StrategyQuery, StrategyQuery, ...]}; the survivors of stage N become the candidate pool for stage N+1.",
@@ -948,6 +982,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                          "For /query/timetravel/series, POST {\"plan\":StrategyQuery,\"as_of_from\":date,\"as_of_to\":date,\"forward_days\":int} for a daily effectiveness_pct series (local SQL Server backend only, max 90-day range).",
                          "lookback_hours + min_trade_count on StrategyQuery restrict the evidence window to the trailing N hours from now instead of since-inception, so /query/search and /query/chain can answer recent-performance questions directly (e.g. 'strategies with >5 trades in the last 3 hours'), local SQL Server backend only.",
                          "POST /query/top-performers is a fixed-shape convenience wrapper over exactly that: {lookback_hours, min_trade_count, top_n, sort, return_basis} -> ranked top_n, for the single most common recent-performance ask without assembling a full StrategyQuery.",
+                         "POST /query/time-window answers a fixed-clock-time version of the same idea - {before, after, min_trade_count, min_win_rate, top_n} e.g. 'strategies with a 100% win rate and more than 5 trades before 10:00 local' - a clock-time boundary rather than a trailing lookback_hours from now, and min_trade_count/min_win_rate apply only to trades inside that window, not the whole day. Local SQL Server backend, today only.",
                          "return_basis (default net_return) selects the outcome every metric/filter/rank/robustness check is computed from. alt_net_return is not an alternate cost basis - it is every trade in the ledger reversed (opposite side), so a query with return_basis=alt_net_return answers 'would fading this strategy have worked', over the same universe and evidence rules as net_return.",
                          "alt_net_return and lookback_hours querying are local SQL Server-backend only and rebuild the candidate pool from cached trade curves per request (no cached fast-path exists for either yet), so they are slower than the default since-inception net_return query.",
                          "Persist a result as a watchlist via POST /api/intelligence/user/collections with the returned strategy_ids."],
@@ -1147,6 +1182,16 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     def asset(name:str):
         if name not in {"styles.css","tech-principle-theme.css","thetechprinciple-icon-180.png","api-client.js","period-filter.js","equity-chart.js","button-feedback.js","theme-toggle.js"}: raise HTTPException(404)
         return FileResponse(WEB/name,headers=no_store)
+
+    def arena_universe(start,end):
+        """Candidate pool for the EP052 Arena intelligence provider: the full
+        since-inception pool (any backend, via all_profiles()) when no window
+        is given, or the windowed basis_profiles() rebuild (local SQL Server
+        only, same as every other lookback_hours-style query) when one is."""
+        if start is None and end is None:return all_profiles()
+        return basis_profiles(end,"net_return",start=start)
+
+    arena_provider.install(app,cfg,arena_universe)
     return app
 
 
