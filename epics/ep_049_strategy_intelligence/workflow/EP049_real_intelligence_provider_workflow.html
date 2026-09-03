@@ -1,4 +1,5 @@
 <!doctype html>
+<!-- VERSION HISTORY: v1.2.0 · 2026-09-03 · Marks RIP-100/RIP-110 complete: durable per-query observability log with rolling-window anomaly warnings, GET /v1/observability/agents, and GET /v1/kinds publishing the recognized vocabulary plus live fallback rate. All 11 gates now complete. -->
 <!-- VERSION HISTORY: v1.1.0 · 2026-09-03 · Marks gates 1-4 (RIP-010..RIP-090) complete after direct-provider verification, a fixed backend-gating bug found by the new tests, and a confirmed end-to-end query through the live Arena by a real registered agent. RIP-100/RIP-110 (hardening) remain planned. -->
 <!-- VERSION HISTORY: v1.0.0 · 2026-09-03 · Initial workflow: replace simulated_intelligence.py's random provider with a real ranked implementation of the existing GET /v1/contracts/intelligence contract, served from the DNA Strategy Directory (127.0.0.1:8012). -->
 <html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
@@ -16,7 +17,7 @@ WORKFLOW_LANES=[
 {id:"verify",title:"3 · Direct Provider Verification",description:"Prove the provider is correct in isolation, before the Arena is pointed at it."},
 {id:"cutover",title:"4 · Arena Cutover",description:"Flip config.toml to external mode and prove one real agent query end-to-end."},
 {id:"hardening",title:"5 · Hardening",description:"Close the gaps a placeholder never had to handle: abuse, audit, kind vocabulary drift."}];
-const COMPLETE_NODES=new Set(["RIP-010","RIP-020","RIP-030","RIP-040","RIP-050","RIP-060","RIP-070","RIP-080","RIP-090"]);
+const COMPLETE_NODES=new Set(["RIP-010","RIP-020","RIP-030","RIP-040","RIP-050","RIP-060","RIP-070","RIP-080","RIP-090","RIP-100","RIP-110"]);
 const N=(id,lane,title,purpose,steps,test,evidence,dependencies,executor)=>({id,lane,title,pct:COMPLETE_NODES.has(id)?100:0,status:COMPLETE_NODES.has(id)?"complete":"planned",purpose,steps,test,evidence,dependencies,executor});
 WORKFLOW_NODES=[
 N("RIP-010","contract","Read GET /v1/contracts/intelligence","Treat the Arena's already-published contract as fixed, not a starting point to redesign.",["Fetch the live contract JSON: query_schema, delivery_schema, fee_usd, identity/exact_retry/refresh/provider_failure semantics","Note mode is reported as 'simulated_random' today and must become 'external'","Note visitor_query_url (/participant/v1/me/queries) and visitor_receipt_url are Arena-side, not this provider's paths"],"Contract fields reproduced verbatim match the live /v1/contracts/intelligence response.","Captured JSON response, this workflow document.","None","Integration"),

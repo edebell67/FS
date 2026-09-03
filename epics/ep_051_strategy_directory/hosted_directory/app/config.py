@@ -42,6 +42,8 @@ class Settings(BaseSettings):
     regime_shape_min_periods: int = 6
     ep052_intelligence_token: str | None = None
     arena_deliveries_path: str = "runtime/arena_intelligence_deliveries.sqlite"
+    arena_anomaly_threshold: int = 30
+    arena_anomaly_window_seconds: int = 300
 
     @property
     def cors_origins(self) -> list[str]:
