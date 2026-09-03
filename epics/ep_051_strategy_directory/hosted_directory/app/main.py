@@ -33,7 +33,7 @@ from .repository import MemoryRepository, PostgresRepository, local_closed_trade
 from .intelligence.profile import UNITS, build_profile, build_summary_profile
 from .intelligence.metrics import calculate as calculate_metrics
 from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
-from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, matches as query_matches, rank_value, retrieve
+from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, retrieve
 from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceStore, preference_trace
 from .intelligence.regime import classify, recommend, strategy_regime_profile
 from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
@@ -372,6 +372,34 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             points=[{**row,"closed_at":row["exit_time"]} for row in rows if row.get("exit_time")]
             out[strategy_id]=points
         return out
+
+    def _local_ts(value):
+        """Trade timestamps in this dataset are recorded in local (system)
+        time, not UTC - confirmed by comparing the machine's local vs UTC
+        clock against the data's own latest timestamp. _parse_ts elsewhere
+        in this file labels naive timestamps as UTC (the app's established,
+        pre-existing convention for the rest of the intelligence layer) -
+        this is a deliberately separate parser, naive throughout, used only
+        for the recent-window (data_now/top-performers) code path so its
+        window math isn't corrupted by mixing a false UTC label with the
+        system's real local clock."""
+        text=str(value).replace("Z","")
+        return datetime.fromisoformat(text.split("+")[0])
+
+    def data_now(fresh=None):
+        """The latest trade timestamp actually present in today's data, in
+        the data's own (local) time - not the system's UTC clock, and not
+        a UTC-labelled reading of the same timestamp either; both of those
+        were off by up to ~1h (a DST offset, not real clock drift) before
+        this was fixed. Falls back to the system's local clock only when
+        there is no trade evidence today to anchor to."""
+        fresh=today_points_by_strategy() if fresh is None else fresh
+        latest=None
+        for points in fresh.values():
+            for point in points:
+                stamp=_local_ts(point["closed_at"])
+                if latest is None or stamp>latest:latest=stamp
+        return latest or datetime.now()
 
     def _parse_ts(value):
         stamp=datetime.fromisoformat(str(value).replace("Z","+00:00"));return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
@@ -851,29 +879,40 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/intelligence/query/top-performers")
     def top_performers(request:TopPerformersRequest):
-        """Canned answer to the single most common recent-performance ask -
-        'top N strategies in the last H hours with at least M trades' - as
-        one call instead of an agent assembling a StrategyQuery by hand.
-        Filters via the same StrategyQuery/matches() every other query
-        endpoint uses, but ranks by the raw metric value across every match -
-        unlike /query/search's retrieve(), it does NOT bucket eligible ahead
-        of rank_eligible=False strategies first. That gate needs complete
-        risk/consistency metrics, which a window this short rarely has yet;
-        applying it here would let a worse performer that happened to clear
-        the gate outrank a genuinely better one that hasn't accumulated
-        enough evidence for sharpe/drawdown to be computed."""
-        plan=StrategyQuery(lookback_hours=request.lookback_hours,min_trade_count=request.min_trade_count,
-                            sort=request.sort,direction="desc",return_basis=request.return_basis)
-        profiles=query_pool(plan.return_basis,plan.lookback_hours)
-        matched=[]
-        for profile in profiles:
-            ok,reasons=query_matches(profile,plan)
-            if ok:matched.append({"profile":profile,"why_matched":reasons,"rank_trace":{"objective":plan.sort,"direction":"desc","value":rank_value(profile,plan.sort)}})
-        matched.sort(key=lambda item:item["rank_trace"]["value"] if item["rank_trace"]["value"] is not None else float("-inf"),reverse=True)
-        results=matched[:request.top_n]
-        return {"lookback_hours":request.lookback_hours,"min_trade_count":request.min_trade_count,"sort":request.sort,
-                "window_universe_size":len(profiles),"total_matched":len(matched),"items":results,
-                "notice":"Ranked purely by the chosen metric's raw value across every matched strategy - the quality-score rank-eligibility gate /query/search applies is deliberately skipped here, since almost nothing clears it on a window this short. Evidence is recomputed from just the trailing window, not the full trade history.",
+        """Canned answer to 'top N strategies in the last H hours, among
+        strategies with at least M trades today' - two DIFFERENT windows,
+        not one: min_trade_count is an activity/liquidity gate over the
+        WHOLE day (so a strategy that's actually been trading qualifies,
+        regardless of how many of those trades landed inside the recent
+        window), while the ranked return is computed only from trades
+        inside the last lookback_hours. Collapsing both into one window
+        (an earlier version of this endpoint did) systematically favours
+        strategies that happen to be quiet outside the window over ones
+        that have been active all day. 'now' is the latest trade timestamp
+        actually seen in today's data (data_now()), in the data's own local
+        time - not a UTC-labelled reading of it, which is off by a DST hour."""
+        if cfg.data_backend!="sqlserver":raise HTTPException(501,"top-performers is only available on the local SQL Server-backed deployment")
+        fresh=today_points_by_strategy()
+        now=data_now(fresh);window_start=now-timedelta(hours=request.lookback_hours)
+        snapshot=local_snapshot();names={p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
+        candidates=[]
+        for strategy_id,points in fresh.items():
+            valid=[p for p in points if p.get(request.return_basis) is not None]
+            if len(valid)<request.min_trade_count:continue
+            window_points=[p for p in valid if window_start<=_local_ts(p["closed_at"])<now]
+            if not window_points:continue
+            window_return=sum(float(p[request.return_basis]) for p in window_points)
+            wins=sum(1 for p in window_points if float(p[request.return_basis])>0)
+            candidates.append({"strategy_id":strategy_id,"name":names.get(strategy_id),
+                "trades_today":len(valid),"trades_in_window":len(window_points),
+                "window_return":round(window_return,4),"window_win_rate":round(wins/len(window_points),4)})
+        sort_key={"annualized_return":"window_return","win_rate":"window_win_rate"}.get(request.sort,"window_return")
+        candidates.sort(key=lambda row:row[sort_key],reverse=True)
+        results=candidates[:request.top_n]
+        return {"now":now.isoformat(),"window":{"from":window_start.isoformat(),"to":now.isoformat()},"time_basis":"local time, as recorded in the trade data - not UTC",
+                "lookback_hours":request.lookback_hours,"min_trade_count_today":request.min_trade_count,
+                "candidates_meeting_trade_count":len(candidates),"items":results,
+                "notice":"min_trade_count is evaluated against today's TOTAL trades, not just trades inside the lookback window; window_return/window_win_rate are computed only from trades inside the lookback window. sort=sharpe/quality_score are not meaningful on a window this short and fall back to window_return.",
                 "schema_version":"1.0.0"}
 
     @app.post("/api/intelligence/query/chain")
