@@ -1,6 +1,7 @@
 """Build Strategy Intelligence Profiles from canonical aggregates and trade returns.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.2.0 · 2026-08-27 · Populates EvidenceProfile.confidence_components (sample size, period coverage, concentration, holdout stability) using confidence_components() instead of the sample+duration-only evidence_confidence().
 v1.1.0 · 2026-08-24 · Adds capital-aware metrics, calendar returns and trade-behaviour evidence.
 v1.0.0 · 2026-08-24 · Server-side profile construction with evidence and methodology provenance.

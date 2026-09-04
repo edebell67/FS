@@ -1,3 +1,7 @@
+# VERSION HISTORY
+# v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+#   epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision.
+#   No test-logic changes.
 from datetime import datetime,timezone,timedelta
 from app.intelligence.ingestion import AllowlistedAdapterRegistry,EvidenceIngestionStore
 

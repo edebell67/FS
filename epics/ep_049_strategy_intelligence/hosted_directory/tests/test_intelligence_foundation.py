@@ -1,4 +1,7 @@
 # VERSION HISTORY
+# v1.1.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+#   epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision.
+#   No test-logic changes.
 # v1.1.0 · 2026-08-24 · Adds capital-aware and expanded metric registry coverage.
 # v1.0.0 · 2026-08-24 · Golden foundation metrics, ingestion and profile contract tests.
 from datetime import datetime, timezone

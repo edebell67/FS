@@ -1,6 +1,7 @@
 """Versioned point-in-time market-feature evidence store.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.0.0 · 2026-08-24 · Adds immutable feature snapshots, freshness gates and as-of lookup.
 """
 from __future__ import annotations

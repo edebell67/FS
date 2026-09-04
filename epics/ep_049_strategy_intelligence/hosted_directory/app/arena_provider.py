@@ -9,6 +9,11 @@ connection model is the identity system; this only verifies the arena
 itself is a trusted caller and logs which of its agents triggered each query.
 
 VERSION HISTORY
+v1.2.0 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/app/
+to epics/ep_049_strategy_intelligence/hosted_directory/app/ per Ed's EP049 ownership decision
+(this is intelligence infrastructure, not EP051's own directory-listing responsibility). No
+code changes - imported by EP051's app/main.py (the shared FastAPI host) via a namespace-package
+merge across both hosted_directory/ trees (see both directories' conftest.py).
 v1.1.0 - RIP-100/RIP-110: durable per-query observability log (agent_id,
 kind, fallback, window, requested/returned/universe counts, latency, cache
 hit), a rolling per-agent volume check that logs a warning on anomalous

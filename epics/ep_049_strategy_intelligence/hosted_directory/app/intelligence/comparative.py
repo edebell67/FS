@@ -1,6 +1,7 @@
 """Explainable comparative intelligence: scores, cohorts, correlations and similarity.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.1.0 · 2026-08-24 · Adds classified cohorts, minimum-size suppression and timestamp-aligned correlation.
 v1.0.0 · 2026-08-24 · Versioned composite scoring and relationship engines.
 """

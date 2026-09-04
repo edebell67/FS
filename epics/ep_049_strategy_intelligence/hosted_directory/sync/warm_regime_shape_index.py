@@ -8,6 +8,8 @@ ever reads the cache these files produce, the same warm-up/read split
 warm_local_intelligence.py already uses for the main profile cache.
 
 Version history:
+- 1.0.1 (2026-09-04): Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+  epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 - 1.0.0: Original warm-up script.
 """
 import argparse, json, time

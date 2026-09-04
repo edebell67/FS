@@ -1,6 +1,7 @@
 """Canonical Strategy Intelligence Object contracts.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.2.0 · 2026-08-27 · Adds optional EvidenceProfile.confidence_components for the sample-size/period-coverage/concentration/holdout-stability breakdown.
 v1.1.0 · 2026-08-24 · Adds CAGR, VaR and extensible robustness evidence.
 v1.0.0 · 2026-08-24 · Versioned identity, classification, metrics, evidence and provenance schemas.

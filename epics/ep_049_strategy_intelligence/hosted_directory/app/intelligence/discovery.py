@@ -1,6 +1,7 @@
 """Canonical structured and natural-language strategy discovery.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.3.0 · 2026-08-27 · why_matched reasons now include the actual stored evidence value that satisfied each constraint (evidence_value()), not just the constraint threshold, so every statement traces to a concrete metric/classification value.
 v1.2.0 · 2026-08-27 · Adds evidence_confidence as a selectable sort/rank objective (rank_value() replaces the ad-hoc quality_score special-case with a small dispatch covering quality_score, evidence_confidence and plain metrics).
 v1.1.0 · 2026-08-24 · Adds explicit units, full classification/evidence constraints and exclusion traces.

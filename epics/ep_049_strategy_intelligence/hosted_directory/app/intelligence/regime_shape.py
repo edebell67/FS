@@ -1,6 +1,8 @@
 """Intraday price-shape regime vectors, built from raw tick captures.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.0.0 - Replaces the coarse bull/bear/sideways x volatility label with a
 continuous per-instrument shape: 24 hourly [open%,high%,low%] triples
 relative to the day's opening mid price. A "regime" is this 72-number

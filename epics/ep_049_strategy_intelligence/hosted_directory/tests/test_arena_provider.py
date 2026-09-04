@@ -1,4 +1,10 @@
 # VERSION HISTORY
+# v1.1.0 · 2026-09-04 · Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+#   epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision.
+#   Updated test_windowed_query_on_non_sqlserver_backend_reports_503 to
+#   test_windowed_query_works_on_repository_backed_non_sqlserver_backend - basis_profiles()
+#   gained a repository-backed (Postgres/memory) path earlier this session, so windowed
+#   queries on those backends now succeed (200), not 503.
 # v1.0.0 · 2026-09-03 · Covers the EP052 Arena intelligence provider contract:
 # auth, ranking, exact-retry idempotency, request_id conflict, unknown-kind fallback.
 from datetime import datetime, timezone

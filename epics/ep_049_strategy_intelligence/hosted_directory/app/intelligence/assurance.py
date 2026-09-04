@@ -1,6 +1,7 @@
 """Deterministic intelligence evaluation, SLO and release-gate primitives.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.0.0 · 2026-08-24 · Adds metric, discovery, recommendation, drift and canary gates.
 """
 from __future__ import annotations

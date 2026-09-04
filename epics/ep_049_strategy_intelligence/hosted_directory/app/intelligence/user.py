@@ -1,6 +1,7 @@
 """Tenant-isolated user intelligence objects and privacy lifecycle.
 
 VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
 v1.1.0 · 2026-08-24 · Adds consent state, evidence-version snapshots and deterministic replay metadata.
 v1.0.0 · 2026-08-24 · Watchlists, saved plans, collections, preferences, export and deletion services.
 """

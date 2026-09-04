@@ -1,4 +1,9 @@
-"""Allowlisted, replay-safe intelligence evidence ingestion with lineage and quarantine."""
+"""Allowlisted, replay-safe intelligence evidence ingestion with lineage and quarantine.
+
+VERSION HISTORY
+v1.0.1 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/ to
+epics/ep_049_strategy_intelligence/hosted_directory/ per Ed's EP049 ownership decision. No code changes.
+"""
 from __future__ import annotations
 from copy import deepcopy
 from datetime import datetime,timezone
