@@ -1,6 +1,13 @@
 """Container-ready directory API and screen host.
 
 Version history:
+- 3.0.0 (2026-09-04): Removes the agent-queryable intelligence query API, per-user
+  intelligence objects, market-feature/regime endpoints, and the EP052 Arena
+  provider mount - these now live as their own standalone service in
+  epics/ep_049_strategy_intelligence/hosted_directory/app/main.py, per Ed's
+  explicit EP049 ownership decision. This app keeps only its own directory-
+  listing responsibility (strategy list/detail/equity-curve/trades/rank-journey)
+  and snapshot ingestion. See that file's own version history for what moved.
 - 2.2.0 (2026-09-04): Ports timetravel/timetravel-series/top-performers/time-window off the SQL-Server-only 501 gate onto a repository-backed (Postgres/memory) path, so they work on the hosted deployment.
 - 2.1.2 (2026-08-28): Allows caller-selected evidence trade-count threshold, default 5, independently of result filtering.
 - 2.1.1 (2026-08-27): Serves the shared Tech Principle screen-theme stylesheet.
@@ -20,7 +27,7 @@ Version history:
 - 1.0.0 (2026-08-23): Local SQL and hosted snapshot modes, ingestion and screens.
 """
 from __future__ import annotations
-import base64,hashlib,hmac, json,os,re,secrets,statistics,subprocess, time as clock
+import base64,hashlib,hmac, json,os,re,secrets,subprocess, time as clock
 from threading import Lock,Thread
 from datetime import date, datetime, time, timedelta, timezone
 from pathlib import Path
@@ -31,18 +38,7 @@ from fastapi.responses import FileResponse,Response
 from .config import Settings, get_settings
 from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
 from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies, rebase_equity_rows
-from .intelligence.profile import UNITS, build_profile, build_summary_profile
-from .intelligence.metrics import calculate as calculate_metrics
-from .intelligence.comparative import cohort_percentiles, correlation, related_strategies, score_profile, similarity
-from .intelligence.discovery import NaturalLanguageRequest,StrategyQuery, chain, exclusion_trace, facet_counts, interpret_with_trace, retrieve
-from .intelligence.user import PostgresUserIntelligenceStore, UserIntelligenceStore, preference_trace
-from .intelligence.regime import classify, recommend, strategy_regime_profile
-from .intelligence.market import MarketFeatureStore, PostgresMarketFeatureStore, build_regime_label_index, freshness_limit,join_regimes_bisect,join_regimes_without_lookahead,validate_market_cache
-from .intelligence.contracts import (ChainRequest, CollectionRequest, ConsentRequest, PreferenceRequest,
-    MarketFeatureIngestRequest, RecommendationRequest, RegimeFeaturesRequest, SavedSearchRequest, SearchRequest, SimilarDaysRequest, TimeTravelRequest, TimeTravelSeriesRequest, TimeWindowRequest, TopPerformersRequest)
-from .intelligence import regime_shape
-from . import arena_provider
-from .intelligence.assurance import OperationsMonitor,ReleaseManager
+from .intelligence.assurance import OperationsMonitor
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
 WEB = Path(__file__).resolve().parents[1] / "web"
@@ -88,20 +84,9 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     cfg = settings or get_settings()
     repo = repository or (PostgresRepository(cfg.database_url) if cfg.data_backend == "postgres" and cfg.database_url else None)
     app = FastAPI(title="DNA Strategy Directory API", version="1.0.0", docs_url=None, redoc_url=None)
-    user_store=PostgresUserIntelligenceStore(cfg.database_url,maintenance_database_url=cfg.maintenance_database_url) if cfg.data_backend=="postgres" and cfg.database_url else UserIntelligenceStore()
-    market_store=PostgresMarketFeatureStore(cfg.database_url) if cfg.data_backend=="postgres" and cfg.database_url else MarketFeatureStore()
-    if cfg.data_backend=="sqlserver":
-        market_cache=Path(cfg.local_market_feature_cache_path);market_cache=market_cache if market_cache.is_absolute() else Path(__file__).resolve().parents[1]/market_cache
-        try:
-            payload=validate_market_cache(json.loads(market_cache.read_text(encoding="utf-8")))
-            candidate_store=MarketFeatureStore()
-            for feature in payload["features"]:candidate_store.ingest(feature["market"],feature["as_of"],feature["features"],feature["source_version"])
-            market_store=candidate_store
-        except (OSError,ValueError,KeyError,TypeError):pass
-    app.state.repository = repo; app.state.settings = cfg; app.state.user_intelligence = user_store;app.state.market_features=market_store
-    app.state.operations=OperationsMonitor();app.state.releases=ReleaseManager()
+    app.state.repository = repo; app.state.settings = cfg
+    app.state.operations=OperationsMonitor()
     app.state.csp_cache={"signature":None,"value":None};app.state.csp_cache_lock=Lock()
-    app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};app.state.profile_cache_lock=Lock()
     app.state.snapshot_cache={"snapshot":None};app.state.snapshot_cache_lock=Lock()
     app.state.strategy_cache=None;app.state.strategy_cache_lock=Lock()
     app.state.local_snapshot_cache=None
@@ -216,6 +201,17 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         except (OSError,ValueError,KeyError,TypeError,json.JSONDecodeError):
             raise HTTPException(503,"Current-day directory cache is warming; retry shortly")
 
+    def points_from_snapshot(snapshot,strategy_id,start=None,end=None):
+        if snapshot is None:return None
+        points=[]
+        for point in snapshot["curves"].get(strategy_id,[]):
+            observed=datetime.fromisoformat(str(point["closed_at"]).replace("Z","+00:00"));observed=observed if observed.tzinfo else observed.replace(tzinfo=timezone.utc)
+            if (start is None or observed>=start) and (end is None or observed<end):points.append(point)
+        equity=peak=0.0;rebased=[]
+        for index,point in enumerate(points,1):
+            equity+=float(point["net_return"]);peak=max(peak,equity);rebased.append({**point,"trade_number":index,"equity":equity,"drawdown":equity-peak})
+        return rebased
+
     def items(date_from: date | None = None, date_to: date | None = None, canonical_strategy: str | None = None, signal: str | None = None):
         if date_from and date_to and date_from > date_to:
             raise HTTPException(422, "date_from must be on or before date_to")
@@ -294,362 +290,9 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             return [Strategy.model_validate(x) for x in rows]
         snap=hosted_snapshot();return [] if snap is None else snap.items
 
-    def trusted_user(authorization:str|None=Header(None),x_user_id:str|None=Header(None,alias="X-User-ID")):
-        """Trust user identity only behind the configured shared edge boundary."""
-        expected=cfg.intelligence_user_token or ""; supplied=(authorization or "").removeprefix("Bearer ")
-        if not expected: raise HTTPException(503,"Private intelligence identity is not configured")
-        if not hmac.compare_digest(supplied,expected): raise HTTPException(401,"Unauthorized")
-        if not x_user_id or len(x_user_id)>128: raise HTTPException(401,"A trusted user identity is required")
-        return x_user_id
-
     def trusted_publisher(authorization:str|None=Header(None)):
         expected=cfg.sync_token or "";supplied=(authorization or "").removeprefix("Bearer ")
         if not expected or not hmac.compare_digest(supplied,expected):raise HTTPException(401,"Unauthorized")
-
-    def all_profiles():
-        now=clock.monotonic();cached=app.state.profile_cache
-        if cached["profiles"] is not None:return cached["profiles"]
-        with app.state.profile_cache_lock:
-            cached=app.state.profile_cache;now=clock.monotonic()
-            if cached["profiles"] is not None:return cached["profiles"]
-            if cfg.data_backend=="sqlserver":
-                summaries=items();expected_ids={summary.strategy_id for summary in summaries};payload=local_snapshot()
-                if payload is not None and {profile["identity"]["strategy_id"] for profile in payload["profiles"]}!=expected_ids:payload=None
-                if payload is not None:
-                    profiles=payload["profiles"];curves=payload["curves"]
-                else:
-                    profiles=[];curves={}
-                    for summary_model in summaries:
-                        profile=build_summary_profile(summary_model.model_dump(mode="json")).model_dump(mode="json");profile["score"]=score_profile(profile);profiles.append(profile)
-            else:
-                if app.state.repository is None:raise HTTPException(503,"Intelligence repository is not configured")
-                profiles=app.state.repository.current_profiles();curves=app.state.repository.current_equity_curves()
-                for profile in profiles:profile.setdefault("score",score_profile(profile))
-            app.state.profile_cache={"at":clock.monotonic(),"profiles":profiles,"curves":curves};return profiles
-
-    def points_from_snapshot(snapshot,strategy_id,start=None,end=None):
-        if snapshot is None:return None
-        points=[]
-        for point in snapshot["curves"].get(strategy_id,[]):
-            observed=datetime.fromisoformat(str(point["closed_at"]).replace("Z","+00:00"));observed=observed if observed.tzinfo else observed.replace(tzinfo=timezone.utc)
-            if (start is None or observed>=start) and (end is None or observed<end):points.append(point)
-        equity=peak=0.0;rebased=[]
-        for index,point in enumerate(points,1):
-            equity+=float(point["net_return"]);peak=max(peak,equity);rebased.append({**point,"trade_number":index,"equity":equity,"drawdown":equity-peak})
-        return rebased
-
-    def cached_points(strategy_id,start=None,end=None):
-        if cfg.data_backend=="sqlserver":
-            return points_from_snapshot(local_snapshot(),strategy_id,start,end)
-        if app.state.repository is None:return None
-        points=app.state.repository.current_equity_curves().get(strategy_id,[])
-        filtered=[p for p in points if (start is None or _parse_ts(p["closed_at"])>=start) and (end is None or _parse_ts(p["closed_at"])<end)]
-        return rebase_equity_rows(filtered)
-
-    def resolved_profile(strategy_id,start=None,end=None):
-        if cfg.data_backend=="sqlserver":
-            snapshot=local_snapshot();points=cached_points(strategy_id,start,end)
-            if snapshot is not None:
-                source=next((profile for profile in snapshot["profiles"] if profile["identity"]["strategy_id"]==strategy_id),None)
-                if source is None:return None
-                if start is None and end is None:return source
-                if not points:return None
-                return build_profile(cached_summary(source,points).model_dump(mode="json"),points).model_dump(mode="json")
-            if not cfg.allow_synchronous_local_fallback:raise HTTPException(503,"Local intelligence snapshot is missing or stale; run the operator warm-up")
-            summaries=local_strategies(cfg,start,end,strategy_id)
-            if not summaries:return None
-            return build_profile(summaries[0],local_equity_curve(cfg,strategy_id,start,end)).model_dump(mode="json")
-        return next((profile for profile in all_profiles() if profile["identity"]["strategy_id"]==strategy_id),None)
-
-    def today_points_by_strategy():
-        """Today's trades from the frequently-refreshed current-day cache
-        (directory_summary_cache.json), not the intelligence snapshot - that
-        one is only rebuilt by an operator-run warm-up (sync/warm_local_intelligence.py)
-        that can sit hours stale, which silently starves a short lookback_hours
-        window of nearly all its evidence. Returns {} if today's cache isn't
-        available rather than raising, so callers can fall back to whatever
-        the (possibly stale) snapshot has."""
-        try:
-            cache=current_directory_cache(datetime.now(timezone.utc).date())
-        except HTTPException:
-            return {}
-        out={}
-        for strategy_id,rows in (cache.get("trades_by_strategy") or {}).items():
-            points=[{**row,"closed_at":row["exit_time"]} for row in rows if row.get("exit_time")]
-            out[strategy_id]=points
-        return out
-
-    def _local_ts(value):
-        """Trade timestamps in this dataset are recorded in local (system)
-        time, not UTC - confirmed by comparing the machine's local vs UTC
-        clock against the data's own latest timestamp. _parse_ts elsewhere
-        in this file labels naive timestamps as UTC (the app's established,
-        pre-existing convention for the rest of the intelligence layer) -
-        this is a deliberately separate parser, naive throughout, used only
-        for the recent-window (data_now/top-performers) code path so its
-        window math isn't corrupted by mixing a false UTC label with the
-        system's real local clock."""
-        text=str(value).replace("Z","")
-        return datetime.fromisoformat(text.split("+")[0])
-
-    def data_now(fresh=None):
-        """The latest trade timestamp actually present in today's data, in
-        the data's own (local) time - not the system's UTC clock, and not
-        a UTC-labelled reading of the same timestamp either; both of those
-        were off by up to ~1h (a DST offset, not real clock drift) before
-        this was fixed. Falls back to the system's local clock only when
-        there is no trade evidence today to anchor to."""
-        fresh=today_points_by_strategy() if fresh is None else fresh
-        latest=None
-        for points in fresh.values():
-            for point in points:
-                stamp=_local_ts(point["closed_at"])
-                if latest is None or stamp>latest:latest=stamp
-        return latest or datetime.now()
-
-    def _parse_ts(value):
-        stamp=datetime.fromisoformat(str(value).replace("Z","+00:00"));return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
-
-    def repository_points_today():
-        """Repository-backed (Postgres/memory) equivalent of
-        today_points_by_strategy(): there is no separately-refreshed
-        current-day cache on these backends, only directory_return_series
-        (already tz-aware real UTC, so no local-time DST hack is needed here
-        the way it is for sqlserver's _local_ts). 'Today' is the calendar
-        date of the latest observed trade in the published data, not the
-        system clock's date - the hosted snapshot is published
-        periodically, not truly live."""
-        if app.state.repository is None:return {}
-        curves=app.state.repository.current_equity_curves()
-        latest=None
-        for points in curves.values():
-            for point in points:
-                stamp=_parse_ts(point["closed_at"])
-                if latest is None or stamp>latest:latest=stamp
-        if latest is None:return {}
-        day_start=datetime.combine(latest.date(),time.min,timezone.utc);day_end=day_start+timedelta(days=1)
-        out={}
-        for strategy_id,points in curves.items():
-            todays=[p for p in points if day_start<=_parse_ts(p["closed_at"])<day_end]
-            if todays:out[strategy_id]=todays
-        return out
-
-    def fresh_points_by_strategy():
-        if cfg.data_backend=="sqlserver":return today_points_by_strategy()
-        return repository_points_today()
-
-    def current_now(fresh=None):
-        if cfg.data_backend=="sqlserver":return data_now(fresh)
-        fresh=fresh_points_by_strategy() if fresh is None else fresh
-        latest=None
-        for points in fresh.values():
-            for point in points:
-                stamp=_parse_ts(point["closed_at"])
-                if latest is None or stamp>latest:latest=stamp
-        return latest or datetime.now(timezone.utc)
-
-    def window_ts_parser():
-        return _local_ts if cfg.data_backend=="sqlserver" else _parse_ts
-
-    def strategy_names():
-        if cfg.data_backend=="sqlserver":
-            snapshot=local_snapshot()
-            return {p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
-        return {p["identity"]["strategy_id"]:p["identity"].get("name") for p in all_profiles()}
-
-    def basis_profiles(end,return_basis="net_return",start=None):
-        """Bulk profiles built directly from cached trade data, under the
-        requested return_basis and bounded to trades closed in [start, end)
-        (start=None = since inception, end=None = through now). Strategies
-        with zero eligible trades in that window/basis are excluded - they
-        weren't evidenced under that basis, so a screen correctly cannot have
-        selected them. alt_net_return reverses every trade, so this is also
-        how a query answers 'would fading this have worked'. A `start` bound
-        is what turns this into a trailing-window screen (e.g. lookback_hours
-        on StrategyQuery); whenever that window reaches into today, today's
-        portion is sourced from the fast current-day cache instead of the
-        slower-to-refresh intelligence snapshot, so a short lookback isn't
-        silently starved by a stale warm-up."""
-        if cfg.data_backend!="sqlserver":
-            # Repository-backed (Postgres/memory) path: no local-only
-            # fast-path cache to reconcile with - directory_return_series is
-            # the single source, already tz-aware UTC (no local-time DST
-            # hack needed, unlike the SQL Server path below). Reuses
-            # cached_points()/cached_summary()/build_profile() so the
-            # resulting profile shape is identical either way.
-            if app.state.repository is None:return None
-            out=[]
-            for source in all_profiles():
-                strategy_id=source["identity"]["strategy_id"]
-                points=cached_points(strategy_id,start,end) or []
-                points=[p for p in points if p.get(return_basis) is not None]
-                if not points:continue
-                profile=build_profile(cached_summary(source,points).model_dump(mode="json"),points,return_basis).model_dump(mode="json")
-                profile["score"]=score_profile(profile);out.append(profile)
-            return out
-        snapshot=local_snapshot()
-        if snapshot is None:return None
-        today_start=datetime.combine(datetime.now(timezone.utc).date(),time.min,timezone.utc)
-        use_fresh_today=start is not None and (end is None or end>today_start)
-        fresh=today_points_by_strategy() if use_fresh_today else {}
-        out=[]
-        for source in snapshot["profiles"]:
-            strategy_id=source["identity"]["strategy_id"]
-            if use_fresh_today:
-                historical_end=min(end,today_start) if end is not None else today_start
-                historical_raw=[point for point in snapshot["curves"].get(strategy_id,[]) if (start is None or _parse_ts(point["closed_at"])>=start) and _parse_ts(point["closed_at"])<historical_end]
-                today_raw=[point for point in fresh.get(strategy_id,[])
-                           if (start is None or _parse_ts(point["closed_at"])>=start) and (end is None or _parse_ts(point["closed_at"])<end)]
-                points=rebase_equity_rows(sorted(historical_raw+today_raw,key=lambda point:_parse_ts(point["closed_at"])))
-            else:
-                points=points_from_snapshot(snapshot,strategy_id,start,end) or []
-            points=[p for p in points if p.get(return_basis) is not None]
-            if not points:continue
-            profile=build_profile(cached_summary(source,points).model_dump(mode="json"),points,return_basis).model_dump(mode="json")
-            profile["score"]=score_profile(profile);out.append(profile)
-        return out
-
-    def forward_performance(strategy_ids,start,end,return_basis="net_return"):
-        results=[]
-        for strategy_id in strategy_ids:
-            points=cached_points(strategy_id,start,end)
-            if points is None:continue
-            points=[p for p in points if p.get(return_basis) is not None]
-            computed=calculate_metrics([float(p[return_basis]) for p in points])
-            results.append({"strategy_id":strategy_id,"forward_trade_count":len(points),"forward_net_return":computed["total_return"],"forward_win_rate":computed["win_rate"]})
-        traded=[r for r in results if r["forward_trade_count"]>0]
-        positive_rate=round(sum(r["forward_net_return"]>0 for r in traded)/len(traded),4) if traded else None
-        aggregate={"strategy_count":len(results),"traded_count":len(traded),
-                   "mean_forward_net_return":round(statistics.mean(r["forward_net_return"] for r in traded),4) if traded else None,
-                   "positive_rate":positive_rate,"effectiveness_pct":round(positive_rate*100,1) if positive_rate is not None else None}
-        return results,aggregate
-
-    def run_timetravel(plan,as_of,forward_to):
-        """Evaluate `plan` using only evidence available on `as_of`, then measure
-        how the matched strategies actually performed afterwards (as_of, forward_to],
-        against a same-window baseline of the whole as-of-eligible universe.
-        Uses plan.return_basis throughout, so an alt_net_return plan measures
-        forward performance of the reversed trades too."""
-        as_of_end=datetime.combine(as_of+timedelta(days=1),time.min,timezone.utc)
-        universe=basis_profiles(as_of_end,plan.return_basis)
-        if universe is None:
-            if not cfg.allow_synchronous_local_fallback:raise HTTPException(503,"Local intelligence snapshot is missing or stale; run the operator warm-up")
-            raise HTTPException(503,"Local intelligence snapshot is missing or stale")
-        matched=retrieve(universe,plan);matched=matched[:cfg.intelligence_max_query_results]
-        matched_ids=[item["profile"]["identity"]["strategy_id"] for item in matched]
-        names={item["profile"]["identity"]["strategy_id"]:item["profile"]["identity"].get("name") for item in matched}
-        as_of_metrics={item["profile"]["identity"]["strategy_id"]:{key:item["profile"]["metrics"][key]["value"] for key in ("win_rate","sharpe","profit_factor","max_drawdown")} for item in matched}
-        forward_end=datetime.combine(forward_to+timedelta(days=1),time.min,timezone.utc)
-        matched_forward,matched_aggregate=forward_performance(matched_ids,as_of_end,forward_end,plan.return_basis)
-        for row in matched_forward:row["name"]=names.get(row["strategy_id"]);row["as_of_metrics"]=as_of_metrics.get(row["strategy_id"])
-        universe_ids=[p["identity"]["strategy_id"] for p in universe]
-        _,baseline_aggregate=forward_performance(universe_ids,as_of_end,forward_end,plan.return_basis)
-        lift=(round(matched_aggregate["mean_forward_net_return"]-baseline_aggregate["mean_forward_net_return"],4)
-              if matched_aggregate["mean_forward_net_return"] is not None and baseline_aggregate["mean_forward_net_return"] is not None else None)
-        return {"as_of":as_of,"query_universe_size":len(universe),
-                "matched_at_as_of":{"count":len(matched_ids),"strategy_ids":matched_ids},
-                "forward_window":{"from":as_of_end.date().isoformat(),"to":forward_to.isoformat()},
-                "forward_performance":{"matched":matched_aggregate,"baseline_all_as_of_strategies":baseline_aggregate,"lift_vs_baseline":lift,"per_strategy":matched_forward}}
-
-    CONSISTENCY_WEIGHTS={"outperform_rate":0.6,"stability":0.4}
-    CONSISTENCY_METHOD_VERSION="1.0.0"
-
-    def series_consistency(series):
-        """A query that behaves the same way day after day is more trustworthy
-        than one that happened to work once. consistency_score blends how often
-        the matched cohort beat the baseline (outperform_rate) with how tightly
-        daily effectiveness_pct clusters (stability = 1 - stdev/100), mirroring
-        the weighted-component confidence pattern used elsewhere in this API
-        (see intelligence/metrics.py confidence_components)."""
-        days=[d for d in series if d["effectiveness_pct"] is not None]
-        if not days:return {"days_with_data":0,"consistency_score":None,"confidence_band":"insufficient evidence","methodology_version":CONSISTENCY_METHOD_VERSION}
-        values=[d["effectiveness_pct"] for d in days];lifts=[d["lift_vs_baseline"] for d in days if d["lift_vs_baseline"] is not None]
-        stdev=statistics.pstdev(values) if len(values)>1 else 0.0
-        stability=max(0.0,1-stdev/100)
-        outperform_rate=round(sum(value>0 for value in lifts)/len(lifts),4) if lifts else None
-        score=CONSISTENCY_WEIGHTS["outperform_rate"]*(outperform_rate or 0)+CONSISTENCY_WEIGHTS["stability"]*stability
-        band="insufficient evidence" if len(days)<3 else "high" if score>=0.75 else "medium" if score>=0.5 else "low"
-        return {"days_with_data":len(days),"mean_effectiveness_pct":round(statistics.mean(values),1),"stdev_effectiveness_pct":round(stdev,1),
-                "min_effectiveness_pct":min(values),"max_effectiveness_pct":max(values),"days_beating_baseline":sum(value>0 for value in lifts) if lifts else None,
-                "outperform_rate":outperform_rate,"consistency_score":round(score,4),"confidence_band":band,
-                "weights":CONSISTENCY_WEIGHTS,"methodology_version":CONSISTENCY_METHOD_VERSION}
-
-    @app.post("/api/intelligence/query/timetravel")
-    def timetravel_query(request:TimeTravelRequest):
-        """Point-in-time query backtest for a single as-of date."""
-        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"Point-in-time replay requires a SQL Server or a configured repository-backed deployment")
-        forward_to=request.forward_to or datetime.now(timezone.utc).date()
-        result=run_timetravel(request.plan,request.as_of,forward_to)
-        return {"plan":request.plan.model_dump(mode="json"),**result,
-                "notice":"Point-in-time replay uses only the local SQL Server snapshot's trade evidence. walk_forward and live_backtest_divergence are re-windowed to as_of; parameter_sensitivity still requires a separately tracked parameter-run table and stays COLLECTING.",
-                "schema_version":"1.0.0"}
-
-    @app.post("/api/intelligence/query/timetravel/series")
-    def timetravel_series(request:TimeTravelSeriesRequest):
-        """Day-by-day point-in-time backtest: for every as-of date in
-        [as_of_from, as_of_to], evaluate `plan` as of that day and measure the
-        matched strategies' effectiveness over the following `forward_days` -
-        e.g. '20 Aug: 50% effective, 21 Aug: 52%, 22 Aug: 67%'. Each day is
-        independent: strategies are re-screened fresh, not carried forward."""
-        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"Point-in-time replay requires a SQL Server or a configured repository-backed deployment")
-        series=[];cursor=request.as_of_from
-        while cursor<=request.as_of_to:
-            forward_to=cursor+timedelta(days=request.forward_days)
-            if forward_to>date.today():break
-            result=run_timetravel(request.plan,cursor,forward_to)
-            series.append({"as_of":cursor.isoformat(),"matched_count":result["matched_at_as_of"]["count"],
-                           "effectiveness_pct":result["forward_performance"]["matched"]["effectiveness_pct"],
-                           "mean_forward_net_return":result["forward_performance"]["matched"]["mean_forward_net_return"],
-                           "baseline_effectiveness_pct":result["forward_performance"]["baseline_all_as_of_strategies"]["effectiveness_pct"],
-                           "lift_vs_baseline":result["forward_performance"]["lift_vs_baseline"]})
-            cursor+=timedelta(days=1)
-        consistency=series_consistency(series)
-        return {"plan":request.plan.model_dump(mode="json"),"forward_days":request.forward_days,"days_evaluated":len(series),"series":series,"consistency":consistency,
-                "notice":"A day is omitted when its forward window would extend past today. Robustness fields are all-time, not re-windowed per as_of.",
-                "schema_version":"1.0.0"}
-
-    def regime_index_path(instrument):
-        index_dir=Path(cfg.regime_shape_index_dir);index_dir=index_dir if index_dir.is_absolute() else Path(__file__).resolve().parents[1]/index_dir
-        return index_dir/f"{instrument.upper()}.json"
-
-    @app.post("/api/intelligence/regime/similar-days")
-    def regime_similar_days(request:SimilarDaysRequest):
-        """Find historical days whose intraday price shape (24 hourly
-        [open%,high%,low%] periods relative to that day's open, for whichever
-        instrument the strategy trades) is closest to a target day - a full
-        day, or an in-progress one truncated at through_hour - then reports
-        how the strategy actually performed on each matched day. Reads only
-        the pre-built index (sync/warm_regime_shape_index.py); an uncached
-        target day (e.g. today) is built fresh from the raw tick capture."""
-        profile=resolved_profile(request.strategy_id)
-        if profile is None:raise HTTPException(404,"Strategy evidence was not found")
-        instruments=profile["classification"].get("instruments") or []
-        if not instruments:raise HTTPException(422,"Strategy has no traded instrument to build a regime shape from")
-        instrument=instruments[0].upper()
-        cache_path=regime_index_path(instrument)
-        index=regime_shape.load_index(cache_path)
-        if not index:raise HTTPException(503,f"No regime-shape index for {instrument} yet; run: python -m sync.warm_regime_shape_index --instrument {instrument}")
-        as_of=request.as_of or date.today();as_of_str=as_of.isoformat()
-        if as_of_str in index and request.through_hour is None:
-            target=index[as_of_str]
-        elif as_of_str in index:
-            target=index[as_of_str][:request.through_hour+1]
-        else:
-            root=cfg.regime_price_capture_root
-            if not root or not Path(root).exists():raise HTTPException(503,f"{as_of_str} is not indexed and the price-capture source is not reachable")
-            target=regime_shape.build_day_vector_for_date(Path(root),instrument,as_of,request.through_hour)
-            if target is None:raise HTTPException(404,f"No price-capture data for {instrument} on {as_of_str}")
-        candidates={day:vector for day,vector in index.items() if day!=as_of_str}
-        ranked=regime_shape.find_similar_days(target,candidates,min_periods=cfg.regime_shape_min_periods)[:request.top_n]
-        for row in ranked:
-            day=date.fromisoformat(row["date"]);start=datetime.combine(day,time.min,timezone.utc);end=start+timedelta(days=1)
-            points=cached_points(request.strategy_id,start,end) or []
-            computed=calculate_metrics([float(p["net_return"]) for p in points]) if points else None
-            row["strategy_performance"]={"trade_count":len(points),"net_return":computed["total_return"] if computed else None,"win_rate":computed["win_rate"] if computed else None}
-        return {"strategy_id":request.strategy_id,"instrument":instrument,"as_of":as_of_str,"through_hour":request.through_hour,
-                "target_periods":sum(1 for p in target if p is not None),"index_size":len(index),"similar_days":ranked,
-                "notice":"Distance is Euclidean over whichever hourly periods both days have (min "+str(cfg.regime_shape_min_periods)+" overlapping periods required). strategy_performance is that day's actual, real trades - not a prediction.",
-                "schema_version":"1.0.0"}
 
     @app.get("/healthz")
     def health(): return {"status":"ok","build_sha":BUILD_SHA[:12] if BUILD_SHA else None}
@@ -675,7 +318,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         requested_product=product.upper() if product else None
         rows=[x for x in items(date_from,date_to,exact_strategy,signal)
               if x.total_trades>=minimum_trades
-              and (not search or search.upper() in x.strategy_id.upper())
+              and (not search or search.upper() in x.strategy_id.upper() or search.upper() in (x.descriptive_name or "").upper())
               and (not requested_product or requested_product in {part.strip().upper() for part in (x.product_name or "").split(",")})]
         rows.sort(key=lambda x:(getattr(x,sort) is None,getattr(x,sort)),reverse=direction=="desc")
         total=len(rows)
@@ -807,356 +450,6 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "period":{"date_from":(date_from or today).isoformat(),"date_to":(date_to or today).isoformat()},
                 "basis":basis}
 
-    @app.get("/api/intelligence/strategies/{strategy_id}")
-    def intelligence_profile(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
-                             date_from:date|None=Query(None),date_to:date|None=Query(None),fields:str|None=Query(None,max_length=120,pattern=r"^[a-z_,]*$")):
-        if date_from and date_to and date_from > date_to: raise HTTPException(422,"date_from must be on or before date_to")
-        start=datetime.combine(date_from,time.min,timezone.utc) if date_from else None
-        end=datetime.combine(date_to+timedelta(days=1),time.min,timezone.utc) if date_to else None
-        payload=resolved_profile(strategy_id,start,end)
-        if payload is None: raise HTTPException(404,"Strategy evidence was not found")
-        if fields:
-            selected=[field for field in fields.split(",") if field];allowed={"schema_version","generated_at","identity","classification","metrics","evidence","robustness","links","methodology"}
-            if any(field not in allowed for field in selected):raise HTTPException(422,"Unsupported profile field selection")
-            payload={field:payload[field] for field in selected}
-        return payload
-
-    @app.get("/api/intelligence/metric-registry")
-    def metric_registry():
-        return {"methodology_version":"1.0.0","metrics":[{"name":name,"unit":unit,"computed_by":"intelligence-layer"} for name,unit in UNITS.items()]}
-
-    @app.get("/api/intelligence/strategies/{strategy_id}/score")
-    def intelligence_score(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$")):
-        profile=resolved_profile(strategy_id)
-        if profile is None: raise HTTPException(404,"Strategy evidence was not found")
-        return {"strategy_id":strategy_id,"score":profile.get("score") or score_profile(profile)}
-
-    def comparative_records():
-        records=[]
-        for profile in all_profiles():
-            classification=profile["classification"];metrics=profile["metrics"];records.append({"strategy_id":profile["identity"]["strategy_id"],"quality_score":profile["score"]["quality_score"],"win_rate":metrics["win_rate"]["value"],"profit_factor":metrics["profit_factor"]["value"],"max_drawdown":metrics["max_drawdown"]["value"],"asset_class":classification["asset_class"],"family":classification.get("strategy_family"),"instrument":(classification.get("instruments") or [None])[0],"track_record":int(profile["evidence"]["years"] or 0)})
-        return records
-
-    @app.get("/api/intelligence/cohorts")
-    def intelligence_cohorts(metric:str=Query("quality_score",pattern=r"^(quality_score|win_rate|profit_factor|max_drawdown)$")):
-        records=comparative_records();return {"metric":metric,"minimum_cohort_size":5,"items":cohort_percentiles(records,metric),"methodology_version":"1.1.0"}
-
-    @app.get("/api/intelligence/strategies/{strategy_id}/related")
-    def intelligence_related(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),limit:int=Query(5,ge=1,le=20)):
-        records=comparative_records();target=next((item for item in records if item["strategy_id"]==strategy_id),None)
-        if target is None:raise HTTPException(404,"Strategy intelligence was not found")
-        return {"strategy_id":strategy_id,"items":related_strategies(target,records,limit),"methodology_version":"1.1.0"}
-
-    @app.get("/api/intelligence/compare")
-    def intelligence_compare(strategy_ids:str=Query(min_length=1,max_length=160),format:str=Query("json",pattern=r"^(json|csv)$")):
-        ids=[x.strip().upper() for x in strategy_ids.split(",") if x.strip()]
-        if len(ids)<2 or len(ids)>5 or any(not x.startswith("DNA_") for x in ids): raise HTTPException(422,"Provide 2 to 5 canonical strategy IDs")
-        profiles={}; points={}
-        for strategy_id in ids:
-            profile=resolved_profile(strategy_id)
-            if profile is None: raise HTTPException(404,f"{strategy_id} was not found")
-            if cfg.data_backend=="sqlserver":
-                points[strategy_id]=cached_points(strategy_id)
-                if points[strategy_id] is None:
-                    if not cfg.allow_synchronous_local_fallback:raise HTTPException(503,"Local intelligence snapshot is missing or stale; run the operator warm-up")
-                    points[strategy_id]=local_equity_curve(cfg,strategy_id)
-            profile=dict(profile);profile.setdefault("score",score_profile(profile)); profiles[strategy_id]=profile
-        relationships=[]
-        def daily_returns(rows):
-            buckets={}
-            for point in rows:
-                day=str(point["closed_at"])[:10];buckets[day]=buckets.get(day,0)+float(point["net_return"])
-            return [{"timestamp":day,"return":value} for day,value in sorted(buckets.items())]
-        daily={strategy_id:daily_returns(points[strategy_id]) for strategy_id in ids} if cfg.data_backend=="sqlserver" else app.state.repository.current_daily_returns(ids,2000)
-        for index,left in enumerate(ids):
-            for right in ids[index+1:]:
-                lreturns=daily[left];rreturns=daily[right]
-                lf={"quality_score":profiles[left]["score"]["quality_score"],"win_rate":profiles[left]["metrics"]["win_rate"]["value"],"profit_factor":profiles[left]["metrics"]["profit_factor"]["value"],"max_drawdown":profiles[left]["metrics"]["max_drawdown"]["value"]}
-                rf={"quality_score":profiles[right]["score"]["quality_score"],"win_rate":profiles[right]["metrics"]["win_rate"]["value"],"profit_factor":profiles[right]["metrics"]["profit_factor"]["value"],"max_drawdown":profiles[right]["metrics"]["max_drawdown"]["value"]}
-                relationships.append({"left":left,"right":right,"correlation":correlation(lreturns,rreturns),"similarity":similarity(lf,rf)})
-        starts=[p["evidence"]["start"] for p in profiles.values() if p["evidence"]["start"]]
-        ends=[p["evidence"]["end"] for p in profiles.values() if p["evidence"]["end"]]
-        warnings=[]
-        if starts and ends and (min(starts)!=max(starts) or min(ends)!=max(ends)):
-            warnings.append("Evidence windows differ; period-sensitive metrics are not directly comparable.")
-        payload={"profiles":profiles,"relationships":relationships,"warnings":warnings,"methodology_version":"1.0.0"}
-        if format=="csv":
-            columns=("strategy_id","quality_score","annualized_return","win_rate","sharpe","max_drawdown","evidence_start","evidence_end");lines=[",".join(columns)]
-            for strategy_id,profile in profiles.items():
-                values=(strategy_id,profile["score"]["quality_score"],profile["metrics"]["annualized_return"]["value"],profile["metrics"]["win_rate"]["value"],profile["metrics"]["sharpe"]["value"],profile["metrics"]["max_drawdown"]["value"],profile["evidence"]["start"],profile["evidence"]["end"]);lines.append(",".join("" if value is None else str(value) for value in values))
-            return Response("\n".join(lines),media_type="text/csv",headers={"Content-Disposition":"attachment; filename=dna-strategy-comparison.csv"})
-        return payload
-
-    @app.post("/api/intelligence/query/interpret")
-    def interpret_intelligence_query(request:NaturalLanguageRequest):
-        result=interpret_with_trace(request.query);plan=result.pop("plan")
-        return {"query":request.query,"plan":plan.model_dump(mode="json"),**result,"schema_version":"1.0.0",
-                "notice":"The plan is validated and must be applied before ranking."}
-
-    def attach_regimes(profiles,curves,return_basis="net_return"):
-        """Populate profile["regimes"] the same way /recommendations already
-        does per-strategy (join_regimes_without_lookahead + strategy_regime_profile),
-        but in bulk across a whole profile pool via a bisect join so
-        StrategyQuery.regime works as a real filter/rank input on
-        /query/search and /query/chain, not just on an explicit <=20-id list.
-        Mutates profiles in place: for the cached net_return pool this doubles
-        as a cache (computed once, reused by later requests until the
-        snapshot itself is rebuilt); basis_profiles() pools are already
-        freshly built per request, so mutating them costs nothing extra."""
-        if not profiles:return profiles
-        now=datetime.now(timezone.utc);by_market={}
-        for profile in profiles:
-            if profile.get("regimes"):continue
-            by_market.setdefault(profile["classification"].get("asset_class") or "FX",[]).append(profile)
-        for market,group in by_market.items():
-            history=app.state.market_features.history(market,through=now)
-            if not history:
-                for profile in group:profile["regimes"]={}
-                continue
-            labels=[{"as_of":row["as_of"],"state":classify(row["features"])["state"]} for row in history]
-            index=build_regime_label_index(labels)
-            for profile in group:
-                strategy_id=profile["identity"]["strategy_id"]
-                points=[point for point in curves.get(strategy_id,[]) if point.get(return_basis) is not None]
-                returns=[{"timestamp":point["closed_at"],"return":float(point[return_basis])} for point in points]
-                joined=join_regimes_bisect(returns,index)
-                profile["regimes"]=strategy_regime_profile(joined,minimum=cfg.intelligence_min_regime_samples)
-        return profiles
-
-    def query_pool(return_basis="net_return",lookback_hours=None):
-        """The candidate universe a query/chain runs against. lookback_hours
-        (None = since inception) makes this a trailing-window pool - every
-        metric/filter/rank recomputed from just the last N hours, via the
-        same basis_profiles() used for alt_net_return - so it always bypasses
-        the cached net_return snapshot (which is since-inception by
-        definition) even when return_basis is net_return. Regime evidence is
-        attached in both cases so StrategyQuery.regime is a real filter."""
-        if lookback_hours is None and return_basis=="net_return":
-            profiles=all_profiles();curves=app.state.profile_cache.get("curves") or {}
-            return attach_regimes(profiles,curves,return_basis)
-        start=datetime.now(timezone.utc)-timedelta(hours=lookback_hours) if lookback_hours is not None else None
-        pool=basis_profiles(None,return_basis,start=start)
-        if pool is None:raise HTTPException(501,"alt_net_return and lookback_hours querying are only available on the local SQL Server-backed deployment")
-        snapshot=local_snapshot();curves=(snapshot or {}).get("curves") or {}
-        return attach_regimes(pool,curves,return_basis)
-
-    @app.post("/api/intelligence/query/search")
-    def search_intelligence(request:SearchRequest):
-        profiles=query_pool(request.plan.return_basis,request.plan.lookback_hours);all_results=retrieve(profiles,request.plan);results=all_results[:cfg.intelligence_max_query_results];all_exclusions=exclusion_trace(profiles,request.plan)
-        return {"plan":request.plan.model_dump(mode="json"),"items":results,"total":len(all_results),"facets":facet_counts([item["profile"] for item in all_results]),"exclusions":all_exclusions[:cfg.intelligence_max_query_results],"excluded_total":len(all_exclusions),
-                "constraint_order":"filter-before-rank","schema_version":"1.0.0"}
-
-    @app.post("/api/intelligence/query/top-performers")
-    def top_performers(request:TopPerformersRequest):
-        """Canned answer to 'top N strategies in the last H hours, among
-        strategies with at least M trades today' - two DIFFERENT windows,
-        not one: min_trade_count is an activity/liquidity gate over the
-        WHOLE day (so a strategy that's actually been trading qualifies,
-        regardless of how many of those trades landed inside the recent
-        window), while the ranked return is computed only from trades
-        inside the last lookback_hours. Collapsing both into one window
-        (an earlier version of this endpoint did) systematically favours
-        strategies that happen to be quiet outside the window over ones
-        that have been active all day. 'now' is the latest trade timestamp
-        actually seen in today's data (data_now()), in the data's own local
-        time - not a UTC-labelled reading of it, which is off by a DST hour."""
-        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"top-performers requires a SQL Server or a configured repository-backed deployment")
-        ts=window_ts_parser()
-        fresh=fresh_points_by_strategy()
-        now=current_now(fresh);window_start=now-timedelta(hours=request.lookback_hours)
-        names=strategy_names()
-        candidates=[]
-        for strategy_id,points in fresh.items():
-            valid=[p for p in points if p.get(request.return_basis) is not None]
-            if len(valid)<request.min_trade_count:continue
-            window_points=[p for p in valid if window_start<=ts(p["closed_at"])<now]
-            if not window_points:continue
-            window_return=sum(float(p[request.return_basis]) for p in window_points)
-            wins=sum(1 for p in window_points if float(p[request.return_basis])>0)
-            candidates.append({"strategy_id":strategy_id,"name":names.get(strategy_id),
-                "trades_today":len(valid),"trades_in_window":len(window_points),
-                "window_return":round(window_return,4),"window_win_rate":round(wins/len(window_points),4)})
-        sort_key={"annualized_return":"window_return","win_rate":"window_win_rate"}.get(request.sort,"window_return")
-        candidates.sort(key=lambda row:row[sort_key],reverse=True)
-        results=candidates[:request.top_n]
-        time_basis="local time, as recorded in the trade data - not UTC" if cfg.data_backend=="sqlserver" else "UTC, as published in directory_return_series"
-        return {"now":now.isoformat(),"window":{"from":window_start.isoformat(),"to":now.isoformat()},"time_basis":time_basis,
-                "lookback_hours":request.lookback_hours,"min_trade_count_today":request.min_trade_count,
-                "candidates_meeting_trade_count":len(candidates),"items":results,
-                "notice":"min_trade_count is evaluated against today's TOTAL trades, not just trades inside the lookback window; window_return/window_win_rate are computed only from trades inside the lookback window. sort=sharpe/quality_score are not meaningful on a window this short and fall back to window_return.",
-                "schema_version":"1.0.0"}
-
-    @app.post("/api/intelligence/query/time-window")
-    def time_window_query(request:TimeWindowRequest):
-        """Screen today's strategies by performance within a fixed local
-        clock-time window - 'before 10:00', 'between 09:00 and 14:00' -
-        distinct from /query/top-performers' trailing lookback_hours from
-        now. Unlike top-performers, min_trade_count/min_win_rate here apply
-        to trades strictly INSIDE the time-of-day window, not the whole day
-        - the window itself is the activity period being asked about, not
-        just a ranking scope layered on a separate day-wide activity gate."""
-        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"time-window querying requires a SQL Server or a configured repository-backed deployment")
-        ts=window_ts_parser()
-        fresh=fresh_points_by_strategy();today=current_now(fresh).date()
-        tzify=(lambda dt:dt) if cfg.data_backend=="sqlserver" else (lambda dt:dt.replace(tzinfo=timezone.utc))
-        before_dt=tzify(datetime.combine(today,datetime.strptime(request.before,"%H:%M").time())) if request.before else None
-        after_dt=tzify(datetime.combine(today,datetime.strptime(request.after,"%H:%M").time())) if request.after else None
-        names=strategy_names()
-        candidates=[]
-        for strategy_id,points in fresh.items():
-            valid=[p for p in points if p.get(request.return_basis) is not None]
-            windowed=[p for p in valid if (before_dt is None or ts(p["closed_at"])<before_dt) and (after_dt is None or ts(p["closed_at"])>=after_dt)]
-            if len(windowed)<request.min_trade_count:continue
-            wins=sum(1 for p in windowed if float(p[request.return_basis])>0)
-            win_rate=wins/len(windowed) if windowed else None
-            if request.min_win_rate is not None and (win_rate is None or win_rate<request.min_win_rate):continue
-            net=sum(float(p[request.return_basis]) for p in windowed)
-            candidates.append({"strategy_id":strategy_id,"name":names.get(strategy_id),"trade_count":len(windowed),
-                                "win_rate":round(win_rate,4) if win_rate is not None else None,"net_return":round(net,4)})
-        candidates.sort(key=lambda row:(row[request.sort] if row[request.sort] is not None else float("-inf")),reverse=True)
-        results=candidates[:request.top_n]
-        time_basis="local time, as recorded in the trade data - not UTC" if cfg.data_backend=="sqlserver" else "UTC, as published in directory_return_series"
-        return {"date":today.isoformat(),"before":request.before,"after":request.after,"time_basis":time_basis,
-                "min_trade_count":request.min_trade_count,"min_win_rate":request.min_win_rate,"sort":request.sort,
-                "candidates_meeting_criteria":len(candidates),"items":results,
-                "notice":"min_trade_count and min_win_rate are evaluated over trades strictly inside the [after, before) time-of-day window, not the whole day - unlike /query/top-performers, which gates trade count on the whole day instead.",
-                "schema_version":"1.0.0"}
-
-    @app.post("/api/intelligence/query/chain")
-    def chain_intelligence_query(request:ChainRequest):
-        """Apply up to 10 StrategyQuery stages as a narrowing funnel: each stage's
-        survivors feed the next. Same filter/rank semantics as /query/search, just
-        composed. Returns per-stage survivor/elimination counts plus the final
-        ranked result of the last stage. Callers (human or agent) persist the
-        result via the existing POST /api/intelligence/user/collections using the
-        returned strategy_ids. The first stage's return_basis/lookback_hours
-        select the candidate universe for the whole chain; later stages
-        should match them."""
-        profiles=query_pool(request.stages[0].return_basis,request.stages[0].lookback_hours);result=chain(profiles,request.stages);items=result["items"][:cfg.intelligence_max_query_results]
-        return {"stages":result["stages"],"final_total":result["final_count"],"items":items,
-                "strategy_ids":[item["profile"]["identity"]["strategy_id"] for item in items],
-                "strategies":[{"strategy_id":item["profile"]["identity"]["strategy_id"],"name":item["profile"]["identity"].get("name")} for item in items],
-                "constraint_order":"filter-before-rank, sequential per stage","schema_version":"1.0.0"}
-
-    @app.get("/api/intelligence/query/schema")
-    def query_schema():
-        """Machine-readable description of every queryable field, for an
-        automated caller (agent) to introspect available screens without
-        reading source. Mirrors StrategyQuery/ChainRequest 1:1."""
-        return {"single_query_endpoint":"/api/intelligence/query/search","chain_endpoint":"/api/intelligence/query/chain",
-                "timetravel_endpoint":"/api/intelligence/query/timetravel","timetravel_series_endpoint":"/api/intelligence/query/timetravel/series",
-                "top_performers_endpoint":"/api/intelligence/query/top-performers","time_window_endpoint":"/api/intelligence/query/time-window",
-                "chain_max_stages":10,"timetravel_series_max_range_days":90,"strategy_query_schema":StrategyQuery.model_json_schema(),
-                "top_performers_schema":TopPerformersRequest.model_json_schema(),"time_window_schema":TimeWindowRequest.model_json_schema(),
-                "notes":["Each field on StrategyQuery is an independent AND constraint; omit a field to leave it unconstrained.",
-                         "min_walk_forward_positive_fold_rate, require_no_divergence_alert and require_parameter_stable read profile.robustness evidence and only pass when that evidence's state is VALID (COLLECTING/UNAVAILABLE strategies are excluded, not treated as passing).",
-                         "For /query/chain, POST {\"stages\":[StrategyQuery, StrategyQuery, ...]}; the survivors of stage N become the candidate pool for stage N+1.",
-                         "For /query/timetravel, POST {\"plan\":StrategyQuery,\"as_of\":date,\"forward_to\":date} to see how strategies matching the query as of a past date actually performed afterwards, vs a same-window baseline.",
-                         "For /query/timetravel/series, POST {\"plan\":StrategyQuery,\"as_of_from\":date,\"as_of_to\":date,\"forward_days\":int} for a daily effectiveness_pct series (local SQL Server backend only, max 90-day range).",
-                         "lookback_hours + min_trade_count on StrategyQuery restrict the evidence window to the trailing N hours from now instead of since-inception, so /query/search and /query/chain can answer recent-performance questions directly (e.g. 'strategies with >5 trades in the last 3 hours'), local SQL Server backend only.",
-                         "POST /query/top-performers is a fixed-shape convenience wrapper over exactly that: {lookback_hours, min_trade_count, top_n, sort, return_basis} -> ranked top_n, for the single most common recent-performance ask without assembling a full StrategyQuery.",
-                         "POST /query/time-window answers a fixed-clock-time version of the same idea - {before, after, min_trade_count, min_win_rate, top_n} e.g. 'strategies with a 100% win rate and more than 5 trades before 10:00 local' - a clock-time boundary rather than a trailing lookback_hours from now, and min_trade_count/min_win_rate apply only to trades inside that window, not the whole day. Local SQL Server backend, today only.",
-                         "return_basis (default net_return) selects the outcome every metric/filter/rank/robustness check is computed from. alt_net_return is not an alternate cost basis - it is every trade in the ledger reversed (opposite side), so a query with return_basis=alt_net_return answers 'would fading this strategy have worked', over the same universe and evidence rules as net_return.",
-                         "alt_net_return and lookback_hours querying are local SQL Server-backend only and rebuild the candidate pool from cached trade curves per request (no cached fast-path exists for either yet), so they are slower than the default since-inception net_return query.",
-                         "Persist a result as a watchlist via POST /api/intelligence/user/collections with the returned strategy_ids."],
-                "schema_version":"1.0.0"}
-
-    @app.get("/api/intelligence/user")
-    def user_export(user_id:str=Depends(trusted_user)):
-        payload=app.state.user_intelligence.export(user_id)
-        try:versions={profile["identity"]["strategy_id"]:profile.get("generated_at") for profile in all_profiles()}
-        except HTTPException:versions={}
-        payload["watchlist_details"]=[{"strategy_id":strategy_id,"saved_evidence_version":payload.get("watch_versions",{}).get(strategy_id),"current_evidence_version":versions.get(strategy_id),"stale":bool(payload.get("watch_versions",{}).get(strategy_id) and payload.get("watch_versions",{}).get(strategy_id)!=versions.get(strategy_id))} for strategy_id in payload["watchlist"]]
-        for collection in payload["collections"].values():collection["stale_strategy_ids"]=[strategy_id for strategy_id,version in collection.get("evidence_versions",{}).items() if version and version!=versions.get(strategy_id)]
-        return payload
-
-    @app.delete("/api/intelligence/user",status_code=204)
-    def user_delete(user_id:str=Depends(trusted_user)):
-        app.state.user_intelligence.delete(user_id)
-
-    @app.put("/api/intelligence/user/consent")
-    def user_consent(request:ConsentRequest,user_id:str=Depends(trusted_user)):
-        app.state.user_intelligence.set_consent(user_id,request.history);return {"history":request.history}
-
-    @app.put("/api/intelligence/user/watchlist/{strategy_id}")
-    def watch_strategy(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),user_id:str=Depends(trusted_user)):
-        profile=resolved_profile(strategy_id) if cfg.data_backend!="memory" or app.state.repository is not None else None
-        if profile is None and cfg.data_backend!="memory":raise HTTPException(404,"Strategy evidence was not found")
-        version=profile.get("generated_at") if profile else None;app.state.user_intelligence.watch(user_id,strategy_id,version);return {"strategy_id":strategy_id,"watched":True,"evidence_version":version}
-
-    @app.delete("/api/intelligence/user/watchlist/{strategy_id}")
-    def unwatch_strategy(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),user_id:str=Depends(trusted_user)):
-        app.state.user_intelligence.unwatch(user_id,strategy_id);return {"strategy_id":strategy_id,"watched":False}
-
-    @app.post("/api/intelligence/user/searches",status_code=201)
-    def save_user_search(request:SavedSearchRequest,user_id:str=Depends(trusted_user)):
-        item_id=app.state.user_intelligence.save_search(user_id,request.name,request.plan.model_dump(mode="json"));return {"id":item_id}
-
-    @app.post("/api/intelligence/user/searches/{item_id}/replay")
-    def replay_user_search(item_id:str=ApiPath(pattern=r"^[0-9a-fA-F-]{36}$"),user_id:str=Depends(trusted_user)):
-        exported=app.state.user_intelligence.export(user_id);item=exported["searches"].get(item_id)
-        if item is None:raise HTTPException(404,"Saved search was not found")
-        plan=StrategyQuery.model_validate(item["plan"]);results=retrieve(all_profiles(),plan);ids=[result["profile"]["identity"]["strategy_id"] for result in results]
-        replay=app.state.user_intelligence.replay_search(user_id,item_id,ids);previous=set(replay["previous_result_ids"])
-        return {"id":item_id,"plan":plan.model_dump(mode="json"),"result_ids":ids,"added":sorted(set(ids)-previous),"removed":sorted(previous-set(ids)),"evidence_replayed_at":datetime.now(timezone.utc).isoformat()}
-
-    @app.post("/api/intelligence/user/collections",status_code=201)
-    def create_user_collection(request:CollectionRequest,user_id:str=Depends(trusted_user)):
-        item_id=app.state.user_intelligence.create_collection(user_id,request.name,request.strategy_ids,request.notes,request.evidence_versions);return {"id":item_id}
-
-    @app.put("/api/intelligence/user/preferences")
-    def set_user_preferences(request:PreferenceRequest,user_id:str=Depends(trusted_user)):
-        app.state.user_intelligence.set_preferences(user_id,request.preferences)
-        return preference_trace(request.preferences,app.state.user_intelligence.export(user_id)["history"])
-
-    @app.delete("/api/intelligence/user/preferences")
-    def reset_user_preferences(user_id:str=Depends(trusted_user)):
-        app.state.user_intelligence.reset_preferences(user_id);return {"reset":True}
-
-    @app.post("/api/intelligence/regimes/classify")
-    def classify_regime(request:RegimeFeaturesRequest):
-        now=datetime.now(timezone.utc);at=request.as_of or now
-        if at.tzinfo is None or at.utcoffset() is None:raise HTTPException(422,"as_of must include a timezone")
-        at=at.astimezone(timezone.utc)
-        if at>now+timedelta(minutes=5):raise HTTPException(422,"as_of cannot be in the future")
-        row=app.state.market_features.as_of(request.market,at)
-        if row is None:return {"market":request.market,"as_of":at,"state":"UNKNOWN","confidence":0,"reason":"NO_CANONICAL_FEATURES"}
-        age=(at-row["as_of"]).total_seconds();limit=freshness_limit(at,cfg.intelligence_market_feature_max_age_seconds,cfg.intelligence_market_feature_weekend_max_age_seconds);fresh=age<=limit
-        if request.as_of is None and not fresh:return {"market":request.market,"as_of":at,"feature_as_of":row["as_of"],"state":"UNKNOWN","confidence":0,"reason":"STALE","source_version":row["source_version"]}
-        return {"market":request.market,"as_of":at,"feature_as_of":row["as_of"],"source_version":row["source_version"],"feature_sha256":row["sha256"],"fresh":fresh,**classify(row["features"])}
-
-    @app.post("/api/intelligence/recommendations")
-    def intelligence_recommendations(request:RecommendationRequest):
-        now=datetime.now(timezone.utc);at=request.as_of or now
-        if at.tzinfo is None or at.utcoffset() is None:raise HTTPException(422,"as_of must include a timezone")
-        at=at.astimezone(timezone.utc)
-        if at>now+timedelta(minutes=5):raise HTTPException(422,"as_of cannot be in the future")
-        row=app.state.market_features.as_of(request.market,at)
-        if row is None:return {"items":[],"total":0,"state":"UNKNOWN","reason":"NO_CANONICAL_FEATURES","methodology_version":"1.0.0","decision_support_only":True}
-        age=(at-row["as_of"]).total_seconds()
-        limit=freshness_limit(at,cfg.intelligence_market_feature_max_age_seconds,cfg.intelligence_market_feature_weekend_max_age_seconds)
-        if age<0 or age>limit:return {"items":[],"total":0,"state":"UNKNOWN","reason":"STALE","feature_age_seconds":age,"feature_as_of":row["as_of"],"methodology_version":"1.0.0","decision_support_only":True}
-        current=classify(row["features"]);profiles={item["identity"]["strategy_id"]:item for item in all_profiles()}
-        curves=app.state.profile_cache.get("curves") or {};labels=[]
-        for feature_row in app.state.market_features.history(request.market,through=at):labels.append({"as_of":feature_row["as_of"],"state":classify(feature_row["features"])["state"]})
-        candidates=[]
-        for strategy_id in request.strategy_ids:
-            profile=profiles.get(strategy_id)
-            if profile is None:continue
-            joined=join_regimes_without_lookahead([{"timestamp":point["closed_at"],"return":point["net_return"]} for point in curves.get(strategy_id,[])],labels)
-            regimes=strategy_regime_profile(joined,minimum=cfg.intelligence_min_regime_samples)
-            candidates.append({"strategy_id":strategy_id,"quality_score":profile["score"]["quality_score"],"max_drawdown":profile["metrics"]["max_drawdown"]["value"],"regimes":regimes})
-        result=recommend(current,candidates,request.risk_limit)
-        return {"items":result,"total":len(result),"market":request.market,"regime":current,"feature_as_of":row["as_of"],"feature_age_seconds":age,"mode":"historical" if request.as_of else "current","source_version":row["source_version"],"feature_sha256":row["sha256"],"methodology_version":"1.0.0","decision_support_only":True}
-
-    @app.post("/internal/intelligence/market-features",status_code=202)
-    def ingest_market_features(request:MarketFeatureIngestRequest,_:None=Depends(trusted_publisher)):
-        try:
-            digest=app.state.market_features.ingest(request.market,request.as_of,request.features,request.source_version);result=classify(request.features)
-            app.state.market_features.record_label(request.market,request.as_of,result,request.as_of,result["version"])
-        except ValueError as exc:raise HTTPException(422,str(exc))
-        return {"accepted":True,"market":request.market,"as_of":request.as_of,"sha256":digest,"regime":result}
-
     @app.post("/internal/snapshots",status_code=202)
     async def ingest(snapshot:Snapshot, _:None=Depends(trusted_publisher), idempotency_key:str|None=Header(None)):
         if idempotency_key != snapshot.snapshot_id: raise HTTPException(400,"Idempotency key mismatch")
@@ -1164,7 +457,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         now=datetime.now(timezone.utc)
         if snapshot.generated_at>now+timedelta(minutes=5) or snapshot.source_watermark>now+timedelta(minutes=5):raise HTTPException(422,"Snapshot timestamp is in the future")
         if now-snapshot.source_watermark>timedelta(hours=cfg.snapshot_max_age_hours):raise HTTPException(422,"Snapshot source watermark is stale")
-        try: snapshot.verified(); app.state.repository.promote(snapshot);app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};invalidate_snapshot_cache()
+        try: snapshot.verified(); app.state.repository.promote(snapshot);invalidate_snapshot_cache()
         except ValueError as exc: raise HTTPException(422,str(exc))
         return {"accepted":True,"snapshot_id":snapshot.snapshot_id,"items":snapshot.item_count}
 
@@ -1199,49 +492,8 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         try: app.state.repository.finalize_snapshot(snapshot_id)
         except KeyError: raise HTTPException(404,"Snapshot has not been started - call begin first")
         except ValueError as exc: raise HTTPException(422,str(exc))
-        app.state.profile_cache={"at":0.0,"profiles":None,"curves":None};invalidate_snapshot_cache()
+        invalidate_snapshot_cache()
         return {"accepted":True,"snapshot_id":snapshot_id,"status":"current"}
-
-    @app.post("/internal/intelligence/refresh",status_code=202)
-    def refresh_intelligence_profiles(_:None=Depends(trusted_publisher)):
-        app.state.profile_cache={"at":0.0,"profiles":None,"curves":None}
-        app.state.strategy_cache=None
-        cache_path=Path(cfg.local_intelligence_cache_path);cache_path=cache_path if cache_path.is_absolute() else Path(__file__).resolve().parents[1]/cache_path
-        if cfg.data_backend=="sqlserver" and cache_path.exists():cache_path.unlink()
-        return {"accepted":True,"reason":"operator-authorized evidence refresh"}
-
-    @app.post("/internal/intelligence/privacy/purge",status_code=202)
-    def purge_private_history(_:None=Depends(trusted_publisher)):
-        try:return {"state":"completed","deleted":app.state.user_intelligence.purge_expired()}
-        except RuntimeError as exc:raise HTTPException(503,str(exc))
-
-    @app.get("/api/intelligence/warmup-status")
-    def warmup_status():
-        cache_path=Path(cfg.local_intelligence_cache_path);cache_path=cache_path if cache_path.is_absolute() else Path(__file__).resolve().parents[1]/cache_path
-        return {"ready":app.state.profile_cache.get("profiles") is not None or (cfg.data_backend=="sqlserver" and cache_path.exists()),"catalog_ready":app.state.strategy_cache is not None,"mode":cfg.data_backend}
-
-    @app.get("/internal/intelligence/operations")
-    def intelligence_operations(_:None=Depends(trusted_publisher)):
-        report=app.state.operations.report();snap=app.state.repository.current_snapshot() if app.state.repository else None
-        if snap:app.state.operations.data_state("directory_snapshot",max(0,(datetime.now(timezone.utc)-snap.generated_at).total_seconds()),cfg.snapshot_max_age_hours*3600)
-        return app.state.operations.report()
-
-    @app.post("/internal/intelligence/releases/{version}/stage")
-    def stage_release(version:str=ApiPath(pattern=r"^[A-Za-z0-9._-]{1,80}$"),evidence:dict|None=None,mode:str=Query("shadow",pattern=r"^(shadow|canary)$"),_:None=Depends(trusted_publisher)):
-        return app.state.releases.stage(version,evidence or {},mode)
-
-    @app.post("/internal/intelligence/releases/{version}/promote")
-    def promote_release(version:str=ApiPath(pattern=r"^[A-Za-z0-9._-]{1,80}$"),_:None=Depends(trusted_publisher)):
-        try:return app.state.releases.promote(version)
-        except ValueError as exc:raise HTTPException(409,str(exc))
-
-    @app.post("/internal/intelligence/releases/rollback")
-    def rollback_release(_:None=Depends(trusted_publisher)):
-        try:return app.state.releases.rollback()
-        except ValueError as exc:raise HTTPException(409,str(exc))
-
-    @app.get("/internal/intelligence/releases")
-    def release_status(_:None=Depends(trusted_publisher)):return app.state.releases.status()
 
     no_store={"Cache-Control":"no-store, no-cache, must-revalidate, max-age=0","Pragma":"no-cache","Expires":"0"}
 
@@ -1256,16 +508,4 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         if name not in {"styles.css","tech-principle-theme.css","thetechprinciple-icon-180.png","api-client.js","period-filter.js","equity-chart.js","button-feedback.js","theme-toggle.js"}: raise HTTPException(404)
         return FileResponse(WEB/name,headers=no_store)
 
-    def arena_universe(start,end):
-        """Candidate pool for the EP052 Arena intelligence provider: the full
-        since-inception pool (any backend, via all_profiles()) when no window
-        is given, or the windowed basis_profiles() rebuild (local SQL Server
-        only, same as every other lookback_hours-style query) when one is."""
-        if start is None and end is None:return all_profiles()
-        return basis_profiles(end,"net_return",start=start)
-
-    arena_provider.install(app,cfg,arena_universe)
     return app
-
-
-app=create_app()

@@ -2,9 +2,13 @@
 # v1.2.0 · 2026-08-24 · Adds timestamp alignment and classified-cohort safety coverage.
 # v1.1.0 · 2026-08-24 · Adds comparison API contract coverage.
 # v1.0.0 · 2026-08-24 · Composite-score, percentile, correlation and similarity golden tests.
+from datetime import datetime,timezone
 from fastapi.testclient import TestClient
 from app.config import Settings
+from app.contracts import Snapshot,Strategy,snapshot_hash
+from app.intelligence.profile import build_profile
 from app.main import create_app
+from app.repository import MemoryRepository
 from app.intelligence.comparative import SCORE_SPEC,cohort_percentiles,correlation,correlation_matrix,percentile,related_strategies,rolling_correlation,score_profile,similarity
 
 
@@ -63,12 +67,22 @@ def test_similarity_exposes_feature_contributions():
     assert set(result["contributions"])=={"quality_score","win_rate"}
 
 
-def test_compare_api_returns_profiles_scores_and_relationships(monkeypatch):
-    import app.main as module
-    monkeypatch.setattr(module,"local_strategies",lambda settings,start,end,strategy_id:[{"strategy_id":strategy_id,"descriptive_name":None,"product_name":"EURUSD","market":"FX"}])
-    monkeypatch.setattr(module,"local_equity_curve",lambda settings,strategy_id,*args:[
-      {"closed_at":"2024-01-01T00:00:00+00:00","net_return":1},{"closed_at":"2024-02-01T00:00:00+00:00","net_return":2},{"closed_at":"2024-03-01T00:00:00+00:00","net_return":3}])
-    client=TestClient(create_app(settings=Settings(data_backend="sqlserver",db_server="x",db_user="x",db_pass="x",local_intelligence_cache_path="runtime/__missing_compare_cache__.json",allow_synchronous_local_fallback=True)))
+def test_compare_api_returns_profiles_scores_and_relationships():
+    # v2.0.0 (2026-09-04): EP049 is now Postgres/memory-only (no SQL Server
+    # fallback to monkeypatch local_strategies/local_equity_curve against) -
+    # exercises the same behavior via a real MemoryRepository instead.
+    strategies=[];profiles=[];series=[]
+    for strategy_id,values in (("DNA_1",[1,2,3]),("DNA_2",[2,4,6])):
+        summary=Strategy(strategy_id=strategy_id,total_trades=3,wins=3,losses=0,breakevens=0,total_net_return=sum(values),win_rate=1.0,profit_factor=None,max_drawdown_money=0,evidence_start="2024-01-01T00:00:00Z",evidence_end="2024-03-01T00:00:00Z",quality_state="COLLECTING")
+        strategies.append(summary);equity=0;curve=[]
+        for month,value in zip(("01","02","03"),values):
+            equity+=value;point={"strategy_id":strategy_id,"trade_id":f"{strategy_id}-{month}","trade_number":int(month),"observed_at":f"2024-{month}-01T00:00:00Z","net_return":value,"cumulative_net_return":equity,"drawdown":0}
+            series.append(point);curve.append({"trade_number":int(month),"opened_at":point["observed_at"],"closed_at":point["observed_at"],"net_return":value,"equity":equity,"drawdown":0})
+        profiles.append(build_profile(summary.model_dump(mode="json"),curve))
+    digest=snapshot_hash(strategies,profiles,series);now=datetime.now(timezone.utc)
+    snapshot=Snapshot(snapshot_id="dna-compare-api",source_watermark=now,generated_at=now,item_count=2,sha256=digest,items=strategies,intelligence_profiles=profiles,return_series=series)
+    repository=MemoryRepository();repository.promote(snapshot)
+    client=TestClient(create_app(repository=repository,settings=Settings(data_backend="memory")))
     response=client.get("/api/intelligence/compare?strategy_ids=DNA_1,DNA_2")
     assert response.status_code==200
     assert set(response.json()["profiles"])=={"DNA_1","DNA_2"}

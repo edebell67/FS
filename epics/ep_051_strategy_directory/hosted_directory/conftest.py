@@ -19,6 +19,11 @@ from pathlib import Path
 _HERE = Path(__file__).resolve().parent
 _EP049_HOSTED_DIRECTORY = _HERE.parent.parent / "ep_049_strategy_intelligence" / "hosted_directory"
 
-for _path in (str(_HERE), str(_EP049_HOSTED_DIRECTORY)):
-    if _path not in sys.path:
-        sys.path.insert(0, _path)
+for _path in (str(_EP049_HOSTED_DIRECTORY), str(_HERE)):
+    if _path in sys.path:
+        sys.path.remove(_path)
+    sys.path.insert(0, _path)
+# _HERE goes in last (of these two), so it ends up first on sys.path - this
+# repo's own app/main.py must win module resolution for its own test suite,
+# with EP049's app/ package only supplying submodules (app.intelligence.*,
+# app.arena_provider) that this repo's app/ package does not itself provide.
