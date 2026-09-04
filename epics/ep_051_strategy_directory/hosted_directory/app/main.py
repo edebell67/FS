@@ -1,6 +1,7 @@
 """Container-ready directory API and screen host.
 
 Version history:
+- 2.2.0 (2026-09-04): Ports timetravel/timetravel-series/top-performers/time-window off the SQL-Server-only 501 gate onto a repository-backed (Postgres/memory) path, so they work on the hosted deployment.
 - 2.1.2 (2026-08-28): Allows caller-selected evidence trade-count threshold, default 5, independently of result filtering.
 - 2.1.1 (2026-08-27): Serves the shared Tech Principle screen-theme stylesheet.
 - 2.1.0 (2026-08-27): Adds profitable-strategy count and percentage to the selected-period directory summary.
@@ -338,8 +339,12 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return rebased
 
     def cached_points(strategy_id,start=None,end=None):
-        snapshot=local_snapshot() if cfg.data_backend=="sqlserver" else None
-        return points_from_snapshot(snapshot,strategy_id,start,end)
+        if cfg.data_backend=="sqlserver":
+            return points_from_snapshot(local_snapshot(),strategy_id,start,end)
+        if app.state.repository is None:return None
+        points=app.state.repository.current_equity_curves().get(strategy_id,[])
+        filtered=[p for p in points if (start is None or _parse_ts(p["closed_at"])>=start) and (end is None or _parse_ts(p["closed_at"])<end)]
+        return rebase_equity_rows(filtered)
 
     def resolved_profile(strategy_id,start=None,end=None):
         if cfg.data_backend=="sqlserver":
@@ -405,6 +410,53 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     def _parse_ts(value):
         stamp=datetime.fromisoformat(str(value).replace("Z","+00:00"));return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
 
+    def repository_points_today():
+        """Repository-backed (Postgres/memory) equivalent of
+        today_points_by_strategy(): there is no separately-refreshed
+        current-day cache on these backends, only directory_return_series
+        (already tz-aware real UTC, so no local-time DST hack is needed here
+        the way it is for sqlserver's _local_ts). 'Today' is the calendar
+        date of the latest observed trade in the published data, not the
+        system clock's date - the hosted snapshot is published
+        periodically, not truly live."""
+        if app.state.repository is None:return {}
+        curves=app.state.repository.current_equity_curves()
+        latest=None
+        for points in curves.values():
+            for point in points:
+                stamp=_parse_ts(point["closed_at"])
+                if latest is None or stamp>latest:latest=stamp
+        if latest is None:return {}
+        day_start=datetime.combine(latest.date(),time.min,timezone.utc);day_end=day_start+timedelta(days=1)
+        out={}
+        for strategy_id,points in curves.items():
+            todays=[p for p in points if day_start<=_parse_ts(p["closed_at"])<day_end]
+            if todays:out[strategy_id]=todays
+        return out
+
+    def fresh_points_by_strategy():
+        if cfg.data_backend=="sqlserver":return today_points_by_strategy()
+        return repository_points_today()
+
+    def current_now(fresh=None):
+        if cfg.data_backend=="sqlserver":return data_now(fresh)
+        fresh=fresh_points_by_strategy() if fresh is None else fresh
+        latest=None
+        for points in fresh.values():
+            for point in points:
+                stamp=_parse_ts(point["closed_at"])
+                if latest is None or stamp>latest:latest=stamp
+        return latest or datetime.now(timezone.utc)
+
+    def window_ts_parser():
+        return _local_ts if cfg.data_backend=="sqlserver" else _parse_ts
+
+    def strategy_names():
+        if cfg.data_backend=="sqlserver":
+            snapshot=local_snapshot()
+            return {p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
+        return {p["identity"]["strategy_id"]:p["identity"].get("name") for p in all_profiles()}
+
     def basis_profiles(end,return_basis="net_return",start=None):
         """Bulk profiles built directly from cached trade data, under the
         requested return_basis and bounded to trades closed in [start, end)
@@ -418,7 +470,23 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         portion is sourced from the fast current-day cache instead of the
         slower-to-refresh intelligence snapshot, so a short lookback isn't
         silently starved by a stale warm-up."""
-        if cfg.data_backend!="sqlserver":return None
+        if cfg.data_backend!="sqlserver":
+            # Repository-backed (Postgres/memory) path: no local-only
+            # fast-path cache to reconcile with - directory_return_series is
+            # the single source, already tz-aware UTC (no local-time DST
+            # hack needed, unlike the SQL Server path below). Reuses
+            # cached_points()/cached_summary()/build_profile() so the
+            # resulting profile shape is identical either way.
+            if app.state.repository is None:return None
+            out=[]
+            for source in all_profiles():
+                strategy_id=source["identity"]["strategy_id"]
+                points=cached_points(strategy_id,start,end) or []
+                points=[p for p in points if p.get(return_basis) is not None]
+                if not points:continue
+                profile=build_profile(cached_summary(source,points).model_dump(mode="json"),points,return_basis).model_dump(mode="json")
+                profile["score"]=score_profile(profile);out.append(profile)
+            return out
         snapshot=local_snapshot()
         if snapshot is None:return None
         today_start=datetime.combine(datetime.now(timezone.utc).date(),time.min,timezone.utc)
@@ -509,7 +577,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     @app.post("/api/intelligence/query/timetravel")
     def timetravel_query(request:TimeTravelRequest):
         """Point-in-time query backtest for a single as-of date."""
-        if cfg.data_backend!="sqlserver":raise HTTPException(501,"Point-in-time replay is only available on the local SQL Server-backed deployment")
+        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"Point-in-time replay requires a SQL Server or a configured repository-backed deployment")
         forward_to=request.forward_to or datetime.now(timezone.utc).date()
         result=run_timetravel(request.plan,request.as_of,forward_to)
         return {"plan":request.plan.model_dump(mode="json"),**result,
@@ -523,7 +591,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         matched strategies' effectiveness over the following `forward_days` -
         e.g. '20 Aug: 50% effective, 21 Aug: 52%, 22 Aug: 67%'. Each day is
         independent: strategies are re-screened fresh, not carried forward."""
-        if cfg.data_backend!="sqlserver":raise HTTPException(501,"Point-in-time replay is only available on the local SQL Server-backed deployment")
+        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"Point-in-time replay requires a SQL Server or a configured repository-backed deployment")
         series=[];cursor=request.as_of_from
         while cursor<=request.as_of_to:
             forward_to=cursor+timedelta(days=request.forward_days)
@@ -892,15 +960,16 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         that have been active all day. 'now' is the latest trade timestamp
         actually seen in today's data (data_now()), in the data's own local
         time - not a UTC-labelled reading of it, which is off by a DST hour."""
-        if cfg.data_backend!="sqlserver":raise HTTPException(501,"top-performers is only available on the local SQL Server-backed deployment")
-        fresh=today_points_by_strategy()
-        now=data_now(fresh);window_start=now-timedelta(hours=request.lookback_hours)
-        snapshot=local_snapshot();names={p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
+        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"top-performers requires a SQL Server or a configured repository-backed deployment")
+        ts=window_ts_parser()
+        fresh=fresh_points_by_strategy()
+        now=current_now(fresh);window_start=now-timedelta(hours=request.lookback_hours)
+        names=strategy_names()
         candidates=[]
         for strategy_id,points in fresh.items():
             valid=[p for p in points if p.get(request.return_basis) is not None]
             if len(valid)<request.min_trade_count:continue
-            window_points=[p for p in valid if window_start<=_local_ts(p["closed_at"])<now]
+            window_points=[p for p in valid if window_start<=ts(p["closed_at"])<now]
             if not window_points:continue
             window_return=sum(float(p[request.return_basis]) for p in window_points)
             wins=sum(1 for p in window_points if float(p[request.return_basis])>0)
@@ -910,7 +979,8 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         sort_key={"annualized_return":"window_return","win_rate":"window_win_rate"}.get(request.sort,"window_return")
         candidates.sort(key=lambda row:row[sort_key],reverse=True)
         results=candidates[:request.top_n]
-        return {"now":now.isoformat(),"window":{"from":window_start.isoformat(),"to":now.isoformat()},"time_basis":"local time, as recorded in the trade data - not UTC",
+        time_basis="local time, as recorded in the trade data - not UTC" if cfg.data_backend=="sqlserver" else "UTC, as published in directory_return_series"
+        return {"now":now.isoformat(),"window":{"from":window_start.isoformat(),"to":now.isoformat()},"time_basis":time_basis,
                 "lookback_hours":request.lookback_hours,"min_trade_count_today":request.min_trade_count,
                 "candidates_meeting_trade_count":len(candidates),"items":results,
                 "notice":"min_trade_count is evaluated against today's TOTAL trades, not just trades inside the lookback window; window_return/window_win_rate are computed only from trades inside the lookback window. sort=sharpe/quality_score are not meaningful on a window this short and fall back to window_return.",
@@ -925,15 +995,17 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         to trades strictly INSIDE the time-of-day window, not the whole day
         - the window itself is the activity period being asked about, not
         just a ranking scope layered on a separate day-wide activity gate."""
-        if cfg.data_backend!="sqlserver":raise HTTPException(501,"time-window querying is only available on the local SQL Server-backed deployment")
-        fresh=today_points_by_strategy();today=data_now(fresh).date()
-        before_dt=datetime.combine(today,datetime.strptime(request.before,"%H:%M").time()) if request.before else None
-        after_dt=datetime.combine(today,datetime.strptime(request.after,"%H:%M").time()) if request.after else None
-        snapshot=local_snapshot();names={p["identity"]["strategy_id"]:p["identity"].get("name") for p in (snapshot or {}).get("profiles",[])}
+        if cfg.data_backend!="sqlserver" and app.state.repository is None:raise HTTPException(501,"time-window querying requires a SQL Server or a configured repository-backed deployment")
+        ts=window_ts_parser()
+        fresh=fresh_points_by_strategy();today=current_now(fresh).date()
+        tzify=(lambda dt:dt) if cfg.data_backend=="sqlserver" else (lambda dt:dt.replace(tzinfo=timezone.utc))
+        before_dt=tzify(datetime.combine(today,datetime.strptime(request.before,"%H:%M").time())) if request.before else None
+        after_dt=tzify(datetime.combine(today,datetime.strptime(request.after,"%H:%M").time())) if request.after else None
+        names=strategy_names()
         candidates=[]
         for strategy_id,points in fresh.items():
             valid=[p for p in points if p.get(request.return_basis) is not None]
-            windowed=[p for p in valid if (before_dt is None or _local_ts(p["closed_at"])<before_dt) and (after_dt is None or _local_ts(p["closed_at"])>=after_dt)]
+            windowed=[p for p in valid if (before_dt is None or ts(p["closed_at"])<before_dt) and (after_dt is None or ts(p["closed_at"])>=after_dt)]
             if len(windowed)<request.min_trade_count:continue
             wins=sum(1 for p in windowed if float(p[request.return_basis])>0)
             win_rate=wins/len(windowed) if windowed else None
@@ -943,7 +1015,8 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                                 "win_rate":round(win_rate,4) if win_rate is not None else None,"net_return":round(net,4)})
         candidates.sort(key=lambda row:(row[request.sort] if row[request.sort] is not None else float("-inf")),reverse=True)
         results=candidates[:request.top_n]
-        return {"date":today.isoformat(),"before":request.before,"after":request.after,"time_basis":"local time, as recorded in the trade data - not UTC",
+        time_basis="local time, as recorded in the trade data - not UTC" if cfg.data_backend=="sqlserver" else "UTC, as published in directory_return_series"
+        return {"date":today.isoformat(),"before":request.before,"after":request.after,"time_basis":time_basis,
                 "min_trade_count":request.min_trade_count,"min_win_rate":request.min_win_rate,"sort":request.sort,
                 "candidates_meeting_criteria":len(candidates),"items":results,
                 "notice":"min_trade_count and min_win_rate are evaluated over trades strictly inside the [after, before) time-of-day window, not the whole day - unlike /query/top-performers, which gates trade count on the whole day instead.",
