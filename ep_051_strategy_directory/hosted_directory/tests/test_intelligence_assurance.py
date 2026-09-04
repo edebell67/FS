@@ -11,7 +11,7 @@ def test_metric_gate_fails_any_out_of_tolerance_value():
 
 
 def test_discovery_exactness_and_rank_invariants_are_repeatable():
-    cases=[{"id":"fx-win","query":"FX with win rate over 60%","expected":{"asset_class":"FX","min_win_rate":.6,"sort":"quality_score","direction":"desc"}}]
+    cases=[{"id":"fx-win","query":"FX with win rate over 60%","expected":{"asset_class":"FX","min_win_rate":.6,"sort":"quality_score","direction":"desc","return_basis":"net_return"}}]
     assert discovery_evaluation(cases,interpret)["passed"] is True
     assert rank_invariants([{"suitability_score":90},{"suitability_score":80}])=={"descending":True,"bounded":True,"count":2}
 

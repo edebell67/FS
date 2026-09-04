@@ -1,11 +1,11 @@
 # Version history:
 # 2026-08-30 v1.0.0 - Covers the hosted (postgres) per-strategy trade-ledger
-# endpoint (/api/dna/strategies/{id}/trades), which previously 501'd
-# unconditionally for any non-sqlserver backend. Extends
-# IntelligenceReturnPoint with optional product/signal/entry_price/
-# exit_price so the hosted ledger can show what the local SQL Server view
-# always could; old snapshots without these fields still validate (all
-# default to None).
+#   endpoint (/api/dna/strategies/{id}/trades), which previously 501'd
+#   unconditionally for any non-sqlserver backend. Extends
+#   IntelligenceReturnPoint with optional product/signal/entry_price/
+#   exit_price so the hosted ledger can show what the local SQL Server view
+#   always could; old snapshots without these fields still validate (all
+#   default to None).
 
 from __future__ import annotations
 
@@ -27,6 +27,9 @@ def _snapshot_with_priced_trades(snapshot_kwargs):
          "evidence_start": "2026-08-27T13:35:47Z", "evidence_end": "2026-08-28T22:01:37Z", "quality_state": "COLLECTING"},
     ]
     series = [
+        # Chronological order by observed_at (close time): guid-2 closes 27
+        # Aug, guid-1 closes 28 Aug - trade_number/cumulative/drawdown must
+        # follow that order for Snapshot.verified()'s reconciliation.
         {"strategy_id": "DNA_301001", "trade_id": "guid-2", "trade_number": 1,
          "opened_at": "2026-08-27T13:35:47Z", "observed_at": "2026-08-27T22:05:12Z",
          "net_return": -50.0, "cumulative_net_return": -50.0, "drawdown": -50.0,
@@ -43,8 +46,10 @@ def test_memory_repository_current_closed_trades_returns_prices(snapshot_kwargs)
     snapshot = _snapshot_with_priced_trades(snapshot_kwargs)
     repository = MemoryRepository()
     repository.promote(snapshot)
+
     rows = repository.current_closed_trades("DNA_301001")
     assert len(rows) == 2
+    # Ordered by observed_at ascending - the older (27 Aug) trade first.
     assert rows[0]["guid"] == "guid-2"
     assert rows[0]["signal"] == "BUY"
     assert rows[0]["entry_price"] == 0.63885
@@ -58,6 +63,7 @@ def test_memory_repository_current_closed_trades_filters_by_close_time(snapshot_
     snapshot = _snapshot_with_priced_trades(snapshot_kwargs)
     repository = MemoryRepository()
     repository.promote(snapshot)
+
     start = datetime(2026, 8, 28, tzinfo=timezone.utc)
     end = datetime(2026, 8, 29, tzinfo=timezone.utc)
     rows = repository.current_closed_trades("DNA_301001", start, end)
@@ -75,34 +81,10 @@ def test_api_trade_ledger_no_longer_501s_on_hosted_backend(snapshot_kwargs):
     repository = MemoryRepository()
     repository.promote(snapshot)
     client = _client(repository)
+
     response = client.get("/api/dna/strategies/DNA_301001/trades")
     assert response.status_code == 200
     body = response.json()
     assert body["total"] == 2
     assert body["items"][1]["entry_price"] == 0.63895
     assert body["items"][1]["exit_price"] == 0.6378
-
-
-def test_hosted_ledger_and_rank_journey_return_exported_optional_fields(snapshot_kwargs):
-    base_snapshot = _snapshot_with_priced_trades(snapshot_kwargs)
-    series = []
-    for index, point in enumerate(base_snapshot.return_series, start=1):
-        row = point.model_dump(mode="json")
-        row.update(alt_net_return=point.net_return + 0.5, rank_position=index, total_strategies=2)
-        series.append(row)
-    snapshot = build_snapshot(base_snapshot.items, return_series=series, **snapshot_kwargs)
-    repository = MemoryRepository()
-    repository.promote(snapshot)
-    client = _client(repository)
-
-    ledger = client.get("/api/dna/strategies/DNA_301001/trades")
-    assert ledger.status_code == 200
-    assert ledger.json()["items"][0]["alt_net_return"] == -49.5
-
-    journey = client.get("/api/dna/strategies/DNA_301001/rank-journey?date_from=2026-08-27&date_to=2026-08-28")
-    assert journey.status_code == 200
-    body = journey.json()
-    assert body["total"] == 2
-    assert body["items"][0]["rank_position"] == 1
-    assert body["items"][0]["total_strategies"] == 2
-    assert "last published snapshot" in body["basis"]

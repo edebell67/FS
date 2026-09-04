@@ -30,8 +30,24 @@ class StrategyQuery(BaseModel):
     min_evidence_confidence: float | None = Field(None,ge=0,le=1)
     min_quality_score: float | None = Field(None,ge=0,le=100)
     min_track_record_years: float | None = Field(None,ge=0)
+    min_sortino: float | None = None
+    min_calmar: float | None = None
+    min_value_at_risk_95: float | None = None
+    min_walk_forward_positive_fold_rate: float | None = Field(None,ge=0,le=1)
+    require_no_divergence_alert: bool | None = None
+    require_parameter_stable: bool | None = None
+    min_trade_count: int | None = Field(None,ge=0,description="Minimum closed trades within the evidence window (lookback_hours if set, else since inception).")
+    lookback_hours: float | None = Field(None,gt=0,le=8760,description=
+        "Restrict the evidence window to the trailing N hours from now, instead of "
+        "since-inception - e.g. lookback_hours=3 + min_trade_count=6 answers 'top "
+        "performers in the last 3 hours with more than 5 trades'. Local SQL Server "
+        "backend only. Every metric/filter/rank is recomputed from just that window.")
+    return_basis: Literal["net_return","alt_net_return"] = Field("net_return",
+        description="Outcome column every metric, robustness check and rank is computed from. "
+                    "net_return is the trade as actually taken; alt_net_return is the same trade "
+                    "reversed (opposite side), letting a query ask 'would fading this strategy have worked'.")
     regime: str | None = Field(None,max_length=80)
-    sort: Literal["quality_score","annualized_return","win_rate","sharpe","max_drawdown","evidence_confidence"] = "quality_score"
+    sort: Literal["quality_score","annualized_return","win_rate","sharpe","sortino","calmar","max_drawdown","evidence_confidence"] = "quality_score"
     direction: Literal["asc","desc"] = "desc"
 
     @model_validator(mode="after")
@@ -85,7 +101,8 @@ def matches(profile:dict,plan:StrategyQuery)->tuple[bool,list[str]]:
     reasons=[]; classification=profile["classification"]; metrics=profile["metrics"]; evidence=profile["evidence"]
     value=lambda key:metrics.get(key,{}).get("value")
     unit=lambda key:metrics.get(key,{}).get("unit")
-    score=profile.get("score",{});regimes=profile.get("regimes",{})
+    score=profile.get("score",{});regimes=profile.get("regimes",{});robustness=profile.get("robustness",{})
+    walk_forward=robustness.get("walk_forward",{}) or {};divergence=robustness.get("live_backtest_divergence",{}) or {};sensitivity=robustness.get("parameter_sensitivity",{}) or {}
     checks=[
       (plan.asset_class,classification.get("asset_class"),lambda a,b:str(a).lower()==str(b).lower(),"asset class"),
       (plan.instrument,classification.get("instruments",[]),lambda a,b:str(a).lower() in [str(x).lower() for x in b],"instrument"),
@@ -96,10 +113,17 @@ def matches(profile:dict,plan:StrategyQuery)->tuple[bool,list[str]]:
       (plan.min_annualized_return,value("annualized_return"),lambda a,b:b is not None and unit("annualized_return")==plan.annualized_return_unit and b>=a,"annualized return"),
       (plan.max_drawdown,value("max_drawdown"),lambda a,b:b is not None and unit("max_drawdown")==plan.max_drawdown_unit and abs(b)<=a,"maximum drawdown"),
       (plan.min_sharpe,value("sharpe"),lambda a,b:b is not None and b>=a,"Sharpe"),
+      (plan.min_sortino,value("sortino"),lambda a,b:b is not None and b>=a,"Sortino"),
+      (plan.min_calmar,value("calmar"),lambda a,b:b is not None and b>=a,"Calmar"),
+      (plan.min_value_at_risk_95,value("value_at_risk_95"),lambda a,b:b is not None and b>=a,"95% VaR"),
       (plan.min_profit_factor,value("profit_factor"),lambda a,b:b is not None and b>=a,"profit factor"),
       (plan.min_track_record_years,evidence.get("years"),lambda a,b:b is not None and b>=a,"track record"),
+      (plan.min_trade_count,evidence.get("trade_count"),lambda a,b:b is not None and b>=a,"trade count"),
       (plan.min_evidence_confidence,evidence.get("confidence"),lambda a,b:b is not None and b>=a,"evidence confidence"),
       (plan.min_quality_score,score.get("quality_score"),lambda a,b:b is not None and b>=a,"quality score"),
+      (plan.min_walk_forward_positive_fold_rate,walk_forward,lambda a,b:b.get("state")=="VALID" and b.get("positive_fold_rate") is not None and b["positive_fold_rate"]>=a,"walk-forward positive-fold rate"),
+      (plan.require_no_divergence_alert,divergence,lambda a,b:(not a) or (b.get("state")=="VALID" and b.get("alert") is False),"live/backtest divergence"),
+      (plan.require_parameter_stable,sensitivity,lambda a,b:(not a) or (b.get("state")=="VALID" and b.get("stable") is True),"parameter sensitivity"),
       (plan.regime,regimes,lambda a,b:any(str(a).lower() in str(key).lower() and item.get("confidence")=="VALID" for key,item in b.items()),"regime"),
     ]
     for expected,actual,predicate,label in checks:
@@ -117,6 +141,9 @@ def evidence_value(label,actual,expected):
         return next((item for item in actual if str(item).lower()==str(expected).lower()),actual)
     if label=="regime":
         return next((key for key,item in actual.items() if str(expected).lower() in str(key).lower() and item.get("confidence")=="VALID"),expected)
+    if label=="walk-forward positive-fold rate":return actual.get("positive_fold_rate")
+    if label=="live/backtest divergence":return {"state":actual.get("state"),"alert":actual.get("alert"),"mean_shift":actual.get("mean_shift")}
+    if label=="parameter sensitivity":return {"state":actual.get("state"),"stable":actual.get("stable"),"score_cv":actual.get("score_cv")}
     if isinstance(actual,float):return round(actual,4)
     return actual
 
@@ -153,6 +180,21 @@ def facet_counts(profiles):
             if value is not None:output[key][str(value)]=output[key].get(str(value),0)+1
         for value in classification.get("instruments",[]):output["instrument"][str(value)]=output["instrument"].get(str(value),0)+1
     return output
+
+
+def chain(profiles:list[dict],plans:list[StrategyQuery])->dict:
+    """Apply a sequence of query plans as a narrowing funnel: each stage's
+    survivors become the candidate pool for the next stage. Reuses retrieve()
+    per stage so filter/rank/why-matched semantics stay identical to a single
+    query, and reports per-stage elimination so a caller (human or agent) can
+    see which criterion was the bottleneck."""
+    pool=profiles;stages=[];last_results=[]
+    for index,plan in enumerate(plans):
+        results=retrieve(pool,plan);survivors=[item["profile"] for item in results];survivor_ids={s["identity"]["strategy_id"] for s in survivors}
+        stages.append({"index":index,"plan":plan.model_dump(mode="json"),"input_count":len(pool),"survivor_count":len(survivors),
+                        "eliminated_count":len(pool)-len(survivors),"eliminated_sample":[p["identity"]["strategy_id"] for p in pool if p["identity"]["strategy_id"] not in survivor_ids][:10]})
+        pool=survivors;last_results=results
+    return {"stages":stages,"final_count":len(pool),"items":last_results}
 
 
 def exclusion_trace(profiles:list[dict],plan:StrategyQuery)->list[dict]:

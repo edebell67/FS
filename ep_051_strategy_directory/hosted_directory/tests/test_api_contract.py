@@ -1,4 +1,5 @@
 # Version history:
+# 2026-09-04 v1.5.1 Hermes - Updates the directory-summary contract for the intentional evidence_min_trades field added by the mapped hosted application release.
 # 2026-08-27 v1.5.0 Codex - Verifies profitable-strategy count and percentage reconcile across the full filtered result before paging.
 # 2026-08-25 v1.4.0 Codex - Verifies full-filter directory summary totals remain independent of pagination.
 # 2026-08-24 v1.3.0 Codex - Verifies source product identity is exposed publicly.
@@ -91,8 +92,8 @@ def test_public_directory_contract_supports_search_sort_and_paging(
         "profitable_strategies": profitable,
         "profitable_percentage": float(profitable * 100),
         "evidence_ready": int(body["data"]["items"][0]["quality_state"] == "VALID"),
-        "evidence_min_trades": 5,
         "collecting": int(body["data"]["items"][0]["quality_state"] == "COLLECTING"),
+        "evidence_min_trades": 5,
     }
     assert body["methodology_version"] == "1.0.0"
     assert "costs and commission already included" in body["basis"]

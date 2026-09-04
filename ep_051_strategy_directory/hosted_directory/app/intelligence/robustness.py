@@ -41,3 +41,38 @@ def live_backtest_divergence(backtest,live,minimum=20):
     if len(backtest)<minimum or len(live)<minimum:return {"state":"COLLECTING","backtest_count":len(backtest),"live_count":len(live),"mean_shift":None}
     baseline=statistics.mean(map(float,backtest));observed=statistics.mean(map(float,live));scale=statistics.pstdev(map(float,backtest)) or 1
     shift=(observed-baseline)/scale;return {"state":"VALID","backtest_count":len(backtest),"live_count":len(live),"mean_shift":shift,"alert":abs(shift)>=1}
+
+
+def walk_forward_folds_from_points(points,folds=4,return_basis="net_return"):
+    """Derive chronological walk-forward folds directly from an evidence window's
+    trade points, so walk_forward() re-windows naturally with whatever `points`
+    (e.g. an as-of-bounded set) is passed in, instead of depending on a separate
+    offline fold table. Splits points into `folds` contiguous chronological
+    chunks; each chunk after the first becomes one out-of-sample test fold
+    against everything before it, so train_end < test_start always holds.
+    `return_basis` selects which outcome column each fold's test_return sums -
+    net_return (as-traded) or alt_net_return (the same trades reversed)."""
+    eligible=[row for row in points if row.get(return_basis) is not None]
+    ordered=sorted((row for row in eligible if row.get("closed_at")),key=lambda row:_time(row["closed_at"]))
+    if len(ordered)<folds*2:return []
+    size=len(ordered)//folds;chunks=[ordered[i*size:(i+1)*size] for i in range(folds-1)]+[ordered[(folds-1)*size:]]
+    result=[]
+    for previous,current in zip(chunks,chunks[1:]):
+        train_end=_time(previous[-1]["closed_at"]);test_start=_time(current[0]["closed_at"])
+        if test_start<=train_end:continue
+        result.append({"train_end":train_end.isoformat(),"test_start":test_start.isoformat(),"test_return":sum(float(row[return_basis]) for row in current)})
+    return result
+
+
+def divergence_split_from_points(points,minimum=20,return_basis="net_return"):
+    """Split an evidence window's trade points chronologically in half so
+    live_backtest_divergence() can measure whether the strategy's second half
+    diverged from its first half within that same window - the closest
+    signal available without a separately tracked backtest/live source.
+    `return_basis` selects net_return (as-traded) or alt_net_return (every
+    trade reversed)."""
+    eligible=[row for row in points if row.get(return_basis) is not None]
+    ordered=sorted((row for row in eligible if row.get("closed_at")),key=lambda row:_time(row["closed_at"]))
+    if len(ordered)<minimum*2:return [],[]
+    mid=len(ordered)//2
+    return [float(row[return_basis]) for row in ordered[:mid]],[float(row[return_basis]) for row in ordered[mid:]]
