@@ -88,17 +88,19 @@ def test_empty_universe_returns_an_empty_result_not_an_error(tmp_path):
     assert response.json()["strategy_ids"] == []
 
 
-def test_windowed_query_on_non_sqlserver_backend_reports_503(tmp_path):
-    """basis_profiles() (the windowed rebuild) is local SQL Server only -
-    a window_start/window_end on a memory/postgres backend must fail
-    closed with 503, not silently ignore the window or crash."""
+def test_windowed_query_works_on_repository_backed_non_sqlserver_backend(tmp_path):
+    """basis_profiles() (the windowed rebuild) now has a repository-backed
+    path for memory/postgres too (see basis_profiles() in app/main.py) -
+    a window_start/window_end on a memory/postgres backend should succeed,
+    not fail closed with 503, as it did before that path existed."""
     app = create_app(repository=MemoryRepository(), settings=Settings(data_backend="memory", ep052_intelligence_token=TOKEN,
                       arena_deliveries_path=str(tmp_path / "d.sqlite")))
     response = TestClient(app).post("/v1/queries", json={
         "request_id": str(uuid4()), "kind": "quality",
         "window_start": "2026-08-01T00:00:00Z", "window_end": "2026-08-02T00:00:00Z",
     }, headers=headers())
-    assert response.status_code == 503
+    assert response.status_code == 200
+    assert response.json()["strategy_ids"] == []
 
 
 def test_ranks_by_requested_kind_not_randomly(client):

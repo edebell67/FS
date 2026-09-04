@@ -51,3 +51,26 @@ services:
         sync: false
       - key: ALLOWED_ORIGINS
         value: https://ep051-directory.onrender.com
+      # EP052 Arena intelligence provider (app/arena_provider.py, added 2026-09-03).
+      # Shared secret between this service and the EP052 Arena's intelligence
+      # client - both sides must be set to the same value by hand.
+      - key: EP052_INTELLIGENCE_TOKEN
+        sync: false
+      # SQLite file for arena_provider.py's query_log/deliveries idempotency
+      # tables. Requires a persistent disk mounted at (or above) this path -
+      # without one, delivery idempotency state is lost on every restart/redeploy.
+      - key: ARENA_DELIVERIES_PATH
+        sync: false
+      - key: ARENA_ANOMALY_THRESHOLD
+        value: "30"
+      - key: ARENA_ANOMALY_WINDOW_SECONDS
+        value: "300"
+      # Regime-shape (intraday price-shape similar-day search) inputs. Only
+      # meaningful if raw tick captures are reachable from this service; see
+      # workstream deployment checklist in epics/ep_049_strategy_intelligence/README.md.
+      - key: REGIME_PRICE_CAPTURE_ROOT
+        sync: false
+      - key: REGIME_SHAPE_INDEX_DIR
+        sync: false
+      - key: REGIME_SHAPE_MIN_PERIODS
+        value: "6"

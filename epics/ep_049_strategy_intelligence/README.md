@@ -2,6 +2,7 @@
 
 ## Version history
 
+- 1.1.0 (2026-09-03): Added Deployment Checklist section - nothing below has been deployed yet, all verified locally only.
 - 1.0.0 (2026-09-03): Initial epic overview after the agent-queryable intelligence API, the real EP052 Arena intelligence provider, and the owner-instruction relay loop were built and live-verified.
 
 Agent-facing intelligence layer for the DNA Strategy Directory (EP051), and its real integration into the EP052 Agentic Arena as the `strategy_trading` skill's intelligence access. `ep_049` was explicitly settled by the user as the strategy intelligence epic on 2026-09-03, superseding an earlier, unrelated EP046 plan to deploy `site_restructure` to `/ep049` (that plan needs a new epic number when it resumes).
@@ -35,6 +36,29 @@ The application code lives in `epics/ep_051_strategy_directory/hosted_directory/
 - **Everything agent-facing routes through the Arena.** No side-channel between an agent and a backend service, and no direct agent-to-agent bypass, even for a future skill designed to feel peer-to-peer - it is always agent -> Arena -> agent/service, with the Arena remaining the validator of every transaction.
 - **Access is skill/purpose-scoped** (`ConnectionRequest.purpose`, currently `strategy_trading`), with full isolation between skills. This epic's intelligence access is `strategy_trading`'s access specifically, not a generic Arena feature - an agent connecting for a different future purpose has no awareness the exchange or intelligence layer exists. The Arena itself is a generic, multi-use-case surface; this isolation is deliberate groundwork for other future skills, potentially including agent-to-agent ones (still always mediated by the Arena).
 - **Keep additions lightweight.** Prefer the smallest change that makes the agent<->Arena communication loop work correctly over new infrastructure (tables, services, config surfaces) unless the loop itself needs it. Rule-based/deterministic logic over new heavy dependencies is the default here.
+
+## Deployment checklist
+
+Nothing in this epic has been deployed yet - everything above is built, tested, and live-verified only against local services (`127.0.0.1`). Posted to the agent message board (`agent_board/board.jsonl`, entry `20260903T221705089132_claude_801314f7`) for Hermes as a handoff.
+
+**DNA Strategy Directory (hosted on Render, `epics/ep_051_strategy_directory/hosted_directory`)**
+- [ ] Deploy `app/arena_provider.py` (new EP052 intelligence provider) and the `arena_provider.install()` wiring in `app/main.py`
+- [ ] Deploy the six new query endpoints in `app/main.py`: `/query/chain`, `/query/timetravel`, `/query/timetravel/series`, `/query/top-performers`, `/query/time-window`, `/query/schema`, `/regime/similar-days`
+- [ ] Deploy `app/intelligence/discovery.py`, `contracts.py`, `regime_shape.py` (new)
+- [ ] Deploy `app/repository.py` (signal field threaded through equity-curve reads - SQL Server, Postgres, Memory backends)
+- [ ] Set real hosted-env values for the new `app/config.py` settings (`ep052_intelligence_token`, `arena_deliveries_path`, `arena_anomaly_threshold`, `arena_anomaly_window_seconds`, `regime_price_capture_root`, `regime_shape_index_dir`, `regime_shape_min_periods`) - do not carry over local defaults
+- [ ] Deploy `web/equity-chart.js` / `web/styles.css` (split buy/sell equity chart)
+- [ ] Run `sync/warm_regime_shape_index.py` once against hosted data after deploy to build the regime-shape index
+
+**EP052 Agentic Trade Arena (`epics/ep_052_strategy_directory_agentic_trade_arena`)**
+- [ ] Stand up its own hosted instance
+- [ ] Cut `config.toml` over to `intelligence_mode=external` with `intelligence_url` pointing at the hosted directory (only verified against `127.0.0.1:8012` so far)
+- [ ] Run `scripts/instructed_intelligence_agent.py` as a scheduled/always-on job in the hosted environment, not ad hoc `run_once` (`--arena-url`/`ARENA_BASE_URL` are already env-driven, no code change needed there)
+
+**Blocking prerequisites (not code changes)**
+- [ ] Provision `ep052_intelligence_token` as a real shared secret between the two hosted services
+- [ ] Confirm the raw tick-capture data (`TradeApps/breakout/fs/json/live/forex/<date>/_price_capture.jsonl`, or an equivalent hosted source) is reachable from the hosted directory - required for `/regime/similar-days` to work in production
+- [ ] Confirm the Render deploy has persistent disk for `arena_deliveries_path` - `arena_provider.py`'s `query_log`/`deliveries` tables are SQLite-file-backed, so delivery-idempotency state would be lost on every restart/redeploy without it
 
 ## Evidence and workflow
 
