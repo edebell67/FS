@@ -1,5 +1,8 @@
 <!doctype html>
+<!-- Version 1.5.1 (2026-09-02): raises the shared panel timeout from 15s to 60s - the live rank-journey computation was measured taking ~43s under current SQL Server load, so the position-after-close column was losing the race and always falling back to "—". -->
 <!-- Version 1.5.0 (2026-08-31): adds a "Position after close" column to the trade ledger, showing this strategy's exact rank among all active strategies at the instant each trade closed (local backend only; overlay, doesn't block the ledger if unavailable). -->
+<!-- Version 1.4.2 (2026-08-28): displays source alt_net_return beside ledger net return, with missing values shown as a dash. -->
+<!-- Version history: 1.4.1 (2026-08-28) renders evidence sections independently and bounds waits to 15 seconds. -->
 <!-- Version history: 1.4.0 (2026-08-27) applies the approved Tech Principle intelligence visual system; 1.3.0 (2026-08-24) displays source product identity; 1.2.0 premium live equity curve; 1.1.0 period filtering; 1.0.0 connected evidence page. -->
 <html lang="en">
   <head>
@@ -153,8 +156,9 @@
       const product = (value) => String(value || "").toUpperCase() || "Not supplied";
       const price = (value) => value == null || !Number.isFinite(Number(value)) ? "—" : Number(value).toLocaleString("en-GB", { maximumFractionDigits: 8 });
       const stamp = (value) => value ? new Intl.DateTimeFormat("en-GB", { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value)) : "—";
-      let latestPositionsByCloseTime = null;
+      let latestTradesPayload = null, latestPositionsByCloseTime = null;
       function renderTrades(payload) {
+        latestTradesPayload = payload;
         tradeCount.textContent = `${payload.total} closed trade${payload.total === 1 ? "" : "s"}`;
         if (!payload.items.length) {
           tradeLedger.className = "ledger-empty";
@@ -166,7 +170,7 @@
           const row = latestPositionsByCloseTime?.get(trade.exit_time);
           return row ? `#${row.rank_position} of ${row.total_strategies}` : "—";
         };
-        tradeLedger.innerHTML = `<table class="trade-table"><thead><tr><th>Product</th><th>Signal</th><th>Entry time</th><th class="number">Entry price</th><th>Exit time</th><th class="number">Exit price</th><th class="number">Net return</th><th class="number">Position after close</th></tr></thead><tbody>${payload.items.map((trade) => `<tr><td data-label="Product"><strong>${esc(product(trade.product))}</strong></td><td data-label="Signal"><span class="signal signal-${esc(String(trade.signal || "").toLowerCase())}">${esc(trade.signal || "—")}</span></td><td data-label="Entry time">${esc(stamp(trade.entry_time))}</td><td data-label="Entry price" class="number">${esc(price(trade.entry_price))}</td><td data-label="Exit time">${esc(stamp(trade.exit_time))}</td><td data-label="Exit price" class="number">${esc(price(trade.exit_price))}</td><td data-label="Net return" class="number return-${Number(trade.net_return) >= 0 ? "positive" : "negative"}">${esc(money(trade.net_return))}</td><td data-label="Position after close" class="number">${esc(position(trade))}</td></tr>`).join("")}</tbody></table>`;
+tradeLedger.innerHTML = `<table class="trade-table"><thead><tr><th>Product</th><th>Signal</th><th>Entry time</th><th class="number">Entry price</th><th>Exit time</th><th class="number">Exit price</th><th class="number">Net return</th><th class="number">alt_net_return</th><th class="number">Position after close</th></tr></thead><tbody>${payload.items.map((trade) => `<tr><td data-label="Product"><strong>${esc(product(trade.product))}</strong></td><td data-label="Signal"><span class="signal signal-${esc(String(trade.signal || "").toLowerCase())}">${esc(trade.signal || "—")}</span></td><td data-label="Entry time">${esc(stamp(trade.entry_time))}</td><td data-label="Entry price" class="number">${esc(price(trade.entry_price))}</td><td data-label="Exit time">${esc(stamp(trade.exit_time))}</td><td data-label="Exit price" class="number">${esc(price(trade.exit_price))}</td><td data-label="Net return" class="number return-${Number(trade.net_return) >= 0 ? "positive" : "negative"}">${esc(money(trade.net_return))}</td><td data-label="alt_net_return" class="number ${trade.alt_net_return == null ? "" : Number(trade.alt_net_return) >= 0 ? "return-positive" : "return-negative"}">${esc(money(trade.alt_net_return))}</td><td data-label="Position after close" class="number">${esc(position(trade))}</td></tr>`).join("")}</tbody></table>`;
       }
       async function refresh() {
         const sequence = ++refreshSequence,
@@ -178,38 +182,60 @@
         tradeCount.textContent = "Loading…";
         tradeLedger.className = "ledger-loading";
         tradeLedger.textContent = "Loading closed trades…";
-        try {
-          const [p, curve, trades, journey] = await Promise.all([
-            DnaDirectoryApi.list({ search: id, page_size: 1, ...params }),
-            DnaDirectoryApi.equityCurve(id, params),
-            DnaDirectoryApi.trades(id, params),
-            // Position data is an overlay on the trade ledger, not required
-            // for it to be useful (e.g. hosted backend has no per-trade
-            // rank data) - never let its failure break the whole page.
-            DnaDirectoryApi.rankJourney(id, params).catch(() => ({ items: [] })),
-          ]);
+        // Each panel owns its result/error: one stalled request must not hide
+        // evidence that has already arrived. Late responses cannot overwrite a
+        // newer period, or replace a timeout after this attempt has ended.
+        const panel = async (request, render, fail) => {
+          let timer;
+          try {
+            const result = await Promise.race([
+              request,
+              new Promise((_, reject) => {
+                timer = setTimeout(() => reject(new Error("Taking longer than expected. Use Apply selected period to retry.")), 60000);
+              }),
+            ]);
+            if (sequence === refreshSequence) render(result);
+          } catch (error) {
+            if (sequence === refreshSequence) fail(error);
+          } finally {
+            clearTimeout(timer);
+          }
+        };
+        panel(DnaDirectoryApi.equityCurve(id, params),
+          curve => DnaEquityChart.render(equityChart, curve),
+          error => { equityChart.innerHTML = `<div class="chart-empty">${esc(error.message)}</div>`; });
+        latestPositionsByCloseTime = null;
+        panel(DnaDirectoryApi.trades(id, params), renderTrades,
+          error => {
+            tradeCount.textContent = "Unavailable";
+            tradeLedger.className = "ledger-empty";
+            tradeLedger.textContent = error.message;
+          });
+        // Position data is an overlay on the trade ledger, not required for
+        // it to be useful - a failure here (e.g. hosted backend, which has
+        // no per-trade rank data) silently leaves the "—" placeholder
+        // rather than breaking the trade ledger itself.
+        panel(DnaDirectoryApi.rankJourney(id, params), payload => {
+          latestPositionsByCloseTime = new Map(payload.items.map((item) => [item.closed_at, item]));
+          if (latestTradesPayload) renderTrades(latestTradesPayload);
+        }, () => {});
+        panel(DnaDirectoryApi.list({ search: id, page_size: 1, ...params }), p => {
           if (sequence !== refreshSequence) return;
           const x = p.data.items.find((v) => v.strategy_id === id);
           if (!x)
             throw Error(
               "No closed trades for this strategy in the selected period",
             );
-          DnaEquityChart.render(equityChart, curve);
-          latestPositionsByCloseTime = new Map(journey.items.map((item) => [item.closed_at, item]));
-          renderTrades(trades);
           content.innerHTML = `<div class="identity-line"><span class="pill">${esc(x.quality_state)}</span><span class="product-mark">${esc(product(x.product_name))}</span></div><h2>${esc(x.descriptive_name || "Descriptive name pending")}</h2><table class="table"><tr><th>Product</th><td><strong>${esc(product(x.product_name))}</strong></td></tr><tr><th>Selected period</th><td>${esc(periodLabel.textContent)}</td></tr><tr><th>Closed trades</th><td>${Number(x.total_trades)}</td></tr><tr><th>Net return</th><td>${money(x.total_net_return)}</td></tr><tr><th>Win rate</th><td>${(Number(x.win_rate) * 100).toFixed(2)}%</td></tr><tr><th>Profit factor</th><td>${ratio(x.profit_factor)}</td></tr><tr><th>Maximum drawdown</th><td>${money(x.max_drawdown_money)}</td></tr><tr><th>Evidence observed</th><td>${esc(x.evidence_start || "—")} → ${esc(x.evidence_end || "—")}</td></tr></table><p class="status">Outcome is derived from signed net_return. “Target reached” is not treated as a win. Costs and commission are already included.</p><div class="actions"><a href="/compare.html?ids=${encodeURIComponent(id)}"><button>Compare</button></a><a href="/builder.html?ids=${encodeURIComponent(id)}"><button>Add to portfolio</button></a></div>`;
-        } catch (e) {
+        }, e => {
           if (sequence !== refreshSequence) return;
           content.innerHTML = `<span class="error">${esc(e.message)}</span>`;
-          equityChart.innerHTML = `<div class="chart-empty">${esc(e.message)}</div>`;
-          tradeCount.textContent = "Unavailable";
-          tradeLedger.className = "ledger-empty";
-          tradeLedger.textContent = e.message;
-        }
+        });
       }
       document.addEventListener("periodchange", refresh);
       if (query.get("date_from") || query.get("date_to")) applyPeriod.click();
       else refresh();
     </script>
-  </body>
+  <footer id="ttp-product-footer" class="ttp-product-footer" aria-label="The Tech Principle product attribution"><a href="https://thetechprinciple.com/" target="_blank" rel="noreferrer"><span>A</span><img src="/assets/thetechprinciple-icon-180.png" alt="The Tech Principle"><span>thetechprinciple.com product</span></a></footer>
+</body>
 </html>

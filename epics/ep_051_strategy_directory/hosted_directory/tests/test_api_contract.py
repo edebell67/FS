@@ -1,4 +1,5 @@
 # Version history:
+# 2026-08-28 v1.5.1 - Evidence threshold defaults to five and is echoed in summary.
 # 2026-08-27 v1.5.0 Codex - Verifies profitable-strategy count and percentage reconcile across the full filtered result before paging.
 # 2026-08-25 v1.4.0 Codex - Verifies full-filter directory summary totals remain independent of pagination.
 # 2026-08-24 v1.3.0 Codex - Verifies source product identity is exposed publicly.
@@ -85,12 +86,13 @@ def test_public_directory_contract_supports_search_sort_and_paging(
     assert body["data"]["items"][0]["product_name"] == "EURUSD"
     profitable = int(body["data"]["items"][0]["total_net_return"] > 0)
     assert body["data"]["summary"] == {
+        "evidence_min_trades": 5,
         "strategies": 1,
         "closed_trades": body["data"]["items"][0]["total_trades"],
         "total_net_return": body["data"]["items"][0]["total_net_return"],
         "profitable_strategies": profitable,
         "profitable_percentage": float(profitable * 100),
-        "evidence_ready": int(body["data"]["items"][0]["quality_state"] == "VALID"),
+        "evidence_ready": int(body["data"]["items"][0]["total_trades"] >= 5),
         "collecting": int(body["data"]["items"][0]["quality_state"] == "COLLECTING"),
     }
     assert body["methodology_version"] == "1.0.0"
@@ -100,6 +102,11 @@ def test_public_directory_contract_supports_search_sort_and_paging(
 def test_directory_summary_covers_full_result_before_paging(strategy_items, snapshot_kwargs):
     repository = MemoryRepository()
     repository.promote(build_snapshot(strategy_items, **snapshot_kwargs))
+    client = _client(repository)
+    high = client.get('/api/dna/strategies?evidence_min_trades=1000000&page_size=1').json()['data']
+    assert high['summary']['evidence_ready'] == 0
+    assert high['total'] == len(strategy_items)
+    assert client.get('/api/dna/strategies?evidence_min_trades=0').status_code == 422
     body = _client(repository).get(
         "/api/dna/strategies", params={"page_size": 1}
     ).json()["data"]

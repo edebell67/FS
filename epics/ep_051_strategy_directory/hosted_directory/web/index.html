@@ -1,4 +1,7 @@
 <!doctype html>
+<!-- Version 2.2.2 (2026-08-28): configurable minimum closed trades for evidence-ready count; default 5. -->
+<!-- Version 2.2.1 (2026-08-28): moves refresh preferences into a closed floating settings control, outside document flow. -->
+<!-- Version 2.2.0 (2026-08-28): selectable data-only auto refresh, retaining visible results during polling. -->
 <!--
  index.html — Connected Strategy Directory homepage.
 
@@ -97,6 +100,14 @@
       @media(max-width:700px) { .top { min-height:60px; padding:0 16px; } .nav-actions { gap:10px; } .nav-actions a { font-size:8px; } .hero { grid-template-columns:1fr; padding:26px 16px 18px; } .hero h1 { font-size:39px; } .seal { display:none; } .directory-summary,.period,.tools,.refresh-state,.grid { width:calc(100% - 32px); } .directory-summary { grid-template-columns:repeat(2,1fr); } .directory-summary article:nth-child(2) { border-right:0; } .directory-summary article:nth-child(-n+2) { border-bottom:1px solid var(--line); } .period-head { align-items:flex-start; gap:14px; } .period-presets { overflow-x:auto; width:100%; } .period-presets button { flex:none; } .period-dates,.tools,.grid { grid-template-columns:1fr; } .tools { padding:10px; } .tools input,.tools select,.tools #load { width:100%; } .card { min-height:0; } }
       @media(max-width:430px) { .brand { font-size:0; } .nav-actions a:nth-child(n+3) { display:none; } .directory-summary strong { font-size:25px; } .stats { grid-template-columns:repeat(2,1fr); row-gap:12px; } .stat:nth-child(2) { border-right:0; } }
       @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+      .refresh-settings { position:fixed; right:144px; bottom:16px; z-index:100; color:var(--ink); }
+      .refresh-settings summary { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--line); border-radius:50%; background:var(--surface); cursor:pointer; list-style:none; font-size:20px; }
+      .refresh-settings summary::-webkit-details-marker { display:none; }
+      .refresh-settings summary:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
+      .refresh-settings .auto-refresh-control { position:absolute; right:0; bottom:54px; width:200px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:0 6px 24px #0003; }
+      .refresh-settings:not([open]) .auto-refresh-control { display:none; }
+      .refresh-settings select,.refresh-settings input { display:block; margin-top:8px; width:100%; min-height:44px; color:var(--ink); background:var(--surface); }
+      @media(max-width:700px) { .refresh-settings { right:68px; bottom:12px; } }
     </style>
     <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
   </head>
@@ -154,7 +165,7 @@
         </div>
       </section>
       <section class="tools">
-        <input id="search" placeholder="Search DNA_102001" /><select id="product" aria-label="Product">
+        <input id="search" placeholder="Search DNA_102001 or breakout_R_4_tp20_sl5" /><select id="product" aria-label="Product">
           <option value="">All products</option>
         </select><select id="signal" aria-label="Signal">
           <option value="" selected>BUY + SELL</option>
@@ -175,6 +186,21 @@
         <div class="refresh-copy"><span id="status">Connecting to the directory API…</span><span id="progressValue">0%</span></div>
         <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
       </div>
+      <details class="refresh-settings" id="refreshSettings">
+      <summary aria-label="Refresh settings" title="Refresh settings"><span aria-hidden="true">⚙</span></summary>
+      <div class="auto-refresh-control"><label>Auto refresh
+        <select id="autoRefresh" aria-label="Auto refresh interval">
+          <option value="5">Every 5 seconds</option>
+          <option value="10" selected>Every 10 seconds</option>
+          <option value="30">Every 30 seconds</option>
+          <option value="60">Every 60 seconds</option>
+        </select>
+      </label>
+      <label style="display:block;margin-top:14px">Minimum closed trades
+        <input id="evidenceMinimum" type="number" min="1" max="1000000" step="1" value="5" aria-label="Minimum closed trades" />
+      </label>
+      <small>For the evidence-ready count only.</small></div>
+      </details>
       <section class="grid" id="grid" aria-live="polite"></section>
     </main>
     <script src="/assets/button-feedback.js?v=1.0.0"></script>
@@ -200,7 +226,44 @@
       let backgroundPolls = 0,
         refreshTimer = null,
         refreshGeneration = 0;
-      async function refresh(isBackgroundPoll = false) {
+      let autoRefreshTimer = null;
+      let refreshActive = false;
+      const autoRefresh = document.querySelector("#autoRefresh");
+      const evidenceMinimum = document.querySelector("#evidenceMinimum");
+      try {
+        const savedMinimum = Number(localStorage.getItem("dna-evidence-minimum"));
+        if (Number.isInteger(savedMinimum) && savedMinimum >= 1 && savedMinimum <= 1000000) evidenceMinimum.value = savedMinimum;
+      } catch {}
+      let evidenceThreshold = Number(evidenceMinimum.value);
+      evidenceMinimum.onchange = () => {
+        if (!evidenceMinimum.reportValidity()) return;
+        evidenceThreshold = Number(evidenceMinimum.value);
+        try { localStorage.setItem("dna-evidence-minimum", String(evidenceThreshold)); } catch {}
+        refresh(false, true);
+      };
+      const refreshSettings = document.querySelector("#refreshSettings");
+      document.addEventListener("click", event => {
+        if (!refreshSettings.contains(event.target)) refreshSettings.open = false;
+      });
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape" && refreshSettings.open) {
+          refreshSettings.open = false;
+          refreshSettings.querySelector("summary").focus();
+        }
+      });
+      const savedInterval = (() => { try { return localStorage.getItem("dna-auto-refresh-seconds"); } catch { return null; } })();
+      if (["5", "10", "30", "60"].includes(savedInterval)) autoRefresh.value = savedInterval;
+      function scheduleAutoRefresh() {
+        clearTimeout(autoRefreshTimer);
+        if (!refreshActive) autoRefreshTimer = setTimeout(() => refresh(false, true), Number(autoRefresh.value) * 1000);
+      }
+      autoRefresh.onchange = () => {
+        try { localStorage.setItem("dna-auto-refresh-seconds", autoRefresh.value); } catch {}
+        scheduleAutoRefresh();
+      };
+      async function refresh(isBackgroundPoll = false, isAutomatic = false) {
+        clearTimeout(autoRefreshTimer);
+        refreshActive = true;
         if (!isBackgroundPoll) {
           clearTimeout(refreshTimer);
           backgroundPolls = 0;
@@ -222,11 +285,12 @@
         button.disabled = true;
         button.textContent = "Refreshing…";
         g.setAttribute("aria-busy", "true");
-        if (!isBackgroundPoll) {
+        if (!isBackgroundPoll && !isAutomatic) {
           directorySummary.hidden = true;
           g.replaceChildren();
         }
         const progressTimer = setInterval(() => {
+          if (generation !== refreshGeneration) return;
           progress = Math.min(92, progress + Math.max(1, Math.round((92 - progress) / 5)));
           value.textContent = `${progress}%`;
           bar.style.width = `${progress}%`;
@@ -235,6 +299,7 @@
           const [p] = await Promise.all([
             DnaDirectoryApi.list({
               page_size: 100,
+              evidence_min_trades: evidenceThreshold,
               search: search.value,
               product: product.value,
               signal: signal.value,
@@ -256,18 +321,22 @@
           if (p.data.refresh_pending) {
             // Provisional aggregates are not evidence. Keep results hidden and
             // communicate the running state exclusively through the status bar.
-            directorySummary.hidden = true;
-            g.replaceChildren();
+            if (!isAutomatic) {
+              directorySummary.hidden = true;
+              g.replaceChildren();
+            }
             s.textContent = `Calculating live ${periodLabel.textContent.toLowerCase()} evidence…`;
             backgroundPolls += 1;
             const delay = backgroundPolls < 8 ? 1200 : 2500;
-            refreshTimer = setTimeout(() => refresh(true), delay);
+            refreshTimer = setTimeout(() => refresh(true, isAutomatic), delay);
             return;
           }
+          backgroundPolls = 0;
           summaryStrategies.textContent = fmt(summary.strategies);
           summaryTrades.textContent = fmt(summary.closed_trades);
           summaryProfitable.textContent = `${fmt(summary.profitable_percentage)}%`;
           summaryReady.textContent = `${fmt(summary.evidence_ready)} / ${fmt(summary.strategies)}`;
+          summaryReady.parentElement.title = `Strategies with at least ${summary.evidence_min_trades ?? evidenceThreshold} closed trades in the selected period; not a statistical reliability score.`;
           directorySummary.hidden = false;
           if (!p.data.items.length) {
             g.innerHTML =
@@ -289,6 +358,8 @@
             backgroundPolls = 0;
           }
         } catch (e) {
+          if (generation !== refreshGeneration) return;
+          backgroundPolls = 0;
           clearInterval(progressTimer);
           state.className = "refresh-state error";
           value.textContent = "Failed";
@@ -297,18 +368,22 @@
           if (!g.children.length) g.innerHTML =
             '<div class="notice">The evidence query could not be completed. Adjust the period or check API readiness.</div>';
         } finally {
+          clearInterval(progressTimer);
+          if (generation !== refreshGeneration) return;
+          refreshActive = backgroundPolls > 0;
           button.disabled = false;
           button.textContent = "Refresh evidence";
           g.removeAttribute("aria-busy");
+          if (!backgroundPolls) scheduleAutoRefresh();
         }
       }
-      load.onclick = refresh;
+      load.onclick = () => refresh();
       search.onkeydown = (e) => {
         if (e.key === "Enter") refresh();
       };
       product.onchange = () => refresh();
       signal.onchange = () => refresh();
-      document.addEventListener("periodchange", refresh);
+      document.addEventListener("periodchange", () => refresh());
       // Establish the default evidence window before any asynchronous product
       // catalogue request. This prevents an all-history/previous-period result
       // from rendering while the Current day request is waiting to start.
@@ -318,5 +393,6 @@
           `<option value="${esc(value)}">${esc(value)}</option>`).join(""));
       });
     </script>
-  </body>
+  <footer id="ttp-product-footer" class="ttp-product-footer" aria-label="The Tech Principle product attribution"><a href="https://thetechprinciple.com/" target="_blank" rel="noreferrer"><span>A</span><img src="/assets/thetechprinciple-icon-180.png" alt="The Tech Principle"><span>thetechprinciple.com product</span></a></footer>
+</body>
 </html>
