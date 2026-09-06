@@ -509,3 +509,6 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return FileResponse(WEB/name,headers=no_store)
 
     return app
+
+
+app=create_app()
