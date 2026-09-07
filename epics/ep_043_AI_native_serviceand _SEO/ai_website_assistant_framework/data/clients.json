@@ -232,7 +232,8 @@
     "publicKey": "demo_northstar",
     "allowedHosts": [
       "localhost",
-      "127.0.0.1"
+      "127.0.0.1",
+      "shared-website-assistant-api.onrender.com"
     ],
     "businessName": "Northstar Heating",
     "tagline": "Warm homes. Clear answers.",
