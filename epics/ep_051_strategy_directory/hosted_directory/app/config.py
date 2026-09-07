@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     db_pass: str | None = None
     sync_token: str | None = None
     allowed_origins: str = "http://127.0.0.1:8080,http://localhost:8080"
+    # Intelligence features (interpret/search/cohorts/user/*) live on EP049's
+    # own service since the 2026-09 architectural split - the frontend fetches
+    # cross-origin to it, which the CSP connect-src directive must explicitly
+    # allow or the browser blocks it regardless of CORS. Empty by default so
+    # a deployment that hasn't configured EP049 yet gets the old same-origin-
+    # only CSP rather than a silently-wrong allowance.
+    intelligence_api_origin: str = ""
     max_snapshot_items: int = 2000
     max_snapshot_bytes: int = 50_000_000
     snapshot_max_age_hours: int = 48

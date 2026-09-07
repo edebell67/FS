@@ -11,6 +11,16 @@
     document.querySelector('meta[name="api-base"]')?.content ||
     "";
   const base = configured.replace(/\/$/, "");
+  // Intelligence features (interpret/search/cohorts/user/*) moved to their own
+  // EP049 service in the 2026-09 architectural split - they are no longer
+  // served by this page's own origin, so they need a separate base URL.
+  // Falls back to `base` (same-origin) when unset, matching prior behavior
+  // for any deployment that hasn't configured this yet.
+  const intelligenceConfigured =
+    globalThis.DNA_INTELLIGENCE_API_BASE_URL ||
+    document.querySelector('meta[name="intelligence-api-base"]')?.content ||
+    configured;
+  const intelligenceBase = intelligenceConfigured.replace(/\/$/, "");
   async function list(params = {}) {
     const query = new URLSearchParams(
       Object.entries(params).filter(([, v]) => v !== "" && v != null),
@@ -98,7 +108,7 @@
     ? { Authorization: `Bearer ${identityToken}`, "X-User-ID": identityUserId }
     : {};
   async function request(path, options = {}) {
-    const response = await fetch(`${base}${path}`, {
+    const response = await fetch(`${intelligenceBase}${path}`, {
       headers: {
         Accept: "application/json",
         "Content-Type": "application/json",
@@ -159,7 +169,7 @@
       body: JSON.stringify({ preferences }),
     });
   const deleteUser = () =>
-    fetch(`${base}/api/intelligence/user`, { method: "DELETE" }).then(
+    fetch(`${intelligenceBase}/api/intelligence/user`, { method: "DELETE" }).then(
       (response) => {
         if (!response.ok) throw new Error(`Delete failed (${response.status})`);
       },
@@ -199,5 +209,6 @@
     recommend,
     identityHeaders,
     base,
+    intelligenceBase,
   };
 })();

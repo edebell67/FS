@@ -72,12 +72,13 @@ def html_signature():
     return tuple(sorted((p.name,p.stat().st_mtime_ns,p.stat().st_size) for p in WEB.glob("*.html")))
 
 
-def content_security_policy():
+def content_security_policy(intelligence_api_origin: str = ""):
     hashes=[]
     for path in WEB.glob("*.html"):
         for script in re.findall(r"<script>(.*?)</script>",path.read_text(encoding="utf-8"),re.DOTALL):
             digest=base64.b64encode(hashlib.sha256(script.encode()).digest()).decode();hashes.append(f"'sha256-{digest}'")
-    return "default-src 'self'; script-src 'self' "+" ".join(sorted(set(hashes)))+"; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
+    connect_src="connect-src 'self'"+(f" {intelligence_api_origin}" if intelligence_api_origin else "")
+    return "default-src 'self'; script-src 'self' "+" ".join(sorted(set(hashes)))+"; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; "+connect_src+"; object-src 'none'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'"
 
 
 def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
@@ -107,7 +108,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         if cache["signature"]!=signature:
             with app.state.csp_cache_lock:
                 if cache["signature"]!=signature:
-                    cache["value"]=content_security_policy();cache["signature"]=signature
+                    cache["value"]=content_security_policy(cfg.intelligence_api_origin);cache["signature"]=signature
         return cache["value"]
 
     @app.middleware("http")

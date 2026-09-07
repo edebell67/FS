@@ -15,6 +15,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="api-base" content="" />
+    <!-- Intelligence features (interpret/search/cohorts/user/*) live on EP049's
+         own service since the 2026-09 architectural split, not this origin.
+         Local dev default; hosted deployments should override with a build-time
+         value pointing at the deployed EP049 service. -->
+    <meta name="intelligence-api-base" content="http://127.0.0.1:8049" />
     <!-- This app is bound to 127.0.0.1 only and used by a single owner, so a
          static local identity is a legitimate configuration of the "trusted
          edge boundary" app/main.py's trusted_user() expects — not a bypass of
@@ -500,7 +505,7 @@
       const cohortMetric = "quality_score";
       async function cohorts(metric = cohortMetric) {
         if (!cohortsCache[metric]) {
-          cohortsCache[metric] = fetch(`${DnaDirectoryApi.base}/api/intelligence/cohorts?metric=${encodeURIComponent(metric)}`)
+          cohortsCache[metric] = fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/cohorts?metric=${encodeURIComponent(metric)}`)
             .then((r) => r.json())
             .catch(() => ({ items: {} }));
         }
@@ -529,8 +534,8 @@
         const p = item?.profile;
         try {
           const [scoreResp, related, cohortPayload] = await Promise.all([
-            DnaDirectoryApi.base ? fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()) : fetch(`/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()),
-            fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}/related?limit=5`).then((r) => r.json()),
+            DnaDirectoryApi.base ? fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()) : fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/strategies/${encodeURIComponent(id)}/score`).then((r) => r.json()),
+            fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/strategies/${encodeURIComponent(id)}/related?limit=5`).then((r) => r.json()),
             cohorts(),
           ]);
           const s = scoreResp.score || p?.score || {};
@@ -573,7 +578,7 @@
       q("#checkRegime").onclick = async () => {
         q("#regimeStatus").textContent = "Classifying current regime from canonical market features…";
         try {
-          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/regimes/classify`, {
+          const result = await fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/regimes/classify`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ market: q("#regimeMarket").value }),
@@ -605,7 +610,7 @@
           return;
         }
         try {
-          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/user/collections`, {
+          const result = await fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/user/collections`, {
             method: "POST",
             headers: { "Content-Type": "application/json", ...DnaDirectoryApi.identityHeaders },
             body: JSON.stringify({ name, strategy_ids: [...portfolioIds], notes: "" }),
@@ -627,7 +632,7 @@
         }
         q("#portfolioStatus").textContent = "Requesting complementary strategies…";
         try {
-          const result = await fetch(`${DnaDirectoryApi.base}/api/intelligence/recommendations`, {
+          const result = await fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/recommendations`, {
             method: "POST",
             headers: { "Content-Type": "application/json", ...DnaDirectoryApi.identityHeaders },
             body: JSON.stringify({ market: q("#regimeMarket")?.value || "FX", strategy_ids: [...portfolioIds] }),
@@ -676,7 +681,7 @@
             .sort((a, b) => (b[1][dimension].percentile - a[1][dimension].percentile) || a[0].localeCompare(b[0]));
           const top = members.slice(0, 20);
           const profiles = await Promise.all(
-            top.map(([id]) => fetch(`${DnaDirectoryApi.base}/api/intelligence/strategies/${encodeURIComponent(id)}`).then((r) => r.json())),
+            top.map(([id]) => fetch(`${DnaDirectoryApi.intelligenceBase}/api/intelligence/strategies/${encodeURIComponent(id)}`).then((r) => r.json())),
           );
           q("#leadersStatus").textContent = `Ranking ${top.length} of ${members.length} strategies in ${esc(dimension.replace(/_/g, " "))} = ${esc(value)}, by ${esc(metricUnit[metric])}.`;
           q("#leadersList").innerHTML = top
