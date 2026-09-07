@@ -1,6 +1,18 @@
 """Outbound-only idempotent snapshot publisher.
 
 Version history:
+- 2.1.0 (2026-09-07): Raises the client timeout from 20s to 90s and lowers
+  DEFAULT_BATCH_SIZE from 125 to 50 - the committed automated pipeline
+  (deploy/sync_to_hosted.ps1) had never actually succeeded on its own
+  (see that script's own 1.1.0 history note: a separate Get-Date -AsUTC
+  bug hid this too, since PowerShell 5.1 - what the supervised loop
+  actually runs under - never even reached this code path). With that
+  fixed, the first real run hit this: 20s was already too short for a
+  single /batch call under current load even at the reduced-history
+  export size, confirmed by reproducing the exact ReadTimeout live on
+  2026-09-07. Every ad-hoc test script used during this investigation
+  worked around it with an explicit longer timeout - this is that fix
+  applied to the actual committed path instead.
 - 2.0.0 (2026-08-28): Replaces the single large POST /internal/snapshots
   request (whole ~28MB/2000-strategy body in one call) with the staged,
   batched ingestion path (PUB-04): POST .../begin (envelope only), then N
@@ -19,7 +31,7 @@ from pathlib import Path
 import httpx
 from app.contracts import Snapshot, SnapshotBatch
 
-DEFAULT_BATCH_SIZE = 125
+DEFAULT_BATCH_SIZE = 50
 
 
 def _post(client: httpx.Client, url: str, token: str, idempotency_key: str, body: str, attempts: int = 4):
@@ -46,7 +58,7 @@ def publish_snapshot(snapshot: Snapshot, url: str, token: str, transport=None, a
     for point in snapshot.return_series:
         series_by_strategy.setdefault(point.strategy_id, []).append(point)
 
-    with httpx.Client(timeout=20, transport=transport) as client:
+    with httpx.Client(timeout=90, transport=transport) as client:
         envelope = snapshot.model_dump_json(include={"schema_version", "methodology_version", "snapshot_id",
             "source_watermark", "generated_at", "item_count", "sha256"})
         _post(client, base + "/begin", token, snapshot.snapshot_id, envelope, attempts)

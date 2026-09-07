@@ -51,7 +51,7 @@ if (-not (Test-Path $hostedDirectory)) {
 $snapshotDir = Join-Path $RepoRoot 'deploy\release'
 if (-not (Test-Path $snapshotDir)) { New-Item -ItemType Directory -Force -Path $snapshotDir | Out-Null }
 
-$timestamp = Get-Date -AsUTC -Format 'yyyyMMddTHHmmssZ'
+$timestamp = (Get-Date).ToUniversalTime().ToString('yyyyMMddTHHmmssZ')
 $snapshotPath = Join-Path $snapshotDir "snapshot_$timestamp.json"
 
 Push-Location $hostedDirectory
