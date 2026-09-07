@@ -113,6 +113,20 @@ def build_snapshot(items, source_watermark: str | datetime, generated_at: dateti
 
 def main():
     parser = argparse.ArgumentParser(); parser.add_argument("--output", required=True); parser.add_argument("--watermark")
+    # Optional, off by default (None = full history, MAX_PROFILE_POINTS-capped
+    # per local_equity_curves()'s own query limit, same as always). Exists
+    # because hosted's /finalize has a real capacity ceiling somewhere between
+    # 37.7MB and 76MB of staged payload (confirmed empirically 2026-09-06,
+    # see agent_board/board.jsonl topic ep051_render_deployment) - a full
+    # 2000-strategy export exceeds it and finalize fails every time. This is
+    # explicitly NOT a change to the default: per Hermes's 2026-09-06 board
+    # reply, permanently reducing history depth needs a product decision, not
+    # a unilateral one, so the ordinary `export_snapshot.py` invocation is
+    # unaffected. deploy/sync_to_hosted.ps1 passes this explicitly as the
+    # interim workaround the user asked for (auto-repeating every 10 minutes)
+    # until Hermes's proper streamed/incremental finalize design ships.
+    parser.add_argument("--history-limit", type=int, default=None,
+        help="Cap each strategy's return_series to its most recent N trades (item stats are derived from the same capped set, so they stay internally consistent). Unset = full history.")
     args = parser.parse_args(); watermark = args.watermark or datetime.now(timezone.utc).isoformat()
     settings=get_settings()
     # Names/labels only (descriptive_name/product_name/market/status) - NOT
@@ -121,7 +135,7 @@ def main():
     # Single consistent read: every strategy's curve, in one query. Both the
     # selection ranking and every item's stats are derived from this same
     # data, so they can never disagree with each other by construction.
-    all_curves=local_equity_curves(settings)
+    all_curves=local_equity_curves(settings,max_points=args.history_limit)
     selected=sorted(all_curves.items(),key=lambda kv:(-len(kv[1]),kv[0]))[:MAX_SNAPSHOT_ITEMS]
     items=[]
     for strategy_id,points in selected:

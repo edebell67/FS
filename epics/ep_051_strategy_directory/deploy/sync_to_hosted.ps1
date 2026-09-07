@@ -1,4 +1,20 @@
 # EP051 local -> hosted snapshot sync.
+# Version 1.1.0 (2026-09-07): Passes --history-limit 20 to export_snapshot.py.
+#   Hosted's /finalize has a real capacity ceiling somewhere between 37.7MB
+#   and 76MB of staged payload (confirmed empirically 2026-09-06/07, see
+#   agent_board/board.jsonl topic ep051_render_deployment) - a full
+#   2000-strategy export (up to 1000 trades/strategy) exceeds it and
+#   finalize fails every time, which is why every automated sync cycle had
+#   been silently failing since 2026-09-06 despite this loop running -
+#   export_snapshot.py itself always succeeded, only publish_snapshot.py's
+#   /finalize call ever failed, and this script's error handling (see the
+#   loop wrapper) just logs the failure and waits for the next cycle
+#   instead of stopping, so it kept quietly retrying and failing for over
+#   14 hours. This is an EXPLICIT INTERIM WORKAROUND, not a permanent
+#   product decision (Hermes flagged on 2026-09-06 that permanently
+#   reducing history depth needs one) - each strategy's trade history on
+#   hosted is capped at its most recent 20 trades instead of the normal
+#   up to 1000, until a proper streamed/incremental /finalize design ships.
 # Version 1.0.0 (2026-08-27).
 #
 # Wraps hosted_directory/sync/export_snapshot.py + publish_snapshot.py into
@@ -41,7 +57,7 @@ $snapshotPath = Join-Path $snapshotDir "snapshot_$timestamp.json"
 Push-Location $hostedDirectory
 try {
     Write-Host "Exporting local snapshot to $snapshotPath ..."
-    python -m sync.export_snapshot --output $snapshotPath
+    python -m sync.export_snapshot --output $snapshotPath --history-limit 20
     if ($LASTEXITCODE -ne 0) { throw "export_snapshot.py failed with exit code $LASTEXITCODE" }
 
     Write-Host "Publishing snapshot to $HostedUrl ..."

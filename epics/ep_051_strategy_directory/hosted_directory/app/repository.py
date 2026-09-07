@@ -511,9 +511,19 @@ def local_closed_trades(settings, strategy_id: str, date_from=None, date_to_excl
     return rows
 
 
-def local_equity_curves(settings,strategy_ids=None) -> dict[str,list[dict[str,Any]]]:
-    """Load every canonical DNA return series in one query for bounded directory intelligence work."""
+def local_equity_curves(settings,strategy_ids=None,max_points=None) -> dict[str,list[dict[str,Any]]]:
+    """Load every canonical DNA return series in one query for bounded directory intelligence work.
+
+    max_points overrides MAX_PROFILE_POINTS for this call only (default
+    unchanged when unset). The limit is applied inside the SQL query itself,
+    before the equity/drawdown/trade_number window functions run - trimming
+    the returned rows in Python afterward instead would leave those columns
+    holding absolute values computed over the full untrimmed history, which
+    fails Snapshot.verified()'s reconciliation (it recomputes trade_number/
+    cumulative_net_return fresh from whatever points it's given, expecting
+    them to start from zero)."""
     strategy_ids=list(dict.fromkeys(strategy_ids or []));canonical="CASE WHEN RIGHT(model,2) IN ('_B','_S') THEN LEFT(model,LEN(model)-2) ELSE model END"
+    points_limit=max_points or MAX_PROFILE_POINTS
     strategy_filter="" if not strategy_ids else " AND "+canonical+" IN ("+",".join("?" for _ in strategy_ids)+")"
     # Tie-break on CAST(guid AS char(36)) everywhere a trade's relative order
     # matters, not the raw uniqueidentifier column. SQL Server sorts
@@ -536,7 +546,7 @@ def local_equity_curves(settings,strategy_ids=None) -> dict[str,list[dict[str,An
           ORDER BY COALESCE(g_close_time,last_update,created) DESC,created DESC,CAST(guid AS char(36)) DESC) reverse_number
       FROM dbo.combined_trades_closed WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL {strategy_filter}
     ), trades AS (
-      SELECT strategy_id,closed_at,opened_at,created,guid,net_return,product,signal,entry_price,exit_price,alt_net_return FROM ranked_trades WHERE reverse_number<={MAX_PROFILE_POINTS}
+      SELECT strategy_id,closed_at,opened_at,created,guid,net_return,product,signal,entry_price,exit_price,alt_net_return FROM ranked_trades WHERE reverse_number<={points_limit}
     ), equity AS (
       SELECT strategy_id,closed_at,opened_at,guid,net_return,product,signal,entry_price,exit_price,alt_net_return,
         SUM(net_return) OVER(PARTITION BY strategy_id ORDER BY closed_at,guid ROWS UNBOUNDED PRECEDING) equity
