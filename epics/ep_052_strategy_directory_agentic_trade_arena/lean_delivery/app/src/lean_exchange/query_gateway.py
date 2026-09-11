@@ -1,8 +1,8 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Commit public delivered-research event with the charged receipt.
+# VERSION HISTORY v1.2.0 · 2026-09-06 · Catch records.IntegrityError (Postgres) instead of sqlite3's.
+# v1.1.0 · 2026-09-02 · Commit public delivered-research event with the charged receipt.
 # v1.0.1 · 2026-09-02 · Make receipt/balance preflight a consistent short transaction for final-cent retries.
 # v1.0.0 · 2026-09-02 · Participant-funded delivery, exact retry and refresh charging in one local commit.
 import json
-import sqlite3
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -11,6 +11,7 @@ from .contracts import QueryRequest, fingerprint
 from .arena import query_event
 from .participant_funds import FundingError, balance, move
 from .providers import ProviderError
+from .records import IntegrityError
 
 
 def router(authority, provider):
@@ -56,7 +57,7 @@ def router(authority, provider):
             raise HTTPException(409, str(exc)) from exc
         except ProviderError as exc:
             raise HTTPException(503, str(exc)) from exc
-        except sqlite3.IntegrityError as exc:
+        except IntegrityError as exc:
             raise HTTPException(502, 'INTELLIGENCE_RECEIPT_CONFLICT') from exc
 
     @routes.get('/participant/v1/me/queries/{delivery_id}')

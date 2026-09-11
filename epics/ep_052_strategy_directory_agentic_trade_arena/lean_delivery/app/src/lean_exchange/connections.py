@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Publish connection/disconnection transitions without owner associations.
+# VERSION HISTORY v1.3.0 · 2026-09-10 · Record heartbeat effects in the owner activity audit.
+# v1.2.0 · 2026-09-10 · Apply Arena observer access policy only to the public presence projection.
+# v1.1.0 · 2026-09-02 · Publish connection/disconnection transitions without owner associations.
 # v1.0.0 · 2026-09-02 · Independent visiting-agent connections with persisted heartbeat/disconnect state.
 from uuid import UUID, uuid4
 
@@ -46,6 +48,9 @@ def router(authority: Authority):
                                 (clock(), str(connection_id), actor['agent_id']))
             if not result.rowcount:
                 raise HTTPException(404, 'Active connection not found')
+            emit(db, source_key='heartbeat:' + str(connection_id) + ':' + str(clock()), agent_id=actor['agent_id'],
+                 operation='HEARTBEAT', resource_id=str(connection_id),
+                 payload={'effect': 'Agent presence was renewed', 'outcome': 'ACTIVE'})
             return project(db.execute('SELECT * FROM connections WHERE id=?', (str(connection_id),)).fetchone())
 
     @routes.delete('/v1/connections/{connection_id}')
@@ -62,7 +67,7 @@ def router(authority: Authority):
         return {'disconnected': True}
 
     @routes.get('/v1/arena/connections')
-    def connected(actor=Depends(authority.authenticate)):
+    def connected(actor=Depends(authority.arena_viewer)):
         with store.transaction() as db:
             # Arena only exposes public agent identity/presence, not owner association or credentials.
             rows = db.execute('SELECT id,agent_id,last_seen,disconnected FROM connections WHERE disconnected=0').fetchall()

@@ -19,8 +19,7 @@ def agent(client, owner, name):
 
 
 def test_owner_feedback_group_ack_reply_and_restart(tmp_path):
-    path = tmp_path / 'feedback.sqlite'
-    app = create_app(database=path)
+    app = create_app()
     owner = app.state.authority.create_owner('Owner')
     outsider = app.state.authority.create_owner('Other owner')
     with TestClient(app) as client:
@@ -51,7 +50,7 @@ def test_owner_feedback_group_ack_reply_and_restart(tmp_path):
         assert len(detail['replies']) == 1
         assert sum(x['acknowledged_at'] is not None for x in detail['recipients']) == 1
         assert client.get('/v1/owner/feedback', headers=headers(first)).status_code == 403
-    with TestClient(create_app(database=path)) as restarted:
+    with TestClient(create_app()) as restarted:
         assert restarted.get('/v1/owner/feedback/' + feedback_id, headers=headers(owner)).json() == detail
 
 
@@ -80,3 +79,21 @@ def test_owner_latest_and_older_pagination():
         assert [x['message'] for x in latest['items']] == ['2', '1']
         older = client.get('/v1/owner/feedback?before=' + str(latest['next_cursor']), headers=headers(owner)).json()
         assert [x['message'] for x in older['items']] == ['0']
+
+
+def test_owner_audit_records_communication_actor_effect_and_outcome():
+    app = create_app()
+    owner = app.state.authority.create_owner('Audit owner')
+    with TestClient(app) as client:
+        own = agent(client, owner, 'Audited agent')
+        sent = client.post('/v1/owner/feedback', headers=headers(owner), json={
+            'request_id': str(uuid4()), 'agent_ids': [own['agent_id']], 'message': 'Review the market.'}).json()
+        client.post('/v1/me/feedback/' + sent['id'] + '/ack', headers=headers(own))
+        client.post('/v1/me/feedback/' + sent['id'] + '/responses', headers=headers(own), json={
+            'request_id': str(uuid4()), 'message': 'Reviewed.'})
+        audit = client.get('/v1/owner/activity-audit', headers=headers(owner),
+                           params={'agent_id': own['agent_id']}).json()['items']
+        assert {item['operation'] for item in audit} >= {
+            'FEEDBACK_SENT', 'FEEDBACK_ACKNOWLEDGED', 'FEEDBACK_REPLIED'}
+        assert all(item['actor']['id'] and item['affected']['type'] and item['effect'] and item['outcome'] for item in audit)
+        assert client.get('/v1/owner/activity-audit', headers=headers(own)).status_code == 403

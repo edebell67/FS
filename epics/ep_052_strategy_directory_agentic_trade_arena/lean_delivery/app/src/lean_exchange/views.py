@@ -1,4 +1,5 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Serve a read-only API-driven Arena alongside the private owner workspace.
+# VERSION HISTORY v1.2.0 · 2026-09-10 · Serve the allowlisted strategy-family stylesheet used by the Arena.
+# v1.1.0 · 2026-09-02 · Serve a read-only API-driven Arena alongside the private owner workspace.
 # v1.0.0 · 2026-09-02 · Allowlisted owner workspace files with a self-only content security policy.
 from pathlib import Path
 
@@ -27,7 +28,7 @@ def router():
 
     @routes.get('/assets/{name}', include_in_schema=False)
     def assets(name: str):
-        if name not in ('owner.css', 'owner.js', 'arena.css', 'arena.js'):
+        if name not in ('owner.css', 'owner.js', 'arena.css', 'arena-families.css', 'arena-audit.css', 'arena.js'):
             raise HTTPException(404, 'Asset not found')
         return FileResponse(ROOT / name, headers=HEADERS)
 

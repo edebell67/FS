@@ -11,7 +11,7 @@ from test_query_fees import setup_app, register
 
 
 def test_trade_effects_public_but_private_funding_and_owner_data_absent(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'arena.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app) as client:
         a, other = agent(app, client), agent(app, client)
@@ -38,7 +38,7 @@ def test_trade_effects_public_but_private_funding_and_owner_data_absent(tmp_path
 
 
 def test_filters_cursor_resume_and_same_timestamp_boundary(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'cursor.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app) as client:
         a = agent(app, client)
@@ -60,7 +60,7 @@ def test_filters_cursor_resume_and_same_timestamp_boundary(tmp_path):
 
 
 def test_query_reports_privacy_and_success_only_projection(tmp_path):
-    app = setup_app(tmp_path / 'queries.sqlite', [])
+    app = setup_app([])
     with TestClient(app) as client:
         a = register(client, app)
         body = {'request_id': str(uuid4()), 'kind': 'PRIVATE research note', 'limit': 1}
@@ -75,7 +75,7 @@ def test_query_reports_privacy_and_success_only_projection(tmp_path):
         assert 'PRIVATE' not in json.dumps(events)
         matches = client.get('/v1/arena/activity?strategy_id=DNA_100001', headers=headers(a)).json()
         assert len(matches['items']) == 1 and matches['items'][0]['operation'] == 'QUERY'
-    failing = setup_app(tmp_path / 'failure.sqlite', [], failure='http')
+    failing = setup_app([], failure='http')
     with TestClient(failing) as client:
         a = register(client, failing)
         assert client.post('/participant/v1/me/queries', json=body, headers=headers(a)).status_code == 503
@@ -85,7 +85,7 @@ def test_query_reports_privacy_and_success_only_projection(tmp_path):
 
 def test_event_failure_rolls_back_settlement(tmp_path, monkeypatch):
     from lean_exchange import trades
-    app, cfg = fixture_app(tmp_path / 'rollback.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app, raise_server_exceptions=False) as client:
         a = agent(app, client)
@@ -99,8 +99,7 @@ def test_event_failure_rolls_back_settlement(tmp_path, monkeypatch):
 
 
 def test_restart_and_backfill_do_not_duplicate_receipts_or_fees(tmp_path):
-    path = tmp_path / 'migration.sqlite'
-    app, cfg = fixture_app(path)
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app) as client:
         a = agent(app, client)
@@ -108,18 +107,18 @@ def test_restart_and_backfill_do_not_duplicate_receipts_or_fees(tmp_path):
     with app.state.authority.store.transaction(immediate=True) as db:
         db.execute('DELETE FROM arena_events')
         db.execute("DELETE FROM metadata WHERE key='arena_backfill_v1'")
-    migrated = Store(path)
+    migrated = Store()
     with migrated.transaction() as db:
         initial = [dict(row) for row in db.execute('SELECT * FROM arena_events')]
         assert len(initial) == 1
-    restarted = Store(path)
+    restarted = Store()
     with restarted.transaction() as db:
         assert [dict(row) for row in db.execute('SELECT * FROM arena_events')] == initial
         assert db.execute('SELECT count(*) FROM participant_movements').fetchone()[0] == 1
 
 
 def test_connection_transitions_once_and_no_owner_association(tmp_path):
-    app, _ = fixture_app(tmp_path / 'presence.sqlite')
+    app, _ = fixture_app()
     with TestClient(app) as client:
         a = agent(app, client)
         body = {'request_id': str(uuid4()), 'purpose': 'strategy_trading'}

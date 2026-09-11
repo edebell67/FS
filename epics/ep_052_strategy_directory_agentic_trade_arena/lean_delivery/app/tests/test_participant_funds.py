@@ -15,9 +15,8 @@ def headers(record):
 
 
 def test_seed_configurable_persistent_and_owner_scoped(tmp_path):
-    path = tmp_path / 'funds.sqlite'
     cfg = Settings.model_validate(load_settings().model_dump() | {'seed_funds': '1250.50'})
-    app = create_app(cfg, database=path)
+    app = create_app(cfg)
     owner = app.state.authority.create_owner('A')
     other = app.state.authority.create_owner('B')
     with TestClient(app) as client:
@@ -30,12 +29,12 @@ def test_seed_configurable_persistent_and_owner_scoped(tmp_path):
         assert client.get(url, headers=headers(owner)).status_code == 200
         assert client.get('/participant/v1/me/funds', headers=headers(owner)).status_code == 403
         assert client.post('/participant/v1/me/funds', json={'amount': 100000}, headers=headers(agent)).status_code == 405
-    with TestClient(create_app(database=path)) as client:
+    with TestClient(create_app()) as client:
         assert client.get('/participant/v1/me/funds', headers=headers(agent)).json()['seed_usd'] == '1250.50'
 
 
 def test_internal_funding_references_no_overspend_or_duplicate_effect(tmp_path):
-    app = create_app(database=tmp_path / 'funds.sqlite')
+    app = create_app()
     owner = app.state.authority.create_owner('A')
     with TestClient(app) as client:
         agent = client.post('/v1/owner/agents', json={'name': 'A1'}, headers=headers(owner)).json()['agent_id']

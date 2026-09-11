@@ -19,13 +19,13 @@ from lean_exchange.providers import DirectoryProvider, ValuationInput
 IDS = {f'DNA_{i}' for i in range(1, 13)}
 
 
-def fixture_app(path, **overrides):
+def fixture_app(database=None, **overrides):
     cfg = Settings.model_validate(load_settings().model_dump() | overrides)
     provider = DirectoryProvider(cfg, httpx.MockTransport(lambda _: httpx.Response(200, json={
         'data': {'page': 1, 'total': len(IDS), 'items': [
             {'strategy_id': sid, 'status': 'active', 'total_trades': 1, 'total_net_return': 0} for sid in sorted(IDS)]},
         'as_of': datetime.now(timezone.utc).isoformat()})))
-    app = create_app(cfg, database=path, directory=provider)
+    app = create_app(cfg, database=database, directory=provider)
     return app, cfg
 
 
@@ -52,8 +52,7 @@ def request(quote, side='BUY', units=1, **changes):
 
 
 def test_worked_buy_price_change_sell_and_exact_retry(tmp_path):
-    path = tmp_path / 'trades.sqlite'
-    app, cfg = fixture_app(path)
+    app, cfg = fixture_app()
     first = price(app, cfg)
     with TestClient(app) as client:
         actor = agent(app, client)
@@ -82,14 +81,14 @@ def test_worked_buy_price_change_sell_and_exact_retry(tmp_path):
         assert client.post('/v1/me/decisions', json=reported, headers=headers(actor)).status_code == 200
         assert client.post('/v1/me/decisions', json=reported, headers=headers(other)).status_code == 409
         assert client.post('/v1/me/decisions', json=reported | {'action': 'SELL'}, headers=headers(actor)).status_code == 409
-    restarted, _ = fixture_app(path)
+    restarted, _ = fixture_app()
     with TestClient(restarted) as client:
         assert client.post('/v1/trades', json=buy_request, headers=headers(actor)).json() == receipt
         assert len(client.get('/v1/me/trades', headers=headers(actor)).json()['items']) == 2
 
 
 def test_final_unit_race_sold_out_discovery_and_no_duplicate_fee(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'race.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg, nav='1.15', units=1)
     with TestClient(app) as client:
         actors = [agent(app, client) for _ in range(4)]
@@ -106,7 +105,7 @@ def test_final_unit_race_sold_out_discovery_and_no_duplicate_fee(tmp_path):
 
 
 def test_position_limit_and_adding_to_existing_position(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'positions.sqlite')
+    app, cfg = fixture_app()
     quotes = [price(app, cfg, sid=sid, nav='100') for sid in sorted(IDS)]
     with TestClient(app) as client:
         actor = agent(app, client)
@@ -118,7 +117,7 @@ def test_position_limit_and_adding_to_existing_position(tmp_path):
 
 
 def test_rejections_durable_no_fees_and_no_overselling(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'rejections.sqlite', seed_funds='1')
+    app, cfg = fixture_app(seed_funds='1')
     quote = price(app, cfg)
     with TestClient(app) as client:
         actor = agent(app, client)
@@ -135,7 +134,7 @@ def test_rejections_durable_no_fees_and_no_overselling(tmp_path):
 
 def test_injected_failure_rolls_back_funds_trade_receipt_and_activity(tmp_path, monkeypatch):
     from lean_exchange import trades
-    app, cfg = fixture_app(tmp_path / 'rollback.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app, raise_server_exceptions=False) as client:
         actor = agent(app, client)
@@ -155,7 +154,7 @@ def test_injected_failure_rolls_back_funds_trade_receipt_and_activity(tmp_path, 
 
 
 def test_unbound_inventory_never_invents_prices(tmp_path):
-    app, _ = fixture_app(tmp_path / 'unbound.sqlite')
+    app, _ = fixture_app()
     with TestClient(app) as client:
         actor = agent(app, client)
         assert client.get('/v1/strategies', headers=headers(actor)).json()['items'] == []
@@ -165,7 +164,7 @@ def test_unbound_inventory_never_invents_prices(tmp_path):
 
 
 def test_publisher_preserves_issued_units_and_refuses_unknown_ids(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'publication.sqlite')
+    app, cfg = fixture_app()
     price(app, cfg)
     with pytest.raises(PriceError, match='BASELINE_CHANGED'):
         price(app, cfg, units=999)
@@ -174,7 +173,7 @@ def test_publisher_preserves_issued_units_and_refuses_unknown_ids(tmp_path):
 
 
 def test_concurrent_exact_retry_settles_once(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'exact-retry.sqlite')
+    app, cfg = fixture_app()
     quote = price(app, cfg)
     with TestClient(app) as client:
         actor = agent(app, client)
@@ -193,7 +192,7 @@ def test_concurrent_exact_retry_settles_once(tmp_path):
 
 
 def test_full_exit_releases_position_slot_and_keeps_entry_receipt(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'exit.sqlite', maximum_positions=1)
+    app, cfg = fixture_app(maximum_positions=1)
     first, second = price(app, cfg), price(app, cfg, sid='DNA_2')
     with TestClient(app) as client:
         actor = agent(app, client)

@@ -1,0 +1,4 @@
+interface:
+  display_name: "EP052 Arena Agent Client"
+  short_description: "Connect an independent agent to the EP052 Arena API"
+  default_prompt: "Connect this agent to the EP052 Arena using its assigned credential and operate only through the published API rules."

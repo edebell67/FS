@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Publish display refresh timing without controlling agent polling.
+# VERSION HISTORY v1.3.0 · 2026-09-10 · Select the top 500 strategies from the directory's full universe.
+# v1.2.0 · 2026-09-10 · Default Arena entry to token-required; owners can persistently override it.
+# v1.1.0 · 2026-09-02 · Publish display refresh timing without controlling agent polling.
 # v1.0.0 · 2026-09-02 · Configurable simulation economics and connection settings.
 environment = "simulation"
 currency = "USD"
@@ -12,9 +14,11 @@ initial_nav = "1000.00"
 price_decimal_places = 10
 directory_url = "http://127.0.0.1:8012/api/dna/strategies"
 directory_page_size = 100
+directory_selection_limit = 500
 provider_timeout_seconds = 15
 connection_expiry_seconds = 300
 view_poll_seconds = 5
+arena_public_access = false
 max_query_results = 20
 intelligence_url = "http://127.0.0.1:8012/v1/queries"
 intelligence_mode = "external"

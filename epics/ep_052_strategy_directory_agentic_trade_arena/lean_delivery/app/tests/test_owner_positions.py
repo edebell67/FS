@@ -19,7 +19,7 @@ def register(app, client, owner=None):
 
 
 def test_worked_case_and_price_only_change_reconcile(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'positions.sqlite')
+    app, cfg = fixture_app()
     first = price(app, cfg)
     with TestClient(app) as client:
         owner, actor = register(app, client)
@@ -59,7 +59,7 @@ def test_worked_case_and_price_only_change_reconcile(tmp_path):
 
 
 def test_group_selection_dynamic_and_owner_isolation(tmp_path):
-    app, _ = fixture_app(tmp_path / 'groups.sqlite')
+    app, _ = fixture_app()
     with TestClient(app) as client:
         owner, a = register(app, client)
         _, b = register(app, client, owner)
@@ -78,7 +78,7 @@ def test_group_selection_dynamic_and_owner_isolation(tmp_path):
 
 
 def test_sold_out_positions_remain_visible_and_full_exit_has_only_cash(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'soldout.sqlite')
+    app, cfg = fixture_app()
     first = price(app, cfg, nav='100', units=10)
     with TestClient(app) as client:
         owner, actor = register(app, client)
@@ -92,7 +92,7 @@ def test_sold_out_positions_remain_visible_and_full_exit_has_only_cash(tmp_path)
 
 
 def test_backdated_source_time_cannot_leak_future_publication(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'asof.sqlite')
+    app, cfg = fixture_app()
     first = price(app, cfg)
     with TestClient(app) as client:
         owner, actor = register(app, client)
@@ -111,7 +111,7 @@ def test_backdated_source_time_cannot_leak_future_publication(tmp_path):
 
 def test_missing_quote_is_unknown_not_zero_or_reconciled(tmp_path, monkeypatch):
     from lean_exchange import positions
-    app, cfg = fixture_app(tmp_path / 'unknown.sqlite')
+    app, cfg = fixture_app()
     first = price(app, cfg)
     with TestClient(app) as client:
         owner, actor = register(app, client)
@@ -129,7 +129,7 @@ def test_missing_quote_is_unknown_not_zero_or_reconciled(tmp_path, monkeypatch):
 
 
 def test_invalid_time_windows_rejected(tmp_path):
-    app, _ = fixture_app(tmp_path / 'windows.sqlite')
+    app, _ = fixture_app()
     with TestClient(app) as client:
         owner, actor = register(app, client)
         now = datetime.now(timezone.utc)
@@ -140,7 +140,7 @@ def test_invalid_time_windows_rejected(tmp_path):
 
 
 def test_multiple_entry_prices_retain_both_receipts_without_lot_allocation(tmp_path):
-    app, cfg = fixture_app(tmp_path / 'entries.sqlite')
+    app, cfg = fixture_app()
     first = price(app, cfg)
     with TestClient(app) as client:
         owner, actor = register(app, client)

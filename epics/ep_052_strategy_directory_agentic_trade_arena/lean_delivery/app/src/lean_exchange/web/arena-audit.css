@@ -1,0 +1,8 @@
+/* v1.0.0 · 2026-09-10 · Owner activity-audit presentation. */
+.audit-heading{display:flex;align-items:end;justify-content:space-between;gap:28px;padding:30px 0 8px;border-bottom:1px solid var(--line)}
+.audit-heading h2{font-size:30px;margin:4px 0}
+.audit-heading>p{max-width:580px}
+.audit-meta{display:grid;grid-template-columns:1fr 1fr;gap:8px 24px;font:10px Consolas,monospace;color:#a9c4cd;overflow-wrap:anywhere}
+.event .effect,.event .outcome{margin:8px 0 0;font:12px Consolas,monospace}
+.event .outcome{color:var(--mint)}
+@media(max-width:760px){.audit-heading{align-items:start;flex-direction:column;gap:4px}.audit-meta{grid-template-columns:1fr}}

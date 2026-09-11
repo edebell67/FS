@@ -1,4 +1,5 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Latest-first owner history with an explicit older-message cursor for the workspace.
+# VERSION HISTORY v1.2.0 · 2026-09-10 · Record send, acknowledgement and reply effects in the owner audit.
+# v1.1.0 · 2026-09-02 · Latest-first owner history with an explicit older-message cursor for the workspace.
 # v1.0.0 · 2026-09-02 · Owner-scoped feedback, target-only acknowledgement and independently posted agent replies.
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
@@ -6,6 +7,7 @@ from uuid import UUID, uuid4
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from .contracts import Contract, FeedbackRequest, SafeText, fingerprint
+from .arena import emit
 
 
 class FeedbackReply(Contract):
@@ -52,6 +54,12 @@ def router(authority):
                         datetime.now(timezone.utc).isoformat()))
             db.executemany('INSERT INTO feedback_targets VALUES (?,?,NULL)',
                            [(feedback_id, str(agent_id)) for agent_id in request.agent_ids])
+            for agent_id in request.agent_ids:
+                emit(db, source_key='feedback-sent:' + feedback_id + ':' + str(agent_id), agent_id=str(agent_id),
+                     operation='FEEDBACK_SENT', resource_id=feedback_id, request_id=str(request.request_id),
+                     payload={'actor': {'type': 'owner', 'id': actor['owner_id']},
+                              'affected': {'type': 'agent', 'id': str(agent_id)},
+                              'effect': 'Owner message made available to the agent', 'outcome': 'DELIVERED'})
             return detail(db, db.execute('SELECT * FROM feedback WHERE id=?', (feedback_id,)).fetchone())
 
     @routes.get('/v1/owner/feedback')
@@ -90,6 +98,11 @@ def router(authority):
                        (datetime.now(timezone.utc).isoformat(), str(feedback_id), actor['agent_id']))
             row = db.execute('SELECT acknowledged_at FROM feedback_targets WHERE feedback_id=? AND agent_id=?',
                              (str(feedback_id), actor['agent_id'])).fetchone()
+            emit(db, source_key='feedback-ack:' + str(feedback_id) + ':' + actor['agent_id'], agent_id=actor['agent_id'],
+                 operation='FEEDBACK_ACKNOWLEDGED', resource_id=str(feedback_id),
+                 payload={'affected': {'type': 'owner', 'id': actor['owner_id']},
+                          'effect': 'Owner message receipt was acknowledged', 'outcome': 'ACKNOWLEDGED'},
+                 occurred_at=row['acknowledged_at'])
         return {'feedback_id': str(feedback_id), 'acknowledged_at': row['acknowledged_at'], 'meaning': 'receipt acknowledged, not proof of compliance'}
 
     @routes.post('/v1/me/feedback/{feedback_id}/responses')
@@ -105,6 +118,10 @@ def router(authority):
             reply_id, now = str(uuid4()), datetime.now(timezone.utc).isoformat()
             db.execute('INSERT INTO feedback_replies VALUES (?,?,?,?,?,?,?)',
                        (reply_id, str(feedback_id), actor['agent_id'], str(request.request_id), fingerprint(request), request.message, now))
+            emit(db, source_key='feedback-reply:' + reply_id, agent_id=actor['agent_id'], operation='FEEDBACK_REPLIED',
+                 resource_id=reply_id, request_id=str(request.request_id), occurred_at=now,
+                 payload={'affected': {'type': 'owner', 'id': actor['owner_id']},
+                          'effect': 'Agent response made available to the owner', 'outcome': 'DELIVERED'})
             return {'id': reply_id, 'feedback_id': str(feedback_id), 'message': request.message, 'created_at': now}
 
     return routes

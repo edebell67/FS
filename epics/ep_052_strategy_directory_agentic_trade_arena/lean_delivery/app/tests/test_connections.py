@@ -14,8 +14,7 @@ def headers(credential):
 def test_ten_connections_expire_reconnect_and_preserve_on_restart(tmp_path):
     now = [1000.0]
     cfg = Settings.model_validate(load_settings().model_dump() | {'connection_expiry_seconds': 30})
-    path = tmp_path / 'connections.sqlite'
-    app = create_app(cfg, database=path, clock=lambda: now[0])
+    app = create_app(cfg, clock=lambda: now[0])
     owner = app.state.authority.create_owner('Test owner')
     agents, connections = [], []
     with TestClient(app) as client:
@@ -36,7 +35,7 @@ def test_ten_connections_expire_reconnect_and_preserve_on_restart(tmp_path):
         now[0] += 31
         assert client.get('/v1/arena/connections', headers=headers(owner)).json()['items'] == []
         assert client.post('/v1/connections/' + connections[0]['id'] + '/heartbeat', headers=headers(agents[0])).status_code == 200
-    with TestClient(create_app(cfg, database=path, clock=lambda: now[0])) as client:
+    with TestClient(create_app(cfg, clock=lambda: now[0])) as client:
         assert len(client.get('/v1/arena/connections', headers=headers(owner)).json()['items']) == 1
         assert client.delete('/v1/connections/' + connections[0]['id'], headers=headers(agents[0])).status_code == 200
         assert client.post('/v1/connections/' + connections[0]['id'] + '/heartbeat', headers=headers(agents[0])).status_code == 404

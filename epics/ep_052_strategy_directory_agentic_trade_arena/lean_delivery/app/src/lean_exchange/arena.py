@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.0.0 · 2026-09-02 · Durable shared research/trade/presence projections with allowlisted payloads and resumable filtering.
+# VERSION HISTORY v1.2.0 · 2026-09-10 · Add owner-scoped comprehensive audit projection and normalized activity semantics.
+# v1.1.0 · 2026-09-10 · Apply the owner-controlled observer policy to read-only Arena projections.
+# v1.0.0 · 2026-09-02 · Durable shared research/trade/presence projections with allowlisted payloads and resumable filtering.
 from datetime import datetime, timezone
 import json
 from typing import Literal
@@ -63,18 +65,24 @@ def backfill(db):
 def router(authority):
     routes = APIRouter()
 
-    def read(after, limit, agent_id, strategy_id, operation, start, end):
+    def read(after, limit, agent_id, strategy_id, operation, start, end, owner_id=None):
         limit = limit or authority.settings.activity_page_size
         if limit > authority.settings.activity_page_size:
             raise HTTPException(422, 'Configured activity page limit exceeded')
         if any(value is not None and value.tzinfo is None for value in (start, end)) or (start and end and start > end):
             raise HTTPException(422, 'Use timezone-aware from <= to')
         clauses, params = ['cursor>?'], [after]
+        if owner_id is not None:
+            clauses.append('agent_id IN (SELECT id FROM agents WHERE owner_id=?)'); params.append(owner_id)
+        else:
+            clauses.append("operation NOT LIKE 'FEEDBACK_%'")
         for column, value in [('agent_id', agent_id), ('operation', operation)]:
             if value is not None:
                 clauses.append(column + '=?'); params.append(str(value))
         if strategy_id is not None:
-            clauses.append("(strategy_id=? OR (operation='QUERY' AND EXISTS (SELECT 1 FROM json_each(arena_events.payload,'$.strategy_ids') WHERE value=?)))")
+            # Postgres equivalent of SQLite's json_each(payload,'$.strategy_ids'): payload is
+            # stored as text, so cast to json before expanding the array to matchable elements.
+            clauses.append("(strategy_id=? OR (operation='QUERY' AND EXISTS (SELECT 1 FROM json_array_elements_text((arena_events.payload::json)->'strategy_ids') AS value WHERE value=?)))")
             params.extend([strategy_id, strategy_id])
         # UTC microsecond strings preserve precise interval boundaries without SQLite date rounding.
         for comparator, value in [('>=', start), ('<=', end)]:
@@ -85,8 +93,14 @@ def router(authority):
             rows = db.execute('SELECT * FROM arena_events WHERE ' + ' AND '.join(clauses) + ' ORDER BY cursor LIMIT ?', (*params, limit + 1)).fetchall()
             more = len(rows) > limit
             rows = rows[:limit]
-            items = [{key: row[key] for key in ('cursor','event_id','occurred_at','agent_id','operation','strategy_id','resource_id','request_id')} |
-                     {'details': json.loads(row['payload'])} for row in rows]
+            items = []
+            for row in rows:
+                details = json.loads(row['payload'])
+                items.append({key: row[key] for key in ('cursor','event_id','occurred_at','agent_id','operation','strategy_id','resource_id','request_id')} |
+                             {'actor': details.get('actor', {'type': 'agent', 'id': row['agent_id']}),
+                              'affected': details.get('affected', {'type': 'strategy' if row['strategy_id'] else 'arena', 'id': row['strategy_id']}),
+                              'effect': details.get('effect', _effect(row['operation'], details)),
+                              'outcome': details.get('outcome', 'RECORDED'), 'details': details})
         return {'items': items, 'next_cursor': rows[-1]['cursor'] if more else max(after, high_water),
                 'has_more': more, 'high_water_cursor': high_water,
                 'notice': 'Shared activity excludes private funding, feedback, explanations and unrecognised free-form research text. Change filters with cursor0.'}
@@ -94,17 +108,40 @@ def router(authority):
     @routes.get('/v1/arena/activity')
     def events(after: int = Query(default=0, ge=0), limit: int | None = Query(default=None, gt=0),
                agent_id: UUID | None = None, strategy_id: str | None = Query(default=None, pattern=r'^DNA_[0-9]+$'),
-               operation: Literal['BUY','SELL','QUERY','REPORT','REJECTED','CONNECT','DISCONNECT'] | None = None,
+               operation: Literal['BUY','SELL','QUERY','REPORT','REJECTED','CONNECT','HEARTBEAT','DISCONNECT','MOVE'] | None = None,
                start: datetime | None = Query(default=None, alias='from'), end: datetime | None = Query(default=None, alias='to'),
-               actor=Depends(authority.authenticate)):
+               actor=Depends(authority.arena_viewer)):
         return read(after, limit, agent_id, strategy_id, operation, start, end)
+
+    @routes.get('/v1/owner/activity-audit')
+    def owner_audit(after: int = Query(default=0, ge=0), limit: int | None = Query(default=None, gt=0),
+                    agent_id: UUID | None = None, strategy_id: str | None = Query(default=None, pattern=r'^DNA_[0-9]+$'),
+                    operation: str | None = None, start: datetime | None = Query(default=None, alias='from'),
+                    end: datetime | None = Query(default=None, alias='to'), actor=Depends(authority.owner)):
+        return read(after, limit, agent_id, strategy_id, operation, start, end, actor['owner_id'])
 
     @routes.get('/v1/arena/inventory-effects')
     def effects(after: int = Query(default=0, ge=0), limit: int | None = Query(default=None, gt=0),
-                actor=Depends(authority.authenticate)):
+                actor=Depends(authority.arena_viewer)):
         # The canonical feed carries the same trade identity; callers advance over non-trade events safely.
         page = read(after, limit, None, None, None, None, None)
         page['items'] = [item for item in page['items'] if item['operation'] in ('BUY','SELL')]
         return page
 
     return routes
+
+
+def _effect(operation, details):
+    if operation in ('BUY', 'SELL'):
+        return f"Inventory {details.get('available_units_before', '—')} → {details.get('available_units_after', '—')} units"
+    if operation == 'QUERY':
+        return f"Delivered {details.get('result_count', 0)} strategy results"
+    if operation == 'CONNECT': return 'Agent became visible on the trading floor'
+    if operation == 'HEARTBEAT': return 'Agent presence was renewed'
+    if operation == 'DISCONNECT': return 'Agent left the trading floor'
+    if operation == 'FEEDBACK_SENT': return 'Owner message made available to the agent'
+    if operation == 'FEEDBACK_ACKNOWLEDGED': return 'Owner message receipt was acknowledged'
+    if operation == 'FEEDBACK_REPLIED': return 'Agent response made available to the owner'
+    if operation == 'MOVE': return f"Agent moved toward the {details.get('destination', 'requested')} booth"
+    if operation == 'REJECTED': return 'No trade or inventory change occurred'
+    return details.get('action', 'Activity recorded')

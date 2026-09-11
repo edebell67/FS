@@ -1,4 +1,5 @@
-# VERSION HISTORY v1.1.0 · 2026-09-02 · Declare bearer security in OpenAPI so protected APIs can be tested interactively.
+# VERSION HISTORY v1.2.0 · 2026-09-10 · Permit anonymous read-only Arena observation only when the persisted policy is public.
+# v1.1.0 · 2026-09-02 · Declare bearer security in OpenAPI so protected APIs can be tested interactively.
 # v1.0.0 · 2026-09-02 · Opaque owner/agent credentials, durable expiry/revocation and role boundaries.
 from hashlib import sha256
 import secrets
@@ -43,6 +44,21 @@ class Authority:
         if not row or row['revoked'] or row['expires_at'] <= self.clock():
             raise HTTPException(401, 'Invalid, expired or revoked credential')
         actor = dict(row)
+        request.state.actor = actor
+        return actor
+
+    def arena_public(self):
+        with self.store.transaction() as db:
+            row = db.execute("SELECT value FROM metadata WHERE key='arena_public_access'").fetchone()
+        return self.settings.arena_public_access if row is None else row['value'] == 'true'
+
+    def arena_viewer(self, request: Request, credential: HTTPAuthorizationCredentials | None = Depends(bearer)):
+        # A supplied credential is always validated: malformed/expired credentials never silently downgrade.
+        if request.headers.get('authorization'):
+            return self.authenticate(request)
+        if not self.arena_public():
+            raise HTTPException(401, 'Arena entry token required')
+        actor = {'owner_id': None, 'agent_id': None, 'role': 'arena_observer', 'expires_at': None}
         request.state.actor = actor
         return actor
 

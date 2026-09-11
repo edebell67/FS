@@ -1,5 +1,8 @@
-# VERSION HISTORY v1.0.0 · 2026-09-02 · Read-only directory adapter with strict pagination and honest price provenance.
-from datetime import datetime, timezone
+# VERSION HISTORY v1.3.0 · 2026-09-10 · Select the configured top N only from strategies traded on the current local day.
+# v1.2.0 · 2026-09-10 · Select the configured top N from the explicit full directory universe.
+# v1.1.0 · 2026-09-10 · Request and retain the top-500 directory selection in descending net-return order.
+# v1.0.0 · 2026-09-02 · Read-only directory adapter with strict pagination and honest price provenance.
+from datetime import date, datetime, timezone
 from decimal import Decimal, localcontext
 from hashlib import sha256
 import json
@@ -33,6 +36,7 @@ class DirectorySnapshot(BaseModel):
     retrieved_at: datetime
     page_as_of: list[datetime]
     total: int
+    source_total: int | None = None
     open_evidence_available: bool
     exchange_prices_available: Literal[False] = False
     warnings: list[str]
@@ -45,6 +49,7 @@ class DirectoryProvider:
 
     def fetch(self) -> DirectorySnapshot:
         cfg = self.settings
+        trading_day = date.today().isoformat()
         items: list[StrategyRecord] = []
         timestamps: list[datetime] = []
         expected_total = None
@@ -53,7 +58,9 @@ class DirectoryProvider:
             with httpx.Client(timeout=cfg.provider_timeout_seconds, transport=self.transport,
                               follow_redirects=False) as client:
                 for page in range(1, cfg.directory_max_pages + 1):
-                    response = client.get(cfg.directory_url, params={'page': page, 'page_size': cfg.directory_page_size})
+                    response = client.get(cfg.directory_url, params={'page': page, 'page_size': cfg.directory_page_size,
+                                                                     'sort': 'total_net_return', 'direction': 'desc',
+                                                                     'date_from': trading_day, 'date_to': trading_day})
                     if response.status_code != 200:
                         raise ProviderError('DIRECTORY_UNAVAILABLE')
                     payload = response.json()
@@ -77,7 +84,7 @@ class DirectoryProvider:
                     items.extend(batch)
                     if len(items) > total or len(batch) > cfg.directory_page_size:
                         raise ProviderError('DIRECTORY_INVALID_PAGINATION')
-                    if len(items) == total:
+                    if len(items) >= min(total, cfg.directory_selection_limit):
                         break
                     if not batch:
                         raise ProviderError('DIRECTORY_INCOMPLETE')
@@ -85,10 +92,12 @@ class DirectoryProvider:
                     raise ProviderError('DIRECTORY_PAGE_LIMIT')
         except (httpx.HTTPError, ValidationError, ValueError, KeyError, TypeError) as exc:
             raise ProviderError('DIRECTORY_INVALID_OR_UNAVAILABLE') from exc
-        canonical = [item.model_dump(mode='json') for item in sorted(items, key=lambda x: x.strategy_id)]
+        items.sort(key=lambda item: (-item.total_net_return, item.strategy_id))
+        items = items[:cfg.directory_selection_limit]
+        canonical = [item.model_dump(mode='json') for item in items]
         version = sha256(json.dumps(canonical, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
         open_available = bool(items) and all(x.open_trades is not None and x.open_net_return is not None for x in items)
-        return DirectorySnapshot(items=items, total=len(items), source_version=version,
+        return DirectorySnapshot(items=items, total=len(items), source_total=expected_total, source_version=version,
                                  retrieved_at=datetime.now(timezone.utc), page_as_of=timestamps,
                                  open_evidence_available=open_available,
                                  warnings=['Catalogue/performance is not published USD unit pricing.'] +

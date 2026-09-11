@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.0.0 · 2026-09-02 · Available-only directory projection over explicit issued units and recorded trades.
+# VERSION HISTORY v1.2.0 · 2026-09-10 · Report the full directory population separately from the selected top-N Arena catalogue.
+# v1.1.0 · 2026-09-10 · Allow policy-controlled anonymous Arena reads without opening trading APIs.
+# v1.0.0 · 2026-09-02 · Available-only directory projection over explicit issued units and recorded trades.
 from typing import Literal
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -19,7 +21,7 @@ def router(authority, directory):
             return {'price': None, 'available_units': None, 'issued_units': None, 'valuation_bound': False}
 
     @routes.get('/v1/strategies')
-    def discover(availability: Literal['available', 'all'] = 'available', actor=Depends(authority.authenticate)):
+    def discover(availability: Literal['available', 'all'] = 'available', actor=Depends(authority.arena_viewer)):
         try:
             source = directory.fetch()
         except ProviderError as exc:
@@ -31,12 +33,12 @@ def router(authority, directory):
                 item['available_to_buy'] = item['valuation_bound'] and item['available_units'] > 0 and row.status == 'active'
                 if availability == 'all' or item['available_to_buy']:
                     items.append(item)
-        return {'items': items, 'source_version': source.source_version, 'source_total': source.total,
+        return {'items': items, 'source_version': source.source_version, 'source_total': source.source_total or source.total,
                 'inventory_authority': 'explicit_issued_baseline_plus_local_trade_records',
                 'notice': 'Unbound prices/units are unknown, never inferred from performance returns.'}
 
     @routes.get('/v1/strategies/{strategy_id}')
-    def detail(strategy_id: str, actor=Depends(authority.authenticate)):
+    def detail(strategy_id: str, actor=Depends(authority.arena_viewer)):
         with store.transaction(immediate=True) as db:
             result = quote_and_units(db, strategy_id)
         if not result['valuation_bound']:
@@ -44,7 +46,7 @@ def router(authority, directory):
         return {'strategy_id': strategy_id, **result}
 
     @routes.get('/v1/strategies/{strategy_id}/price')
-    def price(strategy_id: str, actor=Depends(authority.authenticate)):
+    def price(strategy_id: str, actor=Depends(authority.arena_viewer)):
         try:
             with store.transaction() as db:
                 return latest(db, strategy_id)

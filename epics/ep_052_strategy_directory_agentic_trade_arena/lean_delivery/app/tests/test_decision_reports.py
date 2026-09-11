@@ -7,8 +7,7 @@ from lean_exchange.api import create_app
 
 
 def test_hold_retries_are_durable_and_do_not_charge(tmp_path):
-    path = tmp_path / 'decisions.sqlite'
-    app = create_app(database=path)
+    app = create_app()
     owner = app.state.authority.create_owner('Owner')
     owner_auth = {'Authorization': 'Bearer ' + owner['token']}
     with TestClient(app) as client:
@@ -27,5 +26,5 @@ def test_hold_retries_are_durable_and_do_not_charge(tmp_path):
             assert client.post('/v1/me/decisions', json=forged, headers=auth).status_code == 409
         assert len(client.get('/v1/me/decisions', headers=auth).json()['items']) == 1
         assert client.get('/v1/me/decisions', headers=owner_auth).status_code == 403
-    with TestClient(create_app(database=path)) as restarted:
+    with TestClient(create_app()) as restarted:
         assert restarted.get('/v1/me/decisions', headers=auth).json()['items'][0] == first.json()

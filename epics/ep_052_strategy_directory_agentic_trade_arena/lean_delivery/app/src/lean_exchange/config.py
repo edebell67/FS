@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.3.0 · 2026-09-02 · Configure display-only Arena refresh independently of external agent polling.
+# VERSION HISTORY v1.5.0 · 2026-09-10 · Configure the number of top-ranked strategies selected from the full directory universe.
+# v1.4.0 · 2026-09-10 · Add the default server-side Arena public-access policy.
+# v1.3.0 · 2026-09-02 · Configure display-only Arena refresh independently of external agent polling.
 # v1.2.0 · 2026-09-02 · Configurable credential lifetime, body/rate limits and activity pagination.
 # v1.1.0 · 2026-09-02 · Bound directory pagination and validate configured HTTP locations.
 # v1.0.0 · 2026-09-02 · Strict configurable economics; no exchange bank integration.
@@ -29,6 +31,7 @@ class Settings(BaseModel):
     directory_url: str
     directory_page_size: int = Field(default=100, ge=1, le=100, strict=True)
     directory_max_pages: int = Field(default=100, ge=1, strict=True)
+    directory_selection_limit: int = Field(default=500, ge=1, strict=True)
     provider_timeout_seconds: float = Field(default=15, gt=0)
     connection_expiry_seconds: int = Field(default=300, gt=0, strict=True)
     credential_ttl_seconds: int = Field(default=86400, gt=0, strict=True)
@@ -37,6 +40,7 @@ class Settings(BaseModel):
     max_body_bytes: int = Field(default=32768, gt=0, strict=True)
     activity_page_size: int = Field(default=100, gt=0, strict=True)
     view_poll_seconds: int = Field(default=5, gt=0, le=3600, strict=True)
+    arena_public_access: bool = False
     max_query_results: int = Field(default=20, gt=0, strict=True)
     intelligence_url: str
     intelligence_mode: Literal['simulated_random', 'external'] = 'simulated_random'

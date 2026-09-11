@@ -19,7 +19,7 @@ def test_every_application_route_records_authenticated_outcome(tmp_path, monkeyp
                                source_version='test-only', retrieved_at=now, page_as_of=[now], total=1,
                                open_evidence_available=False, warnings=['TEST_FIXTURE'])
     monkeypatch.setattr(DirectoryProvider, 'fetch', lambda self: source)
-    app = setup_app(tmp_path / 'routes.sqlite', [])
+    app = setup_app([])
     owner = app.state.authority.create_owner('Route coverage owner')
     actor = None
     observed = set()

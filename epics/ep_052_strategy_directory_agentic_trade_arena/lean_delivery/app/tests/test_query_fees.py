@@ -40,9 +40,9 @@ def provider(cfg, calls, failure=None):
     return IntelligenceClient(cfg, token='test-only', transport=httpx.MockTransport(respond))
 
 
-def setup_app(path, calls, failure=None, **settings):
+def setup_app(calls, failure=None, **settings):
     cfg = Settings.model_validate(load_settings().model_dump() | settings)
-    app = create_app(cfg, database=path, intelligence_provider=provider(cfg, calls, failure))
+    app = create_app(cfg, intelligence_provider=provider(cfg, calls, failure))
     return app
 
 
@@ -52,8 +52,8 @@ def register(client, app):
 
 
 def test_success_exact_retry_refresh_receipt_and_restart(tmp_path):
-    path, calls = tmp_path / 'query.sqlite', []
-    app = setup_app(path, calls)
+    calls = []
+    app = setup_app(calls)
     query = {'request_id': str(uuid4()), 'kind': 'lowest_drawdown', 'limit': 2}
     with TestClient(app) as client:
         agent = register(client, app)
@@ -72,7 +72,7 @@ def test_success_exact_retry_refresh_receipt_and_restart(tmp_path):
         other = register(client, app)
         url = '/participant/v1/me/queries/' + original['delivery']['delivery_id']
         assert client.get(url, headers=headers(other)).status_code == 404
-    app = setup_app(path, calls, failure='http', intelligence_fee='0.03')
+    app = setup_app(calls, failure='http', intelligence_fee='0.03')
     with TestClient(app) as client:
         assert client.post('/participant/v1/me/queries', json=query, headers=auth).json() == original
         assert client.get(url, headers=auth).json() == original
@@ -81,7 +81,7 @@ def test_success_exact_retry_refresh_receipt_and_restart(tmp_path):
 
 @pytest.mark.parametrize('failure', ['http', 'mismatched', 'mode', 'duplicates'])
 def test_provider_failure_never_charges_or_exposes_result(tmp_path, failure):
-    app = setup_app(tmp_path / 'query.sqlite', [], failure=failure)
+    app = setup_app([], failure=failure)
     with TestClient(app) as client:
         auth = headers(register(client, app))
         result = client.post('/participant/v1/me/queries', json={'request_id': str(uuid4()), 'kind': 'random'}, headers=auth)
@@ -92,7 +92,7 @@ def test_provider_failure_never_charges_or_exposes_result(tmp_path, failure):
 
 def test_concurrent_final_cent_delivers_only_one_query(tmp_path):
     calls = []
-    app = setup_app(tmp_path / 'query.sqlite', calls, seed_funds='0.01')
+    app = setup_app(calls, seed_funds='0.01')
     with TestClient(app) as client:
         auth = headers(register(client, app))
         def submit(_):
@@ -105,7 +105,7 @@ def test_concurrent_final_cent_delivers_only_one_query(tmp_path):
 
 
 def test_concurrent_exact_retry_one_fee(tmp_path):
-    app = setup_app(tmp_path / 'query.sqlite', [], seed_funds='0.01')
+    app = setup_app([], seed_funds='0.01')
     with TestClient(app) as client:
         auth = headers(register(client, app))
         body = {'request_id': str(uuid4()), 'kind': 'random'}

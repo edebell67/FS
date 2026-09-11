@@ -1,4 +1,16 @@
-// VERSION HISTORY v1.14.0 · 2026-09-02 · Restored3D floor verified on live review API; original simulation excluded; exact375px remains pending.
+// VERSION HISTORY v1.26.0 · 2026-09-10 · Bind open-admission agents to the enabling owner and continuously exchange owner feedback.
+// v1.25.0 · 2026-09-10 · Allow open-admission agents to obtain unique identities and render connected agents as headed cruciform figures.
+// v1.24.0 · 2026-09-10 · Select top 500 by descending net return from strategies traded today only.
+// v1.23.0 · 2026-09-10 · Select top 500 after querying the full source universe rather than its capped intelligence snapshot.
+// v1.22.0 · 2026-09-10 · Select the Arena catalogue as the top 500 strategies by descending net return.
+// v1.21.0 · 2026-09-10 · Make every strategy marker visibly and continuously mill around its family booth.
+// v1.20.0 · 2026-09-10 · Place the owner-authorised open/token entry control directly on the Arena entry screen.
+// v1.19.0 · 2026-09-10 · Replace perfect strategy orbits with irregular market-like milling around family booths.
+// v1.18.0 · 2026-09-10 · Add persisted owner-controlled open/token Arena observer entry without opening action APIs.
+// v1.17.0 · 2026-09-10 · Place family booths at the exchange corners and orbit one signed-return marker per strategy.
+// v1.16.0 · 2026-09-10 · Make the four 3D booths correspond one-to-one with the four strategy-family windows.
+// v1.15.0 · 2026-09-10 · Add four API-backed strategy-family windows with net-return lists to the Arena floor scope.
+// v1.14.0 · 2026-09-02 · Restored3D floor verified on live review API; original simulation excluded; exact375px remains pending.
 // v1.13.0 · 2026-09-02 · User correction:3D floor is primary Arena; API activity dashboard retained as audit view; visual integration now in progress.
 // v1.12.0 · 2026-09-02 · Add a runnable delivery-access check; full evidence and external-agent acceptance remain incomplete.
 // v1.11.0 · 2026-09-02 · Correct live visitor guidance and record tested Hermes authentication blockers without claiming an agent visit.
@@ -74,7 +86,7 @@ window.EP052_WORKFLOW={
       "purpose": "Load existing source URL/auth/schema from configuration, never Markdown secrets.",
       "inputs": "Existing directory8012 mapped; actual USD NAV/issued units and open-evidence binding unresolved",
       "steps": [
-        "Load existing source URL/auth/schema from configuration, never Markdown secrets.",
+        "Load the existing source URL/auth/schema from configuration, restrict the population to strategies traded today, then select its top 500 by total_net_return descending; never use Markdown secrets.",
         "Choose one inventory authority: trade-aware upstream or read-only baseline plus recorded trade overlay.",
         "Map published USD price/version/time using existing valuation method; no GBP relabelling or fabricated production prices."
       ],
@@ -135,6 +147,7 @@ window.EP052_WORKFLOW={
       "inputs": "L1-03",
       "steps": [
         "Bind owner and agent to issued credentials and permitted scopes.",
+        "When Arena admission is open, allow a visiting agent to request a new server-issued agent ID and scoped credential without an owner token, bind it to the owner who enabled admission, and reject this route when admission is token-required.",
         "Persist expiry/revocation and validate on every protected request.",
         "Limit input sizes and request rates; redact credentials from records."
       ],
@@ -374,16 +387,16 @@ window.EP052_WORKFLOW={
       "purpose": "Restore existing spatial booth/agent presentation, driven only by lean API records.",
       "inputs": "L4-04",
       "steps": [
-        "Authenticate with existing credential; GET discovery, all-directory inventory, current presence and cursor-paged public events. Fail visibly on API errors and clear session data on sign-out.",
+        "Apply the persisted owner-selected Arena entry mode: either authenticate with an existing credential or allow anonymous read-only observation when open access is enabled. Keep connections, intelligence, trades, participant and owner APIs credential-protected.",
         "Adapt archived perspective geometry, booth selection and camera controls; replace its simulation engine with API-only view data. Catalogue booths may be unpriced or sold-out and must say so; available-only mode excludes them.",
-        "Render current connected identities only; animate newly observed query/trade events without fabricating decisions, historical charts or returns. Orbit/zoom operate on the camera only; fees come from configuration.",
+        "Render current connected identities only as proportionate cruciform figures with distinct heads; animate newly observed query/trade events without fabricating decisions, historical charts or returns. Orbit/zoom operate on the camera only; fees come from configuration.",
         "Provide a keyboard-accessible booth list and inspector plus retained activity audit/filter view. Verify error/sign-out/race handling, real API values, responsive layout and no trading requests."
       ],
       "test": "Browser shows one then ten externally connected agents; query/trade effects match APIs; 375px layout has no overflow.",
       "evidence": "Restored archived perspective geometry and booth/camera interactions on API-only snapshots; no old simulation engine or fabricated charts/returns.107 Python regressions and5 Node scene tests pass. Live8056 browser:500 real catalogue records, available-only1 priced strategy, inspector1.50/550/1000 with fixture provenance,1/10/0 HTTP presence clients, orbit/zoom/reset, pagination/search, BUY audit500 at1.15, invalid auth/signout clearing. Original receipts/funds unchanged. Screenshots evidence/arena/floor-01..08; floor-final-results.xml; floor-scene-results.xml. Width451/scroll436 has no horizontal overflow; exact375px remains unverified. External HTTP clients are not autonomous Hermes.",
       "dependencies": "L4-04",
       "executor": "lean_delivery/app/src/lean_exchange/views.py::arena; web/arena.html, arena.css, arena.js",
-      "outputs": "Read-only3D Arena with audit tab; tests/test_arena_browser.py and test_arena_scene.cjs; scripts/arena_review_clients.py",
+      "outputs": "Read-only3D Arena with audit tab; persisted owner-authorised open/token entry toggle located on the Arena entry screen; exactly four family booths placed at the four exchange corners and mapped one-to-one to scrolling family windows; one thin 3D marker per strategy milling on an individual irregular path around its relevant booth, green for positive net return and red for negative/non-positive; tests/test_arena_browser.py and test_arena_scene.cjs; scripts/arena_review_clients.py",
       "deliverable": "http://127.0.0.1:8056/arena",
       "pct": 80,
       "status": "In progress"
@@ -437,7 +450,7 @@ window.EP052_WORKFLOW={
       "steps": [
         "Record owner messages to agent/group, expose authorised fetch and acknowledgement.",
         "Display feedback alongside the participant view through APIs.",
-        "External agent reads/responds independently; acknowledgement is not proof it obeyed."
+        "Continuously refresh the owner workspace while connected; external agents poll and acknowledge messages alongside heartbeat, then decide independently whether and how to respond. Acknowledgement is not proof they obeyed."
       ],
       "test": "Owner sends feedback, external agent fetches/acks and owner sees result; another owner cannot read it.",
       "evidence": "69 tests passed (evidence/feedback/results.xml); actual browser group send -> external HTTP client fetch/ack/reply -> owner Refresh shows reply -> reload/re-auth retains it. Screenshots01–08 and live-response.log. Owner/target isolation, duplicate retries, latest/older pagination tested. Credentials memory-only; HTML text not interpreted. HTTP client demonstration is not autonomous Hermes acceptance.",

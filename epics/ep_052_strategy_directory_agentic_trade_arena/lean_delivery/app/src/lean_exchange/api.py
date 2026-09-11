@@ -1,4 +1,6 @@
-# VERSION HISTORY v1.10.0 · 2026-09-02 · Advertise the read-only live Arena workspace.
+# VERSION HISTORY v1.12.0 · 2026-09-06 · create_app's `database` param is now a Postgres connection URL (was a SQLite file Path); Store(database_url) reads EP052_DATABASE_URL/DATABASE_URL when omitted.
+# v1.11.0 · 2026-09-05 · Read allowed hosts from EP052_ALLOWED_HOSTS so hosted deploys aren't rejected by TrustedHostMiddleware.
+# v1.10.0 · 2026-09-02 · Advertise the read-only live Arena workspace.
 # v1.9.0 · 2026-09-02 · Serve authenticated shared Arena projections with resumable filtering.
 # v1.8.0 · 2026-09-02 · Expose private positions and owner value-change reconciliation from recorded prices/trades.
 # v1.7.2 · 2026-09-02 · Advertise verified trade-report links and updated visitor rules after live settlement verification.
@@ -14,6 +16,7 @@
 # v1.2.0 · 2026-09-02 · Publish executable contract schemas and validation-only routes for review.
 # v1.1.0 · 2026-09-02 · Expose read-only source diagnostics without claiming tradable inventory or prices.
 # v1.0.0 · 2026-09-02 · Live discovery/configuration/rule delivery; only implemented capabilities advertised.
+import os
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException
@@ -26,7 +29,7 @@ from .contracts import TradeRequest, QueryRequest, schema_catalogue, fingerprint
 from .intelligence import contract
 from .records import Store
 from .auth import Authority
-from . import access, activity, connections, participant_funds, query_gateway, feedback, decisions, views, inventory, trades, positions, arena
+from . import access, activity, connections, participant_funds, query_gateway, feedback, decisions, views, inventory, trades, positions, arena, arena_actions
 from .intelligence_client import IntelligenceClient
 import time
 
@@ -34,18 +37,20 @@ RULES_ROOT = APP_ROOT.parents[1] / 'rules'
 
 
 def create_app(settings: Settings | None = None, rules_root: Path | None = None,
-               directory: DirectoryProvider | None = None, database: Path | None = None, clock=time.time,
+               directory: DirectoryProvider | None = None, database: str | None = None, clock=time.time,
                intelligence_provider=None) -> FastAPI:
     cfg = settings or load_settings()
     root = rules_root or RULES_ROOT
     provider = directory or DirectoryProvider(cfg)
-    authority = Authority(Store(database), cfg, clock)
+    authority = Authority(Store(database), cfg, clock)  # database: Postgres URL, or None to read EP052_DATABASE_URL/DATABASE_URL
     with authority.store.transaction() as db:
         for row in db.execute('SELECT id FROM agents').fetchall():
             participant_funds.initialise(db, row['id'], cfg.seed_funds)
     app = FastAPI(title='EP052 Lean Exchange API', version='0.1.0',
                   description='Visiting-agent API. Only listed endpoints are implemented; no agent runner.')
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=['127.0.0.1', 'localhost', 'testserver'])
+    default_hosts = '127.0.0.1,localhost,testserver'
+    allowed_hosts = [h.strip() for h in os.environ.get('EP052_ALLOWED_HOSTS', default_hosts).split(',') if h.strip()]
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=allowed_hosts)
     app.add_middleware(activity.ActionMiddleware, authority=authority)
     app.state.authority = authority
     app.include_router(access.router(authority))
@@ -60,6 +65,7 @@ def create_app(settings: Settings | None = None, rules_root: Path | None = None,
     app.include_router(trades.router(authority))
     app.include_router(positions.router(authority))
     app.include_router(arena.router(authority))
+    app.include_router(arena_actions.router(authority))
 
     @app.get('/health')
     def health():
