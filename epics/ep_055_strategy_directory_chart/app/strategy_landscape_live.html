@@ -1,0 +1,1722 @@
+<!-- VERSION HISTORY
+v1.0.5 · 2026-09-14 · Make product selection filter closed and live data across every view.
+v1.0.4 · 2026-09-14 · Show TP and SL values/ranges on positive cluster labels.
+v1.0.3 · 2026-09-14 · Add positive-net-only filter across closed and live strategy layers.
+v1.0.2 · 2026-09-12 · Exclude unrecognised IDs; use numeric Non-DNA targets and clear stale selection.
+v1.0.1 · 2026-09-12 · Reload direction-filtered history, reject stale responses, and refresh all counts/pillars.
+-->
+<title>Strategy Landscape</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23C8F250'/%3E%3Crect x='9' y='9' width='14' height='14' rx='1.5' fill='%230A0C0E'/%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0a0d13; --panel:#11151d; --panel-2:#161b25; --line:#232a37;
+  --text:#e7ebf3; --muted:#8a93a6; --faint:#4c5566;
+  --green:#3ddc97; --green-dim:#1d5c47;
+  --red:#ff5d5d; --red-dim:#5c2323;
+  --neutral:#5b6479;
+  --amber:#f4b942;
+  --cyan:#4fd6ff;
+  --font-display:'Sora',system-ui,sans-serif;
+  --font-body:'IBM Plex Sans',system-ui,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme: light){
+  :root:not([data-theme="dark"]){
+    --bg:#f3f4f7; --panel:#ffffff; --panel-2:#f8f9fb; --line:#e0e3ea;
+    --text:#161a22; --muted:#5c6473; --faint:#9aa2b1;
+    --green:#0f9d63; --green-dim:#d3f3e6;
+    --red:#d1363a; --red-dim:#fbdcdc;
+    --neutral:#9aa2b1;
+    --amber:#b8790e;
+    --cyan:#0891b2;
+  }
+}
+:root[data-theme="light"]{
+  --bg:#f3f4f7; --panel:#ffffff; --panel-2:#f8f9fb; --line:#e0e3ea;
+  --text:#161a22; --muted:#5c6473; --faint:#9aa2b1;
+  --green:#0f9d63; --green-dim:#d3f3e6;
+  --red:#d1363a; --red-dim:#fbdcdc;
+  --neutral:#9aa2b1;
+  --amber:#b8790e;
+  --cyan:#0891b2;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0; background:var(--bg); color:var(--text);
+  font-family:var(--font-body);
+  height:100vh; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+h1,h2,h3{font-family:var(--font-display); text-wrap:balance; margin:0;}
+.mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+/* top bar */
+.topbar{
+  display:flex; align-items:center; gap:14px 20px; flex-wrap:wrap;
+  padding:14px 20px; border-bottom:1px solid var(--line);
+  background:var(--panel); flex-shrink:0; z-index:5;
+  max-height:45vh; overflow-y:auto;
+}
+.divider-v{ display:none; }
+@media (min-width: 1400px){ .divider-v{ display:block; } }
+.brand{display:flex; flex-direction:column; gap:2px;}
+.brand h1{font-size:18px; font-weight:700; letter-spacing:.2px;}
+.brand .sub{font-size:11px; color:var(--muted); font-family:var(--font-mono); letter-spacing:.3px;}
+.divider-v{width:1px; align-self:stretch; background:var(--line);}
+.control-group{display:flex; flex-direction:column; gap:4px;}
+.control-label{font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted);}
+.snap-row{display:flex; gap:4px;}
+.snap-btn{
+  font-family:var(--font-mono); font-size:12px; padding:6px 10px;
+  border:1px solid var(--line); background:var(--panel-2); color:var(--muted);
+  border-radius:5px; cursor:pointer; transition:all .12s ease;
+}
+.snap-btn:hover{color:var(--text); border-color:var(--faint);}
+.snap-btn.active{background:var(--text); color:var(--panel); border-color:var(--text); font-weight:600;}
+select.snap-btn{appearance:none; -webkit-appearance:none; cursor:pointer; padding-right:22px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238a93a6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 8px center;}
+select.snap-btn option{background:var(--panel-2); color:var(--text);}
+.mode-row{display:flex; gap:4px;}
+.mode-btn{
+  font-family:var(--font-body); font-size:12px; padding:6px 12px;
+  border:1px solid var(--line); background:var(--panel-2); color:var(--muted);
+  border-radius:5px; cursor:pointer;
+}
+.mode-btn.active{background:var(--amber); color:#221a05; border-color:var(--amber); font-weight:600;}
+.mode-btn:not(.active):hover{color:var(--text);}
+.spacer{flex:1;}
+.pop-stats{display:flex; gap:18px; align-items:center;}
+.pop-stat{display:flex; flex-direction:column; align-items:flex-end; gap:1px;}
+.pop-stat .v{font-family:var(--font-mono); font-size:15px; font-weight:600;}
+.pop-stat .l{font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em;}
+.pop-stat .v.g{color:var(--green);} .pop-stat .v.r{color:var(--red);}
+
+/* main layout */
+.main{flex:1; display:flex; min-height:0; position:relative;}
+.stage-wrap{flex:1; position:relative; min-width:0;}
+canvas{display:block; width:100%; height:100%; cursor:crosshair;}
+
+.family-label{
+  position:absolute; font-family:var(--font-display); font-weight:700;
+  font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--text); pointer-events:none;
+  background:color-mix(in srgb, var(--panel) 78%, transparent);
+  padding:4px 9px; border-radius:5px; border:1px solid var(--line);
+}
+.family-label .count{color:var(--muted); font-weight:400; font-family:var(--font-mono); text-transform:none; margin-left:6px; font-size:11px;}
+.region-label--cell{
+  font-family:var(--font-mono); font-weight:600; font-size:9px; letter-spacing:0;
+  padding:1px 4px; text-transform:none;
+}
+.region-label--cell .count{font-size:8.5px; margin-left:3px;}
+
+.cluster-tag{
+  position:absolute; pointer-events:none; font-family:var(--font-mono);
+  font-size:10.5px; font-weight:600; color:#221a05; background:var(--amber);
+  padding:2px 7px; border-radius:4px; white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.35);
+}
+.cluster-tag .tp-sl{display:block; font-size:9px; font-weight:500; opacity:.82; text-align:center;}
+
+/* side panel */
+.side{
+  width:280px; flex:0 0 auto; border-left:1px solid var(--line);
+  background:var(--panel); overflow-y:auto; padding:16px;
+  display:flex; flex-direction:column; gap:18px;
+}
+.side h3{font-size:12px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin-bottom:10px; font-weight:600;}
+.fam-card{
+  border:1px solid var(--line); border-radius:8px; padding:10px 12px;
+  background:var(--panel-2); margin-bottom:8px;
+}
+.fam-card .name{font-size:13px; font-weight:600;}
+.fam-card .grid{display:grid; grid-template-columns:1fr 1fr; gap:4px 10px; margin-top:8px;}
+.fam-card .kv{display:flex; justify-content:space-between; font-size:11px;}
+.fam-card .kv .k{color:var(--muted);}
+.fam-card .kv .v{font-family:var(--font-mono);}
+
+.cluster-card{
+  border:1px solid var(--line); border-left:3px solid var(--amber); border-radius:6px;
+  padding:8px 10px; background:var(--panel-2); margin-bottom:7px; font-size:11.5px;
+}
+.cluster-card .rank{font-family:var(--font-mono); color:var(--amber); font-weight:700; font-size:11px;}
+.cluster-card .fam{color:var(--muted); font-size:10.5px;}
+.cluster-card .stats{margin-top:5px; display:flex; gap:10px; font-family:var(--font-mono); font-size:11px;}
+
+/* Live Fastest Movers uses cyan, deliberately different from the amber snapshot-
+   based Fastest-Growth Clusters above - they measure different things (a live
+   time window vs a snapshot-to-snapshot delta) and looked like the same feature
+   when both were amber. */
+.mover-card{
+  border:1px solid var(--line); border-left:3px solid var(--cyan); border-radius:6px;
+  padding:8px 10px; background:var(--panel-2); margin-bottom:7px; font-size:11.5px;
+}
+.mover-card .rank{font-family:var(--font-mono); color:var(--cyan); font-weight:700; font-size:11px;}
+.mover-card .fam{color:var(--muted); font-size:10.5px;}
+.mover-card .stats{margin-top:5px; display:flex; gap:10px; font-family:var(--font-mono); font-size:11px;}
+
+/* detail panel */
+.detail{
+  position:absolute; right:16px; bottom:16px; width:260px;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px;
+  padding:14px; box-shadow:0 12px 30px rgba(0,0,0,.4);
+  transform:translateY(12px); opacity:0; pointer-events:none;
+  transition:transform .15s ease, opacity .15s ease;
+}
+.detail.show{transform:translateY(0); opacity:1; pointer-events:auto;}
+.detail .id{font-family:var(--font-mono); font-size:11px; color:var(--muted);}
+.detail .name{font-size:14px; font-weight:700; margin-top:2px;}
+.detail .close{position:absolute; top:10px; right:12px; cursor:pointer; color:var(--muted); font-size:14px;}
+.detail .rows{margin-top:10px; display:flex; flex-direction:column; gap:5px;}
+.detail .row{display:flex; justify-content:space-between; font-size:11.5px;}
+.detail .row .k{color:var(--muted);}
+.detail .row .v{font-family:var(--font-mono);}
+.detail .pill{display:inline-block; padding:2px 7px; border-radius:4px; font-size:10px; font-family:var(--font-mono); font-weight:700;}
+.detail .pill.pos{background:var(--green-dim); color:var(--green);}
+.detail .pill.neg{background:var(--red-dim); color:var(--red);}
+.detail .pill.neu{background:var(--line); color:var(--neutral);}
+
+.legend{
+  position:absolute; left:16px; bottom:16px; display:flex; gap:14px;
+  background:color-mix(in srgb, var(--panel) 85%, transparent);
+  border:1px solid var(--line); border-radius:8px; padding:8px 12px;
+  font-size:11px; color:var(--muted); align-items:center;
+}
+.legend .dot{width:9px; height:9px; border-radius:2px; display:inline-block; margin-right:5px;}
+.legend .ring{width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; border:2px solid var(--text); box-shadow:0 0 6px var(--text);}
+
+.live-badge{
+  display:flex; align-items:center; gap:7px; padding:6px 12px;
+  border:1px solid var(--line); border-radius:20px; background:var(--panel-2);
+  font-family:var(--font-mono); font-size:11.5px; color:var(--muted);
+}
+.live-badge .dot{width:8px; height:8px; border-radius:50%; background:var(--faint); flex:0 0 auto;}
+.live-badge.ok .dot{background:var(--green); box-shadow:0 0 0 0 rgba(61,220,151,.6); animation:pulse 1.6s infinite;}
+.live-badge.err .dot{background:var(--red);}
+.live-badge .n{color:var(--text); font-weight:600;}
+@keyframes pulse{
+  0%{box-shadow:0 0 0 0 rgba(61,220,151,.55);}
+  70%{box-shadow:0 0 0 7px rgba(61,220,151,0);}
+  100%{box-shadow:0 0 0 0 rgba(61,220,151,0);}
+}
+@media (prefers-reduced-motion: reduce){ .live-badge.ok .dot{animation:none;} }
+
+.hint{position:absolute; top:14px; left:16px; font-size:11px; color:var(--faint); font-family:var(--font-mono);}
+
+::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
+
+<div class="topbar">
+  <div class="brand" style="flex-direction:row; align-items:center; gap:10px;">
+    <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true" style="flex:0 0 auto;">
+      <rect width="32" height="32" rx="6" fill="#C8F250"/>
+      <rect x="9" y="9" width="14" height="14" rx="1.5" fill="#0A0C0E"/>
+    </svg>
+    <div>
+      <h1>Strategy Landscape</h1>
+      <div class="sub">EP055 &middot; real data: combined_trades_closed + combined_trades_open</div>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Snapshot</div>
+    <div class="snap-row" id="snapRow"></div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">View</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-mode="all">All Strategies</button>
+      <button class="mode-btn" data-mode="growth">Highlight Growth</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label" id="periodLabel">Current day</div>
+    <div class="mode-row" style="flex-wrap:wrap; max-width:340px;">
+      <button class="mode-btn active" data-period="today">Today</button>
+      <button class="mode-btn" data-period="week">This Week</button>
+      <button class="mode-btn" data-period="month">This Month</button>
+      <button class="mode-btn" data-period="all">All History</button>
+      <label class="mono" style="font-size:11px; color:var(--muted); display:flex; align-items:center; gap:4px;">From
+        <input type="date" id="dateFrom" class="snap-btn" style="padding:4px 6px;">
+      </label>
+      <label class="mono" style="font-size:11px; color:var(--muted); display:flex; align-items:center; gap:4px;">To
+        <input type="date" id="dateTo" class="snap-btn" style="padding:4px 6px;">
+      </label>
+      <button class="mode-btn" id="applyPeriod">Apply</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Product</div>
+    <select class="snap-btn" id="productFilter" style="min-width:88px;"><option value="all">All</option></select>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Signal</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-signal-filter="both">Both</button>
+      <button class="mode-btn" data-signal-filter="buy">Buy</button>
+      <button class="mode-btn" data-signal-filter="sell">Sell</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Created within</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-created-within="0">All</button>
+      <button class="mode-btn" data-created-within="5">5min</button>
+      <button class="mode-btn" data-created-within="15">15min</button>
+      <button class="mode-btn" data-created-within="30">30min</button>
+      <button class="mode-btn" data-created-within="60">1hr</button>
+      <button class="mode-btn" data-created-within="180">3hr</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Fastest growth over</div>
+    <div class="mode-row">
+      <button class="mode-btn" data-growth-window="5">5min</button>
+      <button class="mode-btn" data-growth-window="30">30min</button>
+      <button class="mode-btn active" data-growth-window="60">1hr</button>
+      <button class="mode-btn" data-growth-window="120">2hr</button>
+      <button class="mode-btn" data-growth-window="180">3hr</button>
+      <button class="mode-btn" data-growth-window="240">4hr</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Return basis</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-return-basis="net_return">net_return</button>
+      <button class="mode-btn" data-return-basis="alt_net_return">alt_net_return</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Net result</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-net-filter="all">All</button>
+      <button class="mode-btn" data-net-filter="positive">Positive only</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Trades</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-layer-filter="both">Both</button>
+      <button class="mode-btn" data-layer-filter="closed">Closed only</button>
+      <button class="mode-btn" data-layer-filter="open">Open only</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Trade group</div>
+    <div class="mode-row">
+      <button class="mode-btn active" data-group-filter="both">Both</button>
+      <button class="mode-btn" data-group-filter="dna">DNA</button>
+      <button class="mode-btn" data-group-filter="nondna">Non-DNA</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
+  <div class="live-badge" id="liveBadge"><span class="dot"></span><span id="liveText">connecting…</span></div>
+  <div class="spacer"></div>
+  <div class="pop-stats">
+    <div class="pop-stat"><div class="v mono" id="statTotal">-</div><div class="l">Strategies</div></div>
+    <div class="pop-stat"><div class="v g mono" id="statPos">-</div><div class="l">Positive</div></div>
+    <div class="pop-stat"><div class="v r mono" id="statNeg">-</div><div class="l">Negative</div></div>
+    <div class="pop-stat"><div class="v mono" id="statClusters">-</div><div class="l">Hot Clusters</div></div>
+  </div>
+</div>
+
+<div class="topbar" id="playbackBar" style="display:none; align-items:center; gap:14px;">
+  <div class="control-label" style="text-transform:none; letter-spacing:0;">
+    Time Playback &middot; <span style="color:var(--faint);">today, real close-time order</span>
+  </div>
+  <button class="mode-btn" id="pbReset" title="Back to midnight">&#8676;</button>
+  <button class="mode-btn active" id="pbPlay">Play</button>
+  <input type="range" id="pbSlider" class="mono" min="0" max="86399" value="86399" style="flex:1; max-width:420px;">
+  <span class="mono" id="pbTime" style="min-width:66px; color:var(--text);">23:59:59</span>
+  <button class="mode-btn" id="pbSlower" title="Slower">&minus;</button>
+  <span class="mono" id="pbSpeedLabel" style="min-width:34px; text-align:center;">1x</span>
+  <button class="mode-btn" id="pbFaster" title="Faster">+</button>
+  <button class="mode-btn" id="pbEnd" title="Jump to now">&#8677;</button>
+</div>
+
+<div class="main">
+  <div class="stage-wrap" id="stageWrap">
+    <canvas id="stage"></canvas>
+    <div class="hint">drag to orbit &middot; scroll to zoom &middot; click a pillar</div>
+    <div id="loadingOverlay" style="position:absolute; inset:0; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:10px; background:var(--bg); z-index:10;">
+      <div class="mono" style="color:var(--muted); font-size:13px;" id="loadingText">Loading real strategy history from combined_trades_closed…</div>
+      <div class="mono" style="color:var(--faint); font-size:11px;">this is a full-table aggregate query and can take up to ~20s</div>
+    </div>
+    <div class="legend">
+      <span><span class="dot" style="background:var(--green)"></span>Positive</span>
+      <span><span class="dot" style="background:var(--red)"></span>Negative</span>
+      <span><span class="dot" style="background:var(--neutral)"></span>Neutral</span>
+      <span><span class="dot" style="background:var(--amber)"></span>Snapshot cluster (history)</span>
+      <span><span class="ring"></span>Live open trade</span>
+      <span><span class="ring" style="border-color:var(--cyan); box-shadow:0 0 6px var(--cyan);"></span>Live fastest mover</span>
+    </div>
+    <div class="detail" id="detail">
+      <span class="close" id="detailClose">&times;</span>
+      <div class="id" id="dId">DNA_000000</div>
+      <div class="name" id="dName">Strategy Name</div>
+      <div class="rows">
+        <div class="row"><span class="k">Family</span><span class="v" id="dFamily">-</span></div>
+        <div class="row"><span class="k">Product</span><span class="v" id="dProduct">-</span></div>
+        <div class="row"><span class="k">Net value</span><span class="v" id="dNet">-</span></div>
+        <div class="row"><span class="k">Growth (snap)</span><span class="v" id="dGrowth">-</span></div>
+        <div class="row"><span class="k">Cluster</span><span class="v" id="dCluster">-</span></div>
+        <div class="row"><span class="k">Direction</span><span class="v" id="dDir">-</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="side">
+    <div>
+      <h3 id="sideIntelHeading">Family Intelligence</h3>
+      <div id="famList"></div>
+    </div>
+    <div>
+      <h3 style="color:var(--amber);">Fastest-Growth Clusters</h3>
+      <div style="font-size:10.5px; color:var(--muted); margin:-6px 0 8px;">by snapshot (history), amber</div>
+      <div id="clusterList"></div>
+    </div>
+    <div>
+      <h3 style="color:var(--cyan);">Live Fastest Movers</h3>
+      <div style="font-size:10.5px; color:var(--muted); margin:-6px 0 8px;">by selected time window, cyan</div>
+      <div id="moverList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // ---------- 1. real strategy population, from dbo.combined_trades_closed + dbo.combined_trades_open ----------
+  // No synthetic/fabricated data anywhere in this file. Every strategy, family and
+  // net_return value shown comes from backdrop_server.py (SQL Server) or the live
+  // open-trades poll below.
+  //
+  // 2026-09-08: reverted the brief DNA/Non-DNA "primary grouping" experiment - that
+  // was a misreading of the request. The landscape's layout is the 4 breakout
+  // families again; DNA/Non-DNA is only a FILTER on top (see groupFilter below),
+  // using the model column's "DNA_" prefix, same as api_server_sql's convention.
+  // [V20260909_1555] 2026-09-09: Relative API URLs so UI runs seamlessly whether on port 8065 or 8066
+  const FAMILIES = ['breakout','breakout_r','breakout_rev','breakout_r_rev','nondna'];
+  const API_BASE = window.location.port === '8065' ? '' : (window.location.origin.includes(':8066') ? '' : 'http://127.0.0.1:8065');
+  const BACKDROP_API = API_BASE + '/api/breakout_backdrop';
+  const NONDNA_TPSL_API = API_BASE + '/api/nondna_tpsl_lookup';
+  // Non-DNA open trades mostly have strategy_name = NULL (confirmed: 38 of 43 open
+  // non-DNA trades), so unlike DNA they can't be classified by parsing a name. This
+  // holds the real model:PRODUCT -> {tp,sl} lookup from product_forex instead,
+  // fetched once at boot. Populated by loadNonDnaTpSl() below.
+  let nonDnaTpSlLookup = {};
+
+  function hashStr(s){ let h=2166136261; for(let i=0;i<s.length;i++){ h^=s.charCodeAt(i); h=Math.imul(h,16777619); } return (h>>>0); }
+  function isDna(model){ return /^DNA_[12][0-9]+$/i.test(model||''); }
+  function isNonDna(model){ return /^1[0-9]{5}$/.test(model||''); }
+  // tp/sl is embedded in the real strategy_name for breakout strategies
+  // (e.g. "breakout_r_4_tp20_sl30", "breakout_2_tp3_sl3") - parsed directly, not fabricated.
+  function parseTpSl(name){
+    const m = /tp(-?\d+)[^\d-]*sl(-?\d+)/i.exec(name||'');
+    return m ? {tp:Number(m[1]), sl:Number(m[2])} : null;
+  }
+
+  // ---------- tp/sl grid, used ONLY when Trade Group = Non-DNA (canvas grouping only;
+  // DNA and Both keep the normal 4 family quadrants, untouched). Built from real tp/sl
+  // values parsed out of strategy_name for the actual non-DNA (model-prefix) strategies
+  // as well as active open trades and product_forex targets.
+  // [V20260908_1618] 2026-09-08: Expanded to collect TP/SL from lookup and open trades
+  let TPSL_REGIONS = [];
+  function buildTpSlRegions(){
+    const nondna = strategies.filter(s=>s.group==='nondna' && s.tp!=null && s.sl!=null);
+    const tpSet = new Set(nondna.map(s=>s.tp));
+    const slSet = new Set(nondna.map(s=>s.sl));
+
+    // Also include any TP/SL from active open non-DNA trades
+    if(typeof liveTrades !== 'undefined' && liveTrades.size){
+      liveTrades.forEach(t=>{
+        if(t.group==='nondna' && t.tp!=null && t.sl!=null){
+          tpSet.add(t.tp);
+          slSet.add(t.sl);
+        }
+      });
+    }
+
+    // Fallback: if no TP/SL found yet, extract from nonDnaTpSlLookup
+    if(!tpSet.size && nonDnaTpSlLookup){
+      Object.values(nonDnaTpSlLookup).forEach(v=>{
+        if(v && v.tp!=null && v.sl!=null){
+          tpSet.add(v.tp);
+          slSet.add(v.sl);
+        }
+      });
+    }
+
+    const tps = Array.from(tpSet).sort((a,b)=>a-b);
+    const sls = Array.from(slSet).sort((a,b)=>a-b);
+    const gap = 0.03;
+    const cols = Math.max(1,tps.length), rows = Math.max(1,sls.length);
+    const cellW = 2/cols, cellH = 2/rows;
+    const regions = [];
+    tps.forEach((tp,ci)=>{
+      sls.forEach((sl,ri)=>{
+        regions.push({
+          tp, sl, label:'tp'+tp+'/sl'+sl,
+          ox: -1 + (ci+0.5)*cellW, oy: -1 + (ri+0.5)*cellH,
+          halfW: cellW/2-gap/2, halfH: cellH/2-gap/2,
+        });
+      });
+    });
+    TPSL_REGIONS = regions;
+    const byRegion = {};
+    nondna.forEach(s=>{
+      const idx = regions.findIndex(r=>r.tp===s.tp && r.sl===s.sl);
+      s.tpSlRegionIdx = idx;
+      if(idx>=0) (byRegion[idx]=byRegion[idx]||[]).push(s);
+    });
+    Object.values(byRegion).forEach(list=>{
+      list.sort((a,b)=> a.id < b.id ? -1 : 1);
+      const c = Math.ceil(Math.sqrt(list.length*1.4))||1;
+      list.forEach((s,i)=>{ s.tpSlCellX = i%c; s.tpSlCellY = Math.floor(i/c); s.tpSlCols = c; });
+    });
+
+    // Update live trades tpSlRegionIdx when regions are rebuilt
+    if(typeof liveTrades !== 'undefined' && liveTrades.size){
+      liveTrades.forEach(t=>{
+        if(t.group==='nondna' && t.tp!=null && t.sl!=null){
+          t.tpSlRegionIdx = tpSlRegionIndexFor(t.tp, t.sl);
+        }
+      });
+    }
+  }
+
+  let strategies = [];
+  let SNAP_LABELS = [];
+  let SNAPSHOTS = 0;
+  let backdropReady = false;
+
+  let backdropRequestId = 0;
+  async function loadBackdrop(){
+    const requestId = ++backdropRequestId;
+    const selectedDate = SNAP_LABELS[currentSnap];
+    const loadingText = document.getElementById('loadingText');
+    try{
+      const res = await fetch(BACKDROP_API+'?signal='+encodeURIComponent(signalFilter), {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const json = await res.json();
+      if(requestId !== backdropRequestId) return;
+      SNAP_LABELS = json.snapshot_dates;
+      SNAPSHOTS = SNAP_LABELS.length;
+
+      // stable grid placement within each family quadrant, ordered by strategy_id
+      // so positions don't shuffle between loads (spec section 17: spatial consistency)
+      const byFamily = {};
+      json.strategies = json.strategies.filter(s=>isDna(s.strategy_id)||isNonDna(s.strategy_id));
+      json.strategies.forEach(s=>{ (byFamily[s.family] = byFamily[s.family]||[]).push(s); });
+      Object.values(byFamily).forEach(list=>{
+        list.sort((a,b)=> a.strategy_id < b.strategy_id ? -1 : 1);
+        const cols = Math.ceil(Math.sqrt(list.length*1.4)) || 1;
+        list.forEach((s,idx)=>{ s._cellX = idx % cols; s._cellY = Math.floor(idx/cols); s._cols = cols; });
+      });
+
+      strategies = json.strategies.map(s=>{
+        const tpSl = s.group==='nondna' && s.tp!=null && s.sl!=null ? {tp:Number(s.tp),sl:Number(s.sl)} : parseTpSl(s.strategy_name);
+        return {
+          id: s.strategy_id,
+          name: s.strategy_name || (tpSl ? 'tp'+tpSl.tp+'_sl'+tpSl.sl : s.strategy_id),
+          family: s.family, familyIdx: FAMILIES.indexOf(s.family),
+          group: s.group, tp: tpSl?tpSl.tp:null, sl: tpSl?tpSl.sl:null,
+          product: String(s.product||'').toUpperCase(),
+          tradeCount: s.trade_count,
+          cellX: s._cellX, cellY: s._cellY, cols: s._cols,
+          netSeries: s.net_series, altNetSeries: s.alt_net_series
+        };
+      });
+      strategies.forEach(s=>{ if(s.product) knownProducts.add(s.product); });
+      syncProductFilterOptions();
+      buildTpSlRegions();
+      backdropReady = true;
+      const overlay = document.getElementById('loadingOverlay');
+      if(overlay) overlay.style.display = 'none';
+      const previousSnap = SNAP_LABELS.indexOf(selectedDate);
+      currentSnap = previousSnap >= 0 ? previousSnap : SNAPSHOTS-1;
+      buildSnapshotButtons();
+      refreshPlaybackVisibility();
+      recompute();
+      clusterSet = clusterMemberSet();
+      ensureOverlayEls();
+      renderSide(); renderTopStats(); render();
+    }catch(err){
+      if(requestId !== backdropRequestId) return;
+      console.warn('loadBackdrop error:', err);
+      // If user is only looking at open trades, dismiss overlay so canvas is visible
+      if(layerFilter === 'open'){
+        const overlay = document.getElementById('loadingOverlay');
+        if(overlay) overlay.style.display = 'none';
+      }
+      if(loadingText){
+        loadingText.textContent = 'Could not load real strategy history from '+BACKDROP_API+' — retrying in 8s…';
+      }
+      setTimeout(()=>{ if(requestId === backdropRequestId) loadBackdrop(); }, 8000);
+    }
+  }
+
+  const THRESH = 1.0; // neutral zero-band
+  function dirOf(v){ return v>THRESH?'pos':(v<-THRESH?'neg':'neu'); }
+
+  let returnBasis = 'net_return'; // 'net_return' | 'alt_net_return' - switches which real column drives the whole view
+  let layerFilter = 'both'; // 'both' | 'closed' | 'open' - which trade layer(s) to draw
+  let groupFilter = 'both'; // 'both' | 'dna' | 'nondna' - filters which model-prefix trades show, layout unaffected
+  function seriesFor(s){ return returnBasis==='alt_net_return' ? s.altNetSeries : s.netSeries; }
+  function tv(t){ return returnBasis==='alt_net_return' ? t.alt_net_return : t.net_return; }
+
+  // ---------- time-playback scrubber: replays today's real close-time-ordered
+  // cumulative total, from midnight, instead of showing the full-day sum. Uses
+  // /api/intraday_series, which times each closed trade by the same
+  // COALESCE(g_close_time, last_update, created) convention api_server_sql
+  // already uses elsewhere in this codebase for "when a trade actually closed" -
+  // no fabricated timestamp. Only meaningful on the "today" snapshot; historical
+  // snapshot days only ever had day-granularity sums stored, not intraday points.
+  let playbackActive = false, isPlaying = false, playbackMs = 86399000, playbackSpeed = 1;
+  let intradaySeries = {}; // strategy_id -> [{ms, net_return, alt_net_return}], sorted by ms
+  let playbackInterval = null;
+  const PB_SPEEDS = [1, 10, 60, 300, 900, 3600];
+  function currentValue(s){
+    if(playbackActive && intradaySeries[s.id]){
+      const pts = intradaySeries[s.id];
+      let v = null;
+      for(let i=0;i<pts.length;i++){ if(pts[i].ms<=playbackMs) v=pts[i]; else break; }
+      return v ? (returnBasis==='alt_net_return'?v.alt_net_return:v.net_return) : 0;
+    }
+    return seriesFor(s)[currentSnap];
+  }
+  async function loadIntradaySeries(dateStr){
+    try{
+      const res = await fetch(API_BASE+'/api/intraday_series?trade_date='+encodeURIComponent(dateStr)+'&signal='+encodeURIComponent(signalFilter), {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const json = await res.json();
+      intradaySeries = json.series || {};
+    }catch(err){ console.warn('loadIntradaySeries error:', err); intradaySeries = {}; }
+  }
+  function isTodaySnap(){ return SNAP_LABELS[currentSnap] === todayStr(); }
+  function refreshPlaybackVisibility(){
+    const bar = document.getElementById('playbackBar');
+    if(!bar) return;
+    const show = isTodaySnap();
+    bar.style.display = show ? 'flex' : 'none';
+    if(show && !intradaySeries.__loadedFor){
+      loadIntradaySeries(todayStr()).then(()=>{ intradaySeries.__loadedFor = todayStr(); recompute(); clusterSet=clusterMemberSet(); renderSide(); renderTopStats(); render(); });
+    }
+  }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function fmtHms(ms){ const s=Math.floor(ms/1000); return pad2(Math.floor(s/3600))+':'+pad2(Math.floor(s/60)%60)+':'+pad2(s%60); }
+  function updatePlaybackUI(){
+    const slider = document.getElementById('pbSlider'), time = document.getElementById('pbTime'), speedLbl = document.getElementById('pbSpeedLabel');
+    if(slider) slider.value = Math.floor(playbackMs/1000);
+    if(time) time.textContent = fmtHms(playbackMs);
+    if(speedLbl) speedLbl.textContent = playbackSpeed+'x';
+  }
+  function playbackTick(){
+    playbackMs = Math.min(86399000, playbackMs + 100*playbackSpeed);
+    playbackActive = true;
+    if(playbackMs >= 86399000){ togglePlayback(); }
+    updatePlaybackUI(); recompute(); clusterSet=clusterMemberSet(); renderSide(); renderTopStats(); render();
+  }
+  function togglePlayback(){
+    isPlaying = !isPlaying;
+    const btn = document.getElementById('pbPlay');
+    if(isPlaying){
+      playbackActive = true;
+      if(playbackMs >= 86399000) playbackMs = 0;
+      if(btn) btn.textContent = 'Pause';
+      playbackInterval = setInterval(playbackTick, 100);
+    } else {
+      if(btn) btn.textContent = 'Play';
+      clearInterval(playbackInterval);
+    }
+  }
+  let netFilter = 'all'; // 'all' | 'positive' - applies to the selected return basis and snapshot
+  function visibleStrategies(){
+    return strategies.filter(s=>{
+      if(productFilter!=='all' && s.product!==productFilter) return false;
+      if(groupFilter!=='both' && s.group!==groupFilter) return false;
+      if(netFilter==='positive' && currentValue(s) <= THRESH) return false;
+      return true;
+    });
+  }
+
+  // ---------- 1b. live open-trade feed (real data from backdrop_server & api_server_sql) ----------
+  // [V20260908_1710] Fast unified live open endpoint from backdrop_server
+  // (MAXDOP 1, cached, non-blocking) with timeout protection to prevent hanging the browser.
+  const LIVE_API = API_BASE + '/api/live_open_trades';
+  const NONDNA_LIVE_API = API_BASE + '/api/nondna_open_trades';
+  const LIVE_POLL_MS = 5000;
+  const FETCH_TIMEOUT_MS = 3500;
+
+  function fetchWithTimeout(url, ms = FETCH_TIMEOUT_MS){
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), ms);
+    return fetch(url, {cache:'no-store', signal: controller.signal})
+      .then(r => {
+        clearTimeout(timer);
+        if(!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .catch(err => {
+        clearTimeout(timer);
+        throw err;
+      });
+  }
+
+  function tpSlRegionIndexFor(tp, sl){
+    if(tp==null || sl==null) return -1;
+    return TPSL_REGIONS.findIndex(r=>r.tp===tp && r.sl===sl);
+  }
+  // longest-prefix-first so "breakout_r_rev" isn't mis-matched as "breakout_r"
+  const FAMILY_PREFIXES = ['breakout_r_rev','breakout_rev','breakout_r','breakout'];
+  function familyFromStrategyName(name){
+    const n = (name||'').toLowerCase();
+    for(const p of FAMILY_PREFIXES){ if(n.startsWith(p)) return p; }
+    return null;
+  }
+
+  let liveTrades = new Map(); // guid -> {guid,family,familyIdx,group,product,signal,net_return,entry_price,latest_price,created,cellX,cellY,cols}
+  let liveOk = null, liveLastAt = null;
+  let productFilter = 'all';
+  let signalFilter = 'both'; // 'both' | 'buy' | 'sell'
+  let createdWithinMin = 0; // 0 = no filter (All); else only trades created in the last N minutes
+  let knownProducts = new Set();
+
+  function todayStr(){
+    const d = new Date();
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function visibleLiveTrades(){
+    const out = new Map();
+    const {date_from, date_to} = DnaPeriod.params();
+    liveTrades.forEach((t,guid)=>{
+      const d = (t.created||'').slice(0,10);
+      if(date_from && d < date_from) return;
+      if(date_to && d > date_to) return;
+      if(productFilter!=='all' && t.product!==productFilter) return;
+      if(signalFilter==='buy' && t.signal!=='BUY') return;
+      if(signalFilter==='sell' && t.signal!=='SELL') return;
+      if(groupFilter!=='both' && t.group!==groupFilter) return;
+      if(netFilter==='positive' && tv(t) <= THRESH) return;
+      if(createdWithinMin>0){
+        const createdMs = Date.parse(t.created);
+        if(!Number.isFinite(createdMs) || (Date.now()-createdMs) > createdWithinMin*60*1000) return;
+      }
+      out.set(guid,t);
+    });
+    return out;
+  }
+  function syncProductFilterOptions(){
+    const sel = document.getElementById('productFilter');
+    if(!sel) return;
+    const prev = sel.value;
+    const products = Array.from(knownProducts).sort();
+    sel.innerHTML = '<option value="all">All</option>' + products.map(p=>`<option value="${p}">${p}</option>`).join('');
+    sel.value = products.includes(prev) || prev==='all' ? prev : 'all';
+  }
+
+  async function fetchLive(){
+    let gotAny = false;
+    const next = new Map();
+
+    const [liveRes, nonDnaRes] = await Promise.allSettled([
+      fetchWithTimeout(LIVE_API),
+      fetchWithTimeout(NONDNA_LIVE_API)
+    ]);
+
+    const liveRows = (liveRes.status === 'fulfilled' && liveRes.value && liveRes.value.data) ? liveRes.value.data : [];
+    const nonDnaRows = (nonDnaRes.status === 'fulfilled' && nonDnaRes.value && nonDnaRes.value.data) ? nonDnaRes.value.data : [];
+
+    if(liveRes.status === 'fulfilled' || nonDnaRes.status === 'fulfilled'){
+      gotAny = true;
+    }
+
+    let rebuildRegionsNeeded = false;
+
+    // Process all open rows (both DNA and Non-DNA)
+    liveRows.forEach(r=>{
+      if(!isDna(r.model) && !isNonDna(r.model)) return;
+      const group = isDna(r.model) ? 'dna' : 'nondna';
+      const product = (r.product||'').toUpperCase();
+      let family = null, familyIdx = null, tp = null, sl = null, tpSlRegionIdx = -1, displayName = r.strategy_name;
+
+      if(group==='dna'){
+        family = familyFromStrategyName(r.strategy_name);
+        if(!family) return;
+        familyIdx = FAMILIES.indexOf(family);
+        const parsed = parseTpSl(r.strategy_name);
+        if(parsed){ tp = parsed.tp; sl = parsed.sl; tpSlRegionIdx = tpSlRegionIndexFor(tp, sl); }
+      } else {
+        const parsed = parseTpSl(r.strategy_name);
+        if(parsed){
+          tp = parsed.tp; sl = parsed.sl;
+        } else {
+          const entry = nonDnaTpSlLookup[r.model+':'+product];
+          if(entry){ tp = entry.tp; sl = entry.sl; }
+        }
+        if(tp==null || sl==null) return;
+        tpSlRegionIdx = tpSlRegionIndexFor(tp, sl);
+        if(tpSlRegionIdx < 0){
+          rebuildRegionsNeeded = true;
+        }
+        family = 'nondna'; familyIdx = 4;
+        displayName = r.strategy_name || ('tp'+tp+'_sl'+sl);
+      }
+
+      const h = hashStr(r.guid);
+      const cols = 22;
+      knownProducts.add(product);
+      next.set(r.guid, {
+        guid:r.guid, family, familyIdx, group, product, model:r.model,
+        tp, sl, tpSlRegionIdx,
+        signal:(r.signal||'').trim().toUpperCase(), net_return:Number(r.net_return)||0,
+        alt_net_return:Number(r.alt_net_return)||0,
+        entry_price:r.entry_price, latest_price:r.latest_price,
+        created:r.created, strategy_name:displayName,
+        cellX: h % cols, cellY: Math.floor(h/cols) % cols, cols
+      });
+    });
+
+    // Process any additional rows from dedicated Non-DNA endpoint if not already included
+    nonDnaRows.forEach(r=>{
+      if(!isNonDna(r.model) || next.has(r.guid)) return;
+      const group = 'nondna';
+      const product = (r.product||'').toUpperCase();
+      let tp = null, sl = null, displayName = r.strategy_name;
+
+      const parsed = parseTpSl(r.strategy_name);
+      if(parsed){
+        tp = parsed.tp; sl = parsed.sl;
+      } else {
+        const entry = nonDnaTpSlLookup[r.model+':'+product];
+        if(entry){ tp = entry.tp; sl = entry.sl; }
+      }
+      if(tp==null || sl==null) return;
+
+      displayName = r.strategy_name || ('tp'+tp+'_sl'+sl);
+      let tpSlRegionIdx = tpSlRegionIndexFor(tp, sl);
+      if(tpSlRegionIdx < 0){
+        rebuildRegionsNeeded = true;
+      }
+
+      const h = hashStr(r.guid);
+      const cols = 22;
+      knownProducts.add(product);
+      next.set(r.guid, {
+        guid:r.guid, family:'nondna', familyIdx:4, group, product, model:r.model,
+        tp, sl, tpSlRegionIdx,
+        signal:(r.signal||'').trim().toUpperCase(), net_return:Number(r.net_return)||0,
+        alt_net_return:Number(r.alt_net_return)||0,
+        entry_price:r.entry_price, latest_price:r.latest_price,
+        created:r.created, strategy_name:displayName,
+        cellX: h % cols, cellY: Math.floor(h/cols) % cols, cols
+      });
+    });
+
+    liveTrades = next;
+    if(rebuildRegionsNeeded || !TPSL_REGIONS.length){
+      buildTpSlRegions();
+    }
+
+    if(gotAny){
+      liveOk = true; liveLastAt = new Date();
+      syncProductFilterOptions();
+      recordGrowthSamples(next);
+    } else {
+      liveOk = false;
+    }
+    updateLiveBadge();
+    ensureOverlayEls();
+    if(typeof render === 'function'){ recomputeLiveExtent(); render(); renderSide(); }
+  }
+
+  // ---------- 1c. time-windowed growth tracking for live trades ----------
+  // Real net_return values sampled on every poll (every 5s) and kept per guid,
+  // so "fastest growth over Nmin" is measured from actually-observed values -
+  // nothing here is simulated or interpolated.
+  const GROWTH_HISTORY_MS = 4*60*60*1000; // keep 4h of samples, the widest window offered
+  let liveHistory = new Map(); // guid -> [{t, net_return}]
+  let growthWindowMin = 60;
+
+  function recordGrowthSamples(tradesMap){
+    const now = Date.now();
+    tradesMap.forEach((t,guid)=>{
+      const hist = liveHistory.get(guid) || [];
+      hist.push({t: now, net_return: t.net_return, alt_net_return: t.alt_net_return});
+      while(hist.length && now - hist[0].t > GROWTH_HISTORY_MS) hist.shift();
+      liveHistory.set(guid, hist);
+    });
+    // drop history for trades that are no longer open
+    Array.from(liveHistory.keys()).forEach(guid=>{ if(!tradesMap.has(guid)) liveHistory.delete(guid); });
+  }
+
+  function growthOverWindow(guid){
+    const hist = liveHistory.get(guid);
+    if(!hist || hist.length < 2) return null;
+    const now = Date.now();
+    const cutoff = now - growthWindowMin*60*1000;
+    let baseline = hist[0]; // earliest sample we have (growth-since-open if trade is younger than the window)
+    for(const sample of hist){ if(sample.t >= cutoff){ baseline = sample; break; } }
+    const latest = hist[hist.length-1];
+    return tv(latest) - tv(baseline);
+  }
+
+  function fastestMovers(limit){
+    const rows = [];
+    visibleLiveTrades().forEach((t,guid)=>{
+      const g = growthOverWindow(guid);
+      if(g!==null) rows.push({t, guid, growth:g});
+    });
+    rows.sort((a,b)=>b.growth-a.growth);
+    return rows.slice(0, limit||5);
+  }
+  function updateLiveBadge(){
+    const badge = document.getElementById('liveBadge');
+    const text = document.getElementById('liveText');
+    if(!badge) return;
+    badge.classList.remove('ok','err');
+    if(liveOk){
+      badge.classList.add('ok');
+      const secs = liveLastAt ? Math.max(0,Math.round((Date.now()-liveLastAt.getTime())/1000)) : 0;
+      const n = visibleLiveTrades().size;
+      let label = 'open trades';
+      if(productFilter!=='all') label += ' · '+productFilter;
+      if(signalFilter!=='both') label += ' · '+signalFilter.toUpperCase();
+      if(createdWithinMin>0) label += ' · last '+(createdWithinMin>=60 ? (createdWithinMin/60)+'hr' : createdWithinMin+'min');
+      text.innerHTML = '<span class="n">'+n+'</span> '+label+' &middot; updated '+secs+'s ago';
+    } else if(liveOk===false){
+      badge.classList.add('err');
+      text.textContent = 'live feed unreachable (api_server_sql:8001) — retrying';
+    } else {
+      text.textContent = 'connecting…';
+    }
+  }
+  let liveNetExtent = 1;
+  function recomputeLiveExtent(){
+    const vals = Array.from(visibleLiveTrades().values()).map(t => Math.abs(tv(t)));
+    liveNetExtent = Math.max(1, percentile(vals, 0.9));
+  }
+  setInterval(()=>{ if(liveOk!==null){ updateLiveBadge(); } }, 1000);
+  fetchLive();
+  setInterval(fetchLive, LIVE_POLL_MS);
+
+  // ---------- 2. per-snapshot cluster detection (grid-density of high growth) ----------
+  function compactRange(values){
+    const nums = values.map(Number).filter(Number.isFinite);
+    if(!nums.length) return '—';
+    const min = Math.min(...nums), max = Math.max(...nums);
+    const fmt = n => Number.isInteger(n) ? String(n) : String(Number(n.toFixed(4)));
+    return min===max ? fmt(min) : fmt(min)+'–'+fmt(max);
+  }
+  function tpSlLabel(members){
+    return 'TP '+compactRange(members.map(s=>s.tp))+' | SL '+compactRange(members.map(s=>s.sl));
+  }
+  function computeClusters(snapIdx){
+    if(snapIdx===0) return [];
+    const nonDnaMode = groupFilter==='nondna';
+    const growthOf = s => seriesFor(s)[snapIdx]-seriesFor(s)[snapIdx-1];
+    const cellMap = new Map(); // key groupIdx:gx:gy -> list
+    const GRID = 6; // coarsen cell grid for clustering
+    visibleStrategies().forEach(s=>{
+      if(nonDnaMode && (s.tpSlRegionIdx==null || s.tpSlRegionIdx<0)) return; // no parseable tp/sl
+      const g = growthOf(s);
+      if(g < 2.0) return; // qualifying threshold
+      const cols = nonDnaMode ? s.tpSlCols : s.cols;
+      const gx = Math.floor((nonDnaMode?s.tpSlCellX:s.cellX)/GRID), gy = Math.floor((nonDnaMode?s.tpSlCellY:s.cellY)/GRID);
+      const groupIdx = nonDnaMode ? s.tpSlRegionIdx : s.familyIdx;
+      const key = groupIdx+':'+gx+':'+gy;
+      if(!cellMap.has(key)) cellMap.set(key,[]);
+      cellMap.get(key).push(s);
+    });
+    let clusters = [];
+    cellMap.forEach((list,key)=>{
+      if(list.length < 6) return; // density minimum
+      const avgGrowth = list.reduce((a,s)=>a+growthOf(s),0)/list.length;
+      const positives = list.filter(s=>dirOf(seriesFor(s)[snapIdx])==='pos').length;
+      const [gi,gx,gy] = key.split(':').map(Number);
+      const label = nonDnaMode ? (TPSL_REGIONS[gi]?TPSL_REGIONS[gi].label:'?') : FAMILIES[gi];
+      clusters.push({key, familyIdx:gi, family:label, members:list, avgGrowth, positives, gx, gy, tpSl:tpSlLabel(list)});
+    });
+    clusters.sort((a,b)=>b.avgGrowth-a.avgGrowth);
+    clusters.forEach((c,i)=>c.rank=i+1);
+    return clusters.slice(0,6);
+  }
+
+  // ---------- 3. layout: quadrant placement ----------
+  let W=0,H=0;
+  const canvas = document.getElementById('stage');
+  const ctx = canvas.getContext('2d');
+  const wrap = document.getElementById('stageWrap');
+
+  function resize(){
+    W = wrap.clientWidth; H = wrap.clientHeight;
+    canvas.width = W*devicePixelRatio; canvas.height = H*devicePixelRatio;
+    canvas.style.width=W+'px'; canvas.style.height=H+'px';
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+    if(typeof render === 'function') render(); // changing canvas.width clears it - must repaint immediately
+  }
+  window.addEventListener('resize', resize);
+
+  // camera (simple orbit + zoom over an isometric-ish projection)
+  let camAngle = -0.62, camTilt = 0.72, camZoom = 1.0;
+  let dragging=false, lastX=0,lastY=0;
+  let renderQueued = false;
+  function requestRender(){
+    if(renderQueued) return;
+    renderQueued = true;
+    requestAnimationFrame(()=>{ renderQueued=false; render(); });
+  }
+  canvas.addEventListener('mousedown', e=>{dragging=true; lastX=e.clientX; lastY=e.clientY;});
+  window.addEventListener('mouseup', ()=>dragging=false);
+  window.addEventListener('mousemove', e=>{
+    if(!dragging) return;
+    camAngle += (e.clientX-lastX)*0.005;
+    camTilt = Math.min(1.25, Math.max(0.35, camTilt + (e.clientY-lastY)*0.004));
+    lastX=e.clientX; lastY=e.clientY;
+    requestRender();
+  });
+  canvas.addEventListener('wheel', e=>{
+    e.preventDefault();
+    camZoom = Math.min(2.4, Math.max(0.55, camZoom * (1 - e.deltaY*0.001)));
+    requestRender();
+  }, {passive:false});
+
+  function project(x,y,z){
+    // x,y in landscape plane [-1,1], z is height 0..1
+    const rx = x*Math.cos(camAngle) - y*Math.sin(camAngle);
+    const ry = x*Math.sin(camAngle) + y*Math.cos(camAngle);
+    const scale = Math.min(W,H)*0.42*camZoom;
+    const sx = W/2 + rx*scale;
+    const sy = H/2 + ry*scale*camTilt - z*scale*0.55;
+    return [sx,sy];
+  }
+
+  // ---------- 4. state ----------
+  let currentSnap = SNAPSHOTS-1;
+  let mode = 'all';
+  let selected = null;
+  let clustersNow = computeClusters(currentSnap);
+  let netExtent = 1;
+
+  function percentile(values, p){
+    if(!values.length) return 0;
+    const sorted = values.slice().sort((a,b)=>a-b);
+    const idx = Math.min(sorted.length-1, Math.floor(p*sorted.length));
+    return sorted[idx];
+  }
+  function recompute(){
+    // Normalize against the 90th percentile, not the single largest strategy -
+    // one extreme outlier was flattening the visual height of everything else
+    // (spec section 7's "prevent a few extreme strategies from flattening the
+    // rest"). Values above the 90th percentile are simply clamped to full height.
+    const vals = visibleStrategies().map(s => Math.abs(currentValue(s)));
+    netExtent = Math.max(1, percentile(vals, 0.9));
+    clustersNow = computeClusters(currentSnap);
+  }
+  recompute();
+
+  // precompute cluster membership set for current snapshot for quick highlight lookup
+  function clusterMemberSet(){
+    const set = new Set();
+    clustersNow.forEach(c=>c.members.forEach(s=>set.add(s)));
+    return set;
+  }
+  let clusterSet = clusterMemberSet();
+
+  function colorFor(v, colors){
+    const d = dirOf(v);
+    return d==='pos' ? colors.green : d==='neg' ? colors.red : colors.neutral;
+  }
+  function getVar(name){ return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
+  // getComputedStyle forces a style recalc - calling it per-pillar for ~2,600 pillars
+  // every render (including every drag/zoom frame) was the actual cause of the slowdown.
+  // Read each color once per render and reuse it for every pillar instead.
+  function readColors(){
+    return {
+      bg: getVar('--bg'), line: getVar('--line'), text: getVar('--text'),
+      green: getVar('--green'), red: getVar('--red'), neutral: getVar('--neutral'), amber: getVar('--amber'), cyan: getVar('--cyan'),
+    };
+  }
+
+  // ---------- 5. render ----------
+  const FAM_GAP = 0.06;
+  function familyOrigin(idx){
+    if(idx===4) return [0,1.6]; // Numeric Non-DNA summary in the combined view.
+    // 4 DNA quadrants
+    const qx = idx%2===0 ? -1 : 1;
+    const qy = idx<2 ? -1 : 1;
+    return [qx*(0.5+FAM_GAP/2), qy*(0.5+FAM_GAP/2)];
+  }
+
+  function strategyPlane(s){
+    // Non-DNA view groups by real tp/sl (parsed from strategy_name) instead of family.
+    // DNA and Both stay on the normal 4 family quadrants below, untouched.
+    if(groupFilter==='nondna'){
+      const region = (s.tpSlRegionIdx!=null && s.tpSlRegionIdx>=0) ? TPSL_REGIONS[s.tpSlRegionIdx] : null;
+      if(!region) return null; // no parseable tp/sl - dropped from this view rather than mis-placed
+      const nx = (s.tpSlCellX/s.tpSlCols) - 0.5;
+      const ny = (s.tpSlCellY/s.tpSlCols) - 0.5;
+      const px = region.ox + nx*2*region.halfW;
+      const py = region.oy + ny*2*region.halfH;
+      return [Math.max(-1,Math.min(1,px)), Math.max(-1,Math.min(1,py))];
+    }
+    const [ox,oy] = familyOrigin(s.familyIdx);
+    const span = 0.94; // fraction of the quadrant's half-width the grid spans, leaving a small margin at the edges
+    // nx/ny range over [-0.5, 0.5]; multiplying by span (not span*0.5, which was
+    // only covering half the square and left the pillars bunched in the middle)
+    // maps that to the same +/-0.47 the quadrant border itself is drawn at.
+    const nx = (s.cellX/s.cols) - 0.5;
+    const ny = (s.cellY/s.cols) - 0.5;
+    const px = ox + nx*span;
+    const py = oy + ny*span;
+    return [px,py];
+  }
+
+  function livePlane(t){
+    if(groupFilter==='nondna'){
+      const region = (t.tpSlRegionIdx!=null && t.tpSlRegionIdx>=0) ? TPSL_REGIONS[t.tpSlRegionIdx] : null;
+      if(!region) return null;
+      const px = region.ox + ((t.cellX/t.cols)-0.5)*2*region.halfW;
+      const py = region.oy + ((t.cellY/t.cols)-0.5)*2*region.halfH;
+      return [Math.max(-1,Math.min(1,px)), Math.max(-1,Math.min(1,py))];
+    }
+    if(t.familyIdx==null) return null; // non-DNA trade with no real family - only placeable in the tp/sl grid above
+    const [ox,oy] = familyOrigin(t.familyIdx);
+    const span = 0.94;
+    const px = ox + ((t.cellX/t.cols)-0.5)*span;
+    const py = oy + ((t.cellY/t.cols)-0.5)*span;
+    return [px,py];
+  }
+
+  let hitList = []; // for click detection
+
+  function render(){
+    const colors = readColors(); // one style read per render, not one per pillar
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = colors.bg; ctx.fillRect(0,0,W,H);
+
+    // ground grid: tp/sl grid when viewing Non-DNA, normal 4 family quadrants otherwise
+    ctx.strokeStyle = colors.line; ctx.lineWidth=1;
+    if(groupFilter==='nondna'){
+      TPSL_REGIONS.forEach(region=>{
+        const {ox,oy,halfW,halfH} = region;
+        const corners = [[-halfW,-halfH],[halfW,-halfH],[halfW,halfH],[-halfW,halfH]].map(([dx,dy])=>project(ox+dx,oy+dy,0));
+        ctx.beginPath();
+        corners.forEach((c,i)=> i===0?ctx.moveTo(c[0],c[1]):ctx.lineTo(c[0],c[1]));
+        ctx.closePath(); ctx.stroke();
+      });
+    } else {
+      for(let f=0; f<(groupFilter==='both'?FAMILIES.length:4); f++){
+        const [ox,oy] = familyOrigin(f);
+        const corners = [[-0.47,-0.47],[0.47,-0.47],[0.47,0.47],[-0.47,0.47]].map(([dx,dy])=>project(ox+dx,oy+dy,0));
+        ctx.beginPath();
+        corners.forEach((c,i)=> i===0?ctx.moveTo(c[0],c[1]):ctx.lineTo(c[0],c[1]));
+        ctx.closePath(); ctx.stroke();
+      }
+    }
+
+    hitList = [];
+    const showSet = clusterSet;
+    const items = visibleStrategies().map(s=>{
+      const plane = strategyPlane(s);
+      if(!plane) return null; // no parseable tp/sl in Non-DNA view - dropped, not mis-placed
+      const [px,py] = plane;
+      const depth = px*Math.sin(camAngle)+py*Math.cos(camAngle); // for painter's sort
+      return {s,px,py,depth};
+    }).filter(Boolean);
+    items.sort((a,b)=>a.depth-b.depth);
+
+    // Bar width is derived from the actual grid cell spacing (not a fixed constant).
+    // The grid's overall SPREAD across each quadrant (span=0.94 in strategyPlane,
+    // unaffected by this) is what fills ~90% of the square's footprint - that's
+    // positioning, not bar thickness. 0.42 of the cell pitch leaves a clear visible
+    // gap between neighbours so each pillar reads as its own distinct bar.
+    const scale = Math.min(W,H)*0.42*camZoom; // matches project()'s own scale
+    let cellPx;
+    if(groupFilter==='nondna' && items.length){
+      const sample = items[0].s;
+      const region = TPSL_REGIONS[sample.tpSlRegionIdx];
+      cellPx = region ? (region.halfW*2/sample.tpSlCols) * scale : 4;
+    } else {
+      const sampleCols = (strategies[0] && strategies[0].cols) || 20;
+      cellPx = (0.94/sampleCols) * scale; // 0.94 = span, matching strategyPlane's pitch
+    }
+    function barWidthFor(){
+      return Math.max(1, Math.min(40, cellPx*0.42));
+    }
+
+    // These backdrop pillars ARE the closed-trade layer (combined_trades_closed
+    // history, cumulative to each snapshot). "Open only" hides them; "Both" and
+    // "Closed only" keep them.
+    // project()'s x output never depends on z (only y/sy does) - every bar is a
+    // perfectly vertical line on screen. That means we can draw it as a pixel-
+    // rounded filled rectangle instead of a stroked line: fillRect with integer
+    // x/width/y/height has no anti-aliased edge to blur, which stroking a
+    // fractional-width line always does. This is what actually fixes crispness -
+    // the earlier width/gap tuning alone couldn't, since canvas still
+    // anti-aliases any stroke not aligned to the pixel grid.
+    if(layerFilter!=='open') items.forEach(({s,px,py})=>{
+      const v = currentValue(s);
+      const ratio = Math.min(1, Math.abs(v)/netExtent); // clamped - values above the 90th percentile just cap out at full height
+      const h = Math.pow(ratio, 0.62) * 0.42; // height unchanged from the original scale - only bar width/footprint was asked to grow
+      const [bx,by] = project(px,py,0);
+      const [,ty] = project(px,py,h);
+      const inCluster = showSet.has(s);
+      let alpha = 1;
+      if(mode==='growth' && !inCluster) alpha = 0.16;
+
+      let col = colorFor(v, colors);
+      if(inCluster && mode!=='off') col = colors.amber;
+
+      const bw = Math.max(1, Math.round(barWidthFor(s)));
+      const xLeft = Math.round(bx - bw/2);
+      const yTop = Math.round(Math.min(by,ty));
+      const yBottom = Math.round(Math.max(by,ty));
+
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = col;
+      ctx.fillRect(xLeft, yTop, bw, Math.max(1,yBottom-yTop));
+      ctx.globalAlpha = 1;
+
+      hitList.push({x:bx,y:yTop,r:Math.max(3,bw*2.2),s});
+    });
+
+    // live open-trade layer: drawn on top, wider + glowing ring
+    const liveArr = layerFilter==='closed' ? [] : Array.from(visibleLiveTrades().values());
+    const liveItems = liveArr.map(t=>{
+      const plane = livePlane(t);
+      if(!plane) return null; // Non-DNA view: no parseable tp/sl for this trade - dropped
+      const [px,py] = plane;
+      const depth = px*Math.sin(camAngle)+py*Math.cos(camAngle);
+      return {t,px,py,depth};
+    }).filter(Boolean);
+    liveItems.sort((a,b)=>a.depth-b.depth);
+    const moverGuids = new Set(fastestMovers(5).map(m=>m.guid));
+    liveItems.forEach(({t,px,py})=>{
+      const liveRatio = Math.min(1, Math.abs(tv(t))/liveNetExtent);
+      const h = Math.pow(liveRatio, 0.55) * 0.46;
+      const [bx,by] = project(px,py,0);
+      const [tx,ty] = project(px,py,h);
+      const dir = dirOf(tv(t));
+      const col = dir==='pos'?colors.green:dir==='neg'?colors.red:colors.neutral;
+      const isMover = moverGuids.has(t.guid);
+      let alpha = 1;
+      if(mode==='growth') alpha = 0.35; // live layer always visible, just dimmed in growth-focus like the rest
+
+      const liveBw = isMover?7:5;
+      const liveXLeft = Math.round(bx - liveBw/2);
+      const liveYTop = Math.round(Math.min(by,ty));
+      const liveYBottom = Math.round(Math.max(by,ty));
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = col;
+      ctx.fillRect(liveXLeft, liveYTop, liveBw, Math.max(1,liveYBottom-liveYTop)); // pixel-rounded rect, same crispness fix as the backdrop bars
+      // Glowing ring at tip marks it as a real, currently-open position. Fastest
+      // movers previously only got a thinner cyan-vs-white outline at the same
+      // small radius - too subtle to read as "highlighted" against a busy dark
+      // background, which is exactly why switching to Open-only view looked like
+      // nothing was highlighted at all. Movers now get a filled cyan halo behind
+      // the trade dot, clearly larger and a solid fill rather than a thin line.
+      if(isMover){
+        ctx.fillStyle = colors.cyan;
+        ctx.globalAlpha = alpha*0.35;
+        ctx.beginPath(); ctx.arc(tx,ty,11,0,Math.PI*2); ctx.fill();
+        ctx.globalAlpha = alpha;
+      }
+      ctx.fillStyle = col;
+      ctx.beginPath(); ctx.arc(tx,ty,3.4,0,Math.PI*2); ctx.fill();
+      ctx.lineWidth = isMover?2.6:1.6; ctx.strokeStyle = isMover?colors.cyan:colors.text;
+      ctx.beginPath(); ctx.arc(tx,ty, isMover?7.2:5.6,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha = 1;
+
+      hitList.push({x:tx,y:ty,r:8,t});
+    });
+
+    positionOverlays();
+  }
+
+  // ---------- 6. overlays (family labels + cluster tags), positioned via DOM over canvas ----------
+  const stageWrap = document.getElementById('stageWrap');
+  let famLabelEls = [], clusterTagEls = [];
+  function ensureOverlayEls(){
+    famLabelEls.forEach(e=>e.remove()); famLabelEls=[];
+    clusterTagEls.forEach(e=>e.remove()); clusterTagEls=[];
+    if(groupFilter==='nondna'){
+      TPSL_REGIONS.forEach(region=>{
+        const el = document.createElement('div');
+        el.className='family-label region-label--cell';
+        const closedCount = visibleStrategies().filter(s=>s.tpSlRegionIdx>=0 && TPSL_REGIONS[s.tpSlRegionIdx]===region).length;
+        const openCount = Array.from(visibleLiveTrades().values()).filter(t=>t.tpSlRegionIdx>=0 && TPSL_REGIONS[t.tpSlRegionIdx]===region).length;
+        const countDisplay = layerFilter==='open' ? openCount : (closedCount ? closedCount + (openCount ? `+${openCount}o` : '') : openCount);
+        el.innerHTML = region.label + '<span class="count">'+countDisplay+'</span>';
+        stageWrap.appendChild(el);
+        famLabelEls.push(el);
+      });
+    } else {
+      FAMILIES.forEach((f,i)=>{
+        if(i===4 && groupFilter==='dna') return;
+        const el = document.createElement('div');
+        el.className='family-label';
+        const count = visibleStrategies().filter(s=>s.familyIdx===i).length;
+        el.innerHTML = f + '<span class="count">'+count+'</span>';
+        stageWrap.appendChild(el);
+        famLabelEls.push(el);
+      });
+    }
+    // Cluster tags mark growth in the closed-trade backdrop pillars - skip them
+    // when those pillars aren't being drawn ("Open only").
+    if(layerFilter!=='open') clustersNow.forEach((c,i)=>{
+      const el = document.createElement('div');
+      el.className='cluster-tag';
+      el.innerHTML = 'FASTEST GROWTH #'+c.rank+'<span class="tp-sl">'+c.tpSl+'</span>';
+      stageWrap.appendChild(el);
+      clusterTagEls.push(el);
+    });
+  }
+  function positionOverlays(){
+    if(groupFilter==='nondna'){
+      TPSL_REGIONS.forEach((region,i)=>{
+        const [sx,sy] = project(region.ox, region.oy-region.halfH, region.halfH*1.05);
+        const el = famLabelEls[i];
+        if(el){ el.style.left=(sx-el.offsetWidth/2)+'px'; el.style.top=(sy-16)+'px'; }
+      });
+    } else {
+      FAMILIES.forEach((f,i)=>{
+        if(i===4 && groupFilter==='dna') return;
+        const [ox,oy] = familyOrigin(i);
+        const [sx,sy] = project(ox,oy-0.5,0.5);
+        const el = famLabelEls[i];
+        if(el){ el.style.left=(sx-el.offsetWidth/2)+'px'; el.style.top=(sy-30)+'px'; }
+      });
+    }
+    clustersNow.forEach((c,i)=>{
+      const planes = c.members.map(s=>strategyPlane(s)).filter(Boolean);
+      if(!planes.length) return;
+      const avgX = planes.reduce((a,p)=>a+p[0],0)/planes.length;
+      const avgY = planes.reduce((a,p)=>a+p[1],0)/planes.length;
+      const h = 0.3;
+      const [sx,sy] = project(avgX,avgY,h);
+      const el = clusterTagEls[i];
+      if(el){ el.style.left=(sx-el.offsetWidth/2)+'px'; el.style.top=(sy-16)+'px'; }
+    });
+  }
+
+  // ---------- 7. click detection ----------
+  canvas.addEventListener('click', e=>{
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+    let best=null, bestD=1e9, bestIsLive=false;
+    hitList.forEach(h=>{
+      const d = (h.x-mx)**2+(h.y-my)**2;
+      if(d<bestD && d < (h.r*4)**2){ bestD=d; best=h.t||h.s; bestIsLive=!!h.t; }
+    });
+    if(best){ if(bestIsLive) showLiveDetail(best); else showDetail(best); }
+  });
+
+  function showLiveDetail(t){
+    selected = null;
+    const dir = dirOf(tv(t));
+    document.getElementById('dId').textContent = t.guid.slice(0,8)+'…';
+    document.getElementById('dName').textContent = t.strategy_name || (t.group==='dna'?t.family:'Non-DNA');
+    document.getElementById('dFamily').textContent = (t.family||'(no family - tp/sl only)')+' · '+(t.group==='dna'?'DNA':'Non-DNA');
+    document.getElementById('dProduct').textContent = t.product+' · '+t.signal;
+    document.getElementById('dNet').textContent = tv(t).toFixed(2)+' ('+returnBasis+', live, unrealized)';
+    document.getElementById('dGrowth').textContent = t.entry_price+' → '+(t.latest_price ?? '—');
+    document.getElementById('dCluster').textContent = 'open since '+(t.created ? t.created.replace('T',' ').slice(0,16) : '—');
+    document.getElementById('dDir').innerHTML = '<span class="pill '+dir+'">'+(dir==='pos'?'OPEN · POSITIVE':dir==='neg'?'OPEN · NEGATIVE':'OPEN · NEUTRAL')+'</span>';
+    document.getElementById('detail').classList.add('show');
+  }
+
+  function showDetail(s){
+    selected = s;
+    const v = currentValue(s);
+    const prev = currentSnap>0 ? seriesFor(s)[currentSnap-1] : null;
+    const growth = prev!==null ? (v-prev) : null;
+    document.getElementById('dId').textContent = s.id;
+    document.getElementById('dName').textContent = s.name;
+    document.getElementById('dFamily').textContent = s.family+' · '+(s.group==='dna'?'DNA':'Non-DNA');
+    document.getElementById('dProduct').textContent = s.product+' · '+s.tradeCount+' closed trades';
+    document.getElementById('dNet').textContent = v.toFixed(2);
+    document.getElementById('dGrowth').textContent = growth!==null ? (growth>=0?'+':'')+growth.toFixed(2) : '—';
+    const inCluster = clustersNow.find(c=>c.members.includes(s));
+    document.getElementById('dCluster').textContent = inCluster ? ('#'+inCluster.rank+' '+inCluster.family) : 'none';
+    const dir = dirOf(v);
+    document.getElementById('dDir').innerHTML = '<span class="pill '+dir+'">'+(dir==='pos'?'POSITIVE':dir==='neg'?'NEGATIVE':'NEUTRAL')+'</span>';
+    document.getElementById('detail').classList.add('show');
+  }
+  document.getElementById('detailClose').addEventListener('click', ()=>{
+    document.getElementById('detail').classList.remove('show');
+  });
+
+  // ---------- 8. side panel: family cards + cluster list ----------
+  function renderSide(){
+    const heading = document.getElementById('sideIntelHeading');
+    if(heading){
+      heading.textContent = groupFilter==='nondna' ? 'TP/SL Group Intelligence' : 'Family Intelligence';
+    }
+    const famList = document.getElementById('famList');
+    famList.innerHTML='';
+
+    if(groupFilter==='nondna'){
+      // Show TP/SL grouping intelligence cards
+      TPSL_REGIONS.forEach((region, i)=>{
+        const members = visibleStrategies().filter(s=>s.tpSlRegionIdx===i);
+        const vals = members.map(s=>currentValue(s));
+        const pos = vals.filter(v=>v>THRESH).length;
+        const neg = vals.filter(v=>v<-THRESH).length;
+        const neu = members.length-pos-neg;
+        const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+        const liveForRegion = Array.from(visibleLiveTrades().values()).filter(t=>t.tpSlRegionIdx===i);
+        const liveSum = liveForRegion.reduce((a,t)=>a+tv(t),0);
+
+        // Only show regions that have closed strategies or active open trades
+        if(!members.length && !liveForRegion.length) return;
+
+        const card = document.createElement('div');
+        card.className='fam-card';
+        card.innerHTML = `
+          <div class="name">${region.label}</div>
+          <div class="grid">
+            <div class="kv"><span class="k">Closed</span><span class="v">${members.length}</span></div>
+            <div class="kv"><span class="k">Avg net</span><span class="v">${avg.toFixed(2)}</span></div>
+            <div class="kv"><span class="k">Positive</span><span class="v" style="color:var(--green)">${pos}</span></div>
+            <div class="kv"><span class="k">Negative</span><span class="v" style="color:var(--red)">${neg}</span></div>
+            <div class="kv"><span class="k">Open now</span><span class="v" style="font-weight:700; color:var(--text);">${liveForRegion.length}</span></div>
+            <div class="kv"><span class="k">Open P&amp;L</span><span class="v" style="color:${liveSum>=0?'var(--green)':'var(--red)'}">${liveSum>=0?'+':''}${liveSum.toFixed(2)}</span></div>
+          </div>`;
+        famList.appendChild(card);
+      });
+    } else {
+      FAMILIES.forEach((f,i)=>{
+        if(i===4 && groupFilter==='dna') return;
+        const members = visibleStrategies().filter(s=>s.familyIdx===i);
+        const vals = members.map(s=>currentValue(s));
+        const pos = vals.filter(v=>v>THRESH).length;
+        const neg = vals.filter(v=>v<-THRESH).length;
+        const neu = members.length-pos-neg;
+        const avg = vals.length ? vals.reduce((a,b)=>a+b,0)/vals.length : 0;
+        const clusterCount = clustersNow.filter(c=>c.familyIdx===i).length;
+        const liveForFam = Array.from(visibleLiveTrades().values()).filter(t=>t.familyIdx===i);
+        const liveSum = liveForFam.reduce((a,t)=>a+tv(t),0);
+        const card = document.createElement('div');
+        card.className='fam-card';
+        card.innerHTML = `
+          <div class="name">${f}</div>
+          <div class="grid">
+            <div class="kv"><span class="k">Count</span><span class="v">${members.length}</span></div>
+            <div class="kv"><span class="k">Clusters</span><span class="v">${clusterCount}</span></div>
+            <div class="kv"><span class="k">Positive</span><span class="v" style="color:var(--green)">${pos}</span></div>
+            <div class="kv"><span class="k">Negative</span><span class="v" style="color:var(--red)">${neg}</span></div>
+            <div class="kv"><span class="k">Neutral</span><span class="v">${neu}</span></div>
+            <div class="kv"><span class="k">Avg net</span><span class="v">${avg.toFixed(2)}</span></div>
+            <div class="kv"><span class="k">Open now</span><span class="v">${liveForFam.length}</span></div>
+            <div class="kv"><span class="k">Open P&amp;L</span><span class="v" style="color:${liveSum>=0?'var(--green)':'var(--red)'}">${liveSum>=0?'+':''}${liveSum.toFixed(2)}</span></div>
+          </div>`;
+        famList.appendChild(card);
+      });
+    }
+
+    const clusterList = document.getElementById('clusterList');
+    clusterList.innerHTML='';
+    if(clustersNow.length===0){
+      clusterList.innerHTML = '<div style="font-size:11.5px;color:var(--muted)">No qualifying clusters at this snapshot.</div>';
+    }
+    clustersNow.forEach(c=>{
+      const card = document.createElement('div');
+      card.className='cluster-card';
+      card.innerHTML = `
+        <span class="rank">#${c.rank}</span> <span class="fam">${c.family}</span>
+        <div class="stats">
+          <span>${c.members.length} strategies</span>
+          <span style="color:var(--green)">avg +${c.avgGrowth.toFixed(2)}</span>
+          <span>${c.positives}/${c.members.length} pos</span>
+          <span>${c.tpSl}</span>
+        </div>`;
+      clusterList.appendChild(card);
+    });
+
+    renderMovers();
+  }
+
+  function renderMovers(){
+    const moverList = document.getElementById('moverList');
+    if(!moverList) return;
+    moverList.innerHTML='';
+    const label = growthWindowMin>=60 ? (growthWindowMin/60)+'hr' : growthWindowMin+'min';
+    const top = fastestMovers(5);
+    if(top.length===0){
+      moverList.innerHTML = '<div style="font-size:11.5px;color:var(--muted)">No open trades with '+label+' of history yet.</div>';
+      return;
+    }
+    top.forEach((m,i)=>{
+      const card = document.createElement('div');
+      card.className='mover-card';
+      card.innerHTML = `
+        <span class="rank">#${i+1}</span> <span class="fam">${m.t.strategy_name||m.t.family||'?'} · ${m.t.product}</span>
+        <div class="stats">
+          <span style="color:${m.growth>=0?'var(--green)':'var(--red)'}">${m.growth>=0?'+':''}${m.growth.toFixed(2)} / ${label}</span>
+          <span>now ${tv(m.t).toFixed(2)}</span>
+        </div>`;
+      moverList.appendChild(card);
+    });
+  }
+
+  function renderTopStats(){
+    if(layerFilter==='open'){
+      const vLive = Array.from(visibleLiveTrades().values());
+      const vals = vLive.map(t=>tv(t));
+      document.getElementById('statTotal').textContent = vLive.length.toLocaleString();
+      document.getElementById('statPos').textContent = vals.filter(v=>v>THRESH).length.toLocaleString();
+      document.getElementById('statNeg').textContent = vals.filter(v=>v<-THRESH).length.toLocaleString();
+      document.getElementById('statClusters').textContent = '—';
+      return;
+    }
+    const vs = visibleStrategies();
+    const vals = vs.map(s=>currentValue(s));
+    const vLive = Array.from(visibleLiveTrades().values());
+    const totalCount = layerFilter==='both' && !vs.length ? vLive.length : vs.length;
+    document.getElementById('statTotal').textContent = totalCount.toLocaleString();
+    document.getElementById('statPos').textContent = vals.filter(v=>v>THRESH).length.toLocaleString();
+    document.getElementById('statNeg').textContent = vals.filter(v=>v<-THRESH).length.toLocaleString();
+    document.getElementById('statClusters').textContent = clustersNow.length;
+  }
+
+  // ---------- 9. snapshot + mode controls ----------
+  const snapRow = document.getElementById('snapRow');
+  function buildSnapshotButtons(){
+    snapRow.innerHTML = '';
+    SNAP_LABELS.forEach((lab,i)=>{
+      const btn = document.createElement('button');
+      btn.className='snap-btn'+(i===currentSnap?' active':'');
+      btn.textContent = lab===todayStr() ? lab+' (now)' : lab;
+      btn.addEventListener('click', ()=>{
+        currentSnap = i;
+        [...snapRow.children].forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
+        playbackActive = false; if(isPlaying) togglePlayback();
+        refreshPlaybackVisibility();
+        recompute();
+        clusterSet = clusterMemberSet();
+        ensureOverlayEls();
+        renderSide(); renderTopStats(); render();
+        if(selected) showDetail(selected);
+      });
+      snapRow.appendChild(btn);
+    });
+  }
+
+  document.querySelectorAll('.mode-row .mode-btn[data-mode]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-mode]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      mode = btn.dataset.mode;
+      render();
+    });
+  });
+
+  // ---------- period filter, same day/week/month/all + custom range pattern as EP051's period-filter.js ----------
+  const dateFrom = document.getElementById('dateFrom');
+  const dateTo = document.getElementById('dateTo');
+  const applyPeriod = document.getElementById('applyPeriod');
+  const periodLabel = document.getElementById('periodLabel');
+  const DnaPeriod = (function(){
+    const iso = d => { const x = new Date(d.getTime()-d.getTimezoneOffset()*60000); return x.toISOString().slice(0,10); };
+    const title = (from,to) => from && to ? (from===to ? new Date(from+'T00:00:00').toLocaleDateString(undefined,{dateStyle:'long'}) : `${new Date(from+'T00:00:00').toLocaleDateString()} — ${new Date(to+'T00:00:00').toLocaleDateString()}`) : 'All available history';
+    function onChange(){
+      recomputeLiveExtent(); updateLiveBadge(); render(); renderSide();
+    }
+    function setPreset(kind, notify){
+      if(notify===undefined) notify = true;
+      const now = new Date(), from = new Date(now), to = new Date(now);
+      if(kind==='week'){ const day=(now.getDay()+6)%7; from.setDate(now.getDate()-day); to.setDate(from.getDate()+6); }
+      if(kind==='month'){ from.setDate(1); to.setMonth(from.getMonth()+1,0); }
+      if(kind==='all'){ dateFrom.value=''; dateTo.value=''; }
+      else { dateFrom.value = iso(from); dateTo.value = iso(to); }
+      document.querySelectorAll('[data-period]').forEach(b=>b.classList.toggle('active', b.dataset.period===kind));
+      periodLabel.textContent = title(dateFrom.value, dateTo.value);
+      if(notify) onChange();
+    }
+    function apply(){
+      if(dateFrom.value && dateTo.value && dateFrom.value > dateTo.value){
+        dateTo.setCustomValidity('End date must be on or after start date'); dateTo.reportValidity(); return;
+      }
+      dateTo.setCustomValidity('');
+      document.querySelectorAll('[data-period]').forEach(b=>b.classList.remove('active'));
+      periodLabel.textContent = title(dateFrom.value, dateTo.value);
+      onChange();
+    }
+    document.querySelectorAll('[data-period]').forEach(b=>b.addEventListener('click', ()=>setPreset(b.dataset.period)));
+    applyPeriod.addEventListener('click', apply);
+    setPreset('today', false);
+    return { params: () => ({date_from: dateFrom.value||'', date_to: dateTo.value||''}), setPreset };
+  })();
+
+  // ---------- time-playback scrubber wiring ----------
+  (function(){
+    const play = document.getElementById('pbPlay'), reset = document.getElementById('pbReset'), end = document.getElementById('pbEnd');
+    const slider = document.getElementById('pbSlider'), slower = document.getElementById('pbSlower'), faster = document.getElementById('pbFaster');
+    if(!play) return;
+    play.addEventListener('click', togglePlayback);
+    reset.addEventListener('click', ()=>{
+      if(isPlaying) togglePlayback();
+      playbackActive = true; playbackMs = 0;
+      updatePlaybackUI(); recompute(); clusterSet=clusterMemberSet(); renderSide(); renderTopStats(); render();
+    });
+    end.addEventListener('click', ()=>{
+      if(isPlaying) togglePlayback();
+      playbackActive = false; playbackMs = 86399000;
+      updatePlaybackUI(); recompute(); clusterSet=clusterMemberSet(); renderSide(); renderTopStats(); render();
+    });
+    slider.addEventListener('input', e=>{
+      if(isPlaying) togglePlayback();
+      playbackActive = true; playbackMs = Number(e.target.value)*1000;
+      updatePlaybackUI(); recompute(); clusterSet=clusterMemberSet(); renderSide(); renderTopStats(); render();
+    });
+    slower.addEventListener('click', ()=>{ playbackSpeed = PB_SPEEDS[Math.max(0, PB_SPEEDS.indexOf(playbackSpeed)-1)]; updatePlaybackUI(); });
+    faster.addEventListener('click', ()=>{ playbackSpeed = PB_SPEEDS[Math.min(PB_SPEEDS.length-1, PB_SPEEDS.indexOf(playbackSpeed)+1)]; updatePlaybackUI(); });
+  })();
+
+  document.getElementById('productFilter').addEventListener('change', e=>{
+    productFilter = e.target.value;
+    selected = null;
+    document.getElementById('detail').classList.remove('show');
+    if(backdropReady){ recompute(); clusterSet = clusterMemberSet(); }
+    recomputeLiveExtent();
+    updateLiveBadge();
+    ensureOverlayEls();
+    renderSide(); renderTopStats(); render();
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-signal-filter]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-signal-filter]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      signalFilter = btn.dataset.signalFilter;
+      selected = null;
+      document.getElementById('detail').classList.remove('show');
+      strategies = [];
+      backdropReady = false;
+      recompute(); clusterSet = clusterMemberSet(); renderTopStats();
+      const overlay = document.getElementById('loadingOverlay');
+      if(overlay && layerFilter !== 'open') overlay.style.display = 'flex';
+      document.getElementById('loadingText').textContent = 'Loading '+signalFilter+' strategy history…';
+      loadBackdrop();
+      recomputeLiveExtent();
+      updateLiveBadge();
+      render();
+      renderSide();
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-created-within]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-created-within]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      createdWithinMin = Number(btn.dataset.createdWithin);
+      recomputeLiveExtent();
+      updateLiveBadge();
+      render();
+      renderSide();
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-growth-window]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-growth-window]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      growthWindowMin = Number(btn.dataset.growthWindow);
+      render();
+      renderMovers();
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-return-basis]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-return-basis]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      returnBasis = btn.dataset.returnBasis;
+      if(backdropReady){ recompute(); clusterSet = clusterMemberSet(); renderTopStats(); }
+      recomputeLiveExtent();
+      renderSide();
+      render();
+      if(selected) showDetail(selected);
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-net-filter]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-net-filter]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      netFilter = btn.dataset.netFilter;
+      selected = null;
+      document.getElementById('detail').classList.remove('show');
+      if(backdropReady){ recompute(); clusterSet = clusterMemberSet(); }
+      recomputeLiveExtent();
+      updateLiveBadge();
+      ensureOverlayEls();
+      renderSide(); renderTopStats(); render();
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-layer-filter]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-layer-filter]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      layerFilter = btn.dataset.layerFilter;
+      if(layerFilter === 'open'){
+        const overlay = document.getElementById('loadingOverlay');
+        if(overlay) overlay.style.display = 'none';
+      }
+      ensureOverlayEls(); // cluster tags only make sense when closed-trade pillars are shown
+      renderSide();
+      renderTopStats();
+      render();
+    });
+  });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-group-filter]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-group-filter]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      groupFilter = btn.dataset.groupFilter;
+      if(backdropReady){ recompute(); clusterSet = clusterMemberSet(); }
+      recomputeLiveExtent();
+      updateLiveBadge();
+      ensureOverlayEls();
+      renderSide(); renderTopStats(); render();
+    });
+  });
+
+  // ---------- init ----------
+  async function loadNonDnaTpSl(){
+    try{
+      const res = await fetch(NONDNA_TPSL_API, {cache:'no-store'});
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const json = await res.json();
+      nonDnaTpSlLookup = json.lookup || {};
+      buildTpSlRegions();
+      ensureOverlayEls();
+      if(typeof render === 'function') render();
+    }catch(err){
+      setTimeout(loadNonDnaTpSl, 8000); // retry - live non-DNA trades stay unclassified until this loads
+    }
+  }
+
+  function boot(){
+    resize();
+    loadBackdrop(); // real strategy history - takes a few seconds (full-table aggregate)
+    loadNonDnaTpSl();
+  }
+  window.addEventListener('load', boot);
+  if(document.readyState==='complete') boot();
+})();
+</script>
