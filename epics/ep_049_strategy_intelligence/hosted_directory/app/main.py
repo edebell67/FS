@@ -649,7 +649,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         if start is None and end is None: return all_profiles()
         return basis_profiles(end, "net_return", start=start)
 
-    arena_provider.install(app, cfg, arena_universe)
+    arena_provider.install(app, cfg, arena_universe, points_fn=repository_points_today, now_fn=current_now)
     return app
 
 

@@ -9,6 +9,24 @@ connection model is the identity system; this only verifies the arena
 itself is a trusted caller and logs which of its agents triggered each query.
 
 VERSION HISTORY
+v1.5.0 (2026-09-15) - Correct late_day_riser's actual criterion: was a
+self-invented "late-half net_return minus discounted early strength" sum;
+now an independent EP049-side reimplementation of the Arena's own
+positive_rising_hour_evidence() blue-stripe test (cumulative return positive
+AND rising vs the prior hour), counted for hours >=12:00 Europe/London local
+(not UTC), synthesized from this service's own trade-level repository data
+since it has no access to the Arena's strategy_return_hourly table.
+v1.4.0 (2026-09-15) - Add 12 public-facing aliases for late_day_riser (late_riser,
+afternoon_riser, late_bloomer, second_half_momentum, pm_momentum, afternoon_rings,
+pm_blue_rings, afternoon_blue_rings, pm_rings, pm_blue_stripes, pm_stripes,
+afternoon_stripes) ahead of public access - same pattern as best_return/net_return/
+top_performers aliasing one metric.
+v1.3.0 (2026-09-15) - Add late_day_riser kind: ranks by second-half-of-day net
+return discounted by any first-half strength, replicating a validated pattern
+(early leaders fade, eventual best performers build later, p<0.0001 on the
+most recent replication). Reuses main.py's repository_points_today/current_now
+via new optional install(points_fn, now_fn) params; omitted, the kind 503s
+instead of the whole provider erroring.
 v1.2.0 (2026-09-04) - Relocated from epics/ep_051_strategy_directory/hosted_directory/app/
 to epics/ep_049_strategy_intelligence/hosted_directory/app/ per Ed's EP049 ownership decision
 (this is intelligence infrastructure, not EP051's own directory-listing responsibility). No
@@ -26,11 +44,12 @@ retried request_id/revision replays the same result instead of re-billing).
 """
 from __future__ import annotations
 from contextlib import closing
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, time as dtime, timedelta, timezone
 from hashlib import sha256
 from pathlib import Path
 from typing import Literal
 from uuid import UUID, uuid4
+from zoneinfo import ZoneInfo
 import hmac, json, logging, sqlite3, time
 
 from fastapi import Depends, FastAPI, Header, HTTPException
@@ -68,6 +87,100 @@ KIND_DESCRIPTIONS = {
     "quality": f"Rank by composite quality_score, highest first. Also the fallback for any unrecognized kind.",
     "quality_score": "Alias of quality.",
 }
+
+# Not driven by KIND_METRICS' single-scalar-field dispatch: this kind counts
+# qualifying hours (cumulative net return positive AND rising vs the prior
+# hour), not a lookup on an existing profile field, so it's handled as its
+# own branch in select_strategies() rather than another KIND_METRICS row.
+# This is deliberately the SAME criterion as the Arena's own
+# lean_exchange/pricing.py positive_rising_hour_evidence() - the "blue
+# stripe" markers drawn on each strategy's pillar in the floor view
+# (arena.js drawStrategyMarkers) - computed independently here from this
+# service's own repository data, since arena_provider has no access to the
+# Arena's strategy_return_hourly table. Validated pattern (replicated ~4-5
+# months apart, p<0.0001 on the most recent measurement): strategies with
+# more blue-stripe hours in the afternoon/evening (>=12:00 Europe/London,
+# the exchange's own pricing_timezone) earn markedly higher net returns than
+# ones whose blue stripes are confined to the morning.
+LATE_DAY_KIND = "late_day_riser"
+LONDON = ZoneInfo("Europe/London")
+KIND_DESCRIPTIONS[LATE_DAY_KIND] = (
+    "Rank by count of qualifying hours (cumulative net return positive AND rising vs "
+    "the prior hour - the same criterion behind the Arena floor view's blue per-hour "
+    "strategy markers) falling at or after 12:00 Europe/London local time today. "
+    "Validated pattern: strategies whose blue-stripe hours land in the afternoon/"
+    "evening earn markedly higher net returns than ones confined to the morning."
+)
+# Aliases: same canonical kind, different public-facing spellings - agent
+# authors and (eventually) public callers shouldn't have to know the one
+# exact string. "rings"/"stripes" callbacks refer to the floor view's blue
+# per-hour markers on each strategy's pillar (arena.js drawStrategyMarkers) -
+# this kind is literally "does that strategy have its blue markers late".
+LATE_DAY_ALIASES = (
+    "late_riser", "afternoon_riser", "late_bloomer", "second_half_momentum", "pm_momentum",
+    "afternoon_rings", "pm_blue_rings", "afternoon_blue_rings", "pm_rings",
+    "pm_blue_stripes", "pm_stripes", "afternoon_stripes",
+)
+for _alias in LATE_DAY_ALIASES:
+    KIND_DESCRIPTIONS[_alias] = f"Alias of {LATE_DAY_KIND}."
+LATE_DAY_KINDS = frozenset({LATE_DAY_KIND, *LATE_DAY_ALIASES})
+
+
+def _late_day_riser_scores(points_fn, now_fn) -> dict[str, int]:
+    """Count, per strategy, how many of today's COMPLETED local hours are
+    'qualifying' - cumulative net return positive AND strictly greater than
+    the prior hour's cumulative return, same test as pricing.py's
+    positive_rising_hour_evidence() - restricted to hours at or after 12:00
+    Europe/London. Synthesizes hourly cumulative snapshots from this
+    service's own trade-level repository_points_today() data (closed_at,
+    net_return) rather than reading the Arena's own hourly snapshot table,
+    which this service cannot reach. Because every hour from local midnight
+    to the current (partial, excluded) hour is synthesized, cadence between
+    consecutive hours is always exactly 1 hour by construction - no gap
+    check needed, unlike the sparse-row DB version this mirrors."""
+    fresh = points_fn()
+    if not fresh:
+        return {}
+    now_local = now_fn(fresh).astimezone(LONDON)
+    local_date = now_local.date()
+    day_start = datetime.combine(local_date, dtime.min, tzinfo=LONDON)
+    current_hour = now_local.replace(minute=0, second=0, microsecond=0)
+    scores: dict[str, int] = {}
+    for strategy_id, points in fresh.items():
+        valid = sorted(
+            (p for p in points if p.get("net_return") is not None),
+            key=lambda p: _parse_closed_at(p["closed_at"]),
+        )
+        if not valid:
+            continue
+        hourly_cumulative: dict[datetime, float] = {}
+        running = 0.0
+        cursor_index = 0
+        hour_cursor = day_start
+        while hour_cursor < current_hour:
+            hour_end = hour_cursor + timedelta(hours=1)
+            while cursor_index < len(valid) and _parse_closed_at(valid[cursor_index]["closed_at"]).astimezone(LONDON) < hour_end:
+                running += float(valid[cursor_index]["net_return"])
+                cursor_index += 1
+            hourly_cumulative[hour_cursor] = running
+            hour_cursor = hour_end
+        hours_sorted = sorted(hourly_cumulative)
+        count = 0
+        for index in range(1, len(hours_sorted)):
+            hour = hours_sorted[index]
+            if hour.hour < 12:
+                continue
+            recent, prior = hourly_cumulative[hour], hourly_cumulative[hours_sorted[index - 1]]
+            if recent > 0 and recent > prior:
+                count += 1
+        if count:
+            scores[strategy_id] = count
+    return scores
+
+
+def _parse_closed_at(value) -> datetime:
+    stamp = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    return stamp if stamp.tzinfo else stamp.replace(tzinfo=timezone.utc)
 
 
 class ArenaQueryRequest(BaseModel):
@@ -115,12 +228,25 @@ def _metric_value(profile: dict, path: tuple[str, str]) -> float | None:
     return profile.get("metrics", {}).get(key, {}).get("value")
 
 
-def select_strategies(request: ArenaQueryRequest, universe_fn, cfg) -> tuple[list[str], str, bool, int]:
+def select_strategies(request: ArenaQueryRequest, universe_fn, cfg, points_fn=None, now_fn=None) -> tuple[list[str], str, bool, int]:
     """Resolve one ArenaQueryRequest against the real directory: builds the
     candidate pool for [window_start, window_end) via basis_profiles (or the
     full since-inception pool when no window is given), ranks by whatever
     `kind` maps to, restricts to request.strategy_ids when given, and caps
     at request.limit. Returns (strategy_ids, notice, fallback, universe_size)."""
+    if request.kind.lower() in LATE_DAY_KINDS:
+        if points_fn is None or now_fn is None:
+            raise HTTPException(503, "late_day_riser is not wired up on this deployment (points_fn/now_fn missing)")
+        scores = _late_day_riser_scores(points_fn, now_fn)
+        ranked = sorted(scores, key=scores.get, reverse=True)
+        if request.strategy_ids:
+            wanted = set(request.strategy_ids)
+            ranked = [sid for sid in ranked if sid in wanted]
+        selected = ranked[:request.limit]
+        notice = (f"Ranked by {LATE_DAY_KIND}: count of qualifying hours (cumulative net "
+                  f"return positive and rising vs the prior hour) at or after 12:00 "
+                  f"Europe/London today; {len(scores)} strategies have at least one.")
+        return selected, notice, False, len(scores)
     metric_path = KIND_METRICS.get(request.kind.lower())
     fallback = metric_path is None
     if fallback:
@@ -142,12 +268,15 @@ def select_strategies(request: ArenaQueryRequest, universe_fn, cfg) -> tuple[lis
     return selected, notice, fallback, len(profiles)
 
 
-def install(app: FastAPI, cfg, universe_fn):
+def install(app: FastAPI, cfg, universe_fn, points_fn=None, now_fn=None):
     """Mount POST /v1/queries and GET /v1/deliveries/{id} on `app`, matching
     ep_052's IntelligenceClient contract exactly. `universe_fn(start,end)`
     must return a list of profile dicts (or None if unavailable) bounded to
     that window - the caller supplies this so this module stays independent
-    of main.py's specific profile-cache plumbing."""
+    of main.py's specific profile-cache plumbing. `points_fn`/`now_fn` are
+    optional: pass main.py's repository_points_today/current_now closures to
+    enable the `late_day_riser` kind (see _late_day_riser_scores); omitted,
+    that kind 503s instead of erroring the whole provider."""
     db_path = Path(cfg.arena_deliveries_path)
     db_path = db_path if db_path.is_absolute() else Path(__file__).resolve().parents[1] / db_path
     db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -222,11 +351,12 @@ def install(app: FastAPI, cfg, universe_fn):
         with closing(sqlite3.connect(db_path)) as db:
             recovered = existing(db)
             if recovered:
-                log_query(agent_id, request.kind, request.kind.lower() not in KIND_METRICS, request,
+                is_fallback = request.kind.lower() not in KIND_METRICS and request.kind.lower() not in LATE_DAY_KINDS
+                log_query(agent_id, request.kind, is_fallback, request,
                           len(recovered.strategy_ids), None, (time.perf_counter() - started) * 1000, cache_hit=True)
                 return recovered
 
-        selected, notice, fallback, universe_size = select_strategies(request, universe_fn, cfg)
+        selected, notice, fallback, universe_size = select_strategies(request, universe_fn, cfg, points_fn, now_fn)
         result = ArenaQueryDelivery(delivery_id=uuid4(), request_id=request.request_id, revision=request.revision,
                                      result_version=uuid4(), created_at=datetime.now(timezone.utc),
                                      source_version="dna-strategy-directory-1.0.0", mode="external",
@@ -287,6 +417,10 @@ def install(app: FastAPI, cfg, universe_fn):
         total, fallback_total = (row[0] or 0), (row[1] or 0)
         kinds = [{"kind": name, "metric": "/".join(KIND_METRICS[name]), "description": KIND_DESCRIPTIONS[name],
                   "is_default_fallback": name == DEFAULT_KIND} for name in sorted(KIND_METRICS)]
+        for name in sorted(LATE_DAY_KINDS):
+            kinds.append({"kind": name, "metric": "qualifying_hours_after_noon_london",
+                          "description": KIND_DESCRIPTIONS[name], "is_default_fallback": False,
+                          "requires_today_trade_data": True})
         return {"kinds": kinds, "default_fallback_kind": DEFAULT_KIND,
                 "fallback_rate_all_time": round(fallback_total / total, 4) if total else None,
                 "total_queries_observed": total, "schema_version": "1.0.0"}
