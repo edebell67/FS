@@ -2,6 +2,9 @@
 # Read-only aggregation API for the EP055 Strategy Landscape historical backdrop.
 #
 # VERSION HISTORY
+# v2.4.0 · 2026-09-16 · Add first_created_series to /api/breakout_backdrop: per snapshot,
+#   the earliest real `created` of the trades feeding that day's bar, so the frontend
+#   can draw age stripes (one per complete X minutes of bar age).
 # v2.3.0 · 2026-09-15 · Add /api/intraday_series for the time-playback scrubber:
 #   per-strategy cumulative net_return/alt_net_return at real trade-close resolution
 #   (COALESCE(g_close_time, last_update, created), same convention api_server_sql
@@ -469,7 +472,8 @@ def _run_query(db: str, signal: str = "both") -> dict:
                    CAST(created AS DATE) AS trade_date,
                    SUM(net_return) AS day_net,
                    SUM(alt_net_return) AS day_alt_net,
-                   COUNT(*) AS day_count
+                   COUNT(*) AS day_count,
+                   MIN(created) AS day_first_created
             FROM dbo.combined_trades_closed WITH (NOLOCK)
             WHERE ((strategy_name LIKE 'breakout%' AND (model LIKE 'DNA[_]1%' OR model LIKE 'DNA[_]2%'))
                    OR (model LIKE '1[0-9][0-9][0-9][0-9][0-9]' AND LEN(model) = 6)) AND created >= DATEADD(day, -90, GETDATE())
@@ -483,7 +487,7 @@ def _run_query(db: str, signal: str = "both") -> dict:
 
         cur.execute(
             """
-            SELECT model, strategy_name, product, net_return, alt_net_return
+            SELECT model, strategy_name, product, net_return, alt_net_return, created
             FROM dbo.combined_trades_open WITH (NOLOCK)
             WHERE ((strategy_name LIKE 'breakout%' AND (model LIKE 'DNA[_]1%' OR model LIKE 'DNA[_]2%'))
                    OR (model LIKE '1[0-9][0-9][0-9][0-9][0-9]' AND LEN(model) = 6)) AND net_return IS NOT NULL
@@ -509,9 +513,10 @@ def _run_query(db: str, signal: str = "both") -> dict:
             "family": family, "group": "dna" if is_dna(model) else "nondna",
             "product": (product or "").upper(),
             "daily": defaultdict(lambda: {"net_return": 0.0, "alt_net_return": 0.0}), "trade_count": 0,
+            "first_created": {},  # date_str -> earliest created datetime that day
         }
 
-    for model, strategy_name, product, trade_date, day_net, day_alt_net, day_count in closed_rows:
+    for model, strategy_name, product, trade_date, day_net, day_alt_net, day_count, day_first_created in closed_rows:
         if not (is_dna(model) or is_nondna(model)):
             continue
         family = "nondna" if is_nondna(model) else family_of(strategy_name)
@@ -523,9 +528,13 @@ def _run_query(db: str, signal: str = "both") -> dict:
         entry["daily"][date_str]["net_return"] += float(day_net or 0)
         entry["daily"][date_str]["alt_net_return"] += float(day_alt_net or 0)
         entry["trade_count"] += int(day_count or 0)
+        if day_first_created is not None:
+            prev = entry["first_created"].get(date_str)
+            entry["first_created"][date_str] = day_first_created if prev is None else min(prev, day_first_created)
 
     open_by_strategy: dict[str, dict] = defaultdict(lambda: {"net_return": 0.0, "alt_net_return": 0.0})
-    for model, strategy_name, product, net_return, alt_net_return in open_rows:
+    open_first_created: dict[str, object] = {}
+    for model, strategy_name, product, net_return, alt_net_return, created in open_rows:
         if not (is_dna(model) or is_nondna(model)):
             continue
         family = "nondna" if is_nondna(model) else family_of(strategy_name)
@@ -534,6 +543,9 @@ def _run_query(db: str, signal: str = "both") -> dict:
         open_by_strategy[model]["net_return"] += float(net_return or 0)
         open_by_strategy[model]["alt_net_return"] += float(alt_net_return or 0)
         strategies.setdefault(model, new_entry(model, strategy_name, family, product))
+        if created is not None:
+            prev = open_first_created.get(model)
+            open_first_created[model] = created if prev is None else min(prev, created)
 
     sorted_dates = sorted(all_dates)
     historical_snapshots = sorted_dates[-4:] if len(sorted_dates) >= 4 else sorted_dates
@@ -546,7 +558,7 @@ def _run_query(db: str, signal: str = "both") -> dict:
 
     out_strategies = []
     for model, s in strategies.items():
-        net_by_snapshot, alt_by_snapshot = [], []
+        net_by_snapshot, alt_by_snapshot, first_created_by_snapshot = [], [], []
         running_net, running_alt = 0.0, 0.0
         # cumulative = sum of every closed day up to and including each snapshot date
         daily = s["daily"]
@@ -562,6 +574,10 @@ def _run_query(db: str, signal: str = "both") -> dict:
             if snap_date == today_str:
                 net_val += open_vals["net_return"]
                 alt_val += open_vals["alt_net_return"]
+            fc = s["first_created"].get(snap_date)
+            if snap_date == today_str and model in open_first_created:
+                fc = open_first_created[model] if fc is None else min(fc, open_first_created[model])
+            first_created_by_snapshot.append(fc.isoformat(timespec="seconds") if fc is not None else None)
             net_by_snapshot.append(round(net_val, 2))
             alt_by_snapshot.append(round(alt_val, 2))
         out_strategies.append({
@@ -576,6 +592,7 @@ def _run_query(db: str, signal: str = "both") -> dict:
             "open_alt_net_return": round(open_vals["alt_net_return"], 2),
             "net_series": net_by_snapshot,
             "alt_net_series": alt_by_snapshot,
+            "first_created_series": first_created_by_snapshot,
         })
 
     return {

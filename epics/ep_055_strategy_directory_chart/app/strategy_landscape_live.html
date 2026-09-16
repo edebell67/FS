@@ -204,6 +204,18 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
 
 .hint{position:absolute; top:14px; left:16px; font-size:11px; color:var(--faint); font-family:var(--font-mono);}
 
+/* split Buy/Sell view: two embedded panes of this same page, side by side */
+.split-wrap{flex:1; display:none; gap:8px; min-width:0;}
+body.split-on .split-wrap{display:flex;}
+body.split-on .main > .stage-wrap, body.split-on .main > .side{display:none;}
+.split-pane{flex:1; min-width:0; display:flex; flex-direction:column; border:1px solid var(--line); border-radius:8px; overflow:hidden;}
+.split-pane .pane-title{font-family:var(--font-mono); font-size:11px; font-weight:700; letter-spacing:.1em; padding:5px 10px; border-bottom:1px solid var(--line);}
+.split-pane iframe{flex:1; border:0; width:100%; background:var(--bg);}
+#splitToggle{display:none;}
+body.signal-both #splitToggle{display:inline-block;}
+body.embed .topbar, body.embed .side, body.embed .legend{display:none !important;}
+@media (max-width:760px){ body.split-on .split-wrap{flex-direction:column;} }
+
 ::-webkit-scrollbar{width:8px;} ::-webkit-scrollbar-thumb{background:var(--line); border-radius:4px;}
 </style>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600;700&display=swap">
@@ -261,6 +273,7 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       <button class="mode-btn active" data-signal-filter="both">Both</button>
       <button class="mode-btn" data-signal-filter="buy">Buy</button>
       <button class="mode-btn" data-signal-filter="sell">Sell</button>
+      <button class="mode-btn" id="splitToggle" title="Buy (left) and Sell (right) side by side">Split</button>
     </div>
   </div>
   <div class="divider-v"></div>
@@ -322,6 +335,16 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
     </div>
   </div>
   <div class="divider-v"></div>
+  <div class="control-group">
+    <div class="control-label">Age stripe every</div>
+    <div class="mode-row">
+      <button class="mode-btn" data-stripe-min="5">5min</button>
+      <button class="mode-btn active" data-stripe-min="15">15min</button>
+      <button class="mode-btn" data-stripe-min="30">30min</button>
+      <button class="mode-btn" data-stripe-min="60">1hr</button>
+    </div>
+  </div>
+  <div class="divider-v"></div>
   <div class="live-badge" id="liveBadge"><span class="dot"></span><span id="liveText">connecting…</span></div>
   <div class="spacer"></div>
   <div class="pop-stats">
@@ -347,6 +370,10 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
 </div>
 
 <div class="main">
+  <div class="split-wrap" id="splitWrap">
+    <div class="split-pane"><div class="pane-title" style="color:var(--green);">BUY</div><iframe id="paneBuy" title="Buy strategies"></iframe></div>
+    <div class="split-pane"><div class="pane-title" style="color:var(--red);">SELL</div><iframe id="paneSell" title="Sell strategies"></iframe></div>
+  </div>
   <div class="stage-wrap" id="stageWrap">
     <canvas id="stage"></canvas>
     <div class="hint">drag to orbit &middot; scroll to zoom &middot; click a pillar</div>
@@ -359,6 +386,7 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       <span><span class="dot" style="background:var(--red)"></span>Negative</span>
       <span><span class="dot" style="background:var(--neutral)"></span>Neutral</span>
       <span><span class="dot" style="background:var(--amber)"></span>Snapshot cluster (history)</span>
+      <span><span class="dot" style="background:#0b1f5c; outline:1px solid var(--line)"></span>Age stripe (per X min)</span>
       <span><span class="ring"></span>Live open trade</span>
       <span><span class="ring" style="border-color:var(--cyan); box-shadow:0 0 6px var(--cyan);"></span>Live fastest mover</span>
     </div>
@@ -534,7 +562,8 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
           product: String(s.product||'').toUpperCase(),
           tradeCount: s.trade_count,
           cellX: s._cellX, cellY: s._cellY, cols: s._cols,
-          netSeries: s.net_series, altNetSeries: s.alt_net_series
+          netSeries: s.net_series, altNetSeries: s.alt_net_series,
+          firstCreatedSeries: s.first_created_series || []
         };
       });
       strategies.forEach(s=>{ if(s.product) knownProducts.add(s.product); });
@@ -551,6 +580,10 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       clusterSet = clusterMemberSet();
       ensureOverlayEls();
       renderSide(); renderTopStats(); render();
+      if(EMBED_PANE && window.parent !== window && !window.__paneReadySent){
+        window.__paneReadySent = true;
+        window.parent.postMessage({type:'pane-ready'}, location.origin);
+      }
     }catch(err){
       if(requestId !== backdropRequestId) return;
       console.warn('loadBackdrop error:', err);
@@ -689,6 +722,14 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
   let liveOk = null, liveLastAt = null;
   let productFilter = 'all';
   let signalFilter = 'both'; // 'both' | 'buy' | 'sell'
+  const EMBED_PANE = new URLSearchParams(location.search).get('pane'); // split-view pane: 'buy' | 'sell' | null
+  if(EMBED_PANE === 'buy' || EMBED_PANE === 'sell'){
+    document.body.classList.add('embed');
+    signalFilter = EMBED_PANE;
+    document.querySelectorAll('.mode-btn[data-signal-filter]').forEach(b=>b.classList.toggle('active', b.dataset.signalFilter===EMBED_PANE));
+  }
+  function syncSignalClass(){ document.body.classList.toggle('signal-both', signalFilter==='both'); }
+  syncSignalClass();
   let createdWithinMin = 0; // 0 = no filter (All); else only trades created in the last N minutes
   let knownProducts = new Set();
 
@@ -1100,8 +1141,41 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
 
   let hitList = []; // for click detection
 
+  // ---------- age stripes: one very dark blue band per complete X minutes of bar age ----------
+  // Age = reference time minus the earliest real `created` of the trades feeding the
+  // bar (first_created_series from backdrop_server). Reference time is the playback
+  // scrubber time on today's snapshot (now when not scrubbing), end of day for history.
+  let stripeMin = 15;
+  const STRIPE_COLOR = '#0b1f5c';
+  const STRIPE_PITCH_PX = 5;
+  function ageRefMs(){
+    const lab = SNAP_LABELS[currentSnap];
+    if(!lab) return Date.now();
+    const midnight = new Date(lab+'T00:00:00').getTime();
+    if(lab === todayStr()) return playbackActive ? midnight + playbackMs : Date.now();
+    return midnight + 86400000;
+  }
+  function stripeCount(createdIso, refMs){
+    if(!createdIso) return 0;
+    const c = Date.parse(createdIso);
+    if(!Number.isFinite(c) || refMs <= c) return 0;
+    return Math.floor((refMs - c) / (stripeMin*60000));
+  }
+  function drawStripes(xLeft, yTop, yBottom, bw, n){
+    const hpx = yBottom - yTop;
+    if(n <= 0 || hpx < 3) return;
+    // squeeze: normal pitch, compressed so every band still fits inside the bar
+    const pitch = Math.min(STRIPE_PITCH_PX, (hpx - 1) / n);
+    const thick = pitch >= 3 ? 2 : 1;
+    ctx.fillStyle = STRIPE_COLOR;
+    for(let i=1;i<=n;i++){
+      ctx.fillRect(xLeft, Math.round(yBottom - i*pitch), bw, thick);
+    }
+  }
+
   function render(){
     const colors = readColors(); // one style read per render, not one per pillar
+    const refMs = ageRefMs();
     ctx.clearRect(0,0,W,H);
     ctx.fillStyle = colors.bg; ctx.fillRect(0,0,W,H);
 
@@ -1186,6 +1260,7 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       ctx.globalAlpha = alpha;
       ctx.fillStyle = col;
       ctx.fillRect(xLeft, yTop, bw, Math.max(1,yBottom-yTop));
+      drawStripes(xLeft, yTop, yBottom, bw, stripeCount((s.firstCreatedSeries||[])[currentSnap], refMs));
       ctx.globalAlpha = 1;
 
       hitList.push({x:bx,y:yTop,r:Math.max(3,bw*2.2),s});
@@ -1220,6 +1295,7 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       ctx.globalAlpha = alpha;
       ctx.fillStyle = col;
       ctx.fillRect(liveXLeft, liveYTop, liveBw, Math.max(1,liveYBottom-liveYTop)); // pixel-rounded rect, same crispness fix as the backdrop bars
+      drawStripes(liveXLeft, liveYTop, liveYBottom, liveBw, stripeCount(t.created, Date.now()));
       // Glowing ring at tip marks it as a real, currently-open position. Fastest
       // movers previously only got a thinner cyan-vs-white outline at the same
       // small radius - too subtle to read as "highlighted" against a busy dark
@@ -1601,6 +1677,8 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       document.querySelectorAll('.mode-row .mode-btn[data-signal-filter]').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
       signalFilter = btn.dataset.signalFilter;
+      syncSignalClass();
+      if(signalFilter!=='both' && splitOn) setSplit(false);
       selected = null;
       document.getElementById('detail').classList.remove('show');
       strategies = [];
@@ -1616,6 +1694,86 @@ canvas{display:block; width:100%; height:100%; cursor:crosshair;}
       renderSide();
     });
   });
+
+  document.querySelectorAll('.mode-row .mode-btn[data-stripe-min]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      document.querySelectorAll('.mode-row .mode-btn[data-stripe-min]').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      stripeMin = Number(btn.dataset.stripeMin);
+      render();
+    });
+  });
+
+  // ---------- split Buy/Sell view ----------
+  // Two embedded copies of this page (?pane=buy / ?pane=sell), each loading its own
+  // signal-filtered real data. Every control change here is mirrored into both panes,
+  // so they always show the same filters, snapshot and playback time.
+  const splitToggle = document.getElementById('splitToggle');
+  const panes = [document.getElementById('paneBuy'), document.getElementById('paneSell')];
+  let splitOn = false;
+  function paneDocs(){ return panes.map(f=>{ try{ return f.contentDocument; }catch(e){ return null; } }).filter(d=>d && d.body && d.body.classList.contains('embed')); }
+  function selectorFor(el){
+    if(el.id) return '#'+el.id;
+    for(const a of el.attributes){ if(a.name.startsWith('data-')) return '.mode-btn['+a.name+'="'+a.value+'"]'; }
+    if(el.parentElement && el.parentElement.id==='snapRow') return '#snapRow > :nth-child('+([...el.parentElement.children].indexOf(el)+1)+')';
+    return null;
+  }
+  function mirrorClick(el){
+    const sel = selectorFor(el); if(!sel) return;
+    paneDocs().forEach(d=>{ const t = d.querySelector(sel); if(t) t.click(); });
+  }
+  function mirrorValue(el, type){
+    if(!el.id) return;
+    paneDocs().forEach(d=>{ const t = d.getElementById(el.id); if(t){ t.value = el.value; t.dispatchEvent(new Event(type, {bubbles:true})); } });
+  }
+  function syncPaneState(d){
+    // bring a freshly loaded pane up to this page's current control state
+    document.querySelectorAll('.topbar .mode-btn.active').forEach(b=>{
+      if(b.id || b.dataset.signalFilter || b.dataset.period) return;
+      const sel = selectorFor(b); const t = sel && d.querySelector(sel);
+      if(t && !t.classList.contains('active')) t.click();
+    });
+    const pf = d.getElementById('productFilter');
+    if(pf && pf.value !== productFilter){
+      if(![...pf.options].some(o=>o.value===productFilter)){ const o = d.createElement('option'); o.value = o.textContent = productFilter; pf.appendChild(o); }
+      pf.value = productFilter; pf.dispatchEvent(new Event('change', {bubbles:true}));
+    }
+    const activePeriod = document.querySelector('[data-period].active');
+    if(activePeriod){ const t = d.querySelector('[data-period="'+activePeriod.dataset.period+'"]'); if(t) t.click(); }
+    else { d.getElementById('dateFrom').value = dateFrom.value; d.getElementById('dateTo').value = dateTo.value; d.getElementById('applyPeriod').click(); }
+    const snapBtn = document.querySelector('#snapRow > .active');
+    if(snapBtn){ const t = d.querySelector(selectorFor(snapBtn)); if(t && !t.classList.contains('active')) t.click(); }
+    if(playbackActive){ const sl = d.getElementById('pbSlider'); if(sl){ sl.value = Math.floor(playbackMs/1000); sl.dispatchEvent(new Event('input', {bubbles:true})); } }
+  }
+  window.addEventListener('message', e=>{
+    if(e.origin !== location.origin || !e.data || e.data.type !== 'pane-ready') return;
+    const f = panes.find(p=>p.contentWindow === e.source);
+    if(f && f.contentDocument && splitOn) syncPaneState(f.contentDocument);
+  });
+  function setSplit(on){
+    splitOn = on && signalFilter==='both';
+    splitToggle.classList.toggle('active', splitOn);
+    document.body.classList.toggle('split-on', splitOn);
+    if(splitOn){
+      panes[0].src = location.pathname+'?pane=buy';
+      panes[1].src = location.pathname+'?pane=sell';
+    } else {
+      panes.forEach(f=>{ if(f.getAttribute('src')) f.removeAttribute('src'); });
+      resize();
+    }
+  }
+  splitToggle.addEventListener('click', ()=>setSplit(!splitOn));
+  if(!EMBED_PANE){
+    document.querySelectorAll('.topbar').forEach(bar=>{
+      bar.addEventListener('click', e=>{
+        const el = e.target.closest('button'); if(!el || !splitOn) return;
+        if(el.dataset.signalFilter || el.id==='splitToggle') return;
+        mirrorClick(el);
+      });
+      bar.addEventListener('change', e=>{ if(splitOn && e.target.matches('select, input[type=date]')) mirrorValue(e.target, 'change'); });
+      bar.addEventListener('input', e=>{ if(splitOn && e.target.matches('input[type=range]')) mirrorValue(e.target, 'input'); });
+    });
+  }
 
   document.querySelectorAll('.mode-row .mode-btn[data-created-within]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
