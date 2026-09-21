@@ -133,9 +133,66 @@ def build_live_day(date_str: str) -> dict:
     }
 
 
+TRADES_CLOSED_SQL = """
+    SELECT 'closed', to_char(created, 'YYYY-MM-DD HH24:MI:SS'), to_char(last_update, 'YYYY-MM-DD HH24:MI:SS'),
+           TRIM(signal), TRIM(product), entry_price, latest_price, trade_quantity,
+           net_return, alt_net_return, min_net_return, max_net_return,
+           TRIM(close_type), TRIM(trade_reason), TRIM(strategy_name)
+    FROM combined_trades_closed
+    WHERE model = %s AND created::date BETWEEN %s AND %s
+    ORDER BY created;
+"""
+
+TRADES_OPEN_SQL = """
+    SELECT 'open', to_char(created, 'YYYY-MM-DD HH24:MI:SS'), to_char(last_update, 'YYYY-MM-DD HH24:MI:SS'),
+           TRIM(signal), TRIM(product), entry_price, latest_price, trade_quantity,
+           net_return, alt_net_return, min_net_return, max_net_return,
+           NULL, TRIM(trade_reason), TRIM(strategy_name)
+    FROM combined_trades_open
+    WHERE TRIM(model) = %s AND created::date BETWEEN %s AND %s
+    ORDER BY created;
+"""
+
+TRADE_COLS = [
+    "status", "opened", "last_update", "signal", "product", "entry_price", "latest_price",
+    "quantity", "net_return", "alt_net_return", "min_net_return", "max_net_return",
+    "close_type", "trade_reason", "strategy",
+]
+
+
+def build_model_trades(model: str, date_from: str, date_to: str) -> dict:
+    with _connect() as conn, conn.cursor() as cur:
+        rows = []
+        for sql in (TRADES_OPEN_SQL, TRADES_CLOSED_SQL):
+            cur.execute(sql, (model, date_from, date_to))
+            rows += cur.fetchall()
+    trades = []
+    for r in rows:
+        t = dict(zip(TRADE_COLS, r))
+        for k in ("entry_price", "latest_price", "quantity", "net_return",
+                  "alt_net_return", "min_net_return", "max_net_return"):
+            t[k] = float(t[k]) if t[k] is not None else None
+        trades.append(t)
+    return {"model": model, "from": date_from, "to": date_to, "trades": trades}
+
+
+DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
+
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         url = urlparse(self.path)
+        if url.path == "/api/model_trades":
+            q = parse_qs(url.query)
+            model = q.get("model", [""])[0]
+            d_from = q.get("from", [""])[0]
+            d_to = q.get("to", [d_from])[0]
+            if not model or not DATE_RE.fullmatch(d_from) or not DATE_RE.fullmatch(d_to):
+                return self._json(400, {"error": "model, from=YYYY-MM-DD [, to=YYYY-MM-DD] required"})
+            try:
+                return self._json(200, build_model_trades(model, d_from, d_to))
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
         if url.path != "/api/live_day":
             return super().do_GET()
         date_str = parse_qs(url.query).get("date", [dt.date.today().isoformat()])[0]
