@@ -1,0 +1,1 @@
+SELECT * FROM OPENQUERY(PGSQL_TRADEDB, 'SELECT * FROM pg_catalog.pg_tables');

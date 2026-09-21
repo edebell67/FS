@@ -1,0 +1,4 @@
+{
+  "summary":  "Script to extract product_forex from SQL Server and stream into PostgreSQL",
+  "updatedAt":  "2026-09-19T16:01:05.482142400Z"
+}
