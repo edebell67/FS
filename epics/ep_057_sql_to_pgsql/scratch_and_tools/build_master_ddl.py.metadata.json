@@ -1,0 +1,4 @@
+{
+  "summary":  "Master DDL compiler that compiles and generates all 84 tables, 101 views, and 164 routines into a single complete PostgreSQL script",
+  "updatedAt":  "2026-09-19T14:20:45.613091500Z"
+}
