@@ -166,6 +166,12 @@ def build_model_trades(model: str, date_from: str, date_to: str) -> dict:
         for sql in (TRADES_OPEN_SQL, TRADES_CLOSED_SQL):
             cur.execute(sql, (model, date_from, date_to))
             rows += cur.fetchall()
+        # Canonical model definition: {script}_{window}_tp{tp}_sl{sl} plus params, e.g. breakout_2_tp5_sl20
+        cur.execute(
+            "SELECT TRIM(strategy_name), TRIM(strategy_params) FROM product_forex WHERE TRIM(model) = %s LIMIT 1",
+            (model,),
+        )
+        pf = cur.fetchone() or (None, None)
     trades = []
     for r in rows:
         t = dict(zip(TRADE_COLS, r))
@@ -174,7 +180,10 @@ def build_model_trades(model: str, date_from: str, date_to: str) -> dict:
                   "target_profit", "target_loss"):
             t[k] = float(t[k]) if t[k] is not None else None
         trades.append(t)
-    return {"model": model, "from": date_from, "to": date_to, "trades": trades}
+    return {
+        "model": model, "from": date_from, "to": date_to,
+        "strategy_name": pf[0], "strategy_params": pf[1], "trades": trades,
+    }
 
 
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
