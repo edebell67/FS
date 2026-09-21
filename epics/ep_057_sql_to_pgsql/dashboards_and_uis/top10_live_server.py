@@ -137,7 +137,7 @@ TRADES_CLOSED_SQL = """
     SELECT 'closed', to_char(created, 'YYYY-MM-DD HH24:MI:SS'), to_char(last_update, 'YYYY-MM-DD HH24:MI:SS'),
            TRIM(signal), TRIM(product), entry_price, latest_price, trade_quantity,
            net_return, alt_net_return, min_net_return, max_net_return,
-           TRIM(close_type), TRIM(trade_reason), TRIM(strategy_name)
+           TRIM(close_type), TRIM(trade_reason), TRIM(strategy_name), target_profit, target_loss
     FROM combined_trades_closed
     WHERE model = %s AND created::date BETWEEN %s AND %s
     ORDER BY created;
@@ -147,7 +147,7 @@ TRADES_OPEN_SQL = """
     SELECT 'open', to_char(created, 'YYYY-MM-DD HH24:MI:SS'), to_char(last_update, 'YYYY-MM-DD HH24:MI:SS'),
            TRIM(signal), TRIM(product), entry_price, latest_price, trade_quantity,
            net_return, alt_net_return, min_net_return, max_net_return,
-           NULL, TRIM(trade_reason), TRIM(strategy_name)
+           NULL, TRIM(trade_reason), TRIM(strategy_name), target_profit, target_loss
     FROM combined_trades_open
     WHERE TRIM(model) = %s AND created::date BETWEEN %s AND %s
     ORDER BY created;
@@ -156,7 +156,7 @@ TRADES_OPEN_SQL = """
 TRADE_COLS = [
     "status", "opened", "last_update", "signal", "product", "entry_price", "latest_price",
     "quantity", "net_return", "alt_net_return", "min_net_return", "max_net_return",
-    "close_type", "trade_reason", "strategy",
+    "close_type", "trade_reason", "strategy", "target_profit", "target_loss",
 ]
 
 
@@ -170,7 +170,8 @@ def build_model_trades(model: str, date_from: str, date_to: str) -> dict:
     for r in rows:
         t = dict(zip(TRADE_COLS, r))
         for k in ("entry_price", "latest_price", "quantity", "net_return",
-                  "alt_net_return", "min_net_return", "max_net_return"):
+                  "alt_net_return", "min_net_return", "max_net_return",
+                  "target_profit", "target_loss"):
             t[k] = float(t[k]) if t[k] is not None else None
         trades.append(t)
     return {"model": model, "from": date_from, "to": date_to, "trades": trades}
