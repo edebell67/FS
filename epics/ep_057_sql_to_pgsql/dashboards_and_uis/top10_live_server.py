@@ -38,23 +38,24 @@ COLORS = [
     "#fb923c", "#2dd4bf", "#4ade80", "#e879f9", "#f87171",
 ]
 
-TOP_SQL = """
-    SELECT model,
-           ROUND(SUM(net_return)::numeric, 2) AS total_net,
-           ROUND(SUM(alt_net_return)::numeric, 2) AS total_alt_net,
+# Per-model stats for one trading date; strategy/tp from the canonical model definition
+STATS_SQL = """
+    SELECT c.model,
+           ROUND(SUM(c.net_return)::numeric, 2) AS total_net,
+           ROUND(SUM(c.alt_net_return)::numeric, 2) AS total_alt_net,
            COUNT(*) AS total_trades,
-           COUNT(*) FILTER (WHERE net_return > 0) AS wins,
-           COUNT(*) FILTER (WHERE net_return <= 0) AS losses,
-           ROUND((COUNT(*) FILTER (WHERE net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS win_rate,
-           COUNT(*) FILTER (WHERE alt_net_return > 0) AS alt_wins,
-           ROUND((COUNT(*) FILTER (WHERE alt_net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS alt_win_rate,
-           MAX(product) AS product,
-           MAX(strategy_name) AS strategy
-    FROM combined_trades_closed
-    WHERE created::date = %s
-    GROUP BY model
-    ORDER BY {order} DESC
-    LIMIT 10;
+           COUNT(*) FILTER (WHERE c.net_return > 0) AS wins,
+           COUNT(*) FILTER (WHERE c.net_return <= 0) AS losses,
+           ROUND((COUNT(*) FILTER (WHERE c.net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS win_rate,
+           COUNT(*) FILTER (WHERE c.alt_net_return > 0) AS alt_wins,
+           ROUND((COUNT(*) FILTER (WHERE c.alt_net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS alt_win_rate,
+           MAX(TRIM(c.product)) AS product,
+           COALESCE(MAX(TRIM(pf.strategy_name)), MAX(TRIM(c.strategy_name))) AS strategy,
+           MAX(pf.target_profit) AS target_profit
+    FROM combined_trades_closed c
+    LEFT JOIN product_forex pf ON TRIM(pf.model) = c.model
+    WHERE c.created::date = %s
+    GROUP BY c.model;
 """
 
 SNAP_SQL = """
@@ -85,17 +86,75 @@ def _connect():
     )
 
 
+STAT_COLS = ["model", "net", "alt", "trades", "wins", "losses", "win_rate",
+             "alt_wins", "alt_win_rate", "product", "strategy", "target_profit"]
+MIN_SCENARIO_MODELS = 2  # fewer qualifying models -> scenario falls back to top_net
+
+
+def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]]) -> dict[str, list[str]]:
+    """Scenario model lists for one trading date.
+
+    Rules reproduce the stored 14-18 Sep lists: each scenario filters the day's pool
+    (Top 10 Net Return + Top 10 Win Rate) and falls back to Top 10 Net Return when fewer
+    than MIN_SCENARIO_MODELS qualify. weakening_selection follows its catalogue text
+    (high-volume pool models below their intraday peak) - the original rule is unknown.
+    """
+    by_net = sorted(stats, key=lambda s: (-s["net"], -s["win_rate"], s["model"]))
+    top_net = by_net[:10]
+    top_alt = sorted(stats, key=lambda s: (-s["alt"], s["model"]))[:10]
+    top_win = sorted((s for s in stats if s["win_rate"] >= 50),
+                     key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:10]
+    pool, seen = [], set()
+    for s in top_net + top_win:
+        if s["model"] not in seen:
+            seen.add(s["model"])
+            pool.append(s)
+
+    def tp_pips(s):
+        return (s["target_profit"] or 0) / 10
+
+    def drawdown(s):
+        series = snaps.get(s["model"]) or []
+        return (max(p["net"] for p in series) - series[-1]["net"]) if series else 0.0
+
+    def pick(models, limit=10):
+        models = list(models)[:limit]
+        return models if len(models) >= MIN_SCENARIO_MODELS else top_net
+
+    lists = {
+        "top_net": top_net,
+        "top_alt_net": top_alt,
+        "top_win": top_win or top_net,
+        "strongest_three": sorted(pool, key=lambda s: -s["net"])[:3],
+        "strengthening_cluster": pick(s for s in pool if (s["strategy"] or "").startswith("breakout_R_")),
+        "relative_value": pick(sorted((s for s in pool if s["win_rate"] >= 85), key=lambda s: -s["win_rate"])),
+        "market_move": pick(s for s in pool if tp_pips(s) >= 10),
+        "opposite_cluster": pick(s for s in pool if 3 <= tp_pips(s) <= 5),
+        "weakening_selection": pick(sorted((s for s in pool if drawdown(s) > 0),
+                                           key=lambda s: (-s["trades"], -drawdown(s)))),
+        "repair_negative": pick(s for s in pool if s["win_rate"] == 100 and s["net"] > 0),
+    }
+    lists["NET_RETURN"] = lists["top_net"]
+    lists["WIN_RATE"] = lists["top_win"]
+    return {k: [s["model"] for s in v] for k, v in lists.items()}
+
+
 def build_live_day(date_str: str) -> dict:
     with _connect() as conn, conn.cursor() as cur:
-        cur.execute(TOP_SQL.format(order="total_net"), (date_str,))
-        top_net = cur.fetchall()
-        cur.execute(TOP_SQL.format(order="total_alt_net"), (date_str,))
-        top_alt = cur.fetchall()
+        cur.execute(STATS_SQL, (date_str,))
+        stats = [dict(zip(STAT_COLS, r)) for r in cur.fetchall()]
+        for s in stats:
+            for k in ("net", "alt", "win_rate", "alt_win_rate", "target_profit"):
+                s[k] = _f(s[k])
 
-        models = sorted({r[0] for r in top_net} | {r[0] for r in top_alt})
+        # Snapshots for every model that can appear in a scenario (top net / alt / win-rate pools)
+        candidates = {s["model"] for s in sorted(stats, key=lambda s: -s["net"])[:10]}
+        candidates |= {s["model"] for s in sorted(stats, key=lambda s: -s["alt"])[:10]}
+        candidates |= {s["model"] for s in sorted((s for s in stats if s["win_rate"] >= 50),
+                                                  key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:10]}
         snaps: dict[str, list[dict]] = {}
-        if models:
-            cur.execute(SNAP_SQL, (date_str, models))
+        if candidates:
+            cur.execute(SNAP_SQL, (date_str, sorted(candidates)))
             for m, tm, net, buy, sell, a_net, a_buy, a_sell, op, tr in cur.fetchall():
                 snaps.setdefault(m, []).append({
                     "time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
@@ -103,34 +162,34 @@ def build_live_day(date_str: str) -> dict:
                     "open": int(op or 0), "trades": int(tr or 0),
                 })
 
-    def model_list(rows) -> list[dict]:
+    by_model = {s["model"]: s for s in stats}
+
+    def model_list(ids: list[str]) -> list[dict]:
         out = []
-        for rank, r in enumerate(rows, start=1):
-            m, tot_net, tot_alt, tr, w, l, wr, alt_w, alt_wr, prod, strat = r
+        for rank, m in enumerate(ids, start=1):
+            s = by_model[m]
             series = snaps.get(m) or [{
-                "time": "02:00", "net": _f(tot_net), "buy": 0.0, "sell": _f(tot_net),
-                "alt_net": _f(tot_alt), "alt_buy": 0.0, "alt_sell": _f(tot_alt),
-                "open": 0, "trades": int(tr),
+                "time": "02:00", "net": s["net"], "buy": 0.0, "sell": s["net"],
+                "alt_net": s["alt"], "alt_buy": 0.0, "alt_sell": s["alt"],
+                "open": 0, "trades": int(s["trades"]),
             }]
             last = series[-1]
             out.append({
-                "rank": rank, "model": m, "product": prod or "GBP",
-                "strategy": strat or "breakout_strategy",
+                "rank": rank, "model": m, "product": s["product"] or "GBP",
+                "strategy": s["strategy"] or "breakout_strategy",
                 "color": COLORS[(rank - 1) % len(COLORS)],
-                "trades": int(tr), "wins": int(w), "losses": int(l),
-                "win_rate": _f(wr), "alt_wins": int(alt_w), "alt_win_rate": _f(alt_wr),
+                "trades": int(s["trades"]), "wins": int(s["wins"]), "losses": int(s["losses"]),
+                "win_rate": s["win_rate"], "alt_wins": int(s["alt_wins"]), "alt_win_rate": s["alt_win_rate"],
                 "cum_net": last["net"], "buy_net": last["buy"], "sell_net": last["sell"],
                 "cum_alt_net": last["alt_net"], "buy_alt_net": last["alt_buy"],
                 "sell_alt_net": last["alt_sell"], "series": series,
             })
         return out
 
-    return {
-        "date": date_str,
-        "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
-        "top_net": model_list(top_net),
-        "top_alt_net": model_list(top_alt),
-    }
+    payload = {"date": date_str, "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
+    for sc, ids in _scenario_ids(stats, snaps).items():
+        payload[sc] = model_list(ids)
+    return payload
 
 
 TRADES_CLOSED_SQL = """
