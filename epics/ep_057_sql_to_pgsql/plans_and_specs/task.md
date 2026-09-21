@@ -1,3 +1,0 @@
-- [x] 1. Create and deploy `populate_dna2_models.sql` to deactivate BRK models and populate DNA_2xxxxx models.
-- [x] 2. Update `sp_001_create_trades_brk` to process `DNA_2%` models.
-- [x] 3. Verify trade generation for DNA_2xxxxx models in simulation mode.
