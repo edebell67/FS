@@ -28,7 +28,7 @@ class MetricValue(BaseModel):
 
 
 class StrategyIdentity(BaseModel):
-    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9]+$")
+    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9_]+$")
     name: str | None = None
     author: str | None = None
     source: str = "DNA"

@@ -1,6 +1,7 @@
 """SQL Server source adapter and PostgreSQL snapshot repository.
 
 Version history:
+- 1.12.0 (2026-09-21): LOCAL_SOURCE=postgres runs every local_* reader against PostgreSQL tradedb via source_connection() (T-SQL rewritten on the fly; model_ix -> model, unpopulated on PG). SQL Server stays the default.
 - 1.11.0 (2026-09-04): Threads alt_net_return through current_equity_curve/current_equity_curves on both MemoryRepository and PostgresRepository, so return_basis="alt_net_return" queries work on those backends too.
 - 1.10.0 (2026-08-31): Adds local_rank_journey() - a canonical strategy's
   exact rank among all active strategies at the instant right after each
@@ -38,6 +39,7 @@ Version history:
 """
 from __future__ import annotations
 
+import re
 from bisect import bisect_right
 from contextlib import closing
 from typing import Any
@@ -116,6 +118,111 @@ def sqlserver_connection(settings):
     return pyodbc.connect(value, timeout=10)
 
 
+# ── PostgreSQL local source (LOCAL_SOURCE=postgres) ──────────────────────────
+# The local_* readers below are written in T-SQL for SQL Server. With
+# LOCAL_SOURCE=postgres the same functions run unchanged against PostgreSQL
+# tradedb: _pg_sql() rewrites the handful of T-SQL-only constructs they use and
+# _PgSourceConnection mimics the small slice of the pyodbc API they call
+# (cursor().execute(sql, *params) returning the cursor, iteration, fetch*,
+# description). model_ix is a computed copy of model on SQL Server but is
+# unpopulated on PostgreSQL, so filters read model directly there.
+_PG_SQL_REWRITES = [
+    (re.compile(r"\s+WITH\s*\(\s*NOLOCK\s*\)", re.I), ""),
+    (re.compile(r"\bOPTION\s*\([^)]*\)", re.I), ""),
+    (re.compile(r"\bdbo\.", re.I), "public."),
+    (re.compile(r"LIKE\s+'DNA\[_\]%'", re.I), r"LIKE 'DNA\\_%'"),
+    (re.compile(r"\bmodel_ix\b", re.I), "model"),
+    (re.compile(r"\bLEN\(", re.I), "LENGTH("),
+    (re.compile(r"\bCOUNT_BIG\(", re.I), "COUNT("),
+    (re.compile(r"\bCONVERT\(\s*varchar\((\d+)\)\s*,\s*\?\s*\)", re.I), r"CAST(? AS varchar(\1))"),
+    # SELECT TOP (?) ... is handled separately in _pg_sql (needs the block's ORDER BY tail)
+]
+
+
+def _pg_top_to_limit(sql: str) -> str:
+    """Rewrite each 'SELECT TOP (?) ...ORDER BY ...' block to '... LIMIT ?'.
+
+    TOP's parameter is the first placeholder in these queries; LIMIT's is the
+    last in its block, so the caller moves that parameter (see _PgCursor)."""
+    return re.sub(r"SELECT\s+TOP\s*\(\s*\?\s*\)", "SELECT /*TOP*/", sql, flags=re.I)
+
+
+def _pg_sql(sql: str) -> tuple[str, bool]:
+    has_top = bool(re.search(r"SELECT\s+TOP\s*\(\s*\?\s*\)", sql, re.I))
+    sql = _pg_top_to_limit(sql)
+    for pattern, replacement in _PG_SQL_REWRITES:
+        sql = pattern.sub(replacement, sql)
+    # model LIKE ? ESCAPE '\' with a [0-9] class (family children) -> regex match
+    sql = re.sub(r"model\s+LIKE\s+\?\s+ESCAPE\s+'\\\\'", "model ~ ?", sql, flags=re.I)
+    if has_top:
+        # Close the TOP block: insert LIMIT after the first ORDER BY clause that ends the CTE/select.
+        match = re.search(r"(ORDER BY[^\n]*?)(\n\s*\)|\n\s*$|$)", sql[sql.index("/*TOP*/"):])
+        start = sql.index("/*TOP*/") + match.end(1)
+        sql = sql[:start] + " LIMIT ?" + sql[start:]
+    sql = sql.replace("%", "%%").replace("?", "%s")
+    return sql, has_top
+
+
+def _pg_family_pattern(value):
+    """SQL Server LIKE pattern base\\_[0-9][0-9][0-9][0-9] -> anchored regex."""
+    if isinstance(value, str) and value.endswith("\\_[0-9][0-9][0-9][0-9]"):
+        base = value[: -len("\\_[0-9][0-9][0-9][0-9]")].replace("\\_", "_").replace("\\%", "%").replace("\\\\", "\\")
+        return "^" + re.escape(base) + "_[0-9]{4}$"
+    return value
+
+
+class _PgCursor:
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    def execute(self, sql, *params):
+        if len(params) == 1 and isinstance(params[0], (list, tuple)):
+            params = tuple(params[0])
+        text, has_top = _pg_sql(sql)
+        params = [_pg_family_pattern(p) for p in params]
+        if has_top and params:
+            params = params[1:] + params[:1]  # TOP (?) value becomes the trailing LIMIT %s
+        self._cursor.execute(text, params)
+        return self
+
+    @property
+    def description(self):
+        return self._cursor.description
+
+    def fetchone(self):
+        return self._cursor.fetchone()
+
+    def fetchall(self):
+        return self._cursor.fetchall()
+
+    def __iter__(self):
+        return iter(self._cursor)
+
+
+class _PgSourceConnection:
+    """pyodbc-shaped wrapper over a read-only psycopg connection."""
+    def __init__(self, url):
+        import psycopg
+        self._conn = psycopg.connect(url, connect_timeout=10, autocommit=True)
+        self._conn.execute("SET default_transaction_read_only = on")
+        self.timeout = 10
+
+    def cursor(self):
+        return _PgCursor(self._conn.cursor())
+
+    def close(self):
+        self._conn.close()
+
+
+def source_connection(settings):
+    """Connection to the local trade source: SQL Server (default) or PostgreSQL tradedb."""
+    if getattr(settings, "local_source", "sqlserver") == "postgres":
+        if not settings.source_database_url:
+            raise RuntimeError("Missing local PostgreSQL setting: source_database_url")
+        return _PgSourceConnection(settings.source_database_url)
+    return sqlserver_connection(settings)
+
+
 def local_execution_summary(settings, date_from=None, date_to_exclusive=None) -> dict[str, int]:
     """Count distinct executed models and trades opened within a half-open period."""
     date_filters, date_params = [], []
@@ -139,7 +246,7 @@ def local_execution_summary(settings, date_from=None, date_to_exclusive=None) ->
       )
       SELECT COUNT_BIG(DISTINCT model),COUNT_BIG(DISTINCT guid) FROM executed
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         row = conn.cursor().execute(query, *(date_params + date_params)).fetchone()
     return {"strategies": int(row[0]), "trades": int(row[1])}
 
@@ -162,7 +269,7 @@ def local_open_trade_summary(settings, canonical_strategy=None) -> dict[str, dic
       OPTION (MAXDOP 1)
     """
     grouped: dict[str, dict[str, Any]] = {}
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor()
         cur.execute(query, *params)
         for model, product, descriptive_name, net_return in cur:
@@ -211,7 +318,7 @@ def local_rank_journey(settings, strategy_id, date_from, date_to_exclusive) -> l
       WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL AND created >= ? AND created < ?
       OPTION (MAXDOP 1)
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor()
         cur.execute(query, date_from, date_to_exclusive)
         rows = cur.fetchall()
@@ -246,15 +353,15 @@ def local_rank_journey(settings, strategy_id, date_from, date_to_exclusive) -> l
 
 
 def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical_strategy=None, signal=None) -> list[dict[str, Any]]:
-    """Aggregate canonical strategies within an optional half-open closed-date range."""
+    """Aggregate canonical strategies within an optional half-open entry-date (created) range."""
     if canonical_strategy is not None:
         return local_strategy_summary(settings, canonical_strategy, date_from, date_to_exclusive, signal)
     filters, params = [], []
     if date_from is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        filters.append("AND created >= ?")
         params.append(date_from)
     if date_to_exclusive is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        filters.append("AND created < ?")
         params.append(date_to_exclusive)
     if signal is not None:
         filters.append("AND UPPER(LTRIM(RTRIM(signal))) = ?")
@@ -264,7 +371,7 @@ def local_strategies(settings, date_from=None, date_to_exclusive=None, canonical
         strategy_filter = "WHERE universe.strategy_id = ?"
         params.append(canonical_strategy)
     query = AGGREGATE_SQL.format(date_filters=" ".join(filters), strategy_filter=strategy_filter)
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor()
         cur.execute(query, *params)
         columns = [x[0] for x in cur.description]
@@ -312,15 +419,15 @@ def local_strategy_summary(settings, strategy_id, date_from=None, date_to_exclus
     filters = []
     params = list(models)
     if date_from is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        filters.append("AND created >= ?")
         params.append(date_from)
     if date_to_exclusive is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        filters.append("AND created < ?")
         params.append(date_to_exclusive)
     if signal is not None:
         filters.append("AND UPPER(LTRIM(RTRIM(signal))) = ?")
         params.append(signal)
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         conn.timeout = 10
         cur = conn.cursor()
         cur.execute(f"""SELECT CAST(net_return AS float),created,COALESCE(g_close_time,last_update,created),strategy_name,product
@@ -357,8 +464,31 @@ def local_products(settings) -> list[str]:
         AND NULLIF(LTRIM(RTRIM(product)),'') IS NOT NULL
       ORDER BY product
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         return [str(row[0]) for row in conn.cursor().execute(query).fetchall()]
+
+
+def local_family_strategies(settings, base_id, date_from, date_to_exclusive) -> list[dict[str, Any]]:
+    """Per-model rollup for a base model and its matrix children (base_id, base_id_0001..NNNN)."""
+    query = """
+      SELECT model,COUNT(*) AS trades,
+             SUM(CAST(net_return AS float)) AS cum_net_return,
+             SUM(CAST(alt_net_return AS float)) AS cum_alt_net_return
+      FROM dbo.combined_trades_closed WITH (NOLOCK)
+      WHERE model_ix LIKE 'DNA[_]%' AND net_return IS NOT NULL
+        AND (model = ? OR model LIKE ? ESCAPE '\\')
+        AND created >= ? AND created < ?
+      GROUP BY model
+      OPTION (MAXDOP 1)
+    """
+    child_pattern = base_id.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "\\_[0-9][0-9][0-9][0-9]"
+    with closing(source_connection(settings)) as conn:
+        cur = conn.cursor()
+        cur.execute(query, base_id, child_pattern, date_from, date_to_exclusive)
+        columns = [x[0] for x in cur.description]
+        rows = [dict(zip(columns, row)) for row in cur.fetchall()]
+    rows.sort(key=lambda row: row["model"])
+    return rows
 
 
 def local_period_strategies(settings, date_from, date_to_exclusive, canonical_strategy=None, signal=None) -> list[dict[str, Any]]:
@@ -402,7 +532,7 @@ def local_period_strategies(settings, date_from, date_to_exclusive, canonical_st
         population_query += " AND model IN (?,?,?)"
         population_params.extend([canonical_strategy, canonical_strategy + "_B", canonical_strategy + "_S"])
     grouped = {}
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor(); cur.execute(population_query, *population_params)
         for model, descriptive_name, product in cur:
             strategy_id = model[:-2] if model.endswith(("_B", "_S")) else model
@@ -442,10 +572,10 @@ def local_equity_curve(settings, strategy_id: str, date_from=None, date_to_exclu
     """Return ordered cumulative net-return and drawdown points for one canonical strategy."""
     filters, params = [], [MAX_EQUITY_POINTS, strategy_id, strategy_id + "_B", strategy_id + "_S"]
     if date_from is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        filters.append("AND created >= ?")
         params.append(date_from)
     if date_to_exclusive is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        filters.append("AND created < ?")
         params.append(date_to_exclusive)
     query = f"""
     WITH trades AS (
@@ -466,7 +596,7 @@ def local_equity_curve(settings, strategy_id: str, date_from=None, date_to_exclu
     )
     SELECT trade_number,opened_at,closed_at,net_return,signal,equity,drawdown FROM curve ORDER BY trade_number
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor(); cur.execute(query, *params)
         columns = [x[0] for x in cur.description]
         rows = [dict(zip(columns, row)) for row in cur.fetchall()]
@@ -482,10 +612,10 @@ def local_closed_trades(settings, strategy_id: str, date_from=None, date_to_excl
     """Return the closed-trade ledger ordered from earliest to latest entry."""
     filters, params = [], [limit, strategy_id, strategy_id + "_B", strategy_id + "_S"]
     if date_from is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) >= ?")
+        filters.append("AND created >= ?")
         params.append(date_from)
     if date_to_exclusive is not None:
-        filters.append("AND COALESCE(g_close_time,last_update,created) < ?")
+        filters.append("AND created < ?")
         params.append(date_to_exclusive)
     query = f"""
       SELECT TOP (?) guid,product,UPPER(signal) signal,created entry_time,
@@ -499,7 +629,7 @@ def local_closed_trades(settings, strategy_id: str, date_from=None, date_to_excl
       ORDER BY created ASC,COALESCE(g_close_time,last_update,created) ASC,guid ASC
       OPTION (MAXDOP 1, RECOMPILE)
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur = conn.cursor(); cur.execute(query, *params)
         columns = [item[0] for item in cur.description]
         rows = [dict(zip(columns, row)) for row in cur.fetchall()]
@@ -558,7 +688,7 @@ def local_equity_curves(settings,strategy_ids=None,max_points=None) -> dict[str,
       FROM equity
     ) SELECT strategy_id,trade_number,opened_at,closed_at,guid,net_return,equity,drawdown,product,signal,entry_price,exit_price,alt_net_return FROM curve ORDER BY strategy_id,trade_number
     """
-    with closing(sqlserver_connection(settings)) as conn:
+    with closing(source_connection(settings)) as conn:
         cur=conn.cursor();cur.execute(query,*strategy_ids);columns=[item[0] for item in cur.description]
         rows=[dict(zip(columns,row)) for row in cur.fetchall()]
     grouped={}

@@ -1,6 +1,8 @@
 """Container-ready directory API and screen host.
 
 Version history:
+- 3.1.0 (2026-09-10): Adds an explicit cached full-universe directory mode so EP052 can select
+  the true top strategies rather than the 500-profile intelligence snapshot.
 - 3.0.0 (2026-09-04): Removes the agent-queryable intelligence query API, per-user
   intelligence objects, market-feature/regime endpoints, and the EP052 Arena
   provider mount - these now live as their own standalone service in
@@ -37,7 +39,7 @@ from fastapi.responses import FileResponse,Response
 
 from .config import Settings, get_settings
 from .contracts import Snapshot, SnapshotBatch, SnapshotEnvelope, Strategy
-from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_period_strategies, local_products, local_rank_journey, local_strategies, rebase_equity_rows
+from .repository import MemoryRepository, PostgresRepository, local_closed_trades, local_equity_curve, local_equity_curves, local_family_strategies, local_period_strategies, local_products, local_rank_journey, local_strategies, rebase_equity_rows
 from .intelligence.assurance import OperationsMonitor
 from .intelligence.cache import validate_local_cache,validate_local_cache_freshness
 
@@ -90,6 +92,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     app.state.csp_cache={"signature":None,"value":None};app.state.csp_cache_lock=Lock()
     app.state.snapshot_cache={"snapshot":None};app.state.snapshot_cache_lock=Lock()
     app.state.strategy_cache=None;app.state.strategy_cache_lock=Lock()
+    app.state.full_universe_cache={"loaded_at":0.0,"items":None};app.state.full_universe_cache_lock=Lock()
     app.state.local_snapshot_cache=None
     app.state.local_snapshot_cache_mtime=None
     app.state.period_strategy_cache={}
@@ -190,7 +193,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return (app.state.local_snapshot_cache_mtime,date_from,date_to,canonical_strategy,live_bucket)
 
     def current_directory_cache(request_date: date):
-        cache_path=Path(__file__).resolve().parents[1]/"runtime"/"directory_summary_cache.json"
+        runtime_dir=Path(cfg.runtime_dir);runtime_dir=runtime_dir if runtime_dir.is_absolute() else Path(__file__).resolve().parents[1]/runtime_dir;cache_path=runtime_dir/"directory_summary_cache.json"
         try:
             mtime=cache_path.stat().st_mtime_ns
             if app.state.directory_summary_cache["mtime"] != mtime:
@@ -313,11 +316,21 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                    evidence_min_trades:int=Query(5,ge=1,le=1000000),
                    minimum_trades:int=Query(0,ge=0),sort:str=Query("strategy_id",pattern=r"^(strategy_id|total_trades|total_net_return|win_rate|profit_factor|max_drawdown_money)$"),
                    direction:str=Query("asc",pattern=r"^(asc|desc)$"),
-                   signal:str|None=Query(None,pattern=r"^(BUY|SELL)$"),
+                   signal:str|None=Query(None,pattern=r"^(BUY|SELL)$"),full_universe:bool=Query(False),
                    date_from:date|None=Query(None),date_to:date|None=Query(None)):
         exact_strategy = search.upper() if search and search.upper().startswith("DNA_") else None
         requested_product=product.upper() if product else None
-        rows=[x for x in items(date_from,date_to,exact_strategy,signal)
+        if full_universe and cfg.data_backend == "sqlserver" and not date_from and not date_to and signal is None:
+            cached=app.state.full_universe_cache
+            if cached["items"] is None or clock.monotonic()-cached["loaded_at"]>=60:
+                with app.state.full_universe_cache_lock:
+                    if cached["items"] is None or clock.monotonic()-cached["loaded_at"]>=60:
+                        cached["items"]=[Strategy.model_validate(x) for x in local_strategies(cfg)]
+                        cached["loaded_at"]=clock.monotonic()
+            source_rows=cached["items"]
+        else:
+            source_rows=items(date_from,date_to,exact_strategy,signal)
+        rows=[x for x in source_rows
               if x.total_trades>=minimum_trades
               and (not search or search.upper() in x.strategy_id.upper() or search.upper() in (x.descriptive_name or "").upper())
               and (not requested_product or requested_product in {part.strip().upper() for part in (x.product_name or "").split(",")})]
@@ -355,6 +368,26 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "quality_state":"VALID","period":{"date_from":date_from.isoformat() if date_from else None,
                 "date_to":date_to.isoformat() if date_to else None}}
 
+    @app.get("/api/dna/strategies/{base_id}/family")
+    def family(base_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9_]+$"),
+               date_from:date|None=Query(None),date_to:date|None=Query(None)):
+        if cfg.data_backend != "sqlserver":
+            raise HTTPException(404,"Family rollup is only available on the sqlserver backend")
+        start = datetime.combine(date_from, time.min, timezone.utc) if date_from else datetime.combine(datetime.now(timezone.utc).date(), time.min, timezone.utc)
+        end = datetime.combine((date_to or (date_from or datetime.now(timezone.utc).date())) + timedelta(days=1), time.min, timezone.utc)
+        rows = local_family_strategies(cfg, base_id, start.replace(tzinfo=None), end.replace(tzinfo=None))
+        total_trades = sum(row["trades"] for row in rows)
+        total_net = sum(row["cum_net_return"] or 0 for row in rows)
+        total_alt_net = sum(row["cum_alt_net_return"] or 0 for row in rows)
+        return {"base_id":base_id,
+                "items":[{"model":row["model"],"trades":row["trades"],
+                          "cum_net_return":row["cum_net_return"],
+                          "cum_alt_net_return":row["cum_alt_net_return"]} for row in rows],
+                "summary":{"models":len(rows),"trades":total_trades,
+                           "total_cum_net_return":total_net,"total_cum_alt_net_return":total_alt_net},
+                "period":{"date_from":(date_from or datetime.now(timezone.utc).date()).isoformat(),
+                          "date_to":(date_to or date_from or datetime.now(timezone.utc).date()).isoformat()}}
+
     @app.get("/api/dna/products")
     def products():
         if cfg.data_backend == "sqlserver":
@@ -365,7 +398,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return {"items":values,"total":len(values)}
 
     @app.get("/api/dna/strategies/{strategy_id}/equity-curve")
-    def equity_curve(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
+    def equity_curve(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9_]+$"),
                      date_from:date|None=Query(None),date_to:date|None=Query(None)):
         if date_from and date_to and date_from > date_to:
             raise HTTPException(422, "date_from must be on or before date_to")
@@ -395,7 +428,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "basis":"cumulative net return; costs and commission already included"}
 
     @app.get("/api/dna/strategies/{strategy_id}/trades")
-    def closed_trades(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
+    def closed_trades(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9_]+$"),
                       date_from:date|None=Query(None),date_to:date|None=Query(None),
                       limit:int=Query(1000,ge=1,le=5000)):
         if date_from and date_to and date_from > date_to:
@@ -416,7 +449,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 "basis":"closed trades; net return includes costs and commission"}
 
     @app.get("/api/dna/strategies/{strategy_id}/rank-journey")
-    def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9]+$"),
+    def rank_journey(strategy_id:str=ApiPath(pattern=r"^DNA_[A-Za-z0-9_]+$"),
                      date_from:date|None=Query(None),date_to:date|None=Query(None)):
         """This strategy's rank among every strategy active in the window,
         at the instant right after each of its own trades closed.

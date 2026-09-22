@@ -43,7 +43,7 @@ MAX_RETURN_SERIES_POINTS = 250_000
 
 
 class Strategy(BaseModel):
-    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9]+$")
+    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9_]+$")
     descriptive_name: str | None = Field(default=None, max_length=200)
     product_name: str | None = Field(default=None, max_length=500)
     market: str = Field(default="FX", min_length=1, max_length=40)
@@ -75,7 +75,7 @@ class Strategy(BaseModel):
 
 
 class IntelligenceReturnPoint(BaseModel):
-    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9]+$")
+    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9_]+$")
     trade_id: str = Field(min_length=1,max_length=128)
     trade_number: int = Field(ge=1)
     opened_at: datetime|None = None

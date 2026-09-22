@@ -80,7 +80,20 @@
       .grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:15px; }
       .card { min-width:0; min-height:176px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); box-shadow:none; transition:transform .2s,border-color .2s,box-shadow .2s; animation:directoryRise .35s both; }
       .card:hover { transform:translateY(-3px); border-color:#9ca391; box-shadow:0 16px 36px #24271c14; }
+      .card-link { display:block; color:inherit; text-decoration:none; }
+      .assoc-btn { display:block; width:100%; margin-top:10px; padding:6px 0; border:0; border-top:1px solid var(--line); background:transparent; color:var(--green); font:9px "DM Mono",monospace; letter-spacing:.035em; text-align:left; cursor:pointer; }
+      .assoc-btn:hover { color:var(--ink); }
       .card .id { color:var(--green); font:9px "DM Mono",monospace; letter-spacing:.035em; }
+      .family-panel { width:min(1180px,calc(100% - 48px)); margin:15px auto 0; }
+      .family-panel #familyBack { border:0; background:transparent; color:var(--green); font:10px "DM Mono",monospace; letter-spacing:.035em; cursor:pointer; padding:0 0 10px; }
+      .family-panel #familyBack:hover { color:var(--ink); }
+      .family-panel h3 { margin:0 0 12px; font:700 20px/1.2 Manrope,sans-serif; letter-spacing:-.03em; }
+      .family-table { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); }
+      .family-table th,.family-table td { padding:10px 14px; border-bottom:1px solid var(--line); text-align:right; font:12px "DM Mono",monospace; }
+      .family-table th:first-child,.family-table td:first-child { text-align:left; color:var(--green); }
+      .family-table thead th { text-align:right; color:var(--muted); font-weight:500; }
+      .family-table thead th:first-child { text-align:left; }
+      .family-table tfoot td { border-bottom:0; border-top:2px solid var(--line); font-weight:700; }
       .card h2 { margin:13px 0 12px; color:var(--ink); font:700 18px/1.15 Manrope,sans-serif; letter-spacing:-.035em; }
       .stats { grid-template-columns:repeat(4,1fr); gap:0; padding-top:11px; border-top:1px solid var(--line); }
       .stat { padding:0 8px; border-right:1px solid var(--line); }
@@ -201,12 +214,26 @@
       </label>
       <small>For the evidence-ready count only.</small></div>
       </details>
+      <section class="family-panel" id="familyPanel" hidden aria-live="polite">
+        <button type="button" id="familyBack">← Back to directory</button>
+        <h3 id="familyTitle"></h3>
+        <table class="family-table">
+          <thead><tr><th>Model</th><th>Trades</th><th>Cum. net return</th><th>Cum. alt net return</th></tr></thead>
+          <tbody id="familyBody"></tbody>
+          <tfoot id="familyFoot"></tfoot>
+        </table>
+      </section>
       <section class="grid" id="grid" aria-live="polite"></section>
     </main>
     <script src="/assets/button-feedback.js?v=1.0.0"></script>
     <script src="/assets/api-client.js?v=1.5.0"></script>
     <script src="/assets/period-filter.js?v=1.1.0"></script>
     <script>
+      // Mirrors dbo.config's ep052_dna_matrix_hot_streak_threshold - the
+      // minimum closed-trades-today count (with a 100% win rate) a base DNA
+      // model needs before usp_ep052_manage_dna_matrix will ever create its
+      // matrix children. Update this if that config value changes.
+      const DNA_MATRIX_HOT_STREAK_MIN_TRADES = 4;
       const fmt = (n) =>
         n == null
           ? "—"
@@ -345,10 +372,17 @@
           }
           const period = new URLSearchParams(DnaPeriod.params()).toString();
           g.innerHTML = p.data.items
-            .map(
-              (x) =>
-                `<a class="card" href="/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${period}"><span class="id">${esc(x.strategy_id)} · ${esc(x.quality_state)}</span><h2>${esc(x.descriptive_name || "Name pending")}</h2><div class="stats"><div class="stat"><b>${fmt(x.total_net_return)}</b><span>Net return</span></div><div class="stat"><b>${fmt(x.win_rate * 100)}%</b><span>Win rate</span></div><div class="stat"><b>${fmt(x.profit_factor)}</b><span>Profit factor</span></div><div class="stat"><b>${fmt(x.total_trades)}</b><span>Closed trades</span></div></div><div class="evidence">${esc(x.market)} · ${esc(x.evidence_start?.slice(0, 10) || "—")} → ${esc(x.evidence_end?.slice(0, 10) || "—")}</div></a>`,
-            )
+            .map((x) => {
+              const baseId = x.strategy_id.replace(/_[0-9]{4}$/, "");
+              // Matrix children are only ever created for a base model that hit the
+              // hot-streak bar (>= DNA_MATRIX_HOT_STREAK_MIN_TRADES closed trades today,
+              // all wins) - below that, "view associated models" would always be empty.
+              const canHaveAssociates = x.total_trades >= DNA_MATRIX_HOT_STREAK_MIN_TRADES && x.win_rate === 1;
+              const assocButton = canHaveAssociates
+                ? `<button type="button" class="assoc-btn" data-base="${esc(baseId)}">View associated models →</button>`
+                : "";
+              return `<div class="card"><a class="card-link" href="/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${period}"><span class="id">${esc(x.strategy_id)} · ${esc(x.quality_state)}</span><h2>${esc(x.descriptive_name || "Name pending")}</h2><div class="stats"><div class="stat"><b>${fmt(x.total_net_return)}</b><span>Net return</span></div><div class="stat"><b>${fmt(x.win_rate * 100)}%</b><span>Win rate</span></div><div class="stat"><b>${fmt(x.profit_factor)}</b><span>Profit factor</span></div><div class="stat"><b>${fmt(x.total_trades)}</b><span>Closed trades</span></div></div><div class="evidence">${esc(x.market)} · ${esc(x.evidence_start?.slice(0, 10) || "—")} → ${esc(x.evidence_end?.slice(0, 10) || "—")}</div></a>${assocButton}</div>`;
+            })
             .join("");
           if (p.data.refresh_pending) {
             backgroundPolls += 1;
@@ -380,6 +414,43 @@
       load.onclick = () => refresh();
       search.onkeydown = (e) => {
         if (e.key === "Enter") refresh();
+      };
+      const gridEl = document.querySelector("#grid");
+      const familyPanel = document.querySelector("#familyPanel");
+      const familyBody = document.querySelector("#familyBody");
+      const familyFoot = document.querySelector("#familyFoot");
+      const familyTitle = document.querySelector("#familyTitle");
+      async function showFamily(baseId) {
+        familyTitle.textContent = `Associated models for ${baseId}`;
+        familyBody.innerHTML = "";
+        familyFoot.innerHTML = "";
+        familyPanel.hidden = false;
+        gridEl.hidden = true;
+        const params = new URLSearchParams(DnaPeriod.params()).toString();
+        const res = await fetch(`/api/dna/strategies/${encodeURIComponent(baseId)}/family?${params}`);
+        const body = await res.json();
+        if (!res.ok || !body.items?.length) {
+          familyBody.innerHTML = `<tr><td colspan="4">No associated-model trades found for this period.</td></tr>`;
+          return;
+        }
+        familyBody.innerHTML = body.items
+          .map(
+            (row) =>
+              `<tr><td>${esc(row.model)}</td><td>${fmt(row.trades)}</td><td>${fmt(row.cum_net_return)}</td><td>${fmt(row.cum_alt_net_return)}</td></tr>`,
+          )
+          .join("");
+        const s = body.summary;
+        familyFoot.innerHTML = `<tr><td>Total (${fmt(s.models)} models)</td><td>${fmt(s.trades)}</td><td>${fmt(s.total_cum_net_return)}</td><td>${fmt(s.total_cum_alt_net_return)}</td></tr>`;
+      }
+      document.querySelector("#familyBack").onclick = () => {
+        familyPanel.hidden = true;
+        gridEl.hidden = false;
+      };
+      document.querySelector("#grid").onclick = (e) => {
+        const btn = e.target.closest(".assoc-btn");
+        if (!btn) return;
+        e.preventDefault();
+        showFamily(btn.dataset.base);
       };
       product.onchange = () => refresh();
       signal.onchange = () => refresh();

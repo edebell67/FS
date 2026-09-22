@@ -58,7 +58,7 @@ class TimeTravelSeriesRequest(BaseModel):
 
 class SimilarDaysRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
-    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9]+$")
+    strategy_id: str = Field(pattern=r"^DNA_[A-Za-z0-9_]+$")
     as_of: date | None = Field(None, description="Target day; defaults to today.")
     through_hour: int | None = Field(None, ge=0, le=23, description="Compare only p0..p<through_hour> (an in-progress day); omit for a full day.")
     top_n: int = Field(10, ge=1, le=50)

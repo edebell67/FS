@@ -1,4 +1,9 @@
-# VERSION HISTORY v1.3.0 · 2026-09-10 · Select the top 500 strategies from the directory's full universe.
+# VERSION HISTORY v1.8.0 · 2026-09-13 · Route intelligence to the independently hosted EP049 service.
+# v1.7.0 · 2026-09-11 · Reduce configurable opening inventory to 1,000 units per strategy.
+# v1.6.0 · 2026-09-11 · Reserve 100 persistent ad-hoc catalogue places beyond the ranked top 500.
+# v1.5.0 · 2026-09-11 · Replace manufactured unit pricing with cumulative-return settlement and a USD 250 entry threshold.
+# v1.4.0 · 2026-09-11 · Enable UK-midnight test pricing with 10,000 opening NAV and units. Superseded before release.
+# v1.3.0 · 2026-09-10 · Select the top 500 strategies from the directory's full universe.
 # v1.2.0 · 2026-09-10 · Default Arena entry to token-required; owners can persistently override it.
 # v1.1.0 · 2026-09-02 · Publish display refresh timing without controlling agent polling.
 # v1.0.0 · 2026-09-02 · Configurable simulation economics and connection settings.
@@ -10,15 +15,20 @@ intelligence_fee = "0.01"
 minimum_units = 1
 maximum_positions = 10
 initial_units = 1000
-initial_nav = "1000.00"
+return_based_settlement = true
+minimum_balance = "250.00"
+pricing_timezone = "Europe/London"
 price_decimal_places = 10
+bid_ask_spread_rate = "0.001"
 directory_url = "http://127.0.0.1:8012/api/dna/strategies"
+directory_url_pg = "http://127.0.0.1:8094/api/dna/strategies"
 directory_page_size = 100
 directory_selection_limit = 500
+directory_adhoc_limit = 100
 provider_timeout_seconds = 15
 connection_expiry_seconds = 300
 view_poll_seconds = 5
 arena_public_access = false
 max_query_results = 20
-intelligence_url = "http://127.0.0.1:8012/v1/queries"
+intelligence_url = "http://127.0.0.1:8013/v1/queries"
 intelligence_mode = "external"
