@@ -178,7 +178,10 @@
         </div>
       </section>
       <section class="tools">
-        <input id="search" placeholder="Search DNA_102001 or breakout_R_4_tp20_sl5" /><select id="product" aria-label="Product">
+        <input id="search" placeholder="Search DNA_102001 or breakout_R_4_tp20_sl5" /><select id="productType" aria-label="Type">
+          <option value="forex" selected>Forex</option>
+          <option value="crypto">Crypto</option>
+        </select><select id="product" aria-label="Product">
           <option value="">All products</option>
         </select><select id="signal" aria-label="Signal">
           <option value="" selected>BUY + SELL</option>
@@ -329,6 +332,7 @@
               evidence_min_trades: evidenceThreshold,
               search: search.value,
               product: product.value,
+              product_type: productType.value,
               signal: signal.value,
               sort: sort.value,
               direction: direction.value,
@@ -459,10 +463,14 @@
       // catalogue request. This prevents an all-history/previous-period result
       // from rendering while the Current day request is waiting to start.
       DnaPeriod.setPreset("today");
-      DnaDirectoryApi.products().then((payload) => {
-        product.insertAdjacentHTML("beforeend", payload.items.map((value) =>
-          `<option value="${esc(value)}">${esc(value)}</option>`).join(""));
-      });
+      function loadProducts() {
+        return DnaDirectoryApi.products(productType.value).then((payload) => {
+          product.innerHTML = '<option value="">All products</option>' + payload.items.map((value) =>
+            `<option value="${esc(value)}">${esc(value)}</option>`).join("");
+        });
+      }
+      productType.onchange = () => { product.value = ""; loadProducts().then(refresh); };
+      loadProducts();
     </script>
   <footer id="ttp-product-footer" class="ttp-product-footer" aria-label="The Tech Principle product attribution"><a href="https://thetechprinciple.com/" target="_blank" rel="noreferrer"><span>A</span><img src="/assets/thetechprinciple-icon-180.png" alt="The Tech Principle"><span>thetechprinciple.com product</span></a></footer>
 </body>

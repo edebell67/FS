@@ -57,8 +57,8 @@
       throw new Error("Unexpected equity curve response");
     return payload;
   }
-  async function products() {
-    const response = await fetch(`${base}/api/dna/products`, {
+  async function products(productType = "") {
+    const response = await fetch(`${base}/api/dna/products${productType ? `?product_type=${encodeURIComponent(productType)}` : ""}`, {
       headers: { Accept: "application/json" },
     });
     if (!response.ok)

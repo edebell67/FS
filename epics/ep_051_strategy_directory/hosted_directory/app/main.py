@@ -326,14 +326,20 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                 with app.state.full_universe_cache_lock:
                     if cached["items"] is None or clock.monotonic()-cached["loaded_at"]>=60:
                         cached["items"]=[Strategy.model_validate(x) for x in local_strategies(cfg)]
+    CRYPTO_PRODUCTS={"ADA","AVAX","BTC","DOGE","ETH","SOL","XRP"}
+    def _in_type(name,ptype):
+        return ptype is None or (name.upper() in CRYPTO_PRODUCTS)==(ptype=="crypto")
+
                         cached["loaded_at"]=clock.monotonic()
             source_rows=cached["items"]
         else:
+                   product_type:str|None=Query(None,pattern=r"^(forex|crypto)$"),
             source_rows=items(date_from,date_to,exact_strategy,signal)
         rows=[x for x in source_rows
               if x.total_trades>=minimum_trades
               and (not search or search.upper() in x.strategy_id.upper() or search.upper() in (x.descriptive_name or "").upper())
-              and (not requested_product or requested_product in {part.strip().upper() for part in (x.product_name or "").split(",")})]
+              and (not requested_product or requested_product in {part.strip().upper() for part in (x.product_name or "").split(",")})
+              and (product_type is None or any(_in_type(part.strip(),product_type) for part in (x.product_name or "").split(",") if part.strip()))]
         rows.sort(key=lambda x:(getattr(x,sort) is None,getattr(x,sort)),reverse=direction=="desc")
         total=len(rows)
         # These headline values describe the exact evidence rows already loaded
@@ -389,7 +395,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
                           "date_to":(date_to or date_from or datetime.now(timezone.utc).date()).isoformat()}}
 
     @app.get("/api/dna/products")
-    def products():
+    def products(product_type:str|None=Query(None,pattern=r"^(forex|crypto)$")):
         if cfg.data_backend == "sqlserver":
             values=local_products(cfg)
         else:
@@ -411,6 +417,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
             for number,row in enumerate(ordered,1):
                 equity+=float(row["net_return"]);peak=max(peak,equity)
                 points.append({"trade_number":number,"opened_at":row["entry_time"],"closed_at":row["exit_time"],
+        values=[v for v in values if _in_type(v,product_type)]
                                "net_return":row["net_return"],"signal":row.get("signal"),"equity":equity,"drawdown":equity-peak})
             return {"strategy_id":strategy_id,"points":points,"total_points":len(points),
                     "period":{"date_from":date_from.isoformat(),"date_to":date_to.isoformat()},
