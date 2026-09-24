@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/top10_live_app.py — ASGI entry point for the live equity-curves dashboard.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-09-24 · Exposes the filterable single-strategy portfolio catalogue.
+# v1.6.0 · 2026-09-24 · Exposes same-product comparisons by strategy family, window, TP, and SL.
 # v1.5.0 · 2026-09-22 · Uses orjson plus gzip for substantially faster large live-day responses.
 # v1.4.0 · 2026-09-22 · Adds 10/20/30 scenario limits and the named-portfolio data endpoint.
 # v1.3.0 · 2026-09-22 · Exposes canonical strategy_family filtering on the live-day endpoint.
@@ -27,7 +29,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse, ORJSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from top10_live_server import DATE_RE, HERE, build_live_day, build_model_trades, build_portfolio_day, normalize_model_limit, normalize_product, normalize_product_type, normalize_strategy_family
+from top10_live_server import DATE_RE, HERE, build_live_day, build_model_trades, build_portfolio_day, build_similar_strategies, build_strategy_catalog, normalize_model_limit, normalize_product, normalize_product_type, normalize_strategy_family
 
 app = FastAPI(title="EP057 Top10 Live", docs_url=None, redoc_url=None, default_response_class=ORJSONResponse)
 app.add_middleware(GZipMiddleware, minimum_size=1_000, compresslevel=5)
@@ -64,6 +66,28 @@ async def portfolio_day(models: str = Query(..., min_length=1), date: str | None
         payload = await run_in_threadpool(build_portfolio_day, date_str, models.split(","))
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500, headers=NO_STORE)
+    return ORJSONResponse(payload, headers=NO_STORE)
+
+
+@app.get("/api/similar_strategies")
+async def similar_strategies(model: str = Query(..., min_length=1), date: str | None = None) -> JSONResponse:
+    date_str = _check_date(date or dt.date.today().isoformat())
+    try:
+        payload = await run_in_threadpool(build_similar_strategies, date_str, model)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=500, headers=NO_STORE)
+    return ORJSONResponse(payload, headers=NO_STORE)
+
+
+@app.get("/api/strategy_catalog")
+async def strategy_catalog(date: str | None = None) -> JSONResponse:
+    date_str = _check_date(date or dt.date.today().isoformat())
+    try:
+        payload = await run_in_threadpool(build_strategy_catalog, date_str)
     except Exception as exc:
         return JSONResponse({"error": str(exc)}, status_code=500, headers=NO_STORE)
     return ORJSONResponse(payload, headers=NO_STORE)

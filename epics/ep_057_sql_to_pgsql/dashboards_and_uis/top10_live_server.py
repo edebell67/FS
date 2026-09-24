@@ -1,6 +1,9 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/top10_live_server.py — Live equity-curve API and static dashboard server.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-09-24 · Adds the filterable single-strategy portfolio catalogue.
+# v1.6.0 · 2026-09-24 · Adds same-product strategy comparisons by family, window, TP, or SL.
+# v1.5.0 · 2026-09-23 · _connect() honours DATABASE_URL (Render); PG* variables remain the local default.
 # v1.4.0 · 2026-09-22 · Adds configurable 10/20/30 scenario limits and explicit portfolio model snapshots (maximum ten models).
 # v1.3.0 · 2026-09-22 · Adds canonical breakout strategy-family filtering before scenario ranking.
 # v1.2.0 · 2026-09-22 · Adds validated dependent product filtering and product metadata so every dashboard result can share the selected type/product scope.
@@ -120,6 +123,8 @@ def _f(v) -> float:
 
 
 def _connect():
+    if os.environ.get("DATABASE_URL"):
+        return psycopg2.connect(os.environ["DATABASE_URL"], connect_timeout=5)
     return psycopg2.connect(
         host=os.environ.get("PGHOST", "localhost"),
         port=int(os.environ.get("PGPORT", "5432")),
@@ -135,8 +140,82 @@ STAT_COLS = ["model", "net", "alt", "trades", "wins", "losses", "win_rate",
 MIN_SCENARIO_MODELS = 2  # fewer qualifying models -> scenario falls back to top_net
 
 
+def _family_leaders(stats: list[dict], metric: str) -> list[dict]:
+    """Return the best strategy in each canonical family for the chosen metric."""
+    win_metric = "alt_win_rate" if metric == "alt" else "win_rate"
+    winners: dict[str, dict] = {}
+    for stat in stats:
+        family = strategy_family(stat.get("strategy"))
+        if family == "unknown":
+            continue
+        incumbent = winners.get(family)
+        rank_key = (-stat[metric], -stat[win_metric], stat["model"])
+        if incumbent is None or rank_key < (-incumbent[metric], -incumbent[win_metric], incumbent["model"]):
+            winners[family] = stat
+    family_order = ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev")
+    return [winners[family] for family in family_order if family in winners]
+
+
+def _top_family(stats: list[dict], family: str, metric: str, limit: int = 5) -> list[dict]:
+    """Return the strongest models in one family for the selected return metric."""
+    win_metric = "alt_win_rate" if metric == "alt" else "win_rate"
+    return sorted(
+        (stat for stat in stats if strategy_family(stat.get("strategy")) == family),
+        key=lambda stat: (-stat[metric], -stat[win_metric], stat["model"]),
+    )[:limit]
+
+
+TP_SL_RE = re.compile(r"(?:^|_)tp(?P<tp>\d+)_sl(?P<sl>\d+)(?:_|$)", re.IGNORECASE)
+STRATEGY_SHAPE_RE = re.compile(
+    r"^(?P<family>breakout(?:_r_rev|_rev|_r)?)_(?P<window>\d+)_tp(?P<tp>\d+)_sl(?P<sl>\d+)$",
+    re.IGNORECASE,
+)
+CRYPTO_STRATEGY_SHAPE_RE = re.compile(
+    r"^(?P<family>dna\d+_crypto)_tp(?P<tp>\d+)_sl(?P<sl>\d+)$",
+    re.IGNORECASE,
+)
+
+
+def strategy_tp_sl(strategy: str | None) -> tuple[int, int] | None:
+    """Extract the configured take-profit and stop-loss pair from a strategy name."""
+    match = TP_SL_RE.search(strategy or "")
+    return (int(match.group("tp")), int(match.group("sl"))) if match else None
+
+
+def strategy_shape(strategy: str | None) -> dict | None:
+    """Parse canonical Forex or Crypto family/window/TP/SL strategy names."""
+    value = (strategy or "").strip()
+    match = STRATEGY_SHAPE_RE.fullmatch(value)
+    if match:
+        return {
+            "family": match.group("family").lower(),
+            "window": int(match.group("window")),
+            "tp": int(match.group("tp")),
+            "sl": int(match.group("sl")),
+        }
+    match = CRYPTO_STRATEGY_SHAPE_RE.fullmatch(value)
+    if not match:
+        return None
+    return {
+        "family": match.group("family").lower(),
+        "window": None,
+        "tp": int(match.group("tp")),
+        "sl": int(match.group("sl")),
+    }
+
+
+def _top_tp_sl(stats: list[dict], tp: int, sl: int, metric: str, limit: int = 3) -> list[dict]:
+    """Return the strongest models for one exact TP/SL combination."""
+    win_metric = "alt_win_rate" if metric == "alt" else "win_rate"
+    return sorted(
+        (stat for stat in stats if strategy_tp_sl(stat.get("strategy")) == (tp, sl)),
+        key=lambda stat: (-stat[metric], -stat[win_metric], stat["model"]),
+    )[:limit]
+
+
 def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 10,
-                  touched_rank_one_ids: set[str] | None = None) -> dict[str, list[str]]:
+                  touched_rank_one_ids: set[str] | None = None,
+                  family_stats: list[dict] | None = None) -> dict[str, list[str]]:
     """Scenario model lists for one trading date.
 
     Rules reproduce the stored 14-18 Sep lists: each scenario filters the day's pool
@@ -166,9 +245,12 @@ def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 
         models = list(models)[:pick_limit or limit]
         return models if len(models) >= MIN_SCENARIO_MODELS else top_net
 
+    family_stats = family_stats if family_stats is not None else stats
     lists = {
         "top_net": top_net,
         "top_alt_net": top_alt,
+        "family_leaders_net": _family_leaders(stats, "net"),
+        "family_leaders_alt": _family_leaders(stats, "alt"),
         "top_win": top_win or top_net,
         "strongest_three": sorted(pool, key=lambda s: -s["net"])[:3],
         "strengthening_cluster": pick(s for s in pool if (s["strategy"] or "").startswith("breakout_R_")),
@@ -185,6 +267,13 @@ def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 
             key=lambda s: (-s["net"], -s["win_rate"], s["model"]),
         )[:limit],
     }
+    for family in ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"):
+        lists[f"top5_{family}_net"] = _top_family(family_stats, family, "net")
+        lists[f"top5_{family}_alt"] = _top_family(family_stats, family, "alt")
+    for tp, sl in sorted({pair for stat in stats if (pair := strategy_tp_sl(stat.get("strategy")))}):
+        scenario_id = f"top3_tp{tp}_sl{sl}"
+        lists[f"{scenario_id}_net"] = _top_tp_sl(stats, tp, sl, "net")
+        lists[f"{scenario_id}_alt"] = _top_tp_sl(stats, tp, sl, "alt")
     lists["NET_RETURN"] = lists["top_net"]
     lists["WIN_RATE"] = lists["top_win"]
     return {k: [s["model"] for s in v] for k, v in lists.items()}
@@ -250,17 +339,27 @@ def build_live_day(date_str: str, product_type: str = "all", product: str = "all
             raise ValueError(f"product {product!r} is not available for type {product_type!r}")
         cur.execute(STATS_SQL, (date_str, product_type, product_type, product, product))
         stats = [dict(zip(STAT_COLS, r)) for r in cur.fetchall()]
-        if strategy_family_filter != "all":
-            stats = [s for s in stats if strategy_family(s["strategy"]) == strategy_family_filter]
         for s in stats:
             for k in ("net", "alt", "win_rate", "alt_win_rate", "target_profit"):
                 s[k] = _f(s[k])
+        product_stats = list(stats)
+        if strategy_family_filter != "all":
+            stats = [s for s in stats if strategy_family(s["strategy"]) == strategy_family_filter]
 
         # Snapshots for every model that can appear in a scenario (top net / alt / win-rate pools)
         candidates = {s["model"] for s in sorted(stats, key=lambda s: -s["net"])[:limit]}
         candidates |= {s["model"] for s in sorted(stats, key=lambda s: -s["alt"])[:limit]}
         candidates |= {s["model"] for s in sorted((s for s in stats if s["win_rate"] >= 50),
                                                   key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:limit]}
+        candidates |= {s["model"] for s in _family_leaders(stats, "net")}
+        candidates |= {s["model"] for s in _family_leaders(stats, "alt")}
+        for family in ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"):
+            candidates |= {s["model"] for s in _top_family(product_stats, family, "net")}
+            candidates |= {s["model"] for s in _top_family(product_stats, family, "alt")}
+        tp_sl_pairs = sorted({pair for stat in stats if (pair := strategy_tp_sl(stat.get("strategy")))})
+        for tp, sl in tp_sl_pairs:
+            candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "net")}
+            candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "alt")}
         touched_rank_one_ids: set[str] = set()
         all_model_ids = [s["model"] for s in stats]
         if all_model_ids:
@@ -277,7 +376,7 @@ def build_live_day(date_str: str, product_type: str = "all", product: str = "all
                     "open": int(op or 0), "trades": int(tr or 0),
                 })
 
-    by_model = {s["model"]: s for s in stats}
+    by_model = {s["model"]: s for s in product_stats}
 
     def model_list(ids: list[str]) -> list[dict]:
         out = []
@@ -305,8 +404,12 @@ def build_live_day(date_str: str, product_type: str = "all", product: str = "all
     payload = {"date": date_str, "product_type": product_type, "product": product,
                "strategy_family": strategy_family_filter, "limit": limit,
                "products": products,
+               "tp_sl_scenarios": [
+                   {"id": f"top3_tp{tp}_sl{sl}", "tp": tp, "sl": sl}
+                   for tp, sl in tp_sl_pairs
+               ],
                "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
-    for sc, ids in _scenario_ids(stats, snaps, limit, touched_rank_one_ids).items():
+    for sc, ids in _scenario_ids(stats, snaps, limit, touched_rank_one_ids, product_stats).items():
         payload[sc] = model_list(ids)
     _LIVE_DAY_CACHE[cache_key] = (time.monotonic(), payload)
     if len(_LIVE_DAY_CACHE) > 64:
@@ -365,6 +468,90 @@ def build_portfolio_day(date_str: str, model_ids: list[str]) -> dict:
         })
     return {"date": date_str, "requested_models": clean_ids, "models": models,
             "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
+
+
+def build_similar_strategies(date_str: str, model_id: str) -> dict:
+    """Return same-product comparison sets that vary one strategy dimension only."""
+    model_id = str(model_id or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9._-]+", model_id):
+        raise ValueError("model contains unsupported characters")
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(STATS_SQL, (date_str, "all", "all", "all", "all"))
+        stats = [dict(zip(STAT_COLS, row)) for row in cur.fetchall()]
+    reference = next((stat for stat in stats if stat["model"] == model_id), None)
+    if not reference:
+        raise ValueError(f"model {model_id!r} has no trades on {date_str}")
+    reference_shape = strategy_shape(reference.get("strategy"))
+    if not reference_shape:
+        raise ValueError(f"strategy {reference.get('strategy')!r} is not a supported family/window/TP/SL strategy")
+
+    same_product = [
+        stat for stat in stats
+        if (stat.get("product") or "").strip().lower() == (reference.get("product") or "").strip().lower()
+        and (stat.get("product_type") or "").strip().lower() == (reference.get("product_type") or "").strip().lower()
+        and strategy_shape(stat.get("strategy"))
+    ]
+    dimensions = ("family", "window", "tp", "sl")
+    family_order = {name: index for index, name in enumerate(("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"))}
+    groups: dict[str, list[dict]] = {}
+    for dimension in dimensions:
+        fixed_dimensions = [name for name in dimensions if name != dimension]
+        matches = [
+            stat for stat in same_product
+            if all(strategy_shape(stat["strategy"])[name] == reference_shape[name] for name in fixed_dimensions)
+        ]
+        matches.sort(key=lambda stat: (
+            family_order.get(strategy_shape(stat["strategy"])[dimension], 99)
+            if dimension == "family" else (strategy_shape(stat["strategy"])[dimension] if strategy_shape(stat["strategy"])[dimension] is not None else -1),
+            stat["model"],
+        ))
+        groups[dimension] = [
+            {
+                "model": stat["model"],
+                "product": stat["product"],
+                "product_type": stat["product_type"],
+                "strategy": stat["strategy"],
+                "value": strategy_shape(stat["strategy"])[dimension],
+            }
+            for stat in matches[:10]
+        ]
+    return {
+        "date": date_str,
+        "reference": {
+            "model": reference["model"], "product": reference["product"],
+            "product_type": reference["product_type"], "strategy": reference["strategy"],
+            **reference_shape,
+        },
+        "groups": groups,
+        "generated_at": dt.datetime.now().isoformat(timespec="seconds"),
+    }
+
+
+def build_strategy_catalog(date_str: str) -> dict:
+    """Return active models and parsed strategy dimensions for portfolio selection."""
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(STATS_SQL, (date_str, "all", "all", "all", "all"))
+        stats = [dict(zip(STAT_COLS, row)) for row in cur.fetchall()]
+    models = []
+    for stat in stats:
+        shape = strategy_shape(stat.get("strategy"))
+        if not shape:
+            continue
+        models.append({
+            "model": stat["model"],
+            "product": (stat.get("product") or "").strip().lower(),
+            "product_type": (stat.get("product_type") or "").strip().lower(),
+            "strategy": stat["strategy"],
+            "net": _f(stat.get("net")),
+            "alt": _f(stat.get("alt")),
+            **shape,
+        })
+    family_order = {name: index for index, name in enumerate(("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"))}
+    models.sort(key=lambda item: (
+        item["product_type"], item["product"], family_order.get(item["family"], 99),
+        item["window"] if item["window"] is not None else -1, item["tp"], item["sl"], item["model"],
+    ))
+    return {"date": date_str, "models": models, "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
 
 
 TRADES_CLOSED_SQL = """
@@ -443,6 +630,24 @@ class Handler(SimpleHTTPRequestHandler):
             except Exception as exc:
                 return self._json(500, {"error": str(exc)})
         if url.path != "/api/live_day":
+            if url.path == "/api/strategy_catalog":
+                catalog_date = parse_qs(url.query).get("date", [dt.date.today().isoformat()])[0]
+                if not DATE_RE.fullmatch(catalog_date):
+                    return self._json(400, {"error": "date must be YYYY-MM-DD"})
+                try:
+                    return self._json(200, build_strategy_catalog(catalog_date))
+                except Exception as exc:
+                    return self._json(500, {"error": str(exc)})
+            if url.path == "/api/similar_strategies":
+                q = parse_qs(url.query)
+                similar_date = q.get("date", [dt.date.today().isoformat()])[0]
+                model = q.get("model", [""])[0]
+                if not model or not DATE_RE.fullmatch(similar_date):
+                    return self._json(400, {"error": "model and date=YYYY-MM-DD required"})
+                try:
+                    return self._json(200, build_similar_strategies(similar_date, model))
+                except Exception as exc:
+                    return self._json(500, {"error": str(exc)})
             if url.path == "/api/portfolio_day":
                 q = parse_qs(url.query)
                 portfolio_date = q.get("date", [dt.date.today().isoformat()])[0]
