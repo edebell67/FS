@@ -1,6 +1,7 @@
 """Environment-only application settings.
 
 Version history:
+- 1.5.0 (2026-09-27): ENABLE_DOCS turns on the Swagger UI at /docs (default off).
 - 1.4.0 (2026-09-26): EP058 vendored copy of EP051 1.3.0 config (LOCAL_SOURCE/SOURCE_DATABASE_URL/RUNTIME_DIR/EP051_ENV_FILE), keeping EP049 arena/regime settings. Not auto-synced.
 - 1.3.0 (2026-09-21): LOCAL_SOURCE (sqlserver|postgres) + SOURCE_DATABASE_URL pick the local trade source; RUNTIME_DIR separates cache files per instance; EP051_ENV_FILE selects the env file (e.g. .env.pg for the PostgreSQL instance on 8094).
 - 1.2.0 (2026-08-25): Keeps the last verified local snapshot available across weekly refresh gaps.
@@ -15,6 +16,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
     data_backend: str = "sqlserver"
+    enable_docs: bool = False  # Swagger UI at /docs; local dev only (loads assets from cdn.jsdelivr.net)
     # Local (data_backend="sqlserver") trade source: SQL Server by default, or PostgreSQL tradedb.
     local_source: str = "sqlserver"
     source_database_url: str | None = None

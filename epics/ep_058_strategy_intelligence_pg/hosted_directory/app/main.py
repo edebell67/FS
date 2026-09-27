@@ -67,10 +67,26 @@ def _detect_build_sha() -> str | None:
 BUILD_SHA = _detect_build_sha()
 
 
+GUIDE = """
+## Integration guide
+
+Two families of endpoints, both read-only over HTTP unless noted:
+
+1. **Dashboard API** (`/api/live_day`, `/api/portfolio_day`, `/api/ribbon`, ... ) - per-day strategy performance from PostgreSQL `tradedb`, identical in payload to the ep_057 dashboard server. Start with **`GET /api/coverage`**: it lists the trading dates and product codes that have data (currently 2026-09-14 onward; earlier dates return empty results, not errors). Then `GET /api/scenarios` for scenario ids, `GET /api/live_day?date=` for curves, and the POST engine endpoints (`scenario_candidates`, `ribbon`, `replay_frame`, `overlay_signals`, `leader_rotation`, `multi_split_rotation`) which take one `EngineRequest` body holding every UI setting as an explicit field.
+2. **Intelligence API** (`/api/intelligence/query/*`, `/regime/*`, `/strategies/*`) - screening over the published snapshot in `ep058_intel`. `GET /api/intelligence/query/schema` is the machine-readable catalogue of filter fields. Each strategy's history is capped at its latest 100 trades, so results are shallower than the dashboard API's. `/query/*` times are UTC; dashboard times are server-local.
+
+Conventions: money is USD (not pips); `alt_*` fields are the counterfactual reversed trade; `win_rate` is percent 0-100 on dashboard endpoints but a 0-1 fraction in `/query/*` filters; `frame_index=-1` means the end of the series; `baseline_index=0` means a zero start at 00:00 rather than the first snapshot; invalid parameters return 400 with `{"detail": ...}`, server faults 500 with `{"error": ...}`.
+
+Auth: dashboard and query endpoints are unauthenticated (local network only). `/api/intelligence/user/*` needs the trusted user identity (INTELLIGENCE_USER_TOKEN), `/internal/*` needs the sync token, `/v1/*` needs the Arena service token plus `X-EP052-Agent-ID`. Dashboard portfolios are shared per `owner` string, not authenticated.
+
+Decision support and research evidence, not financial advice.
+"""
+
+
 def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     cfg = settings or get_settings()
     repo = repository or (PostgresRepository(cfg.database_url) if cfg.data_backend == "postgres" and cfg.database_url else None)
-    app = FastAPI(title="EP049 Strategy Intelligence API", version="1.0.0", docs_url=None, redoc_url=None)
+    app = FastAPI(title="EP058 Strategy Intelligence API (PostgreSQL)", version="1.0.0", description=GUIDE, docs_url="/docs" if cfg.enable_docs else None, redoc_url=None)
     user_store = PostgresUserIntelligenceStore(cfg.database_url, maintenance_database_url=cfg.maintenance_database_url) if cfg.data_backend == "postgres" and cfg.database_url else UserIntelligenceStore()
     market_store = PostgresMarketFeatureStore(cfg.database_url) if cfg.data_backend == "postgres" and cfg.database_url else MarketFeatureStore()
     app.state.repository = repo; app.state.settings = cfg; app.state.user_intelligence = user_store; app.state.market_features = market_store
@@ -651,6 +667,12 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
         return basis_profiles(end, "net_return", start=start)
 
     arena_provider.install(app, cfg, arena_universe, points_fn=repository_points_today, now_fn=current_now)
+    def intelligence_coverage():
+        snap = app.state.repository.current_snapshot() if app.state.repository is not None else None
+        if snap is None: return None
+        get = (lambda k: snap.get(k)) if isinstance(snap, dict) else (lambda k: getattr(snap, k, None))
+        return {k: (str(get(k)) if get(k) is not None else None) for k in ("snapshot_id", "source_watermark", "generated_at", "item_count", "methodology_version")}
+    app.state.intelligence_coverage = intelligence_coverage
     from . import dashboard_api; dashboard_api.install(app, cfg.source_database_url)
     return app
 

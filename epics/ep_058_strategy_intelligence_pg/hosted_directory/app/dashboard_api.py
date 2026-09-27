@@ -1,6 +1,7 @@
 # epics/ep_058_strategy_intelligence_pg/hosted_directory/app/dashboard_api.py — Top10 dashboard endpoints.
 #
 # VERSION HISTORY
+# v1.2.0 · 2026-09-27 · Typed OpenAPI responses, parameter docs/enums, GET /api/coverage; fixes portfolio_from_similar (groups are nested, keyed by dimension).
 # v1.1.0 · 2026-09-26 · Adds an endpoint for every function that was client-side only on the page: scenarios, scenario_candidates,
 #   ribbon, replay_frame, overlay_signals, leader_rotation, multi_split_rotation and server-side named portfolios.
 # v1.0.0 · 2026-09-26 · Same paths and payloads as ep_057 top10_live_app.py so top10_5min_equity_curves.html can point at this service.
@@ -20,6 +21,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
 from . import dashboard_engine as eng
+from . import dashboard_models as m
 from . import dashboard_queries as q
 
 NO_STORE = {"Cache-Control": "no-store"}
@@ -31,6 +33,15 @@ SCENARIO_CATALOGUE = json.loads((Path(__file__).parent / "scenarios_catalogue.js
     {"id": "top5_breakout_rev", "name": "Top 5 · Breakout Rev"}, {"id": "top5_breakout_r_rev", "name": "Top 5 · Breakout R Rev"},
     {"id": "top3_tp{N}_sl{M}", "name": "Top 3 by TP/SL pair (ids from /api/scenarios tp_sl_scenarios)"},
 ]
+
+DATE_DOC = "Trading date YYYY-MM-DD (server local date; defaults to today). Data exists only for dates listed by GET /api/coverage."
+PT_DOC = {"description": "Product type filter", "json_schema_extra": {"enum": ["all", "forex", "crypto"]}}
+FAM_DOC = {"description": "Strategy family filter", "json_schema_extra": {"enum": ["all", "breakout", "breakout_r", "breakout_rev", "breakout_r_rev"]}}
+LIMIT_DOC = {"description": "Models per scenario", "json_schema_extra": {"enum": [10, 20, 30]}}
+
+
+def _ok(model):
+    return {200: {"model": model}}
 
 
 def _date(value):
@@ -54,19 +65,19 @@ async def _run(fn, *args):
 class EngineRequest(BaseModel):
     """Everything the page holds as UI state, as explicit parameters."""
     date: str | None = None
-    scenario: str = "top_net"
+    scenario: str = Field("top_net", description="Scenario id from GET /api/scenarios (top_net, top_alt_net, top_win, touched_rank_one, family_leaders, top5_<family>, top3_tp<N>_sl<M>, ...); metric-aware ids are resolved to _net/_alt from return_type")
     models: str | None = Field(None, description="csv of model ids (a portfolio); overrides scenario")
-    return_type: str = Field("NET", pattern="^(NET|ALT)$")
-    product_type: str = "all"
-    product: str = "all"
-    strategy_family: str = "all"
-    limit: int = 10
-    min_win_rate: float = 0.0
-    baseline_index: int | None = None
+    return_type: str = Field("NET", pattern="^(NET|ALT)$", description="NET = actual net_return; ALT = counterfactual reversed trades")
+    product_type: str = Field("all", description="all | forex | crypto")
+    product: str = Field("all", description="Product code, e.g. gbp, eth")
+    strategy_family: str = Field("all", description="all | breakout | breakout_r | breakout_rev | breakout_r_rev")
+    limit: int = Field(10, description="10, 20 or 30 models per scenario")
+    min_win_rate: float = Field(0.0, description="Percent 0-100 (the page's win-rate slider)")
+    baseline_index: int | None = Field(None, description="Frame index of the baseline; 0 or null = session start (zero at 00:00)")
     baseline_time: str | None = Field(None, description="HH:MM; resolves baseline_index on the longest series")
     frame_index: int = Field(-1, description="replay head; -1 = end of series")
-    exit_threshold: float = 0.0
-    daily_target: float = 500.0
+    exit_threshold: float = Field(0.0, description="USD; overlay exits when a side's delta falls below this (e.g. -50)")
+    daily_target: float = Field(500.0, description="USD; first point where overlay P&L reaches it is flagged type T; 0 disables")
     model: str | None = Field(None, description="overlay_signals: which model (default: first eligible)")
     visible_models: str | None = Field(None, description="csv subset of models to include (model curve toggles)")
 
@@ -81,10 +92,10 @@ class MergeBody(BaseModel):
 
 
 class SimilarBody(BaseModel):
-    name: str
+    name: str | None = Field(None, description="Portfolio name; auto-named like the page if omitted")
     date: str | None = None
     model: str
-    group: str
+    dimension: str = Field(description="family | window | tp | sl")
 
 
 class PortfolioStore:
@@ -195,39 +206,44 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
     store = PortfolioStore(Path(os.environ.get("EP058_PORTFOLIO_DB", "runtime/dashboard_portfolios.sqlite")))
 
     # --- query endpoints (identical paths/payloads to the ep_057 server) ---------------------
-    @app.get("/api/live_day")
-    async def live_day(date: str | None = None, product_type: str = "all", product: str = "all",
-                       strategy_family: str = "all", limit: int = 10):
+    @app.get("/api/live_day", response_model=None, responses=_ok(m.LiveDayResponse), summary="All scenarios for a day",
+             description="Every scenario's model list (top_net, top_alt_net, top_win, touched_rank_one, family_leaders_*, top5_<family>_*, top3_tp<N>_sl<M>_*, ...) with 5-minute cumulative curves. Payload is large (MBs); scenario ids are extra keys - list them via GET /api/scenarios. Money is USD; *_alt_* is the counterfactual reversed trade.")
+    async def live_day(date: str | None = Query(None, description=DATE_DOC), product_type: str = Query("all", **PT_DOC),
+                       product: str = Query("all", description="Product code within the type, e.g. gbp, eth; must exist for the type"),
+                       strategy_family: str = Query("all", **FAM_DOC), limit: int = Query(10, **LIMIT_DOC)):
         return await _run(q.build_live_day, _date(date), q.normalize_product_type(product_type),
                           q.normalize_product(product), q.normalize_strategy_family(strategy_family),
                           q.normalize_model_limit(limit))
 
-    @app.get("/api/hourly_family_report")
-    async def hourly_family_report(date: str | None = None, product_type: str = "all",
-                                   product: str = "all", family: str = "all"):
+    @app.get("/api/hourly_family_report", response_model=None, responses=_ok(m.HourlyFamilyReportResponse), summary="Hourly entries/exits by side",
+             description="Per hour and side: trades opened, open at hour end, closed, win counts, totals (USD). For today the current hour is partial (is_incomplete_hour).")
+    async def hourly_family_report(date: str | None = Query(None, description=DATE_DOC), product_type: str = Query("all", **PT_DOC),
+                                   product: str = Query("all", description="Product code"), family: str = Query("all", **FAM_DOC)):
         return await _run(q.build_hourly_family_report, _date(date), q.normalize_product_type(product_type),
                           q.normalize_product(product), q.normalize_strategy_family(family))
 
-    @app.get("/api/portfolio_day")
-    async def portfolio_day(models: str = Query(..., min_length=1), date: str | None = None):
+    @app.get("/api/portfolio_day", response_model=None, responses=_ok(m.PortfolioDayResponse), summary="Curves for an explicit model list")
+    async def portfolio_day(models: str = Query(..., min_length=1, description="Comma-separated model ids, e.g. dna_301680,dna_301686 (max 10)"),
+                            date: str | None = Query(None, description=DATE_DOC)):
         return await _run(q.build_portfolio_day, _date(date), models.split(","))
 
-    @app.get("/api/similar_strategies")
-    async def similar_strategies(model: str = Query(..., min_length=1), date: str | None = None):
+    @app.get("/api/similar_strategies", response_model=None, responses=_ok(m.SimilarStrategiesResponse), summary="Same-product comparison groups",
+             description="For a model, the same-product strategies varying exactly one dimension: family, window, tp or sl.")
+    async def similar_strategies(model: str = Query(..., min_length=1, description="Model id"), date: str | None = Query(None, description=DATE_DOC)):
         return await _run(q.build_similar_strategies, _date(date), model)
 
-    @app.get("/api/strategy_catalog")
-    async def strategy_catalog(date: str | None = None):
+    @app.get("/api/strategy_catalog", response_model=None, responses=_ok(m.StrategyCatalogResponse), summary="Active models with parsed dimensions")
+    async def strategy_catalog(date: str | None = Query(None, description=DATE_DOC)):
         return await _run(q.build_strategy_catalog, _date(date))
 
-    @app.get("/api/model_trades")
+    @app.get("/api/model_trades", response_model=None, responses=_ok(m.ModelTradesResponse), summary="Closed and open trades for a model over a date range")
     async def model_trades(model: str = Query(..., min_length=1), date_from: str = Query(..., alias="from"),
                            date_to: str | None = Query(None, alias="to"), product_type: str = "all",
                            product: str = "all"):
         return await _run(q.build_model_trades, model, _date(date_from), _date(date_to or date_from),
                           q.normalize_product_type(product_type), q.normalize_product(product))
 
-    @app.get("/api/model_trades_summary")
+    @app.get("/api/model_trades_summary", response_model=None, responses=_ok(m.ModelTradesSummaryResponse), summary="Trades-modal summary chips")
     async def model_trades_summary(model: str = Query(..., min_length=1), date_from: str = Query(..., alias="from"),
                                    date_to: str | None = Query(None, alias="to"), product_type: str = "all",
                                    product: str = "all"):
@@ -245,7 +261,7 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
         return await _run(build)
 
     # --- functions that were client-side only on the page ------------------------------------
-    @app.get("/api/scenarios")
+    @app.get("/api/scenarios", response_model=None, responses=_ok(m.ScenariosResponse), summary="Scenario catalogue and the day's dynamic scenario ids")
     async def scenarios(date: str | None = None, product_type: str = "all", product: str = "all",
                         strategy_family: str = "all", limit: int = 10):
         """SCENARIOS_CATALOGUE plus the day's dynamic scenario ids (top5_<family>, top3_tp<N>_sl<M>)."""
@@ -257,12 +273,12 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
                     "products": live["products"], "metric_aware": ["family_leaders", "top5_*", "top3_tp*"]}
         return await _run(build)
 
-    @app.post("/api/scenario_candidates")
+    @app.post("/api/scenario_candidates", response_model=None, responses=_ok(m.ScenarioCandidatesResponse), summary="Models the page would display (getEligibleModels)")
     async def scenario_candidates(req: EngineRequest):
         """getScenarioCandidates / getEligibleModels: the model list (with series) the page would display."""
         return await _run(lambda: {"models": resolve_models(req)})
 
-    @app.post("/api/ribbon")
+    @app.post("/api/ribbon", response_model=None, responses=_ok(m.RibbonResponse), summary="Summed delta net/buy/sell from baseline to replay head")
     async def ribbon(req: EngineRequest):
         """updateRibbon: summed and per-model delta net/buy/sell from baseline to replay head."""
         def build():
@@ -270,7 +286,7 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
             return eng.ribbon(models, return_type=req.return_type, baseline_index=b, frame_index=req.frame_index) | {"baseline_index": b}
         return await _run(build)
 
-    @app.post("/api/replay_frame")
+    @app.post("/api/replay_frame", response_model=None, responses=_ok(m.ReplayFrameResponse), summary="Replay/baseline points per model")
     async def replay_frame(req: EngineRequest):
         """Replay / baseline / scrubber: per-model base and head point plus frame count."""
         def build():
@@ -281,7 +297,7 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
                                 "head": eng.head_point(m["series"], req.frame_index)} for m in models]}
         return await _run(build)
 
-    @app.post("/api/overlay_signals")
+    @app.post("/api/overlay_signals", response_model=None, responses=_ok(m.OverlayResponse), summary="Tri-split B/S/X overlay for one model")
     async def overlay_signals(req: EngineRequest):
         """Tri-split B/S/X overlay for one model: signals, paired trades (with flip result), daily-target hit."""
         def build():
@@ -302,7 +318,7 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
                     "targetSignal": eng.split_target_signal(sigs, sub, base, req.daily_target)}
         return await _run(build)
 
-    @app.post("/api/leader_rotation")
+    @app.post("/api/leader_rotation", response_model=None, responses=_ok(m.RotationResponse), summary="Total Net leader rotation")
     async def leader_rotation(req: EngineRequest):
         """Total Net leader rotation across the visible strategies (ALL_NET mode B/X signals)."""
         def build():
@@ -312,7 +328,7 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
                                        daily_target=req.daily_target) | {"baseline_index": b}
         return await _run(build)
 
-    @app.post("/api/multi_split_rotation")
+    @app.post("/api/multi_split_rotation", response_model=None, responses=_ok(m.RotationResponse), summary="Multi-Split buy/sell rotation")
     async def multi_split_rotation(req: EngineRequest):
         """Multi-Split rotation across every visible strategy's Buy and Sell side."""
         def build():
@@ -349,13 +365,42 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
 
     @app.post("/api/portfolio_from_similar")
     async def portfolios_from_similar(body: SimilarBody, owner: str = "default"):
-        """createSimilarPortfolio: portfolio from a same-product comparison group of a model."""
+        """createSimilarPortfolio: portfolio (max 10) from a same-product comparison group of a model, named like the page does."""
         def build():
             sim = q.build_similar_strategies(_date(body.date), body.model)
-            groups = {k: v for k, v in sim.items() if isinstance(v, list)}
-            if body.group not in groups:
-                raise ValueError(f"unknown comparison group {body.group!r}; available: {sorted(groups)}")
-            return store.put(owner, body.name, [g["model"] if isinstance(g, dict) else g for g in groups[body.group]])
+            groups = sim.get("groups") or {}
+            if body.dimension not in groups:
+                raise ValueError(f"unknown dimension {body.dimension!r}; use one of {sorted(groups)}")
+            ref = sim["reference"]
+            label = {"family": "Family", "window": "Window", "tp": "TP", "sl": "SL"}[body.dimension]
+            win = "" if ref.get("window") is None else f" W{ref['window']}"
+            base = f"{str(ref['product']).upper()} {label}{win} T{ref['tp']} S{ref['sl']}"[:32]
+            existing = store.list(owner)["portfolios"]
+            name = body.name or base
+            if not body.name and name in existing:
+                n = 2
+                while f"{name[:28]} {n}" in existing:
+                    n += 1
+                name = f"{name[:28]} {n}"
+            return store.put(owner, name, [g["model"] for g in groups[body.dimension]][:MAX_PORTFOLIO_MODELS])
+        return await _run(build)
+
+    @app.get("/api/coverage", response_model=None, responses=_ok(m.CoverageResponse), summary="What data exists (dates, products, snapshot times)",
+             description="Call this first: the dashboard endpoints return empty results for dates outside `dates`, and curves need `snapshot_dates`.")
+    async def coverage():
+        def build():
+            with q._connect() as conn, conn.cursor() as cur:
+                cur.execute("SELECT DISTINCT created::date FROM combined_trades_closed ORDER BY 1")
+                dates = [r[0].isoformat() for r in cur.fetchall()]
+                cur.execute("SELECT DISTINCT snapshot_timestamp::date FROM tbl_dna_model_summary_snapshots_5min ORDER BY 1")
+                snap_dates = [r[0].isoformat() for r in cur.fetchall()]
+                cur.execute("SELECT to_char(MAX(snapshot_timestamp), 'YYYY-MM-DD HH24:MI:SS') FROM tbl_dna_model_summary_snapshots_5min")
+                latest = cur.fetchone()[0]
+                cur.execute("SELECT DISTINCT LOWER(TRIM(product)) FROM product_forex WHERE product IS NOT NULL ORDER BY 1")
+                products = [r[0] for r in cur.fetchall()]
+            return {"source": "PostgreSQL tradedb", "first_date": dates[0] if dates else None, "last_date": dates[-1] if dates else None,
+                    "dates": dates, "snapshot_dates": snap_dates, "latest_snapshot": latest, "products": products,
+                    "intelligence": app.state.intelligence_coverage() if hasattr(app.state, "intelligence_coverage") else None}
         return await _run(build)
 
 
@@ -378,7 +423,8 @@ CATALOGUE = {
         "POST /api/multi_split_rotation": "EngineRequest -> Multi-Split buy/sell rotation signals/trades/target",
         "GET|PUT|DELETE /api/portfolios[/{name}]": "named portfolios (max 10 strategies), plus POST /{name}/models, DELETE /{name}/models/{model}",
         "POST /api/portfolio_merge": "{name, sources[]} -> de-duplicated merge",
-        "POST /api/portfolio_from_similar": "{name, date, model, group} -> portfolio from a comparison group",
+        "POST /api/portfolio_from_similar": "{name?, date, model, dimension: family|window|tp|sl} -> portfolio from a comparison group",
+        "GET /api/coverage": "available dates, snapshot dates, products, latest snapshot",
     },
     "engine_request_fields": list(EngineRequest.model_fields),
     "ui_only": ["theme", "collapse/expand sections", "chart drawing/tooltips", "trades-modal column sorting", "scrubber speed"],
