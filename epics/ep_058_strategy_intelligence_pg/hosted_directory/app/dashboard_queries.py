@@ -253,6 +253,164 @@ def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 
     return {k: [s["model"] for s in v] for k, v in lists.items()}
 
 
+def build_point_in_time_scenario(date_str: str, at_time: str, scenario: str = "top_net",
+                                 return_type: str = "NET", product_type: str = "all",
+                                 product: str = "all", strategy_family_filter: str = "all",
+                                 limit: int = 10, min_win_rate: float = 0.0) -> dict:
+    """Re-evaluate a scenario from the full strategy universe at one snapshot time.
+
+    Selection uses only the latest 5-minute snapshot and closed-trade evidence
+    available on or before the requested time. Returned curves extend through
+    the rest of the day so the captured cohort can be assessed afterwards.
+    """
+    product_type = normalize_product_type(product_type)
+    product = normalize_product(product)
+    strategy_family_filter = normalize_strategy_family(strategy_family_filter)
+    limit = normalize_model_limit(limit)
+    return_type = str(return_type or "NET").upper()
+    if return_type not in {"NET", "ALT"}:
+        raise ValueError("return_type must be NET or ALT")
+    if not re.fullmatch(r"\d{2}:\d{2}", str(at_time)):
+        raise ValueError("at_time must be HH:MM")
+    hour, minute = map(int, at_time.split(":"))
+    if hour > 23 or minute > 59:
+        raise ValueError("at_time must be a valid HH:MM time")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", str(scenario)):
+        raise ValueError("scenario contains unsupported characters")
+    if not 0 <= float(min_win_rate) <= 100:
+        raise ValueError("min_win_rate must be between 0 and 100")
+
+    metric = "alt" if return_type == "ALT" else "net"
+    scenario_key = scenario
+    if scenario == "family_leaders" or scenario.startswith("top5_") or scenario.startswith("top3_tp"):
+        scenario_key = f"{scenario}_{metric}"
+
+    point_sql = """
+        WITH bounds AS (
+          SELECT %s::date AS day,
+                 (%s::date + %s::time) AS cutoff
+        ), model_meta AS (
+          SELECT TRIM(model) AS model, MAX(LOWER(TRIM(product))) AS product,
+                 MAX(TRIM(strategy_name)) AS strategy, MAX(target_profit) AS target_profit,
+                 MAX(LOWER(TRIM(product_type))) AS product_type
+          FROM product_forex
+          WHERE product IS NOT NULL
+            AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+            AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+          GROUP BY TRIM(model)
+        ), asof_snap AS (
+          SELECT DISTINCT ON (s.model) s.model, s.snapshot_timestamp,
+                 s.cum_net, s.cum_alt_net, s.open_trade_count, s.closed_trade_count
+          FROM tbl_dna_model_summary_snapshots_5min s CROSS JOIN bounds b
+          WHERE s.snapshot_timestamp >= b.day AND s.snapshot_timestamp <= b.cutoff
+          ORDER BY s.model, s.snapshot_timestamp DESC
+        ), asof_trades AS (
+          SELECT c.model, COUNT(*) AS trades,
+                 COUNT(*) FILTER (WHERE c.net_return > 0) AS wins,
+                 COUNT(*) FILTER (WHERE c.net_return <= 0) AS losses,
+                 COUNT(*) FILTER (WHERE c.alt_net_return > 0) AS alt_wins
+          FROM combined_trades_closed c CROSS JOIN bounds b
+          WHERE c.created >= b.day AND c.created < b.day + INTERVAL '1 day'
+            AND c.last_update <= b.cutoff
+            AND (%s = 'all' OR LOWER(TRIM(c.product_type)) = %s)
+            AND (%s = 'all' OR LOWER(TRIM(c.product)) = %s)
+          GROUP BY c.model
+        )
+        SELECT m.model, m.product, m.strategy, m.target_profit, m.product_type,
+               p.snapshot_timestamp, p.cum_net, p.cum_alt_net,
+               p.open_trade_count, p.closed_trade_count,
+               COALESCE(t.trades, 0), COALESCE(t.wins, 0), COALESCE(t.losses, 0),
+               COALESCE(t.alt_wins, 0)
+        FROM model_meta m JOIN asof_snap p ON p.model = m.model
+        LEFT JOIN asof_trades t ON t.model = m.model
+    """
+    history_sql = """
+        WITH bounds AS (SELECT %s::date AS day, (%s::date + %s::time) AS cutoff)
+        SELECT s.model, to_char(s.snapshot_timestamp, 'HH24:MI'),
+               ROUND(s.cum_net::numeric, 1), ROUND(s.cum_buy_net::numeric, 1),
+               ROUND(s.cum_sell_net::numeric, 1), ROUND(s.cum_alt_net::numeric, 1),
+               ROUND(s.cum_buy_alt_net::numeric, 1), ROUND(s.cum_sell_alt_net::numeric, 1),
+               s.open_trade_count, s.closed_trade_count
+        FROM tbl_dna_model_summary_snapshots_5min s CROSS JOIN bounds b
+        WHERE s.snapshot_timestamp >= b.day AND s.snapshot_timestamp <= b.cutoff
+          AND s.model = ANY(%s)
+        ORDER BY s.model, s.snapshot_timestamp
+    """
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(point_sql, (date_str, date_str, at_time,
+                                product_type, product_type, product, product,
+                                product_type, product_type, product, product))
+        rows = cur.fetchall()
+        if not rows:
+            return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": []}
+
+        stats = []
+        for row in rows:
+            model, prod, strategy, target_profit, ptype, snap_ts, net, alt, opened, snap_trades, trades, wins, losses, alt_wins = row
+            trades = int(trades or snap_trades or 0)
+            wins, losses, alt_wins = int(wins or 0), int(losses or 0), int(alt_wins or 0)
+            stats.append({
+                "model": model, "product": prod, "strategy": strategy or "",
+                "target_profit": _f(target_profit), "product_type": ptype,
+                "net": _f(net), "alt": _f(alt), "trades": trades,
+                "wins": wins, "losses": losses,
+                "win_rate": round(wins / trades * 100, 1) if trades else 0.0,
+                "alt_wins": alt_wins,
+                "alt_win_rate": round(alt_wins / trades * 100, 1) if trades else 0.0,
+            })
+        family_stats = list(stats)
+        if strategy_family_filter != "all":
+            stats = [s for s in stats if strategy_family(s["strategy"]) == strategy_family_filter]
+        eligible_ids = {s["model"] for s in stats}
+        cur.execute(history_sql, (date_str, date_str, at_time, sorted(eligible_ids)))
+        snaps: dict[str, list[dict]] = {}
+        for m, tm, net, buy, sell, alt_net, alt_buy, alt_sell, op, tr in cur.fetchall():
+            if m not in eligible_ids:
+                continue
+            snaps.setdefault(m, []).append({"time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
+                "alt_net": _f(alt_net), "alt_buy": _f(alt_buy), "alt_sell": _f(alt_sell),
+                "open": int(op or 0), "trades": int(tr or 0)})
+
+        touched_rank_one_ids: set[str] = set()
+        snapshots_by_time: dict[str, list[tuple[float, str]]] = {}
+        for model, values in snaps.items():
+            for point in values:
+                snapshots_by_time.setdefault(point["time"], []).append((point["net"], model))
+        for ranked in snapshots_by_time.values():
+            if ranked:
+                best = max(value for value, _ in ranked)
+                touched_rank_one_ids.update(model for value, model in ranked if value == best)
+        selected = _scenario_ids(stats, snaps, limit, touched_rank_one_ids, family_stats).get(scenario_key, [])
+        stats_by_id = {s["model"]: s for s in family_stats}
+        selected = [m for m in selected if stats_by_id[m]["win_rate"] >= float(min_win_rate)]
+        if not selected:
+            return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": []}
+        cur.execute(SNAP_SQL, (date_str, selected))
+        full_series: dict[str, list[dict]] = {}
+        for m, tm, net, buy, sell, alt_net, alt_buy, alt_sell, op, tr in cur.fetchall():
+            full_series.setdefault(m, []).append({"time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
+                "alt_net": _f(alt_net), "alt_buy": _f(alt_buy), "alt_sell": _f(alt_sell),
+                "open": int(op or 0), "trades": int(tr or 0)})
+
+    models = []
+    for rank, model in enumerate(selected, 1):
+        stat = stats_by_id[model]
+        series = full_series.get(model, [])
+        head = series[-1] if series else {}
+        models.append({
+            "rank": rank, "model": model, "product": stat["product"],
+            "product_type": stat["product_type"], "strategy": stat["strategy"],
+            "color": COLORS[(rank - 1) % len(COLORS)], "trades": stat["trades"],
+            "wins": stat["wins"], "losses": stat["losses"], "win_rate": stat["win_rate"],
+            "alt_wins": stat["alt_wins"], "alt_win_rate": stat["alt_win_rate"],
+            "cum_net": head.get("net", 0.0), "buy_net": head.get("buy", 0.0),
+            "sell_net": head.get("sell", 0.0), "cum_alt_net": head.get("alt_net", 0.0),
+            "buy_alt_net": head.get("alt_buy", 0.0), "sell_alt_net": head.get("alt_sell", 0.0),
+            "series": series,
+        })
+    return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": models}
+
+
 PRODUCT_TYPES = {"all", "forex", "crypto"}
 STRATEGY_FAMILIES = {"all", "breakout", "breakout_r", "breakout_rev", "breakout_r_rev"}
 
@@ -585,11 +743,14 @@ def build_model_trades(model: str, date_from: str, date_to: str, product_type: s
 
 
 def build_hourly_family_report(date_str: str, product_type: str = "all",
-                               product: str = "all", family: str = "all") -> dict:
-    """Return uncached hourly entries, exits, and point-in-time open exposure."""
+                               product: str = "all", family: str = "all",
+                               interval_minutes: int = 60) -> dict:
+    """Return uncached time-bucketed entries, exits, and point-in-time open exposure."""
     product_type = normalize_product_type(product_type)
     product = normalize_product(product)
     family = normalize_strategy_family(family)
+    if interval_minutes not in (10, 30, 60, 180):
+        raise ValueError("interval_minutes must be 10, 30, 60, or 180")
     day = dt.date.fromisoformat(date_str)
     family_pattern = {
         "all": r"^(breakout(_r_rev|_rev|_r)?_[0-9]+|dna3_crypto)_tp[0-9]+_sl[0-9]+$",
@@ -650,16 +811,24 @@ def build_hourly_family_report(date_str: str, product_type: str = "all",
 
     now = dt.datetime.now()
     is_today = day == now.date()
-    current_hour = now.replace(minute=0, second=0, microsecond=0) if is_today else None
+    day_start = dt.datetime.combine(day, dt.time.min)
+    current_bucket = (
+        day_start + dt.timedelta(
+            minutes=((now.hour * 60 + now.minute) // interval_minutes) * interval_minutes
+        )
+        if is_today else None
+    )
     rows = []
     totals = {"opened_trades": 0, "closed_trades": 0, "net_profit_count": 0, "alt_profit_count": 0,
               "total_net": 0.0, "total_alt_net": 0.0}
-    day_start = dt.datetime.combine(day, dt.time.min)
-    last_hour = current_hour.hour if is_today else 23
-    for hour_number in range(last_hour + 1):
-        hour_start = day_start + dt.timedelta(hours=hour_number)
-        hour_end = hour_start + dt.timedelta(hours=1)
-        checkpoint = now if current_hour and hour_start == current_hour else hour_end
+    bucket_count = (
+        int((current_bucket - day_start).total_seconds() // (interval_minutes * 60)) + 1
+        if current_bucket else 1440 // interval_minutes
+    )
+    for bucket_number in range(bucket_count):
+        hour_start = day_start + dt.timedelta(minutes=bucket_number * interval_minutes)
+        hour_end = hour_start + dt.timedelta(minutes=interval_minutes)
+        checkpoint = now if current_bucket and hour_start == current_bucket else hour_end
         for side in ("BUY", "SELL"):
             side_trades = [trade for trade in trades if trade["side"] == side]
             opened = sum(hour_start <= trade["opened"] < checkpoint for trade in side_trades)
@@ -668,12 +837,12 @@ def build_hourly_family_report(date_str: str, product_type: str = "all",
                 trade["opened"] < checkpoint and (trade["closed"] is None or trade["closed"] >= checkpoint)
                 for trade in side_trades
             )
-            if not (opened or closed or open_at_end or (current_hour and hour_start == current_hour)):
+            if not (opened or closed or open_at_end or (current_bucket and hour_start == current_bucket)):
                 continue
             total_net = sum(trade["net"] for trade in closed)
             total_alt = sum(trade["alt"] for trade in closed)
             row = {
-                "exit_hour": hour_start.strftime("%H:00"), "side": side,
+                "exit_hour": hour_start.strftime("%H:%M"), "side": side,
                 "opened_trades": opened, "open_at_hour_end": open_at_end,
                 "closed_trades": len(closed),
                 "net_profit_count": sum(trade["net"] > 0 for trade in closed),
@@ -681,7 +850,7 @@ def build_hourly_family_report(date_str: str, product_type: str = "all",
                 "avg_net": total_net / len(closed) if closed else 0.0,
                 "avg_alt_net": total_alt / len(closed) if closed else 0.0,
                 "total_net": total_net, "total_alt_net": total_alt,
-                "is_incomplete_hour": bool(current_hour and hour_start == current_hour),
+                "is_incomplete_hour": bool(current_bucket and hour_start == current_bucket),
             }
             rows.append(row)
             totals["opened_trades"] += opened
@@ -695,7 +864,9 @@ def build_hourly_family_report(date_str: str, product_type: str = "all",
     return {
         "date": date_str, "product_type": product_type, "product": product,
         "family": family, "products": products, "rows": rows, "summary": totals,
-        "is_today": is_today, "current_hour": current_hour.strftime("%H:00") if current_hour else None,
+        "is_today": is_today,
+        "current_hour": current_bucket.strftime("%H:%M") if current_bucket else None,
+        "interval_minutes": interval_minutes,
         "generated_at": now.isoformat(timespec="seconds"),
     }
 

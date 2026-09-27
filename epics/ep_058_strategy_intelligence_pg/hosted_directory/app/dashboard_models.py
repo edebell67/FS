@@ -166,7 +166,15 @@ class HourlyFamilyReportResponse(_Doc):
     summary: dict[str, Any]
     is_today: bool
     current_hour: str | None
+    interval_minutes: int = Field(description="Bucket size in minutes: 10, 30, 60, or 180")
     generated_at: str
+
+
+class PointInTimeScenarioResponse(_Doc):
+    date: str
+    at_time: str = Field(description="The requested cutoff, echoed back")
+    scenario: str = Field(description="Resolved scenario key (metric-aware ids include _net/_alt)")
+    models: list[ModelCurve] = Field(description="The cohort selected using only evidence up to at_time, with full-day curves so later performance can be assessed")
 
 
 class ScenariosResponse(_Doc):
