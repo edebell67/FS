@@ -177,6 +177,26 @@ class PointInTimeScenarioResponse(_Doc):
     models: list[ModelCurve] = Field(description="The cohort selected using only evidence up to at_time, with full-day curves so later performance can be assessed")
 
 
+class HourCohortModel(_Doc):
+    rank: int
+    model: str
+    strategy: str
+    trades: int
+    win_rate: float
+    net: float = Field(description="Value under the requested return_type (net or alt)")
+
+
+class HourCohort(_Doc):
+    at_time: str = Field(description="HH:00, a completed clock-hour cutoff")
+    models: list[HourCohortModel]
+
+
+class PointInTimeScenarioHoursResponse(_Doc):
+    date: str
+    scenario: str
+    hours: list[HourCohort]
+
+
 class ScenariosResponse(_Doc):
     catalogue: list[dict[str, Any]] = Field(description="Static scenario cards: id, name, sub (description), badge")
     tp_sl_scenarios: list[dict[str, Any]]

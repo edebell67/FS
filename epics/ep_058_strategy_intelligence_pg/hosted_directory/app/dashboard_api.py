@@ -1,6 +1,7 @@
 # epics/ep_058_strategy_intelligence_pg/hosted_directory/app/dashboard_api.py — Top10 dashboard endpoints.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-09-27 · Adds GET /api/point_in_time_scenario_hours (cohort at every completed clock-hour, for the page's hourly-cohort history list).
 # v1.3.0 · 2026-09-27 · Adds GET /api/point_in_time_scenario (as-of replay selection) and interval_minutes on hourly_family_report, matching ep_057's point-in-time / hourly-column-panel additions.
 # v1.2.0 · 2026-09-27 · Typed OpenAPI responses, parameter docs/enums, GET /api/coverage; fixes portfolio_from_similar (groups are nested, keyed by dimension).
 # v1.1.0 · 2026-09-26 · Adds an endpoint for every function that was client-side only on the page: scenarios, scenario_candidates,
@@ -354,6 +355,18 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
         return await _run(build)
 
     # --- named portfolios (localStorage on the page; server-side here) -----------------------
+    @app.get("/api/point_in_time_scenario_hours", response_model=None, responses=_ok(m.PointInTimeScenarioHoursResponse), summary="Scenario cohort at every completed clock-hour",
+             description="Batch form of /api/point_in_time_scenario: the selected cohort re-computed at each completed clock-hour cutoff (00:00, 01:00, ...) through the day, each with rank/model/strategy/trades/win_rate/net only (no curves - call point_in_time_scenario or model_trades for detail on one hour/model).")
+    async def point_in_time_scenario_hours(date: str | None = Query(None, description=DATE_DOC),
+                                           scenario: str = Query("top_net", description="Scenario id, as in EngineRequest.scenario"),
+                                           return_type: str = Query("NET", pattern="^(NET|ALT)$"),
+                                           product_type: str = Query("all", **PT_DOC), product: str = Query("all", description="Product code"),
+                                           strategy_family: str = Query("all", **FAM_DOC), limit: int = Query(10, **LIMIT_DOC),
+                                           min_win_rate: float = Query(0.0, description="Percent 0-100")):
+        return await _run(q.build_point_in_time_scenario_hours, _date(date), scenario, return_type,
+                          q.normalize_product_type(product_type), q.normalize_product(product),
+                          q.normalize_strategy_family(strategy_family), q.normalize_model_limit(limit), min_win_rate)
+
     @app.get("/api/portfolios")
     async def portfolios_list(owner: str = "default"):
         return await _run(store.list, owner)
@@ -440,6 +453,7 @@ CATALOGUE = {
         "POST /api/portfolio_merge": "{name, sources[]} -> de-duplicated merge",
         "POST /api/portfolio_from_similar": "{name?, date, model, dimension: family|window|tp|sl} -> portfolio from a comparison group",
         "GET /api/coverage": "available dates, snapshot dates, products, latest snapshot",
+        "GET /api/point_in_time_scenario_hours": "date, scenario, filters -> the cohort re-selected at every completed clock-hour, {at_time, models:[{rank,model,strategy,trades,win_rate,net}]} - no curves",
         "GET /api/point_in_time_scenario": "date, at=HH:MM, scenario, return_type, filters -> the scenario cohort as it would have been selected as-of that time, with full-day curves",
     },
     "engine_request_fields": list(EngineRequest.model_fields),

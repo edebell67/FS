@@ -411,6 +411,144 @@ def build_point_in_time_scenario(date_str: str, at_time: str, scenario: str = "t
     return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": models}
 
 
+def build_point_in_time_scenario_hours(date_str: str, scenario: str = "top_net",
+                                       return_type: str = "NET", product_type: str = "all",
+                                       product: str = "all", strategy_family_filter: str = "all",
+                                       limit: int = 10, min_win_rate: float = 0.0) -> dict:
+    """Return the selected strategy cohort at every completed clock-hour cutoff.
+
+    The universe, snapshots, and closed-trade evidence are read once, then each
+    hourly cohort is ranked using only data available by that cutoff.
+    """
+    product_type = normalize_product_type(product_type)
+    product = normalize_product(product)
+    strategy_family_filter = normalize_strategy_family(strategy_family_filter)
+    limit = normalize_model_limit(limit)
+    return_type = str(return_type or "NET").upper()
+    if return_type not in {"NET", "ALT"}:
+        raise ValueError("return_type must be NET or ALT")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", str(scenario)):
+        raise ValueError("scenario contains unsupported characters")
+    if not 0 <= float(min_win_rate) <= 100:
+        raise ValueError("min_win_rate must be between 0 and 100")
+
+    metric = "alt" if return_type == "ALT" else "net"
+    scenario_key = scenario
+    if scenario == "family_leaders" or scenario.startswith("top5_") or scenario.startswith("top3_tp"):
+        scenario_key = f"{scenario}_{metric}"
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT TRIM(model), MAX(LOWER(TRIM(product))), MAX(TRIM(strategy_name)),
+                   MAX(target_profit), MAX(LOWER(TRIM(product_type)))
+            FROM product_forex
+            WHERE product IS NOT NULL
+              AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+              AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+            GROUP BY TRIM(model)
+        """, (product_type, product_type, product, product))
+        metadata = {row[0]: {"product": row[1], "strategy": row[2] or "",
+                             "target_profit": _f(row[3]), "product_type": row[4]}
+                    for row in cur.fetchall()}
+        if not metadata:
+            return {"date": date_str, "scenario": scenario_key, "hours": []}
+
+        cur.execute("""
+            SELECT model, snapshot_timestamp, cum_net, cum_buy_net, cum_sell_net,
+                   cum_alt_net, cum_buy_alt_net, cum_sell_alt_net,
+                   open_trade_count, closed_trade_count
+            FROM tbl_dna_model_summary_snapshots_5min
+            WHERE snapshot_timestamp >= %s::date
+              AND snapshot_timestamp < %s::date + INTERVAL '1 day'
+              AND model = ANY(%s)
+            ORDER BY snapshot_timestamp, model
+        """, (date_str, date_str, list(metadata)))
+        snapshot_rows = cur.fetchall()
+        cur.execute("""
+            SELECT model, last_update, net_return, alt_net_return
+            FROM combined_trades_closed
+            WHERE created >= %s::date AND created < %s::date + INTERVAL '1 day'
+              AND last_update >= %s::date AND last_update < %s::date + INTERVAL '1 day'
+              AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+              AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+            ORDER BY last_update, model
+        """, (date_str, date_str, date_str, date_str,
+              product_type, product_type, product, product))
+        trade_rows = cur.fetchall()
+
+    def naive(value):
+        return value.replace(tzinfo=None) if getattr(value, "tzinfo", None) else value
+
+    snapshot_rows = [(model, naive(ts), _f(net), _f(buy), _f(sell), _f(alt),
+                      _f(alt_buy), _f(alt_sell), int(opened or 0), int(closed or 0))
+                     for model, ts, net, buy, sell, alt, alt_buy, alt_sell, opened, closed
+                     in snapshot_rows if model in metadata]
+    trade_rows = [(model, naive(ts), _f(net), _f(alt))
+                  for model, ts, net, alt in trade_rows if model in metadata]
+    if not snapshot_rows:
+        return {"date": date_str, "scenario": scenario_key, "hours": []}
+
+    day = dt.date.fromisoformat(date_str)
+    first_snapshot_time = snapshot_rows[0][1]
+    first_hour = first_snapshot_time.hour + int(bool(first_snapshot_time.minute or first_snapshot_time.second or first_snapshot_time.microsecond))
+    last_hour = snapshot_rows[-1][1].hour
+    snap_index = trade_index = 0
+    latest: dict[str, tuple] = {}
+    histories: dict[str, list[dict]] = {}
+    closed: dict[str, list[tuple[float, float]]] = {}
+    hourly = []
+    for hour in range(first_hour, last_hour + 1):
+        cutoff = dt.datetime.combine(day, dt.time(hour=hour))
+        while snap_index < len(snapshot_rows) and snapshot_rows[snap_index][1] <= cutoff:
+            row = snapshot_rows[snap_index]
+            model, ts, net, buy, sell, alt, alt_buy, alt_sell, opened, trades = row
+            latest[model] = row
+            histories.setdefault(model, []).append({"time": ts.strftime("%H:%M"), "net": net,
+                "buy": buy, "sell": sell, "alt_net": alt, "alt_buy": alt_buy,
+                "alt_sell": alt_sell, "open": opened, "trades": trades})
+            snap_index += 1
+        while trade_index < len(trade_rows) and trade_rows[trade_index][1] <= cutoff:
+            model, _, net, alt = trade_rows[trade_index]
+            closed.setdefault(model, []).append((net, alt))
+            trade_index += 1
+
+        stats = []
+        for model, row in latest.items():
+            info = metadata[model]
+            events = closed.get(model, [])
+            trades = len(events) or row[9]
+            wins = sum(1 for net, _ in events if net > 0)
+            losses = sum(1 for net, _ in events if net <= 0)
+            alt_wins = sum(1 for _, alt in events if alt > 0)
+            win_rate = round(wins / trades * 100, 1) if trades else 0.0
+            alt_win_rate = round(alt_wins / trades * 100, 1) if trades else 0.0
+            stats.append({"model": model, **info, "net": row[2], "alt": row[5],
+                "trades": trades, "wins": wins, "losses": losses, "win_rate": win_rate,
+                "alt_wins": alt_wins, "alt_win_rate": alt_win_rate})
+        family_stats = list(stats)
+        if strategy_family_filter != "all":
+            stats = [item for item in stats if strategy_family(item["strategy"]) == strategy_family_filter]
+        eligible_ids = {item["model"] for item in stats}
+        snaps = {model: points for model, points in histories.items() if model in eligible_ids}
+        snapshots_by_time: dict[str, list[tuple[float, str]]] = {}
+        for model, points in snaps.items():
+            for point in points:
+                snapshots_by_time.setdefault(point["time"], []).append((point["net"], model))
+        touched_rank_one_ids: set[str] = set()
+        for ranked in snapshots_by_time.values():
+            if ranked:
+                best = max(value for value, _ in ranked)
+                touched_rank_one_ids.update(model for value, model in ranked if value == best)
+        selected = _scenario_ids(stats, snaps, limit, touched_rank_one_ids, family_stats).get(scenario_key, [])
+        stats_by_id = {item["model"]: item for item in family_stats}
+        selected = [model for model in selected if stats_by_id[model]["win_rate"] >= float(min_win_rate)]
+        cohort = [{"rank": rank, "model": model, "product": stats_by_id[model]["product"],
+                   "strategy": stats_by_id[model]["strategy"], "trades": stats_by_id[model]["trades"],
+                   "win_rate": stats_by_id[model]["win_rate"], "net": stats_by_id[model]["net"]}
+                  for rank, model in enumerate(selected, 1)]
+        hourly.append({"at_time": f"{hour:02d}:00", "models": cohort})
+    return {"date": date_str, "scenario": scenario_key, "hours": hourly}
+
+
 PRODUCT_TYPES = {"all", "forex", "crypto"}
 STRATEGY_FAMILIES = {"all", "breakout", "breakout_r", "breakout_rev", "breakout_r_rev"}
 
