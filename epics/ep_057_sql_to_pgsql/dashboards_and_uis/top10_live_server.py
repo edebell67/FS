@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/top10_live_server.py — Live equity-curve API and static dashboard server.
 #
 # VERSION HISTORY
+# v1.8.0 · 2026-09-25 · Adds live hourly exit reporting by product type, product, family, and side.
 # v1.7.0 · 2026-09-24 · Adds the filterable single-strategy portfolio catalogue.
 # v1.6.0 · 2026-09-24 · Adds same-product strategy comparisons by family, window, TP, or SL.
 # v1.5.0 · 2026-09-23 · _connect() honours DATABASE_URL (Render); PG* variables remain the local default.
@@ -610,12 +611,158 @@ def build_model_trades(model: str, date_from: str, date_to: str, product_type: s
     }
 
 
+def build_hourly_family_report(date_str: str, product_type: str = "all",
+                               product: str = "all", family: str = "all",
+                               interval_minutes: int = 60) -> dict:
+    """Return uncached time-bucketed entries, exits, and point-in-time open exposure."""
+    product_type = normalize_product_type(product_type)
+    product = normalize_product(product)
+    family = normalize_strategy_family(family)
+    if interval_minutes not in (10, 30, 60, 180):
+        raise ValueError("interval_minutes must be 10, 30, 60, or 180")
+    day = dt.date.fromisoformat(date_str)
+    family_pattern = {
+        "all": r"^(breakout(_r_rev|_rev|_r)?_[0-9]+|dna3_crypto)_tp[0-9]+_sl[0-9]+$",
+        "breakout": r"^breakout_[0-9]+_tp[0-9]+_sl[0-9]+$",
+        "breakout_r": r"^breakout_r_[0-9]+_tp[0-9]+_sl[0-9]+$",
+        "breakout_rev": r"^breakout_rev_[0-9]+_tp[0-9]+_sl[0-9]+$",
+        "breakout_r_rev": r"^breakout_r_rev_[0-9]+_tp[0-9]+_sl[0-9]+$",
+    }[family]
+    scope_sql = """
+      AND (%s = 'all' OR LOWER(BTRIM(t.product_type)) = %s)
+      AND (%s = 'all' OR LOWER(BTRIM(t.product)) = %s)
+      AND LOWER(
+            CASE
+              WHEN BTRIM(t.strategy_name) ~* '^dna3_crypto_tp[0-9]+_sl[0-9]+$'
+                THEN regexp_replace(BTRIM(t.strategy_name), '^dna3_crypto_', 'breakout_3_', 'i')
+              ELSE COALESCE(BTRIM(t.strategy_name), '')
+            END
+          ) ~ %s
+    """
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(
+            """SELECT DISTINCT LOWER(BTRIM(product))
+                 FROM product_forex
+                WHERE product IS NOT NULL
+                  AND (%s = 'all' OR LOWER(BTRIM(product_type)) = %s)
+                ORDER BY 1""",
+            (product_type, product_type),
+        )
+        products = [row[0] for row in cur.fetchall()]
+        params = (product_type, product_type, product, product, family_pattern)
+        cur.execute(
+            """SELECT t.created, t.last_update, UPPER(BTRIM(t.signal)),
+                      t.net_return, t.alt_net_return
+                 FROM combined_trades_closed t
+                WHERE t.created < %s::date + INTERVAL '1 day'
+                  AND t.last_update >= %s::date
+            """ + scope_sql,
+            (date_str, date_str, *params),
+        )
+        trades = [
+            {"opened": opened, "closed": closed, "side": side,
+             "net": _f(net), "alt": _f(alt)}
+            for opened, closed, side, net, alt in cur.fetchall()
+        ]
+        cur.execute(
+            """SELECT t.created, NULL, UPPER(BTRIM(t.signal)),
+                      t.net_return, t.alt_net_return
+                 FROM combined_trades_open t
+                WHERE t.created < %s::date + INTERVAL '1 day'
+            """ + scope_sql,
+            (date_str, *params),
+        )
+        trades.extend(
+            {"opened": opened, "closed": None, "side": side,
+             "net": _f(net), "alt": _f(alt)}
+            for opened, _, side, net, alt in cur.fetchall()
+        )
+
+    now = dt.datetime.now()
+    is_today = day == now.date()
+    day_start = dt.datetime.combine(day, dt.time.min)
+    current_bucket = (
+        day_start + dt.timedelta(
+            minutes=((now.hour * 60 + now.minute) // interval_minutes) * interval_minutes
+        )
+        if is_today else None
+    )
+    rows = []
+    totals = {"opened_trades": 0, "closed_trades": 0, "net_profit_count": 0, "alt_profit_count": 0,
+              "total_net": 0.0, "total_alt_net": 0.0}
+    bucket_count = (
+        int((current_bucket - day_start).total_seconds() // (interval_minutes * 60)) + 1
+        if current_bucket else 1440 // interval_minutes
+    )
+    for bucket_number in range(bucket_count):
+        hour_start = day_start + dt.timedelta(minutes=bucket_number * interval_minutes)
+        hour_end = hour_start + dt.timedelta(minutes=interval_minutes)
+        checkpoint = now if current_bucket and hour_start == current_bucket else hour_end
+        for side in ("BUY", "SELL"):
+            side_trades = [trade for trade in trades if trade["side"] == side]
+            opened = sum(hour_start <= trade["opened"] < checkpoint for trade in side_trades)
+            closed = [trade for trade in side_trades if trade["closed"] and hour_start <= trade["closed"] < checkpoint]
+            open_at_end = sum(
+                trade["opened"] < checkpoint and (trade["closed"] is None or trade["closed"] >= checkpoint)
+                for trade in side_trades
+            )
+            if not (opened or closed or open_at_end or (current_bucket and hour_start == current_bucket)):
+                continue
+            total_net = sum(trade["net"] for trade in closed)
+            total_alt = sum(trade["alt"] for trade in closed)
+            row = {
+                "exit_hour": hour_start.strftime("%H:%M"), "side": side,
+                "opened_trades": opened, "open_at_hour_end": open_at_end,
+                "closed_trades": len(closed),
+                "net_profit_count": sum(trade["net"] > 0 for trade in closed),
+                "alt_profit_count": sum(trade["alt"] > 0 for trade in closed),
+                "avg_net": total_net / len(closed) if closed else 0.0,
+                "avg_alt_net": total_alt / len(closed) if closed else 0.0,
+                "total_net": total_net, "total_alt_net": total_alt,
+                "is_incomplete_hour": bool(current_bucket and hour_start == current_bucket),
+            }
+            rows.append(row)
+            totals["opened_trades"] += opened
+            for key in ("closed_trades", "net_profit_count", "alt_profit_count"):
+                totals[key] += row[key]
+            totals["total_net"] += total_net
+            totals["total_alt_net"] += total_alt
+    live_open = {side: sum(trade["side"] == side and trade["closed"] is None for trade in trades)
+                 for side in ("BUY", "SELL")}
+    totals.update({"open_buy": live_open["BUY"], "open_sell": live_open["SELL"]})
+    return {
+        "date": date_str, "product_type": product_type, "product": product,
+        "family": family, "products": products, "rows": rows, "summary": totals,
+        "is_today": is_today,
+        "current_hour": current_bucket.strftime("%H:%M") if current_bucket else None,
+        "interval_minutes": interval_minutes,
+        "generated_at": now.isoformat(timespec="seconds"),
+    }
+
+
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self) -> None:
         url = urlparse(self.path)
+        if url.path == "/api/hourly_family_report":
+            q = parse_qs(url.query)
+            report_date = q.get("date", [dt.date.today().isoformat()])[0]
+            if not DATE_RE.fullmatch(report_date):
+                return self._json(400, {"error": "date must be YYYY-MM-DD"})
+            try:
+                return self._json(200, build_hourly_family_report(
+                    report_date,
+                    q.get("product_type", ["all"])[0],
+                    q.get("product", ["all"])[0],
+                    q.get("family", ["all"])[0],
+                    int(q.get("interval_minutes", ["60"])[0]),
+                ))
+            except (ValueError, TypeError) as exc:
+                return self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
         if url.path == "/api/model_trades":
             q = parse_qs(url.query)
             model = q.get("model", [""])[0]
