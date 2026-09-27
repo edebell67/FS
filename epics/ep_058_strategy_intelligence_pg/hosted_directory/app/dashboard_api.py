@@ -1,6 +1,8 @@
 # epics/ep_058_strategy_intelligence_pg/hosted_directory/app/dashboard_api.py — Top10 dashboard endpoints.
 #
 # VERSION HISTORY
+# v1.6.0 · 2026-09-27 · Fixes _dataset_key double-suffixing an already-resolved scenario id (top5_*/top3_tp*/family_leaders with _net or _alt already appended), which made those scenarios 400 whenever an id from GET /api/scenarios' available_ids was passed straight to /api/ribbon or /api/scenario_candidates.
+# v1.5.0 · 2026-09-27 · Fixes GET /api/scenarios: available_ids no longer wrongly includes the products/tp_sl_scenarios metadata lists.
 # v1.4.0 · 2026-09-27 · Adds GET /api/point_in_time_scenario_hours (cohort at every completed clock-hour, for the page's hourly-cohort history list).
 # v1.3.0 · 2026-09-27 · Adds GET /api/point_in_time_scenario (as-of replay selection) and interval_minutes on hourly_family_report, matching ep_057's point-in-time / hourly-column-panel additions.
 # v1.2.0 · 2026-09-27 · Typed OpenAPI responses, parameter docs/enums, GET /api/coverage; fixes portfolio_from_similar (groups are nested, keyed by dimension).
@@ -164,6 +166,11 @@ class PortfolioStore:
 
 
 def _dataset_key(scenario: str, return_type: str) -> str:
+    """live_day's dict keys for family_leaders/top5_*/top3_tp*_sl* already end in _net/_alt (e.g. from
+    GET /api/scenarios' available_ids); only append the suffix for the bare, unsuffixed form of those ids -
+    appending again on an already-resolved id (e.g. "top5_breakout_alt") produced a nonexistent key."""
+    if scenario.endswith("_net") or scenario.endswith("_alt"):
+        return scenario
     metric_aware = scenario == "family_leaders" or scenario.startswith("top5_") or scenario.startswith("top3_tp")
     return f"{scenario}_{'alt' if str(return_type).upper() == 'ALT' else 'net'}" if metric_aware else scenario
 
@@ -285,7 +292,8 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
             live = q.build_live_day(_date(date), q.normalize_product_type(product_type), q.normalize_product(product),
                                     q.normalize_strategy_family(strategy_family), q.normalize_model_limit(limit))
             return {"catalogue": SCENARIO_CATALOGUE, "tp_sl_scenarios": live["tp_sl_scenarios"],
-                    "available_ids": sorted(k for k, v in live.items() if isinstance(v, list)),
+                    "available_ids": sorted(k for k, v in live.items()
+                                             if isinstance(v, list) and k not in ("products", "tp_sl_scenarios")),
                     "products": live["products"], "metric_aware": ["family_leaders", "top5_*", "top3_tp*"]}
         return await _run(build)
 
