@@ -227,6 +227,23 @@ def install(app: FastAPI, source_database_url: str | None) -> None:
         return await _run(q.build_model_trades, model, _date(date_from), _date(date_to or date_from),
                           q.normalize_product_type(product_type), q.normalize_product(product))
 
+    @app.get("/api/model_trades_summary")
+    async def model_trades_summary(model: str = Query(..., min_length=1), date_from: str = Query(..., alias="from"),
+                                   date_to: str | None = Query(None, alias="to"), product_type: str = "all",
+                                   product: str = "all"):
+        """Trades-modal summary chips: trades, open, win rate, closed net, closed alt net (computed client-side on the page)."""
+        def build():
+            data = q.build_model_trades(model, _date(date_from), _date(date_to or date_from),
+                                        q.normalize_product_type(product_type), q.normalize_product(product))
+            trades = data["trades"]
+            closed = [t for t in trades if t.get("status") == "closed"]
+            wins = sum(1 for t in closed if (t.get("net_return") or 0) > 0)
+            return {"model": model, "from": data["from"], "to": data["to"], "trades": len(trades),
+                    "open": len(trades) - len(closed), "win_rate": round(wins / len(closed) * 100, 1) if closed else None,
+                    "closed_net": sum(t.get("net_return") or 0 for t in closed),
+                    "closed_alt_net": sum(t.get("alt_net_return") or 0 for t in closed)}
+        return await _run(build)
+
     # --- functions that were client-side only on the page ------------------------------------
     @app.get("/api/scenarios")
     async def scenarios(date: str | None = None, product_type: str = "all", product: str = "all",
@@ -351,6 +368,7 @@ CATALOGUE = {
         "GET /api/strategy_catalog": "date -> active models with parsed family/window/tp/sl",
         "GET /api/model_trades": "model, from, to, product_type, product -> closed+open trades with summary",
         "GET /api/hourly_family_report": "date, product_type, product, family -> hourly exits by family and side",
+        "GET /api/model_trades_summary": "same params as model_trades -> trades/open/win_rate/closed_net/closed_alt_net chips",
         "GET /api/scenarios": "scenario catalogue + the day's dynamic ids (top5_*, top3_tp*_sl*)",
         "POST /api/scenario_candidates": "EngineRequest -> getScenarioCandidates/getEligibleModels (win-rate, product, family filters)",
         "POST /api/ribbon": "EngineRequest -> summed/per-model delta net/buy/sell baseline->head",
