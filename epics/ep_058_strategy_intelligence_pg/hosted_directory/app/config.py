@@ -1,0 +1,69 @@
+"""Environment-only application settings.
+
+Version history:
+- 1.4.0 (2026-09-26): EP058 vendored copy of EP051 1.3.0 config (LOCAL_SOURCE/SOURCE_DATABASE_URL/RUNTIME_DIR/EP051_ENV_FILE), keeping EP049 arena/regime settings. Not auto-synced.
+- 1.3.0 (2026-09-21): LOCAL_SOURCE (sqlserver|postgres) + SOURCE_DATABASE_URL pick the local trade source; RUNTIME_DIR separates cache files per instance; EP051_ENV_FILE selects the env file (e.g. .env.pg for the PostgreSQL instance on 8094).
+- 1.2.0 (2026-08-25): Keeps the last verified local snapshot available across weekly refresh gaps.
+- 1.1.0 (2026-08-24): Adds trusted identity boundary and intelligence feature settings.
+- 1.0.0 (2026-08-23): Local SQL Server and hosted PostgreSQL modes.
+"""
+import os
+from functools import lru_cache
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    data_backend: str = "sqlserver"
+    # Local (data_backend="sqlserver") trade source: SQL Server by default, or PostgreSQL tradedb.
+    local_source: str = "sqlserver"
+    source_database_url: str | None = None
+    runtime_dir: str = "runtime"
+    database_url: str | None = None
+    maintenance_database_url: str | None = None
+    db_server: str | None = None
+    db_name: str = "tradedb"
+    db_user: str | None = None
+    db_pass: str | None = None
+    sync_token: str | None = None
+    allowed_origins: str = "http://127.0.0.1:8080,http://localhost:8080"
+    # Intelligence features (interpret/search/cohorts/user/*) live on EP049's
+    # own service since the 2026-09 architectural split - the frontend fetches
+    # cross-origin to it, which the CSP connect-src directive must explicitly
+    # allow or the browser blocks it regardless of CORS. Empty by default so
+    # a deployment that hasn't configured EP049 yet gets the old same-origin-
+    # only CSP rather than a silently-wrong allowance.
+    intelligence_api_origin: str = ""
+    max_snapshot_items: int = 2000
+    max_snapshot_bytes: int = 50_000_000
+    snapshot_max_age_hours: int = 48
+    intelligence_user_token: str | None = None
+    intelligence_min_regime_samples: int = 5
+    intelligence_market_feature_max_age_seconds: int = 129_600
+    intelligence_market_feature_weekend_max_age_seconds: int = 345_600
+    intelligence_max_query_results: int = 100
+    intelligence_catalog_limit: int = 500
+    local_intelligence_cache_path: str = "runtime/intelligence_profiles.json"
+    local_market_feature_cache_path: str = "runtime/market_features.json"
+    # Local evidence is immutable and carries its own as-of timestamp. Keep the
+    # last fully validated snapshot readable between scheduled source refreshes
+    # instead of making the directory unavailable after a single day.
+    local_intelligence_cache_max_age_seconds: int = 604_800
+    allow_synchronous_local_fallback: bool = False
+    intelligence_profile_cache_seconds: int = 60
+    regime_price_capture_root: str | None = r"X:\EDS\TradeApps\breakout\fs\json\live\forex"
+    regime_shape_index_dir: str = "runtime/regime_shape_index"
+    regime_shape_min_periods: int = 6
+    ep052_intelligence_token: str | None = None
+    arena_deliveries_path: str = "runtime/arena_intelligence_deliveries.sqlite"
+    arena_anomaly_threshold: int = 30
+    arena_anomaly_window_seconds: int = 300
+
+    @property
+    def cors_origins(self) -> list[str]:
+        return [x.strip() for x in self.allowed_origins.split(",") if x.strip()]
+
+
+@lru_cache
+def get_settings() -> Settings:
+    return Settings(_env_file=os.getenv("EP051_ENV_FILE", ".env"))

@@ -1,0 +1,82 @@
+[
+ {
+  "id": "top_net",
+  "icon": "\u2605",
+  "name": "Top 10 Net Return",
+  "sub": "Rank by total cumulative $ net return across all closed positions.",
+  "badge": "High Profit",
+  "filter_key": "top_net"
+ },
+ {
+  "id": "top_alt_net",
+  "icon": "\u26a1",
+  "name": "Top 10 Alt Net Return",
+  "sub": "Rank by counterfactual Alt Net Return ($ alt_net_return) across simulated positions.",
+  "badge": "Alt Net Leaders",
+  "filter_key": "top_alt_net"
+ },
+ {
+  "id": "top_win",
+  "icon": "\ud83c\udfaf",
+  "name": "Top 10 Win Rate",
+  "sub": "Rank by highest percentage of winning trades (min 50% win rate).",
+  "badge": "High Accuracy",
+  "filter_key": "top_win"
+ },
+ {
+  "id": "strongest_three",
+  "icon": "\u26a1",
+  "name": "Find the Strongest Three",
+  "sub": "Top 3 highest momentum performers over recent trade windows.",
+  "badge": "Top 3 Momentum",
+  "filter_key": "strongest_three"
+ },
+ {
+  "id": "strengthening_cluster",
+  "icon": "\ud83e\uddec",
+  "name": "Explore a Strengthening Cluster",
+  "sub": "Top performers within the active breakout_R cluster (Range-bound filters).",
+  "badge": "Cluster: Range Breakout",
+  "filter_key": "strengthening_cluster"
+ },
+ {
+  "id": "relative_value",
+  "icon": "\ud83d\udc8e",
+  "name": "Find Relative Value in a Cluster",
+  "sub": "High win-rate strategies (\u226585%) offering controlled stop loss risk.",
+  "badge": "Value & Defense",
+  "filter_key": "relative_value"
+ },
+ {
+  "id": "market_move",
+  "icon": "\ud83c\udf0a",
+  "name": "Match the Current Market Move",
+  "sub": "Aggressive trend-following breakouts with TP \u2265 10 pips.",
+  "badge": "Trend Follower",
+  "filter_key": "market_move"
+ },
+ {
+  "id": "opposite_cluster",
+  "icon": "\u2696\ufe0f",
+  "name": "Look at an Opposite Cluster",
+  "sub": "High-frequency micro-scalpers (TP 3\u20135 pips) for orthogonal risk comparison.",
+  "badge": "Opposite: Scalpers",
+  "filter_key": "opposite_cluster"
+ },
+ {
+  "id": "weakening_selection",
+  "icon": "\ud83d\udd0d",
+  "name": "Review a Weakening Selection",
+  "sub": "High-volume strategies experiencing drawdown to examine reversal points.",
+  "badge": "Stress Analysis",
+  "filter_key": "weakening_selection"
+ },
+ {
+  "id": "repair_negative",
+  "icon": "\ud83d\udee0\ufe0f",
+  "name": "Repair a Negative Selection",
+  "sub": "Elite replacement candidates with 100% win rate and positive net yield.",
+  "badge": "Repair Candidates",
+  "filter_key": "repair_negative"
+ }
+]
