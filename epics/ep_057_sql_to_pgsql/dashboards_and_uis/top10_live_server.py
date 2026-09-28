@@ -1,6 +1,11 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/top10_live_server.py — Live equity-curve API and static dashboard server.
 #
 # VERSION HISTORY
+# v1.9.1 · 2026-09-28 · Fixes LAST_SNAP_SIDE_SQL (added in v1.9.0): a DISTINCT ON + model=ANY(huge-array) shape
+#   forced a full parallel seq scan (~12.6s for 2258 forex models, most of a >60s live_day timeout on its own).
+#   Rewritten as a per-model LATERAL index lookup (~0.7s for the same 2258 models).
+# v1.9.0 · 2026-09-28 · Adds top_buy_sell_net scenario: ranks each model by its own dominant side
+#   (GREATEST(cum_buy_net, cum_sell_net) at its last 5-min snapshot of the day), not total net_return.
 # v1.8.0 · 2026-09-25 · Adds live hourly exit reporting by product type, product, family, and side.
 # v1.7.0 · 2026-09-24 · Adds the filterable single-strategy portfolio catalogue.
 # v1.6.0 · 2026-09-24 · Adds same-product strategy comparisons by family, window, TP, or SL.
@@ -63,19 +68,25 @@ STATS_SQL = """
            ROUND((COUNT(*) FILTER (WHERE c.net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS win_rate,
            COUNT(*) FILTER (WHERE c.alt_net_return > 0) AS alt_wins,
            ROUND((COUNT(*) FILTER (WHERE c.alt_net_return > 0)::numeric / COUNT(*)::numeric * 100), 1) AS alt_win_rate,
-           MAX(TRIM(c.product)) AS product,
-           COALESCE(MAX(TRIM(pf.strategy_name)), MAX(TRIM(c.strategy_name))) AS strategy,
+           MAX(c.product) AS product,
+           COALESCE(MAX(pf.strategy_name), MAX(c.strategy_name)) AS strategy,
            MAX(pf.target_profit) AS target_profit,
-           MAX(LOWER(TRIM(c.product_type))) AS product_type
+           MAX(c.product_type) AS product_type
     FROM combined_trades_closed c
     CROSS JOIN bounds b
-    LEFT JOIN product_forex pf ON TRIM(pf.model) = c.model
+    LEFT JOIN product_forex pf ON pf.model = c.model
     WHERE c.created >= b.day
       AND c.created < b.day + INTERVAL '1 day'
-      AND (%s = 'all' OR LOWER(TRIM(c.product_type)) = %s)
-      AND (%s = 'all' OR LOWER(TRIM(c.product)) = %s)
+      AND (%s = 'all' OR c.product_type = %s)
+      AND (%s = 'all' OR c.product = %s)
     GROUP BY c.model;
 """
+
+# Portfolio loads already know the model ids. Pushing that restriction into SQL
+# avoids aggregating every model for the day and then discarding almost all rows.
+PORTFOLIO_STATS_SQL = STATS_SQL.replace(
+    "GROUP BY c.model", "AND c.model = ANY(%s)\n    GROUP BY c.model"
+)
 
 PRODUCTS_SQL = """
     SELECT DISTINCT LOWER(TRIM(product)) AS product
@@ -116,6 +127,29 @@ TOUCHED_RANK_ONE_SQL = """
     SELECT DISTINCT model
     FROM ranked
     WHERE position = 1;
+"""
+
+# Each model's own dominant side for the day: whichever of cum_buy_net/cum_sell_net is larger
+# at its last 5-min snapshot. Drives the top_buy_sell_net scenario (rank by GREATEST(buy, sell),
+# not total net_return) - a model with a strong buy leg and a weak/negative sell leg still ranks
+# on its buy leg's strength, and vice versa.
+# A DISTINCT ON (model) ... WHERE model = ANY(%s) shape here forces Postgres into a full parallel
+# seq scan + sort over the whole day's snapshot rows once the model list gets into the thousands
+# (measured ~12.6s for 2258 forex models - the majority of a >60s live_day timeout on its own).
+# This LATERAL form does one indexed lookup per model instead (ix_dna_summary_5min_model_ts),
+# ~0.7s for the same 2258 models - a ~17x reduction.
+LAST_SNAP_SIDE_SQL = """
+    SELECT m.model, snap.cum_buy_net, snap.cum_sell_net
+    FROM unnest(%s::text[]) AS m(model)
+    CROSS JOIN LATERAL (
+        SELECT cum_buy_net, cum_sell_net
+        FROM tbl_dna_model_summary_snapshots_5min s
+        WHERE s.model = m.model
+          AND s.snapshot_timestamp >= %s::date
+          AND s.snapshot_timestamp < %s::date + INTERVAL '1 day'
+        ORDER BY s.snapshot_timestamp DESC
+        LIMIT 1
+    ) snap;
 """
 
 
@@ -216,7 +250,8 @@ def _top_tp_sl(stats: list[dict], tp: int, sl: int, metric: str, limit: int = 3)
 
 def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 10,
                   touched_rank_one_ids: set[str] | None = None,
-                  family_stats: list[dict] | None = None) -> dict[str, list[str]]:
+                  family_stats: list[dict] | None = None,
+                  buy_sell_rank: list[str] | None = None) -> dict[str, list[str]]:
     """Scenario model lists for one trading date.
 
     Rules reproduce the stored 14-18 Sep lists: each scenario filters the day's pool
@@ -277,7 +312,308 @@ def _scenario_ids(stats: list[dict], snaps: dict[str, list[dict]], limit: int = 
         lists[f"{scenario_id}_alt"] = _top_tp_sl(stats, tp, sl, "alt")
     lists["NET_RETURN"] = lists["top_net"]
     lists["WIN_RATE"] = lists["top_win"]
-    return {k: [s["model"] for s in v] for k, v in lists.items()}
+    result = {k: [s["model"] for s in v] for k, v in lists.items()}
+    # Ranked by each model's own dominant side (GREATEST(cum_buy_net, cum_sell_net)), not total
+    # net_return - see LAST_SNAP_SIDE_SQL. Empty when the caller doesn't have day-snapshot access
+    # (e.g. the point-in-time replay path), so it simply won't appear in that payload.
+    result["top_buy_sell_net"] = (buy_sell_rank or [])[:limit]
+    return result
+
+
+def build_point_in_time_scenario(date_str: str, at_time: str, scenario: str = "top_net",
+                                 return_type: str = "NET", product_type: str = "all",
+                                 product: str = "all", strategy_family_filter: str = "all",
+                                 limit: int = 10, min_win_rate: float = 0.0) -> dict:
+    """Re-evaluate a scenario from the full strategy universe at one snapshot time.
+
+    Selection uses only the latest 5-minute snapshot and closed-trade evidence
+    available on or before the requested time. Returned curves extend through
+    the rest of the day so the captured cohort can be assessed afterwards.
+    """
+    product_type = normalize_product_type(product_type)
+    product = normalize_product(product)
+    strategy_family_filter = normalize_strategy_family(strategy_family_filter)
+    limit = normalize_model_limit(limit)
+    return_type = str(return_type or "NET").upper()
+    if return_type not in {"NET", "ALT"}:
+        raise ValueError("return_type must be NET or ALT")
+    if not re.fullmatch(r"\d{2}:\d{2}", str(at_time)):
+        raise ValueError("at_time must be HH:MM")
+    hour, minute = map(int, at_time.split(":"))
+    if hour > 23 or minute > 59:
+        raise ValueError("at_time must be a valid HH:MM time")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", str(scenario)):
+        raise ValueError("scenario contains unsupported characters")
+    if not 0 <= float(min_win_rate) <= 100:
+        raise ValueError("min_win_rate must be between 0 and 100")
+
+    metric = "alt" if return_type == "ALT" else "net"
+    scenario_key = scenario
+    if scenario == "family_leaders" or scenario.startswith("top5_") or scenario.startswith("top3_tp"):
+        scenario_key = f"{scenario}_{metric}"
+
+    point_sql = """
+        WITH bounds AS (
+          SELECT %s::date AS day,
+                 (%s::date + %s::time) AS cutoff
+        ), model_meta AS (
+          SELECT TRIM(model) AS model, MAX(LOWER(TRIM(product))) AS product,
+                 MAX(TRIM(strategy_name)) AS strategy, MAX(target_profit) AS target_profit,
+                 MAX(LOWER(TRIM(product_type))) AS product_type
+          FROM product_forex
+          WHERE product IS NOT NULL
+            AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+            AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+          GROUP BY TRIM(model)
+        ), asof_snap AS (
+          SELECT DISTINCT ON (s.model) s.model, s.snapshot_timestamp,
+                 s.cum_net, s.cum_alt_net, s.open_trade_count, s.closed_trade_count
+          FROM tbl_dna_model_summary_snapshots_5min s CROSS JOIN bounds b
+          WHERE s.snapshot_timestamp >= b.day AND s.snapshot_timestamp <= b.cutoff
+          ORDER BY s.model, s.snapshot_timestamp DESC
+        ), asof_trades AS (
+          SELECT c.model, COUNT(*) AS trades,
+                 COUNT(*) FILTER (WHERE c.net_return > 0) AS wins,
+                 COUNT(*) FILTER (WHERE c.net_return <= 0) AS losses,
+                 COUNT(*) FILTER (WHERE c.alt_net_return > 0) AS alt_wins
+          FROM combined_trades_closed c CROSS JOIN bounds b
+          WHERE c.created >= b.day AND c.created < b.day + INTERVAL '1 day'
+            AND c.last_update <= b.cutoff
+            AND (%s = 'all' OR LOWER(TRIM(c.product_type)) = %s)
+            AND (%s = 'all' OR LOWER(TRIM(c.product)) = %s)
+          GROUP BY c.model
+        )
+        SELECT m.model, m.product, m.strategy, m.target_profit, m.product_type,
+               p.snapshot_timestamp, p.cum_net, p.cum_alt_net,
+               p.open_trade_count, p.closed_trade_count,
+               COALESCE(t.trades, 0), COALESCE(t.wins, 0), COALESCE(t.losses, 0),
+               COALESCE(t.alt_wins, 0)
+        FROM model_meta m JOIN asof_snap p ON p.model = m.model
+        LEFT JOIN asof_trades t ON t.model = m.model
+    """
+    history_sql = """
+        WITH bounds AS (SELECT %s::date AS day, (%s::date + %s::time) AS cutoff)
+        SELECT s.model, to_char(s.snapshot_timestamp, 'HH24:MI'),
+               ROUND(s.cum_net::numeric, 1), ROUND(s.cum_buy_net::numeric, 1),
+               ROUND(s.cum_sell_net::numeric, 1), ROUND(s.cum_alt_net::numeric, 1),
+               ROUND(s.cum_buy_alt_net::numeric, 1), ROUND(s.cum_sell_alt_net::numeric, 1),
+               s.open_trade_count, s.closed_trade_count
+        FROM tbl_dna_model_summary_snapshots_5min s CROSS JOIN bounds b
+        WHERE s.snapshot_timestamp >= b.day AND s.snapshot_timestamp <= b.cutoff
+          AND s.model = ANY(%s)
+        ORDER BY s.model, s.snapshot_timestamp
+    """
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(point_sql, (date_str, date_str, at_time,
+                                product_type, product_type, product, product,
+                                product_type, product_type, product, product))
+        rows = cur.fetchall()
+        if not rows:
+            return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": []}
+
+        stats = []
+        for row in rows:
+            model, prod, strategy, target_profit, ptype, snap_ts, net, alt, opened, snap_trades, trades, wins, losses, alt_wins = row
+            trades = int(trades or snap_trades or 0)
+            wins, losses, alt_wins = int(wins or 0), int(losses or 0), int(alt_wins or 0)
+            stats.append({
+                "model": model, "product": prod, "strategy": strategy or "",
+                "target_profit": _f(target_profit), "product_type": ptype,
+                "net": _f(net), "alt": _f(alt), "trades": trades,
+                "wins": wins, "losses": losses,
+                "win_rate": round(wins / trades * 100, 1) if trades else 0.0,
+                "alt_wins": alt_wins,
+                "alt_win_rate": round(alt_wins / trades * 100, 1) if trades else 0.0,
+            })
+        family_stats = list(stats)
+        if strategy_family_filter != "all":
+            stats = [s for s in stats if strategy_family(s["strategy"]) == strategy_family_filter]
+        eligible_ids = {s["model"] for s in stats}
+        cur.execute(history_sql, (date_str, date_str, at_time, sorted(eligible_ids)))
+        snaps: dict[str, list[dict]] = {}
+        for m, tm, net, buy, sell, alt_net, alt_buy, alt_sell, op, tr in cur.fetchall():
+            if m not in eligible_ids:
+                continue
+            snaps.setdefault(m, []).append({"time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
+                "alt_net": _f(alt_net), "alt_buy": _f(alt_buy), "alt_sell": _f(alt_sell),
+                "open": int(op or 0), "trades": int(tr or 0)})
+
+        touched_rank_one_ids: set[str] = set()
+        snapshots_by_time: dict[str, list[tuple[float, str]]] = {}
+        for model, values in snaps.items():
+            for point in values:
+                snapshots_by_time.setdefault(point["time"], []).append((point["net"], model))
+        for ranked in snapshots_by_time.values():
+            if ranked:
+                best = max(value for value, _ in ranked)
+                touched_rank_one_ids.update(model for value, model in ranked if value == best)
+        selected = _scenario_ids(stats, snaps, limit, touched_rank_one_ids, family_stats).get(scenario_key, [])
+        stats_by_id = {s["model"]: s for s in family_stats}
+        selected = [m for m in selected if stats_by_id[m]["win_rate"] >= float(min_win_rate)]
+        if not selected:
+            return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": []}
+        cur.execute(SNAP_SQL, (date_str, selected))
+        full_series: dict[str, list[dict]] = {}
+        for m, tm, net, buy, sell, alt_net, alt_buy, alt_sell, op, tr in cur.fetchall():
+            full_series.setdefault(m, []).append({"time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
+                "alt_net": _f(alt_net), "alt_buy": _f(alt_buy), "alt_sell": _f(alt_sell),
+                "open": int(op or 0), "trades": int(tr or 0)})
+
+    models = []
+    for rank, model in enumerate(selected, 1):
+        stat = stats_by_id[model]
+        series = full_series.get(model, [])
+        head = series[-1] if series else {}
+        models.append({
+            "rank": rank, "model": model, "product": stat["product"],
+            "product_type": stat["product_type"], "strategy": stat["strategy"],
+            "color": COLORS[(rank - 1) % len(COLORS)], "trades": stat["trades"],
+            "wins": stat["wins"], "losses": stat["losses"], "win_rate": stat["win_rate"],
+            "alt_wins": stat["alt_wins"], "alt_win_rate": stat["alt_win_rate"],
+            "cum_net": head.get("net", 0.0), "buy_net": head.get("buy", 0.0),
+            "sell_net": head.get("sell", 0.0), "cum_alt_net": head.get("alt_net", 0.0),
+            "buy_alt_net": head.get("alt_buy", 0.0), "sell_alt_net": head.get("alt_sell", 0.0),
+            "series": series,
+        })
+    return {"date": date_str, "at_time": at_time, "scenario": scenario_key, "models": models}
+
+
+def build_point_in_time_scenario_hours(date_str: str, scenario: str = "top_net",
+                                       return_type: str = "NET", product_type: str = "all",
+                                       product: str = "all", strategy_family_filter: str = "all",
+                                       limit: int = 10, min_win_rate: float = 0.0) -> dict:
+    """Return the selected strategy cohort at every completed clock-hour cutoff.
+
+    The universe, snapshots, and closed-trade evidence are read once, then each
+    hourly cohort is ranked using only data available by that cutoff.
+    """
+    product_type = normalize_product_type(product_type)
+    product = normalize_product(product)
+    strategy_family_filter = normalize_strategy_family(strategy_family_filter)
+    limit = normalize_model_limit(limit)
+    return_type = str(return_type or "NET").upper()
+    if return_type not in {"NET", "ALT"}:
+        raise ValueError("return_type must be NET or ALT")
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", str(scenario)):
+        raise ValueError("scenario contains unsupported characters")
+    if not 0 <= float(min_win_rate) <= 100:
+        raise ValueError("min_win_rate must be between 0 and 100")
+
+    metric = "alt" if return_type == "ALT" else "net"
+    scenario_key = scenario
+    if scenario == "family_leaders" or scenario.startswith("top5_") or scenario.startswith("top3_tp"):
+        scenario_key = f"{scenario}_{metric}"
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute("""
+            SELECT TRIM(model), MAX(LOWER(TRIM(product))), MAX(TRIM(strategy_name)),
+                   MAX(target_profit), MAX(LOWER(TRIM(product_type)))
+            FROM product_forex
+            WHERE product IS NOT NULL
+              AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+              AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+            GROUP BY TRIM(model)
+        """, (product_type, product_type, product, product))
+        metadata = {row[0]: {"product": row[1], "strategy": row[2] or "",
+                             "target_profit": _f(row[3]), "product_type": row[4]}
+                    for row in cur.fetchall()}
+        if not metadata:
+            return {"date": date_str, "scenario": scenario_key, "hours": []}
+
+        cur.execute("""
+            SELECT model, snapshot_timestamp, cum_net, cum_buy_net, cum_sell_net,
+                   cum_alt_net, cum_buy_alt_net, cum_sell_alt_net,
+                   open_trade_count, closed_trade_count
+            FROM tbl_dna_model_summary_snapshots_5min
+            WHERE snapshot_timestamp >= %s::date
+              AND snapshot_timestamp < %s::date + INTERVAL '1 day'
+              AND model = ANY(%s)
+            ORDER BY snapshot_timestamp, model
+        """, (date_str, date_str, list(metadata)))
+        snapshot_rows = cur.fetchall()
+        cur.execute("""
+            SELECT model, last_update, net_return, alt_net_return
+            FROM combined_trades_closed
+            WHERE created >= %s::date AND created < %s::date + INTERVAL '1 day'
+              AND last_update >= %s::date AND last_update < %s::date + INTERVAL '1 day'
+              AND (%s = 'all' OR LOWER(TRIM(product_type)) = %s)
+              AND (%s = 'all' OR LOWER(TRIM(product)) = %s)
+            ORDER BY last_update, model
+        """, (date_str, date_str, date_str, date_str,
+              product_type, product_type, product, product))
+        trade_rows = cur.fetchall()
+
+    def naive(value):
+        return value.replace(tzinfo=None) if getattr(value, "tzinfo", None) else value
+
+    snapshot_rows = [(model, naive(ts), _f(net), _f(buy), _f(sell), _f(alt),
+                      _f(alt_buy), _f(alt_sell), int(opened or 0), int(closed or 0))
+                     for model, ts, net, buy, sell, alt, alt_buy, alt_sell, opened, closed
+                     in snapshot_rows if model in metadata]
+    trade_rows = [(model, naive(ts), _f(net), _f(alt))
+                  for model, ts, net, alt in trade_rows if model in metadata]
+    if not snapshot_rows:
+        return {"date": date_str, "scenario": scenario_key, "hours": []}
+
+    day = dt.date.fromisoformat(date_str)
+    first_snapshot_time = snapshot_rows[0][1]
+    first_hour = first_snapshot_time.hour + int(bool(first_snapshot_time.minute or first_snapshot_time.second or first_snapshot_time.microsecond))
+    last_hour = snapshot_rows[-1][1].hour
+    snap_index = trade_index = 0
+    latest: dict[str, tuple] = {}
+    histories: dict[str, list[dict]] = {}
+    closed: dict[str, list[tuple[float, float]]] = {}
+    hourly = []
+    for hour in range(first_hour, last_hour + 1):
+        cutoff = dt.datetime.combine(day, dt.time(hour=hour))
+        while snap_index < len(snapshot_rows) and snapshot_rows[snap_index][1] <= cutoff:
+            row = snapshot_rows[snap_index]
+            model, ts, net, buy, sell, alt, alt_buy, alt_sell, opened, trades = row
+            latest[model] = row
+            histories.setdefault(model, []).append({"time": ts.strftime("%H:%M"), "net": net,
+                "buy": buy, "sell": sell, "alt_net": alt, "alt_buy": alt_buy,
+                "alt_sell": alt_sell, "open": opened, "trades": trades})
+            snap_index += 1
+        while trade_index < len(trade_rows) and trade_rows[trade_index][1] <= cutoff:
+            model, _, net, alt = trade_rows[trade_index]
+            closed.setdefault(model, []).append((net, alt))
+            trade_index += 1
+
+        stats = []
+        for model, row in latest.items():
+            info = metadata[model]
+            events = closed.get(model, [])
+            trades = len(events) or row[9]
+            wins = sum(1 for net, _ in events if net > 0)
+            losses = sum(1 for net, _ in events if net <= 0)
+            alt_wins = sum(1 for _, alt in events if alt > 0)
+            win_rate = round(wins / trades * 100, 1) if trades else 0.0
+            alt_win_rate = round(alt_wins / trades * 100, 1) if trades else 0.0
+            stats.append({"model": model, **info, "net": row[2], "alt": row[5],
+                "trades": trades, "wins": wins, "losses": losses, "win_rate": win_rate,
+                "alt_wins": alt_wins, "alt_win_rate": alt_win_rate})
+        family_stats = list(stats)
+        if strategy_family_filter != "all":
+            stats = [item for item in stats if strategy_family(item["strategy"]) == strategy_family_filter]
+        eligible_ids = {item["model"] for item in stats}
+        snaps = {model: points for model, points in histories.items() if model in eligible_ids}
+        snapshots_by_time: dict[str, list[tuple[float, str]]] = {}
+        for model, points in snaps.items():
+            for point in points:
+                snapshots_by_time.setdefault(point["time"], []).append((point["net"], model))
+        touched_rank_one_ids: set[str] = set()
+        for ranked in snapshots_by_time.values():
+            if ranked:
+                best = max(value for value, _ in ranked)
+                touched_rank_one_ids.update(model for value, model in ranked if value == best)
+        selected = _scenario_ids(stats, snaps, limit, touched_rank_one_ids, family_stats).get(scenario_key, [])
+        stats_by_id = {item["model"]: item for item in family_stats}
+        selected = [model for model in selected if stats_by_id[model]["win_rate"] >= float(min_win_rate)]
+        cohort = [{"rank": rank, "model": model, "product": stats_by_id[model]["product"],
+                   "strategy": stats_by_id[model]["strategy"], "trades": stats_by_id[model]["trades"],
+                   "win_rate": stats_by_id[model]["win_rate"], "net": stats_by_id[model]["net"]}
+                  for rank, model in enumerate(selected, 1)]
+        hourly.append({"at_time": f"{hour:02d}:00", "models": cohort})
+    return {"date": date_str, "scenario": scenario_key, "hours": hourly}
 
 
 PRODUCT_TYPES = {"all", "forex", "crypto"}
@@ -322,16 +658,29 @@ def normalize_model_limit(value: int | str | None) -> int:
 
 _LIVE_DAY_CACHE: dict[tuple, tuple[float, dict]] = {}
 LIVE_DAY_CACHE_SECONDS = 30
+HISTORICAL_CACHE_SECONDS = 6 * 60 * 60
+_PORTFOLIO_DAY_CACHE: dict[tuple, tuple[float, dict]] = {}
 
 
-def build_live_day(date_str: str, product_type: str = "all", product: str = "all", strategy_family_filter: str = "all", limit: int = 10) -> dict:
+def _cache_seconds(date_str: str) -> int:
+    """Keep immutable historical results hot while refreshing today's data."""
+    return LIVE_DAY_CACHE_SECONDS if date_str == dt.date.today().isoformat() else HISTORICAL_CACHE_SECONDS
+
+
+def build_live_day(date_str: str, product_type: str = "all", product: str = "all",
+                   strategy_family_filter: str = "all", limit: int = 10,
+                   requested_scenario: str | None = None) -> dict:
     product_type = normalize_product_type(product_type)
     product = normalize_product(product)
     strategy_family_filter = normalize_strategy_family(strategy_family_filter)
     limit = normalize_model_limit(limit)
-    cache_key = (date_str, product_type, product, strategy_family_filter, limit)
+    requested_scenario = str(requested_scenario or "").strip() or None
+    if requested_scenario and not re.fullmatch(r"[A-Za-z0-9_.-]+", requested_scenario):
+        raise ValueError("scenario contains unsupported characters")
+    cache_key = (date_str, product_type, product, strategy_family_filter, limit, requested_scenario)
     cached = _LIVE_DAY_CACHE.get(cache_key)
-    if cached and time.monotonic() - cached[0] < LIVE_DAY_CACHE_SECONDS:
+    cache_seconds = _cache_seconds(date_str)
+    if cached and time.monotonic() - cached[0] < cache_seconds:
         return cached[1]
     with _connect() as conn, conn.cursor() as cur:
         cur.execute(PRODUCTS_SQL, (product_type, product_type))
@@ -347,26 +696,60 @@ def build_live_day(date_str: str, product_type: str = "all", product: str = "all
         if strategy_family_filter != "all":
             stats = [s for s in stats if strategy_family(s["strategy"]) == strategy_family_filter]
 
-        # Snapshots for every model that can appear in a scenario (top net / alt / win-rate pools)
-        candidates = {s["model"] for s in sorted(stats, key=lambda s: -s["net"])[:limit]}
-        candidates |= {s["model"] for s in sorted(stats, key=lambda s: -s["alt"])[:limit]}
-        candidates |= {s["model"] for s in sorted((s for s in stats if s["win_rate"] >= 50),
-                                                  key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:limit]}
-        candidates |= {s["model"] for s in _family_leaders(stats, "net")}
-        candidates |= {s["model"] for s in _family_leaders(stats, "alt")}
-        for family in ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"):
-            candidates |= {s["model"] for s in _top_family(product_stats, family, "net")}
-            candidates |= {s["model"] for s in _top_family(product_stats, family, "alt")}
         tp_sl_pairs = sorted({pair for stat in stats if (pair := strategy_tp_sl(stat.get("strategy")))})
-        for tp, sl in tp_sl_pairs:
-            candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "net")}
-            candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "alt")}
         touched_rank_one_ids: set[str] = set()
         all_model_ids = [s["model"] for s in stats]
-        if all_model_ids:
+        if all_model_ids and (requested_scenario is None or requested_scenario == "touched_rank_one"):
             cur.execute(TOUCHED_RANK_ONE_SQL, (date_str, all_model_ids))
             touched_rank_one_ids = {row[0] for row in cur.fetchall()}
+        buy_sell_rank: list[str] = []
+        if all_model_ids and (requested_scenario is None or requested_scenario == "top_buy_sell_net"):
+            cur.execute(LAST_SNAP_SIDE_SQL, (all_model_ids, date_str, date_str))
+            best_side = sorted(
+                ((row[0], max(_f(row[1]), _f(row[2]))) for row in cur.fetchall()),
+                key=lambda r: -r[1],
+            )
+            buy_sell_rank = [model for model, _ in best_side]
+
+        if requested_scenario:
+            selection_snaps: dict[str, list[dict]] = {}
+            if requested_scenario == "weakening_selection":
+                seed_ids = {s["model"] for s in sorted(
+                    stats, key=lambda s: (-s["net"], -s["win_rate"], s["model"])
+                )[:limit]}
+                seed_ids |= {s["model"] for s in sorted((s for s in stats if s["win_rate"] >= 50),
+                                                        key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:limit]}
+                if seed_ids:
+                    cur.execute(SNAP_SQL, (date_str, sorted(seed_ids)))
+                    for m, tm, net, buy, sell, a_net, a_buy, a_sell, op, tr in cur.fetchall():
+                        selection_snaps.setdefault(m, []).append({
+                            "time": tm, "net": _f(net), "buy": _f(buy), "sell": _f(sell),
+                            "alt_net": _f(a_net), "alt_buy": _f(a_buy), "alt_sell": _f(a_sell),
+                            "open": int(op or 0), "trades": int(tr or 0),
+                        })
+            scenario_lists = _scenario_ids(
+                stats, selection_snaps, limit, touched_rank_one_ids, product_stats, buy_sell_rank
+            )
+            requested_ids = scenario_lists.get(requested_scenario, scenario_lists["top_net"])
+            scenario_lists = {requested_scenario: requested_ids}
+            candidates = set(requested_ids)
+        else:
+            # Full payload is retained for compatibility with offline/export callers.
+            candidates = {s["model"] for s in sorted(stats, key=lambda s: -s["net"])[:limit]}
+            candidates |= {s["model"] for s in sorted(stats, key=lambda s: -s["alt"])[:limit]}
+            candidates |= {s["model"] for s in sorted((s for s in stats if s["win_rate"] >= 50),
+                                                      key=lambda s: (-s["win_rate"], -s["net"], s["model"]))[:limit]}
+            candidates |= {s["model"] for s in _family_leaders(stats, "net")}
+            candidates |= {s["model"] for s in _family_leaders(stats, "alt")}
+            for family in ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev"):
+                candidates |= {s["model"] for s in _top_family(product_stats, family, "net")}
+                candidates |= {s["model"] for s in _top_family(product_stats, family, "alt")}
+            for tp, sl in tp_sl_pairs:
+                candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "net")}
+                candidates |= {s["model"] for s in _top_tp_sl(stats, tp, sl, "alt")}
             candidates |= touched_rank_one_ids
+            candidates |= set(buy_sell_rank[:limit])
+            scenario_lists = None
         snaps: dict[str, list[dict]] = {}
         if candidates:
             cur.execute(SNAP_SQL, (date_str, sorted(candidates)))
@@ -410,11 +793,13 @@ def build_live_day(date_str: str, product_type: str = "all", product: str = "all
                    for tp, sl in tp_sl_pairs
                ],
                "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
-    for sc, ids in _scenario_ids(stats, snaps, limit, touched_rank_one_ids, product_stats).items():
+    if scenario_lists is None:
+        scenario_lists = _scenario_ids(stats, snaps, limit, touched_rank_one_ids, product_stats, buy_sell_rank)
+    for sc, ids in scenario_lists.items():
         payload[sc] = model_list(ids)
     _LIVE_DAY_CACHE[cache_key] = (time.monotonic(), payload)
     if len(_LIVE_DAY_CACHE) > 64:
-        cutoff = time.monotonic() - LIVE_DAY_CACHE_SECONDS
+        cutoff = time.monotonic() - HISTORICAL_CACHE_SECONDS
         for key, value in list(_LIVE_DAY_CACHE.items()):
             if value[0] < cutoff:
                 _LIVE_DAY_CACHE.pop(key, None)
@@ -428,8 +813,14 @@ def build_portfolio_day(date_str: str, model_ids: list[str]) -> dict:
     if any(not re.fullmatch(r"[A-Za-z0-9._-]+", model) for model in clean_ids):
         raise ValueError("portfolio contains an invalid model id")
 
+    cache_key = (date_str, tuple(clean_ids))
+    cached = _PORTFOLIO_DAY_CACHE.get(cache_key)
+    cache_seconds = _cache_seconds(date_str)
+    if cached and time.monotonic() - cached[0] < cache_seconds:
+        return cached[1]
+
     with _connect() as conn, conn.cursor() as cur:
-        cur.execute(STATS_SQL, (date_str, "all", "all", "all", "all"))
+        cur.execute(PORTFOLIO_STATS_SQL, (date_str, "all", "all", "all", "all", clean_ids))
         stats = [dict(zip(STAT_COLS, row)) for row in cur.fetchall()]
         stats = [s for s in stats if s["model"] in clean_ids]
         for stat in stats:
@@ -467,8 +858,32 @@ def build_portfolio_day(date_str: str, model_ids: list[str]) -> dict:
             "cum_alt_net": last["alt_net"], "buy_alt_net": last["alt_buy"],
             "sell_alt_net": last["alt_sell"], "series": series,
         })
-    return {"date": date_str, "requested_models": clean_ids, "models": models,
-            "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
+    payload = {"date": date_str, "requested_models": clean_ids, "models": models,
+               "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
+    _PORTFOLIO_DAY_CACHE[cache_key] = (time.monotonic(), payload)
+    if len(_PORTFOLIO_DAY_CACHE) > 128:
+        cutoff = time.monotonic() - HISTORICAL_CACHE_SECONDS
+        for key, value in list(_PORTFOLIO_DAY_CACHE.items()):
+            if value[0] < cutoff:
+                _PORTFOLIO_DAY_CACHE.pop(key, None)
+    return payload
+
+
+def select_live_day_scenario(payload: dict, scenario: str | None) -> dict:
+    """Return one scenario from a full day payload to minimize JSON serialization and transfer."""
+    scenario = str(scenario or "").strip()
+    if not scenario:
+        return payload
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+", scenario):
+        raise ValueError("scenario contains unsupported characters")
+    selected = {
+        key: payload[key]
+        for key in ("date", "product_type", "product", "strategy_family", "limit",
+                    "products", "tp_sl_scenarios", "generated_at")
+        if key in payload
+    }
+    selected[scenario] = payload.get(scenario, payload.get("top_net", []))
+    return selected
 
 
 def build_similar_strategies(date_str: str, model_id: str) -> dict:
@@ -776,6 +1191,38 @@ class Handler(SimpleHTTPRequestHandler):
                 return self._json(200, build_model_trades(model, d_from, d_to, product_type, product))
             except Exception as exc:
                 return self._json(500, {"error": str(exc)})
+        if url.path == "/api/point_in_time_scenario":
+            q = parse_qs(url.query)
+            pit_date = q.get("date", [dt.date.today().isoformat()])[0]
+            if not DATE_RE.fullmatch(pit_date):
+                return self._json(400, {"error": "date must be YYYY-MM-DD"})
+            try:
+                return self._json(200, build_point_in_time_scenario(
+                    pit_date, q.get("at", [""])[0], q.get("scenario", ["top_net"])[0],
+                    q.get("return_type", ["NET"])[0], q.get("product_type", ["all"])[0],
+                    q.get("product", ["all"])[0], q.get("strategy_family", ["all"])[0],
+                    q.get("limit", ["10"])[0], q.get("min_win_rate", ["0"])[0],
+                ))
+            except (ValueError, TypeError) as exc:
+                return self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
+        if url.path == "/api/point_in_time_scenario_hours":
+            q = parse_qs(url.query)
+            hours_date = q.get("date", [dt.date.today().isoformat()])[0]
+            if not DATE_RE.fullmatch(hours_date):
+                return self._json(400, {"error": "date must be YYYY-MM-DD"})
+            try:
+                return self._json(200, build_point_in_time_scenario_hours(
+                    hours_date, q.get("scenario", ["top_net"])[0],
+                    q.get("return_type", ["NET"])[0], q.get("product_type", ["all"])[0],
+                    q.get("product", ["all"])[0], q.get("strategy_family", ["all"])[0],
+                    q.get("limit", ["10"])[0], q.get("min_win_rate", ["0"])[0],
+                ))
+            except (ValueError, TypeError) as exc:
+                return self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
         if url.path != "/api/live_day":
             if url.path == "/api/strategy_catalog":
                 catalog_date = parse_qs(url.query).get("date", [dt.date.today().isoformat()])[0]
@@ -806,15 +1253,20 @@ class Handler(SimpleHTTPRequestHandler):
                 except Exception as exc:
                     return self._json(500, {"error": str(exc)})
             return super().do_GET()
-        date_str = parse_qs(url.query).get("date", [dt.date.today().isoformat()])[0]
-        product_type = parse_qs(url.query).get("product_type", ["all"])[0]
-        product = parse_qs(url.query).get("product", ["all"])[0]
-        strategy_family_filter = parse_qs(url.query).get("strategy_family", ["all"])[0]
-        limit = parse_qs(url.query).get("limit", ["10"])[0]
+        q = parse_qs(url.query)
+        date_str = q.get("date", [dt.date.today().isoformat()])[0]
+        product_type = q.get("product_type", ["all"])[0]
+        product = q.get("product", ["all"])[0]
+        strategy_family_filter = q.get("strategy_family", ["all"])[0]
+        limit = q.get("limit", ["10"])[0]
+        scenario = q.get("scenario", [None])[0]
         if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", date_str):
             return self._json(400, {"error": "date must be YYYY-MM-DD"})
         try:
-            self._json(200, build_live_day(date_str, product_type, product, strategy_family_filter, limit))
+            payload = build_live_day(
+                date_str, product_type, product, strategy_family_filter, limit, scenario
+            )
+            self._json(200, select_live_day_scenario(payload, scenario))
         except Exception as exc:  # surface DB errors to the page status badge
             self._json(500, {"error": str(exc)})
 
