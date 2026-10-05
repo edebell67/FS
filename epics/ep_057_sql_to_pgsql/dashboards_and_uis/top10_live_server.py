@@ -1,6 +1,10 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/top10_live_server.py — Live equity-curve API and static dashboard server.
 #
 # VERSION HISTORY
+# v1.10.3 · 2026-10-05 · trade_log product filter is an exact match; adds /api/trade_log_products for the dropdown.
+# v1.10.2 · 2026-10-05 · /api/trade_log accepts model, strategy, product (contains) and signal (buy|sell) filters.
+# v1.10.1 · 2026-10-05 · /trading_log.html is served from epics/ep_063_Trading_log/.
+# v1.10.0 · 2026-10-05 · Adds /api/trade_log (last 50 executions, open + closed, forex/crypto filter) for trading_log.html.
 # v1.9.1 · 2026-09-28 · Fixes LAST_SNAP_SIDE_SQL (added in v1.9.0): a DISTINCT ON + model=ANY(huge-array) shape
 #   forced a full parallel seq scan (~12.6s for 2258 forex models, most of a >60s live_day timeout on its own).
 #   Rewritten as a per-model LATERAL index lookup (~0.7s for the same 2258 models).
@@ -1155,6 +1159,68 @@ def build_hourly_family_report(date_str: str, product_type: str = "all",
     }
 
 
+TRADE_LOG_SQL = """
+    SELECT * FROM (
+    (SELECT 'open' AS status, TRIM(model) AS model, TRIM(strategy_name) AS strategy, TRIM(signal) AS side, trade_quantity AS qty,
+            UPPER(TRIM(product)) AS product, entry_price, TRIM(product_type) AS ptype, created,
+            NULL::timestamp AS closed_at, NULL::text AS close_type, NULL::numeric AS exit_price, NULL::numeric AS net
+     FROM combined_trades_open WHERE (%(t)s = 'all' OR TRIM(product_type) = %(t)s)
+       AND (%(m)s = '' OR model ILIKE '%%' || %(m)s || '%%') AND (%(s)s = '' OR strategy_name ILIKE '%%' || %(s)s || '%%')
+       AND (%(p)s = '' OR UPPER(TRIM(product)) = UPPER(%(p)s)) AND (%(g)s = '' OR TRIM(signal) = %(g)s)
+     ORDER BY created DESC LIMIT %(n)s)
+    UNION ALL
+    (SELECT 'closed', TRIM(model), TRIM(strategy_name), TRIM(signal), trade_quantity, UPPER(TRIM(product)),
+            entry_price, TRIM(product_type), created, last_update, TRIM(close_type), latest_price, net_return
+     FROM combined_trades_closed WHERE created >= CURRENT_DATE - 1 AND (%(t)s = 'all' OR TRIM(product_type) = %(t)s)
+       AND (%(m)s = '' OR model ILIKE '%%' || %(m)s || '%%') AND (%(s)s = '' OR strategy_name ILIKE '%%' || %(s)s || '%%')
+       AND (%(p)s = '' OR UPPER(TRIM(product)) = UPPER(%(p)s)) AND (%(g)s = '' OR TRIM(signal) = %(g)s)
+     ORDER BY last_update DESC LIMIT %(n)s)
+    ) x
+    ORDER BY CASE WHEN status = 'closed' THEN closed_at ELSE created END DESC LIMIT %(n)s;
+"""
+TRADE_LOG_COLS = ["status", "model", "strategy", "side", "quantity", "product", "entry_price", "product_type",
+                  "created", "closed_at", "close_type", "exit_price", "net_return"]
+
+
+_TRADE_LOG_CACHE: dict[tuple, tuple[float, dict]] = {}
+
+
+def build_trade_log(product_type: str = "all", limit: int = 50, model: str = "", strategy: str = "", product: str = "", signal: str = "") -> dict:
+    if product_type not in ("all", "forex", "crypto"):
+        raise ValueError("type must be all, forex or crypto")
+    limit = max(1, min(limit, 200))
+    signal = signal.strip().lower()
+    if signal not in ("", "buy", "sell"):
+        raise ValueError("signal must be buy or sell")
+    params = {"t": product_type, "n": limit, "m": model.strip()[:60], "s": strategy.strip()[:60], "p": product.strip()[:30], "g": signal}
+    key = (product_type, limit, params["m"], params["s"], params["p"], signal)
+    hit = _TRADE_LOG_CACHE.get(key)
+    if hit and time.monotonic() - hit[0] < 8:  # combined_trades_open is bloated (~3GB, seq scan ~4s); don't pile up polls
+        return hit[1]
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute(TRADE_LOG_SQL, params)
+        rows = []
+        for r in cur.fetchall():
+            row = dict(zip(TRADE_LOG_COLS, r))
+            for k in ("created", "closed_at"):
+                row[k] = row[k].strftime("%Y-%m-%d %H:%M:%S") if row[k] else None
+            for k in ("quantity", "entry_price", "exit_price", "net_return"):
+                row[k] = float(row[k]) if row[k] is not None else None
+            rows.append(row)
+    payload = {"type": product_type, "rows": rows, "generated_at": dt.datetime.now().isoformat(timespec="seconds")}
+    _TRADE_LOG_CACHE[key] = (time.monotonic(), payload)
+    return payload
+
+
+def build_trade_log_products(product_type: str = "all") -> dict:
+    if product_type not in ("all", "forex", "crypto"):
+        raise ValueError("type must be all, forex or crypto")
+    with _connect() as conn, conn.cursor() as cur:
+        cur.execute("SELECT DISTINCT UPPER(TRIM(product)) FROM product_forex WHERE %s = 'all' OR TRIM(product_type) = %s ORDER BY 1",
+                    (product_type, product_type))
+        return {"products": [r[0] for r in cur.fetchall() if r[0]]}
+
+
 DATE_RE = re.compile(r"\d{4}-\d{2}-\d{2}")
 
 
@@ -1174,6 +1240,31 @@ class Handler(SimpleHTTPRequestHandler):
                     q.get("family", ["all"])[0],
                     int(q.get("interval_minutes", ["60"])[0]),
                 ))
+            except (ValueError, TypeError) as exc:
+                return self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
+        if url.path == "/trading_log.html":
+            body = (HERE.parents[1] / "ep_063_Trading_log" / "trading_log.html").read_bytes()
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            return self.wfile.write(body)
+        if url.path == "/api/trade_log_products":
+            try:
+                return self._json(200, build_trade_log_products(parse_qs(url.query).get("type", ["all"])[0]))
+            except ValueError as exc:
+                return self._json(400, {"error": str(exc)})
+            except Exception as exc:
+                return self._json(500, {"error": str(exc)})
+        if url.path == "/api/trade_log":
+            q = parse_qs(url.query)
+            try:
+                return self._json(200, build_trade_log(
+                    q.get("type", ["all"])[0], int(q.get("limit", ["50"])[0]), q.get("model", [""])[0],
+                    q.get("strategy", [""])[0], q.get("product", [""])[0], q.get("signal", [""])[0]))
             except (ValueError, TypeError) as exc:
                 return self._json(400, {"error": str(exc)})
             except Exception as exc:
