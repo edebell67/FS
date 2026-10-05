@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Version 2.3.0 (2026-10-05): adds a Strategy curves link to the top bar. -->
+<!-- Version 1.3.0 (2026-10-05): remembers filters/sort/view/period across the detail drill-down; cards link with from=curves. Version 1.2.0 (2026-10-05): sorting by Alt net return plots cumulative alt_net_return (from the trade ledger). Version 1.1.1 (2026-10-05): Buy | Sell split ignores the Signal filter so it matches the detail page. Version 1.1.0 (2026-10-05): shows 100 charts per page (was 24). Version 1.0.0 (2026-10-05): Strategy curves - the directory as a grid of equity curves, Single or Buy/Sell split. -->
 <!-- Version 2.2.2 (2026-08-28): configurable minimum closed trades for evidence-ready count; default 5. -->
 <!-- Version 2.2.1 (2026-08-28): moves refresh preferences into a closed floating settings control, outside document flow. -->
 <!-- Version 2.2.0 (2026-08-28): selectable data-only auto refresh, retaining visible results during polling. -->
@@ -23,7 +23,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta name="api-base" content="" />
-    <title>DNA Strategy Directory</title>
+    <title>Strategy curves</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -122,39 +122,39 @@
       .refresh-settings:not([open]) .auto-refresh-control { display:none; }
       .refresh-settings select,.refresh-settings input { display:block; margin-top:8px; width:100%; min-height:44px; color:var(--ink); background:var(--surface); }
       @media(max-width:700px) { .refresh-settings { right:68px; bottom:12px; } }
+
+      .curve-grid { width:min(1180px,calc(100% - 56px)); margin:0 auto 48px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+      .curve-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 12px 10px; color:var(--ink); text-decoration:none; display:block; min-width:0; }
+      .curve-card:hover { border-color:var(--ink); }
+      .curve-cap { display:flex; justify-content:space-between; gap:8px; font:500 10px "DM Mono",monospace; color:var(--muted); margin-bottom:6px; }
+      .curve-cap b { color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .curve-svg { width:100%; height:auto; display:block; }
+      .curve-svg .zero { stroke:var(--line); stroke-dasharray:3 3; }
+      .curve-svg text { fill:var(--muted); font:9px "DM Mono",monospace; }
+      .curve-svg .l-single { stroke:#7bd400; fill:none; stroke-width:1.8; }
+      .curve-svg .a-single { fill:#7bd40024; stroke:none; }
+      .curve-svg .l-buy { stroke:#22c55e; fill:none; stroke-width:1.6; }
+      .curve-svg .l-sell { stroke:#e5484d; fill:none; stroke-width:1.6; }
+      .curve-empty { height:120px; display:flex; align-items:center; justify-content:center; color:var(--muted); font:10px "DM Mono",monospace; text-align:center; }
+      .curve-legend { display:flex; gap:12px; font:9px "DM Mono",monospace; color:var(--muted); margin-top:4px; }
+      .curve-legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; }
+      #more { display:block; margin:0 auto 56px; min-height:44px; padding:0 22px; }
+      @media(max-width:700px) { .curve-grid { width:calc(100% - 32px); grid-template-columns:1fr; } }
     </style>
     <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
   </head>
   <body>
     <main class="shell">
       <nav class="top">
-        <span class="brand">DNA / Strategy Directory</span>
-        <span class="nav-actions"
-          ><a href="/strategy-curves.html">Strategy curves</a
-          ><a href="/intelligence.html">Ask the evidence</a
-          ><a href="/search.html">Intelligence workspace</a
-          ><a href="/regimes.html">Market context</a
-          ><a href="/account.html">Your intelligence</a
-          ><span>Evidence before allocation</span></span
-        >
+        <span class="brand">DNA / Strategy Curves</span>
+        <span class="nav-actions"><a href="/">Strategy directory</a><a href="/strategy-curves.html">Strategy curves</a><span>Evidence before allocation</span></span>
       </nav>
       <section class="hero">
         <div>
-          <span class="id">LIVE DIRECTORY · CLOSED-TRADE EVIDENCE</span>
-          <h1>Find a strategy<br />that earns its place.</h1>
-          <p>
-            Compare canonical DNA models using net return after included costs.
-            Select an evidence window to recalculate every statistic from the
-            underlying closed trades.
-          </p>
+          <span class="id">CLOSED-TRADE EVIDENCE · EQUITY CURVES</span>
+          <h1>Every strategy,<br />as its equity curve.</h1>
+          <p>The directory as a wall of cumulative net-return curves. Switch every card between the single curve and the Buy | Sell split. Click a curve for its full trade ledger.</p>
         </div>
-        <div class="seal">LOCAL SQL FIRST<br />→<br />SAME API HOSTED</div>
-      </section>
-      <section class="directory-summary" id="directorySummary" aria-label="Directory summary" aria-live="polite" hidden>
-        <article><span>Strategies</span><strong id="summaryStrategies"></strong></article>
-        <article><span>Closed trades</span><strong id="summaryTrades"></strong></article>
-        <article><span>Profitable strategies</span><strong id="summaryProfitable"></strong></article>
-        <article><span>Evidence-ready</span><strong id="summaryReady"></strong></article>
       </section>
       <section class="period" aria-label="Evidence period">
         <div class="period-head">
@@ -179,6 +179,7 @@
           ><button id="applyPeriod">Apply selected period</button>
         </div>
       </section>
+      
       <section class="tools">
         <input id="search" placeholder="Search DNA_102001 or breakout_R_4_tp20_sl5" /><select id="productType" aria-label="Type">
           <option value="forex" selected>Forex</option>
@@ -192,288 +193,169 @@
         </select><select id="sort">
           <option value="strategy_id">Strategy ID</option>
           <option value="total_net_return" selected>Net return</option>
+          <option value="total_alt_net_return">Alt net return</option>
           <option value="win_rate">Win rate</option>
           <option value="profit_factor">Profit factor</option>
           <option value="total_trades">Evidence volume</option></select
         ><select id="direction">
           <option value="asc">Ascending</option>
           <option value="desc" selected>Descending</option></select
+        ><select id="curveMode" aria-label="Curve view"><option value="single" selected>Equity curve</option><option value="split">Buy | Sell split</option></select
         ><button id="load">Refresh evidence</button>
       </section>
       <div class="refresh-state" id="refreshState" role="status" aria-live="polite">
-        <div class="refresh-copy"><span id="status">Connecting to the directory API…</span><span id="progressValue">0%</span></div>
+        <div class="refresh-copy"><span id="status">Connecting to the directory API…</span><span id="progressValue"></span></div>
         <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
       </div>
-      <details class="refresh-settings" id="refreshSettings">
-      <summary aria-label="Refresh settings" title="Refresh settings"><span aria-hidden="true">⚙</span></summary>
-      <div class="auto-refresh-control"><label>Auto refresh
-        <select id="autoRefresh" aria-label="Auto refresh interval">
-          <option value="5">Every 5 seconds</option>
-          <option value="10" selected>Every 10 seconds</option>
-          <option value="30">Every 30 seconds</option>
-          <option value="60">Every 60 seconds</option>
-        </select>
-      </label>
-      <label style="display:block;margin-top:14px">Minimum closed trades
-        <input id="evidenceMinimum" type="number" min="1" max="1000000" step="1" value="5" aria-label="Minimum closed trades" />
-      </label>
-      <small>For the evidence-ready count only.</small></div>
-      </details>
-      <section class="family-panel" id="familyPanel" hidden aria-live="polite">
-        <button type="button" id="familyBack">← Back to directory</button>
-        <h3 id="familyTitle"></h3>
-        <table class="family-table">
-          <thead><tr><th>Model</th><th>Trades</th><th>Cum. net return</th><th>Cum. alt net return</th></tr></thead>
-          <tbody id="familyBody"></tbody>
-          <tfoot id="familyFoot"></tfoot>
-        </table>
-      </section>
-      <section class="grid" id="grid" aria-live="polite"></section>
+      <section class="curve-grid" id="grid" aria-live="polite"></section>
+      <button id="more" type="button" hidden>Load more strategies</button>
     </main>
     <script src="/assets/button-feedback.js?v=1.0.0"></script>
     <script src="/assets/api-client.js?v=1.5.0"></script>
     <script src="/assets/period-filter.js?v=1.1.0"></script>
     <script>
-      // Mirrors dbo.config's ep052_dna_matrix_hot_streak_threshold - the
-      // minimum closed-trades-today count (with a 100% win rate) a base DNA
-      // model needs before usp_ep052_manage_dna_matrix will ever create its
-      // matrix children. Update this if that config value changes.
-      const DNA_MATRIX_HOT_STREAK_MIN_TRADES = 4;
-      const fmt = (n) =>
-        n == null
-          ? "—"
-          : Number(n).toLocaleString(undefined, { maximumFractionDigits: 2 });
-      const esc = (value) =>
-        String(value ?? "").replace(
-          /[&<>"']/g,
-          (character) =>
-            ({
-              "&": "&amp;",
-              "<": "&lt;",
-              ">": "&gt;",
-              '"': "&quot;",
-              "'": "&#39;",
-            })[character],
-        );
-      let backgroundPolls = 0,
-        refreshTimer = null,
-        refreshGeneration = 0;
-      let autoRefreshTimer = null;
-      let refreshActive = false;
-      const autoRefresh = document.querySelector("#autoRefresh");
-      const evidenceMinimum = document.querySelector("#evidenceMinimum");
-      try {
-        const savedMinimum = Number(localStorage.getItem("dna-evidence-minimum"));
-        if (Number.isInteger(savedMinimum) && savedMinimum >= 1 && savedMinimum <= 1000000) evidenceMinimum.value = savedMinimum;
-      } catch {}
-      let evidenceThreshold = Number(evidenceMinimum.value);
-      evidenceMinimum.onchange = () => {
-        if (!evidenceMinimum.reportValidity()) return;
-        evidenceThreshold = Number(evidenceMinimum.value);
-        try { localStorage.setItem("dna-evidence-minimum", String(evidenceThreshold)); } catch {}
-        refresh(false, true);
-      };
-      const refreshSettings = document.querySelector("#refreshSettings");
-      document.addEventListener("click", event => {
-        if (!refreshSettings.contains(event.target)) refreshSettings.open = false;
-      });
-      document.addEventListener("keydown", event => {
-        if (event.key === "Escape" && refreshSettings.open) {
-          refreshSettings.open = false;
-          refreshSettings.querySelector("summary").focus();
-        }
-      });
-      const savedInterval = (() => { try { return localStorage.getItem("dna-auto-refresh-seconds"); } catch { return null; } })();
-      if (["5", "10", "30", "60"].includes(savedInterval)) autoRefresh.value = savedInterval;
-      function scheduleAutoRefresh() {
-        clearTimeout(autoRefreshTimer);
-        if (!refreshActive) autoRefreshTimer = setTimeout(() => refresh(false, true), Number(autoRefresh.value) * 1000);
-      }
-      autoRefresh.onchange = () => {
-        try { localStorage.setItem("dna-auto-refresh-seconds", autoRefresh.value); } catch {}
-        scheduleAutoRefresh();
-      };
-      async function refresh(isBackgroundPoll = false, isAutomatic = false) {
-        clearTimeout(autoRefreshTimer);
-        refreshActive = true;
-        if (!isBackgroundPoll) {
-          clearTimeout(refreshTimer);
-          backgroundPolls = 0;
-          refreshGeneration += 1;
-        }
-        const generation = refreshGeneration;
-        const s = document.querySelector("#status"),
-          g = document.querySelector("#grid"),
-          directorySummary = document.querySelector("#directorySummary"),
-          state = document.querySelector("#refreshState"),
-          bar = document.querySelector("#progressBar"),
-          value = document.querySelector("#progressValue"),
-          button = document.querySelector("#load");
-        let progress = 12;
-        state.className = "refresh-state loading";
-        s.textContent = "Refreshing evidence…";
-        value.textContent = `${progress}%`;
-        bar.style.width = `${progress}%`;
-        button.disabled = true;
-        button.textContent = "Refreshing…";
-        g.setAttribute("aria-busy", "true");
-        if (!isBackgroundPoll && !isAutomatic) {
-          directorySummary.hidden = true;
-          g.replaceChildren();
-        }
-        const progressTimer = setInterval(() => {
-          if (generation !== refreshGeneration) return;
-          progress = Math.min(92, progress + Math.max(1, Math.round((92 - progress) / 5)));
-          value.textContent = `${progress}%`;
-          bar.style.width = `${progress}%`;
-        }, 140);
-        try {
-          const [p] = await Promise.all([
-            DnaDirectoryApi.list({
-              page_size: 100,
-              evidence_min_trades: evidenceThreshold,
-              search: search.value,
-              product: product.value,
-              product_type: productType.value,
-              signal: signal.value,
-              sort: sort.value,
-              direction: direction.value,
-              ...DnaPeriod.params(),
-            }),
-            new Promise((resolve) => setTimeout(resolve, 450)),
-          ]);
-          if (generation !== refreshGeneration) return;
-          clearInterval(progressTimer);
-          bar.style.width = p.data.refresh_pending ? "95%" : "100%";
-          value.textContent = p.data.refresh_pending ? "Updating" : "100%";
-          s.textContent = p.data.refresh_pending
-            ? `${p.data.total} strategies displayed · live ${periodLabel.textContent.toLowerCase()} evidence is updating…`
-            : `${p.data.total} strategies refreshed · ${periodLabel.textContent}`;
-          state.className = p.data.refresh_pending ? "refresh-state loading" : "refresh-state complete";
-          const summary = p.data.summary;
-          if (p.data.refresh_pending) {
-            // Provisional aggregates are not evidence. Keep results hidden and
-            // communicate the running state exclusively through the status bar.
-            if (!isAutomatic) {
-              directorySummary.hidden = true;
-              g.replaceChildren();
-            }
-            s.textContent = `Calculating live ${periodLabel.textContent.toLowerCase()} evidence…`;
-            backgroundPolls += 1;
-            const delay = backgroundPolls < 8 ? 1200 : 2500;
-            refreshTimer = setTimeout(() => refresh(true, isAutomatic), delay);
-            return;
-          }
-          backgroundPolls = 0;
-          summaryStrategies.textContent = fmt(summary.strategies);
-          summaryTrades.textContent = fmt(summary.closed_trades);
-          summaryProfitable.textContent = `${fmt(summary.profitable_percentage)}%`;
-          summaryReady.textContent = `${fmt(summary.evidence_ready)} / ${fmt(summary.strategies)}`;
-          summaryReady.parentElement.title = `Strategies with at least ${summary.evidence_min_trades ?? evidenceThreshold} closed trades in the selected period; not a statistical reliability score.`;
-          directorySummary.hidden = false;
-          if (!p.data.items.length) {
-            g.innerHTML =
-              '<div class="notice">No closed DNA trades were found in this period.</div>';
-            return;
-          }
-          const period = new URLSearchParams(DnaPeriod.params()).toString();
-          g.innerHTML = p.data.items
-            .map((x) => {
-              const baseId = x.strategy_id.replace(/_[0-9]{4}$/, "");
-              // Matrix children are only ever created for a base model that hit the
-              // hot-streak bar (>= DNA_MATRIX_HOT_STREAK_MIN_TRADES closed trades today,
-              // all wins) - below that, "view associated models" would always be empty.
-              const canHaveAssociates = x.total_trades >= DNA_MATRIX_HOT_STREAK_MIN_TRADES && x.win_rate === 1;
-              const assocButton = canHaveAssociates
-                ? `<button type="button" class="assoc-btn" data-base="${esc(baseId)}">View associated models →</button>`
-                : "";
-              return `<div class="card"><a class="card-link" href="/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${period}"><span class="id">${esc(x.strategy_id)} · ${esc(x.quality_state)}</span><h2>${esc(x.descriptive_name || "Name pending")}</h2><div class="stats"><div class="stat"><b>${fmt(x.total_net_return)}</b><span>Net return</span></div><div class="stat"><b>${fmt(x.win_rate * 100)}%</b><span>Win rate</span></div><div class="stat"><b>${fmt(x.profit_factor)}</b><span>Profit factor</span></div><div class="stat"><b>${fmt(x.total_trades)}</b><span>Closed trades</span></div></div><div class="evidence">${esc(x.market)} · ${esc(x.evidence_start?.slice(0, 10) || "—")} → ${esc(x.evidence_end?.slice(0, 10) || "—")}</div></a>${assocButton}</div>`;
-            })
-            .join("");
-          if (p.data.refresh_pending) {
-            backgroundPolls += 1;
-            const delay = backgroundPolls < 8 ? 1200 : 2500;
-            refreshTimer = setTimeout(() => refresh(true), delay);
-          } else if (!p.data.refresh_pending) {
-            backgroundPolls = 0;
-          }
-        } catch (e) {
-          if (generation !== refreshGeneration) return;
-          backgroundPolls = 0;
-          clearInterval(progressTimer);
-          state.className = "refresh-state error";
-          value.textContent = "Failed";
-          bar.style.width = "100%";
-          s.textContent = e.message;
-          if (!g.children.length) g.innerHTML =
-            '<div class="notice">The evidence query could not be completed. Adjust the period or check API readiness.</div>';
-        } finally {
-          clearInterval(progressTimer);
-          if (generation !== refreshGeneration) return;
-          refreshActive = backgroundPolls > 0;
-          button.disabled = false;
-          button.textContent = "Refresh evidence";
-          g.removeAttribute("aria-busy");
-          if (!backgroundPolls) scheduleAutoRefresh();
-        }
-      }
-      load.onclick = () => refresh();
-      search.onkeydown = (e) => {
-        if (e.key === "Enter") refresh();
-      };
-      const gridEl = document.querySelector("#grid");
-      const familyPanel = document.querySelector("#familyPanel");
-      const familyBody = document.querySelector("#familyBody");
-      const familyFoot = document.querySelector("#familyFoot");
-      const familyTitle = document.querySelector("#familyTitle");
-      async function showFamily(baseId) {
-        familyTitle.textContent = `Associated models for ${baseId}`;
-        familyBody.innerHTML = "";
-        familyFoot.innerHTML = "";
-        familyPanel.hidden = false;
-        gridEl.hidden = true;
-        const params = new URLSearchParams(DnaPeriod.params()).toString();
-        const res = await fetch(`/api/dna/strategies/${encodeURIComponent(baseId)}/family?${params}`);
-        const body = await res.json();
-        if (!res.ok || !body.items?.length) {
-          familyBody.innerHTML = `<tr><td colspan="4">No associated-model trades found for this period.</td></tr>`;
-          return;
-        }
-        familyBody.innerHTML = body.items
-          .map(
-            (row) =>
-              `<tr><td>${esc(row.model)}</td><td>${fmt(row.trades)}</td><td>${fmt(row.cum_net_return)}</td><td>${fmt(row.cum_alt_net_return)}</td></tr>`,
-          )
-          .join("");
-        const s = body.summary;
-        familyFoot.innerHTML = `<tr><td>Total (${fmt(s.models)} models)</td><td>${fmt(s.trades)}</td><td>${fmt(s.total_cum_net_return)}</td><td>${fmt(s.total_cum_alt_net_return)}</td></tr>`;
-      }
-      document.querySelector("#familyBack").onclick = () => {
-        familyPanel.hidden = true;
-        gridEl.hidden = false;
-      };
-      document.querySelector("#grid").onclick = (e) => {
-        const btn = e.target.closest(".assoc-btn");
-        if (!btn) return;
-        e.preventDefault();
-        showFamily(btn.dataset.base);
-      };
-      product.onchange = () => refresh();
-      signal.onchange = () => refresh();
-      document.addEventListener("periodchange", () => refresh());
-      // Establish the default evidence window before any asynchronous product
-      // catalogue request. This prevents an all-history/previous-period result
-      // from rendering while the Current day request is waiting to start.
-      DnaPeriod.setPreset("today");
-      function loadProducts() {
-        return DnaDirectoryApi.products(productType.value).then((payload) => {
-          product.innerHTML = '<option value="">All products</option>' + payload.items.map((value) =>
-            `<option value="${esc(value)}">${esc(value)}</option>`).join("");
+      const PAGE_SIZE = 100, CONCURRENCY = 4;
+      const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const fmt = (n) => Number(n).toLocaleString("en-GB", { maximumFractionDigits: 0, signDisplay: "always" });
+      const $ = (sel) => document.querySelector(sel);
+      let generation = 0, page = 1, total = 0, shown = 0, mode = "single", running = 0;
+      const queue = [], cache = new Map();
+      const grid = $("#grid"), more = $("#more");
+      // Sorting by Alt net return plots the cumulative alt_net_return, treated exactly like net_return.
+      const metricKey = () => ($("#sort").value === "total_alt_net_return" ? "alt_net_return" : "net_return");
+
+      // Cumulative series. The Signal filter is applied to the trades client-side so the curve matches the filter chosen.
+      function series(points, signal, key) {
+        const pts = signal ? points.filter((p) => (p.signal || "").toUpperCase() === signal) : points;
+        let eq = 0, buy = 0, sell = 0;
+        return pts.map((p) => {
+          const v = Number(p[key]) || 0;
+          eq += v;
+          const side = (p.signal || "").toUpperCase();
+          if (side === "BUY") buy += v;
+          else if (side === "SELL") sell += v;
+          return { eq, buy, sell };
         });
       }
-      productType.onchange = () => { product.value = ""; loadProducts().then(refresh); };
-      loadProducts();
+      function draw(points, signal, view, key) {
+        const s = series(points, signal, key);
+        const label = key === "alt_net_return" ? "alt " : "";
+        if (!s.length) return '<div class="curve-empty">No closed trades in this window</div>';
+        const split = view === "split";
+        const vals = split ? [0, ...s.map((p) => p.buy), ...s.map((p) => p.sell)] : [0, ...s.map((p) => p.eq)];
+        const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+        const W = 320, H = 150, l = 44, r = 8, t = 10, b = 14;
+        const x = (i) => l + (s.length === 1 ? (W - l - r) / 2 : (i * (W - l - r)) / (s.length - 1));
+        const y = (v) => t + ((hi - v) * (H - t - b)) / span;
+        const path = (k) => s.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p[k]).toFixed(1)}`).join(" ");
+        const z = y(0).toFixed(1);
+        const lines = split
+          ? `<path class="l-buy" d="${path("buy")}"/><path class="l-sell" d="${path("sell")}"/>`
+          : `<path class="a-single" d="${path("eq")} L${x(s.length - 1).toFixed(1)},${z} L${x(0).toFixed(1)},${z} Z"/><path class="l-single" d="${path("eq")}"/>`;
+        const last = s[s.length - 1];
+        const legend = split
+          ? `<div class="curve-legend"><span><i style="background:#22c55e"></i>Buy ${label}${fmt(last.buy)}</span><span><i style="background:#e5484d"></i>Sell ${label}${fmt(last.sell)}</span></div>`
+          : `<div class="curve-legend"><span>${s.length} trade${s.length === 1 ? "" : "s"} · ${label}${fmt(last.eq)}</span></div>`;
+        return `<svg class="curve-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative return"><line class="zero" x1="${l}" x2="${W - r}" y1="${z}" y2="${z}"/><text x="${l - 5}" y="${t + 3}" text-anchor="end">${fmt(hi)}</text><text x="${l - 5}" y="${H - b + 3}" text-anchor="end">${fmt(lo)}</text>${lines}</svg>${legend}`;
+      }
+      function paint(card) {
+        const data = cache.get(card.dataset.id);
+        if (data) // Split view always shows both sides (as the detail page does); the Signal filter only narrows the single curve.
+        card.querySelector(".curve-body").innerHTML = draw(data.points, mode === "split" ? "" : $("#signal").value, mode, metricKey());
+      }
+      function pump() {
+        while (running < CONCURRENCY && queue.length) {
+          const { card, gen } = queue.shift();
+          if (gen !== generation) continue;
+          running++;
+          // net_return: the cached equity-curve endpoint. alt_net_return only exists per trade, so use the trade ledger.
+          const alt = metricKey() === "alt_net_return";
+          (alt
+            ? DnaDirectoryApi.trades(card.dataset.id, { ...DnaPeriod.params(), limit: 5000 }).then((t) => ({
+                points: [...t.items].sort((a, b) => String(a.exit_time).localeCompare(String(b.exit_time))),
+              }))
+            : DnaDirectoryApi.equityCurve(card.dataset.id, DnaPeriod.params()))
+            .then((c) => { if (gen === generation) { cache.set(card.dataset.id, c); paint(card); } })
+            .catch((e) => { if (gen === generation) card.querySelector(".curve-body").innerHTML = `<div class="curve-empty">${esc(e.message)}</div>`; })
+            .finally(() => { running--; pump(); });
+        }
+      }
+      const observer = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !e.target.dataset.queued) {
+            e.target.dataset.queued = "1";
+            queue.push({ card: e.target, gen: generation });
+            observer.unobserve(e.target);
+          }
+        }
+        pump();
+      }, { rootMargin: "300px" });
+      function addCards(items) {
+        const qs = new URLSearchParams(DnaPeriod.params()).toString();
+        for (const x of items) {
+          const a = document.createElement("a");
+          a.className = "curve-card";
+          a.dataset.id = x.strategy_id;
+          a.href = `/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${qs}&from=curves`;
+          a.innerHTML = `<div class="curve-cap"><b>${esc(x.descriptive_name || "Name pending")}</b><span>${esc(x.strategy_id)}</span></div><div class="curve-body"><div class="curve-empty">Loading curve…</div></div>`;
+          grid.appendChild(a);
+          observer.observe(a);
+        }
+        shown += items.length;
+      }
+      const STATE_KEY = "dna-curves-state";
+      const FIELDS = ["search", "productType", "product", "signal", "sort", "direction", "curveMode", "dateFrom", "dateTo"];
+      function saveState() {
+        try { sessionStorage.setItem(STATE_KEY, JSON.stringify(Object.fromEntries(FIELDS.map((f) => [f, $("#" + f).value])))); } catch {}
+      }
+      async function load(reset) {
+        if (reset) {
+          saveState(); generation++; page = 1; shown = 0; queue.length = 0; cache.clear(); grid.replaceChildren(); more.hidden = true; }
+        const gen = generation, status = $("#status"), bar = $("#progressBar");
+        status.textContent = "Loading strategies…";
+        bar.style.width = "40%";
+        try {
+          const p = await DnaDirectoryApi.list({
+            page_size: PAGE_SIZE, page, search: $("#search").value,
+            product_type: $("#productType").value, product: $("#product").value,
+            signal: $("#signal").value, sort: $("#sort").value,
+            direction: $("#direction").value, ...DnaPeriod.params(),
+          });
+          if (gen !== generation) return;
+          total = p.data.total;
+          addCards(p.data.items);
+          status.textContent = `${shown} of ${total} strategies · ${$("#periodLabel").textContent}`;
+          bar.style.width = "100%";
+          more.hidden = shown >= total;
+        } catch (e) {
+          if (gen === generation) { status.textContent = e.message; bar.style.width = "0"; }
+        }
+      }
+      async function loadProducts() {
+        const payload = await DnaDirectoryApi.products($("#productType").value);
+        $("#product").innerHTML = '<option value="">All products</option>' + payload.items.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+      }
+      more.onclick = () => { page++; load(false); };
+      $("#load").onclick = () => load(true);
+      for (const id of ["sort", "direction", "signal", "product"]) $("#" + id).onchange = () => load(true);
+      $("#productType").onchange = () => { $("#product").value = ""; loadProducts().then(() => load(true)); };
+      $("#search").onkeydown = (e) => { if (e.key === "Enter") load(true); };
+      $("#curveMode").onchange = (e) => { mode = e.target.value; document.querySelectorAll(".curve-card").forEach(paint); };
+      document.addEventListener("periodchange", () => load(true));
+      // Restore the wall exactly as it was left (filters, sort, view, period) so the detail page's back link lands on it.
+      (async () => {
+        let saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem(STATE_KEY) || "null"); } catch {}
+        if (saved) for (const f of ["search", "productType", "signal", "sort", "direction", "curveMode"]) if (saved[f] != null) $("#" + f).value = saved[f];
+        mode = $("#curveMode").value;
+        await loadProducts();
+        if (saved?.product) $("#product").value = saved.product;
+        if (saved?.dateFrom && saved?.dateTo) {
+          $("#dateFrom").value = saved.dateFrom;
+          $("#dateTo").value = saved.dateTo;
+          $("#applyPeriod").click();
+        } else DnaPeriod.setPreset("today");
+      })();
     </script>
-  <footer id="ttp-product-footer" class="ttp-product-footer" aria-label="The Tech Principle product attribution"><a href="https://thetechprinciple.com/" target="_blank" rel="noreferrer"><span>A</span><img src="/assets/thetechprinciple-icon-180.png" alt="The Tech Principle"><span>thetechprinciple.com product</span></a></footer>
-</body>
+<script src="/assets/ep060-nav.js"></script></body>
 </html>

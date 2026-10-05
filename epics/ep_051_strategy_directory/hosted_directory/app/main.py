@@ -542,7 +542,7 @@ def create_app(repository=None, settings: Settings | None = None) -> FastAPI:
     def directory(): return FileResponse(WEB/"index.html",headers=no_store)
     @app.get("/{screen}.html")
     def screen(screen:str):
-        if screen not in {"strategy","compare","builder","intelligence","account","regimes","search"}: raise HTTPException(404)
+        if screen not in {"strategy","strategy-curves","compare","builder","intelligence","account","regimes","search"}: raise HTTPException(404)
         return FileResponse(WEB/f"{screen}.html",headers=no_store)
     @app.get("/assets/{name}")
     def asset(name:str):
