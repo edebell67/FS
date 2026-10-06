@@ -1,0 +1,498 @@
+<!doctype html>
+<!-- Select. Compare. Switch. Built __BUILT_ISO__. Data: __DATA_SUMMARY__. Single self-contained file: open it by double-clicking. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#06111e">
+<meta name="generated" content="__BUILT_ISO__">
+<title>Select, Compare, Switch</title>
+<style>
+/* Mobile first: the base rules are the phone layout; wider screens are added with min-width queries. */
+:root{--bg:#06111e;--panel:#102740;--panel2:#0d1e32;--line:#2a4c67;--muted:#9cb2c4;--cyan:#54d9ff;--lime:#c9f45c;--amber:#ffd26d;--pink:#ff8ea5;--green:#5de493;--white:#f6fbff}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{background:var(--bg);color:var(--white);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%;font-size:16px}
+body{margin:0;min-height:100vh;padding-bottom:calc(76px + env(safe-area-inset-bottom));background:radial-gradient(700px 420px at 15% -10%,#17496c 0%,transparent 60%),linear-gradient(140deg,#07111f,#0c1d30 55%,#081422)}
+button,select,input{font:inherit;touch-action:manipulation}
+select,input{font-size:16px}
+.shell{max-width:1040px;margin:auto;padding:0 14px 28px}
+.ctx{position:sticky;top:0;z-index:20;margin:0 -14px 12px;padding:9px 14px;background:rgba(6,17,30,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);font-size:13px;display:flex;justify-content:space-between;gap:10px;align-items:center}
+.ctx b{color:var(--lime)}
+.ctx span{color:var(--muted);font-size:12px;white-space:nowrap}
+.brand{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
+h1{font-size:30px;letter-spacing:-.04em;margin:6px 0 8px;line-height:1.05}
+.stamp{display:block;font-size:12px;line-height:1.4;color:var(--lime);border:1px solid #3d6b2b;background:#13240f;border-radius:8px;padding:6px 10px;margin:0 0 10px}
+.intro{color:var(--muted);margin:6px 0 4px;line-height:1.5;font-size:15px}
+.about{margin:0 0 12px}
+.about summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--cyan);font-weight:700;list-style:none}
+.about summary::-webkit-details-marker{display:none}
+.about summary::before{content:'+';display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;background:#16344c}
+.about[open] summary::before{content:'2'}
+.controls{display:grid;grid-template-columns:1fr 1fr;gap:12px;background:var(--panel2);border:1px solid var(--line);border-radius:14px;padding:12px;margin-bottom:12px}
+.controls .wide{grid-column:1/-1}
+.controls label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:6px}
+.controls select{width:100%;min-height:48px;background:#081a2b;border:1px solid #365a76;color:var(--white);border-radius:10px;padding:8px 10px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.seg button{min-height:48px;border:1px solid #365a76;border-radius:10px;background:#0a1d2e;color:#cfe2ee;font-weight:800;cursor:pointer}
+.seg button.on{background:var(--cyan);border-color:var(--cyan);color:#07111f}
+.hourrow{display:grid;grid-template-columns:48px 1fr 48px;gap:10px;align-items:center}
+.hourrow button{min-height:48px;border:1px solid #365a76;border-radius:10px;background:#0a1d2e;color:var(--white);font-size:22px;font-weight:700;cursor:pointer}
+input[type=range]{width:100%;height:36px;accent-color:var(--cyan);margin:0}
+.asof{font-size:12px;color:var(--muted);line-height:1.45}
+.asof b{color:var(--lime)}
+.steps{display:none}
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 10px calc(8px + env(safe-area-inset-bottom));background:rgba(6,17,30,.97);border-top:1px solid var(--line)}
+.tab{min-height:56px;border:1px solid #365a76;background:#0a1d2e;color:#bcd0de;border-radius:12px;padding:4px 6px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:12px;font-weight:700}
+.tab .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#16344c;color:var(--cyan);font-size:12px;font-weight:800}
+.tab.active{border-color:var(--cyan);background:#0f2f48;color:var(--white)}
+.tab.active .n{background:var(--cyan);color:#07111f}
+.stage{display:none;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+.stage.active{display:block}
+h2{margin:0 0 6px;font-size:21px;letter-spacing:-.03em}
+h3{margin:20px 0 8px;font-size:17px;letter-spacing:-.02em}
+.rule{background:#0a1d2e;border:1px dashed #3b6482;border-radius:10px;padding:10px 12px;color:#cfe2ee;font-size:13px;line-height:1.55;margin:8px 0 12px}
+.rule b{color:var(--amber)}
+/* Tables are stacked cards on phones. */
+.scroll{border:0}
+table,thead,tbody,tr,td{display:block}
+thead{display:none}
+table{width:100%;font-size:14px}
+tr{border:1px solid #284a66;border-radius:12px;margin:8px 0;padding:6px 12px;background:#0a1d2e}
+td{display:flex;justify-content:space-between;align-items:baseline;gap:14px;padding:4px 0;border:0;text-align:right;word-break:break-word}
+td+td{border-top:1px solid #16344c}
+td::before{content:attr(data-label);flex:0 0 auto;color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;text-align:left}
+td[colspan]{display:block;text-align:left}
+td[colspan]::before{content:none}
+tr.pick{background:rgba(201,244,92,.12);border-color:#6a8b2b}
+tr.cand{background:rgba(84,217,255,.12);border-color:#2f7ea0}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;border-radius:6px;padding:2px 6px;margin-left:6px}
+.tag.lime{background:var(--lime);color:#07111f}.tag.cyan{background:var(--cyan);color:#07111f}.tag.grey{background:#294a63;color:#cfe2ee}
+.pos{color:var(--green)}.neg{color:var(--pink)}
+.bar{display:inline-block;height:8px;border-radius:4px;vertical-align:middle;margin-left:6px}
+.callout{margin-top:14px;border-radius:12px;padding:12px 14px;background:#0b2a40;border:1px solid #2f6a8f;line-height:1.55;font-size:14px}
+.callout b{color:var(--lime)}
+.cards{display:grid;grid-template-columns:1fr;gap:10px;margin:12px 0}
+.card{background:#0a1d2e;border:1px solid #284a66;border-radius:12px;padding:12px}
+.card .l{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;font-weight:800;margin-bottom:4px}
+.card .m{font-size:17px;font-weight:700}
+.card .s{font-size:12px;color:var(--muted);margin:2px 0 6px;word-break:break-all}
+.card .d{font-size:14px;line-height:1.5}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0}
+.kpi{background:#0a1d2e;border:1px solid #284a66;border-radius:12px;padding:10px}
+.kpi .l{display:block;font-size:10px;line-height:1.25;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:800;min-height:25px}
+.kpi b{font-size:18px;letter-spacing:-.03em}
+.chips{display:flex;gap:8px;margin:10px -14px;padding:0 14px 4px;overflow-x:auto;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chip{flex:0 0 auto;min-height:46px;border:1px solid #365a76;border-radius:999px;background:#0a1d2e;color:#cfe2ee;padding:8px 16px;font-weight:700;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--lime);border-color:var(--lime);color:#07111f}
+svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #284a66;border-radius:12px}
+.legend{display:grid;gap:6px;font-size:13px;color:#cfe2ee;margin:8px 0}
+.legend .mono{word-break:break-all}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px}
+.replay{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;margin:8px 0}
+.replay input{accent-color:var(--lime)}
+.nav{display:flex;gap:10px;margin-top:16px}
+.nav button{flex:1;min-height:50px;border:1px solid #517692;border-radius:12px;background:#0a2034;color:#e8f7ff;padding:10px 14px;font-weight:800;cursor:pointer}
+.nav button.primary{background:var(--cyan);color:#07111f;border-color:var(--cyan)}
+.nav span{flex:1}
+.honest{margin-top:14px;border:1px solid #6b4d1f;background:#2a2112;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.55;color:#f1deb4}
+.honest b{color:var(--amber)}
+.disc{margin:16px 0 0;font-size:12px;color:var(--muted);line-height:1.55}
+
+/* Repository sheet: a static sample of the strategy repository as equity curves */
+.repoLink{width:100%;min-height:52px;border:1px solid var(--cyan);border-radius:12px;background:#0a2438;color:var(--white);padding:8px 14px;text-align:left;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.repoLink small{display:block;color:var(--muted);font-weight:400;font-size:12px}
+.repoLink .go{color:var(--cyan);font-size:20px}
+.textlink{display:block;min-height:44px;background:none;border:0;color:var(--cyan);font-weight:700;padding:6px 0;text-align:left;cursor:pointer;text-decoration:underline}
+.sheet{position:fixed;inset:0;z-index:40;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch}
+.sheet[hidden]{display:none}
+.sheetbar{position:sticky;top:0;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top));background:rgba(6,17,30,.97);border-bottom:1px solid var(--line)}
+.sheetbar b{display:block;font-size:19px;letter-spacing:-.02em}
+.sheetbar button{flex:0 0 48px;min-height:48px;border:1px solid #365a76;border-radius:12px;background:#0a1d2e;color:var(--white);font-size:26px;cursor:pointer}
+.sheetbody{max-width:1100px;margin:auto}
+.rnote{margin:12px 14px;font-size:13px;line-height:1.55;color:#cfe2ee}
+.rgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:0 14px 20px}
+.rc{background:#0a1d2e;border:1px solid #284a66;border-radius:12px;padding:10px;min-width:0}
+.rc .n{font-size:12px;font-weight:700;word-break:break-all;line-height:1.35}
+.rc .m{font-size:11px;color:var(--muted);margin-top:2px}
+.rc svg{display:block;width:100%;height:72px;margin:6px 0;border:0;border-radius:0;background:transparent}
+.rc .f{display:flex;justify-content:space-between;gap:6px;font-size:12px}
+.sheet .disc{padding:0 14px 28px;margin:0}
+@media(min-width:560px){
+  .cards{grid-template-columns:1fr 1fr}
+  .kpi b{font-size:22px}
+  .kpi .l{font-size:10px}
+}
+@media(min-width:720px){.rgrid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:1000px){.rgrid{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:720px){
+  body{padding-bottom:0}
+  .shell{padding:0 20px 40px}
+  .ctx{margin:0 -20px 14px;padding:9px 20px}
+  h1{font-size:40px}
+  .stamp{display:inline-block}
+  .intro{max-width:740px}
+  .about summary{display:none}
+  .controls{grid-template-columns:150px 190px 1fr;align-items:end;padding:14px}
+  .controls .wide{grid-column:auto}
+  .controls .asof{grid-column:1/-1}
+  .tabbar{display:none}
+  .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+  .step{border:1px solid #365a76;background:#0a1d2e;color:#bcd0de;border-radius:12px;padding:10px 12px;text-align:left;cursor:pointer;min-height:64px}
+  .step b{display:block;font-size:15px;color:var(--white)}
+  .step small{color:var(--muted);font-size:12px}
+  .step .n{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:50%;background:#16344c;color:var(--cyan);font-size:12px;font-weight:800;margin-right:7px}
+  .step.active{border-color:var(--cyan);background:#0f2f48}
+  .step.active .n{background:var(--cyan);color:#07111f}
+  .stage{padding:18px}
+  .scroll{overflow-x:auto;border:1px solid #284a66;border-radius:10px}
+  table{display:table;min-width:560px;border-collapse:collapse;font-size:13px}
+  thead{display:table-header-group}
+  tbody{display:table-row-group}
+  tr{display:table-row;border:0;border-radius:0;margin:0;padding:0;background:none}
+  th{font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 10px;background:#0a1d2e}
+  td{display:table-cell;padding:9px 10px;border-top:1px solid #1d3a52;text-align:left}
+  td+td{border-top:1px solid #1d3a52}
+  td::before{content:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  td[colspan]{display:table-cell}
+  tr.pick{background:rgba(201,244,92,.10)}
+  tr.cand{background:rgba(84,217,255,.10)}
+  .cards{grid-template-columns:repeat(auto-fit,minmax(190px,1fr))}
+  .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px}
+  .chips{flex-wrap:wrap;margin:10px 0;padding:0;overflow:visible}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;font-size:12px}
+  .nav{justify-content:space-between}
+  .nav button{flex:0 0 auto;min-height:44px;padding:9px 16px}
+  .nav span{flex:0 0 auto}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+  <div class="ctx" id="ctx"><div id="ctxText"></div><span id="ctxSnap"></span></div>
+  <div class="brand">The Tech Principle · strategy selection in three steps</div>
+  <h1>Select. Compare. Switch.</h1>
+  <div class="stamp" id="stamp"></div>
+  <details class="about" id="about"><summary>How this works</summary>
+    <p class="intro">A scenario selects a strategy. It is compared with similar, opposite, overall and best win rate strategies. You switch only if a comparison strategy is performing better. Real data from <span id="date"></span>, embedded in this file; every choice uses only what was known at the decision time.</p>
+  </details>
+
+  <section class="controls" aria-label="Decision point">
+    <div class="wide" id="klassWrap"><label>Asset class</label><div class="seg" id="klass" role="group" aria-label="Asset class"></div></div>
+    <div><label for="product">Product</label><select id="product"></select></div>
+    <div><label for="scen">Selection scenario</label><select id="scen"></select></div>
+    <div class="wide"><label for="hour">Decision time <span id="hourLabel" class="mono"></span></label>
+      <div class="hourrow"><button id="hPrev" type="button" aria-label="Earlier hour">&minus;</button><input id="hour" type="range"><button id="hNext" type="button" aria-label="Later hour">+</button></div></div>
+    <div class="asof wide" id="asof"></div>
+    <div class="wide"><button type="button" class="repoLink openRepo" id="repoBtn"><span>Browse the strategy repository<small id="repoBtnSub"></small></span><span class="go">&rsaquo;</span></button></div>
+  </section>
+
+  <nav class="steps" aria-label="Stages">
+    <button class="step active" data-go="0"><b><span class="n">1</span>Strategy selection</b><small>a scenario picks one strategy</small></button>
+    <button class="step" data-go="1"><b><span class="n">2</span>Compare</b><small>similar, opposite, overall, win rate</small></button>
+    <button class="step" data-go="2"><b><span class="n">3</span>Switch</b><small>move to the best performing</small></button>
+  </nav>
+
+  <section class="stage active" id="s0">
+    <h2>1 · Strategy selection</h2>
+    <div class="rule" id="rule1"></div>
+    <button type="button" class="textlink openRepo">Where do these strategies come from? Browse the repository as equity curves</button>
+    <div class="scroll"><table><thead><tr><th>#</th><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win rate</th><th class="num">Net</th></tr></thead><tbody id="top"></tbody></table></div>
+    <h3>Equity curves of the selected strategies up to the decision time</h3>
+    <div class="legend" id="leg0"></div>
+    <svg id="chart0" viewBox="0 0 360 220" role="img" aria-label="Equity curves of the top six strategies"></svg>
+    <div class="callout" id="pick1"></div>
+    <div class="nav"><span></span><button class="primary" data-go="1">Next: compare →</button></div>
+  </section>
+
+  <section class="stage" id="s1">
+    <h2>2 · Compare with other strategies</h2>
+    <div class="rule"><b>Best similar</b>: same product, differs in exactly one setting (family, window, take-profit or stop-loss). <b>Best opposite</b>: its equity moves against the selected one (correlation of five-minute changes of -0.2 or lower). <b>Best overall</b>: highest net on <span class="pw">this product</span>. <b>Best win rate</b>: highest share of winning closed positions. Candidates <span class="qualtxt"></span>must be a different strategy with a different net from the selected one (identical results are clones and are never used). If no such strategy exists the card says so. Ties go to the lowest model id.</div>
+    <div class="cards" id="cards"></div>
+    <h3>Equity curves of the selected strategy and its comparisons up to the decision time</h3>
+    <div class="legend" id="leg1"></div>
+    <svg id="chart1" viewBox="0 0 360 220" role="img" aria-label="Equity curves of the selected strategy and comparisons"></svg>
+    <h3>Similar strategies</h3>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th>Differs by</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num">Net</th></tr></thead><tbody id="group"></tbody></table></div>
+    <h3>Opposite strategies (best five by net)</h3>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num">Net</th></tr></thead><tbody id="opp"></tbody></table></div>
+    <div class="nav"><button data-go="0">← Back</button><button class="primary" data-go="2">Next: switch →</button></div>
+  </section>
+
+  <section class="stage" id="s2">
+    <h2>3 · Switch, only when better</h2>
+    <div class="rule">Pick what to switch to. The chart then shows what happened next; nothing after the decision time was used to choose it. <b>Always switch:</b> at every following hour the selection and comparison are run again, using only data up to that hour, and you move to the best strategy of the chosen type <b>only if its net is higher than the strategy you hold</b>; otherwise you stay. Switching is assumed free.</div>
+    <div class="chips" id="chips"></div>
+    <div class="callout" id="tinfo"></div>
+    <div class="legend"><span><i class="dot" style="background:var(--lime)"></i><b class="mono" id="bestName"></b><span id="legTarget"></span></span><span><i class="dot" style="background:var(--cyan)"></i><span class="mono" id="candName"></span> (selected)</span><span><i class="dot" style="background:var(--amber)"></i>decision time</span></div>
+    <svg id="chart" viewBox="0 0 360 230" role="img" aria-label="Equity curves"></svg>
+    <div class="replay"><label for="head" class="mono" style="color:var(--muted);font-size:12px">Replay</label><input id="head" type="range"><span class="mono" id="headLabel"></span></div>
+    <div class="kpis">
+      <div class="kpi"><span class="l">Comparison net at decision</span><b id="k1"></b></div>
+      <div class="kpi"><span class="l">Comparison, since decision</span><b id="k2"></b></div>
+      <div class="kpi"><span class="l">Selected, since</span><b id="k3"></b></div>
+    </div>
+    <h3>Always switch, only when better</h3>
+    <div class="kpis">
+      <div class="kpi"><span class="l">Always switch</span><b id="w1"></b></div>
+      <div class="kpi"><span class="l">Stay with selected</span><b id="w2"></b></div>
+      <div class="kpi"><span class="l">Switch once (if better), then stay</span><b id="w3"></b></div>
+    </div>
+    <div class="legend"><span><i class="dot" style="background:#ffffff"></i>always switch</span><span><i class="dot" style="background:var(--cyan)"></i>stay with selected</span><span><i class="dot" style="background:var(--lime)"></i>switch once, then stay</span><span style="color:var(--muted)">change since the decision time</span></div>
+    <svg id="chart2" viewBox="0 0 360 200" role="img" aria-label="Cumulative change since decision"></svg>
+    <h3>Hour by hour</h3>
+    <div class="scroll"><table><thead><tr><th>From</th><th>Holding</th><th>Strategy</th><th class="num">Hour change</th><th class="num">Running total</th></tr></thead><tbody id="switches"></tbody></table></div>
+    <h3>Closed positions after the switch</h3>
+    <div class="scroll"><table><thead><tr><th>Position</th><th>Time</th><th class="num">Net</th></tr></thead><tbody id="closed"></tbody></table></div>
+    <h3>Does switching pay?</h3>
+    <div class="scroll"><table><thead><tr><th>Switch to</th><th class="num">Starts</th><th class="num">Avg always switch</th><th class="num">Avg stay with selected</th><th class="num">Better</th></tr></thead><tbody id="summary"></tbody></table></div>
+    <div class="honest" id="honest"></div>
+    <div class="nav"><button data-go="1">← Back</button><span></span></div>
+  </section>
+
+  <p class="disc">Historical and analytical only. One day (<span id="dd"></span>), replayed from stored snapshots embedded in this file. It is not investment advice, a signal, a forecast or an execution workflow. Net is the five-minute snapshot's cumulative net return in the platform's units (closed plus open positions). Closed means closed positions.</p>
+</main>
+
+<div class="sheet" id="repo" role="dialog" aria-modal="true" aria-labelledby="repoTitle" hidden>
+  <div class="sheetbar"><div><div class="brand" id="repoKicker"></div><b id="repoTitle">Strategy repository</b></div><button id="repoClose" type="button" aria-label="Close the repository">&times;</button></div>
+  <div class="sheetbody">
+    <p class="rnote" id="repoNote"></p>
+    <div class="rgrid" id="repoGrid"></div>
+    <p class="disc">A static sample for illustration. Each curve is a strategy's cumulative net return through the day as recorded by the platform. The explorer's selection, comparison and switching use only the data available at the decision time, never this view.</p>
+  </div>
+</div>
+
+<nav class="tabbar" aria-label="Stages">
+  <button class="tab active" data-go="0"><span class="n">1</span>Select</button>
+  <button class="tab" data-go="1"><span class="n">2</span>Compare</button>
+  <button class="tab" data-go="2"><span class="n">3</span>Switch</button>
+</nav>
+
+<script>
+const DATA=__DATA__;
+const $=id=>document.getElementById(id);
+const fmt=n=>(n<0?'-':n>0?'+':'')+Math.abs(n).toLocaleString('en-US',{maximumFractionDigits:1});
+const ax=v=>Math.abs(v)>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v));
+const cls=n=>n>0?'pos':n<0?'neg':'';
+const r1=x=>Math.round(x*10)/10;
+const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
+const cases=DATA.cases,curves=DATA.curves,SC=DATA.scen,CLS=DATA.classes,klasses=Object.keys(CLS);
+const MINC=DATA.min_closed||0;
+const QUAL=MINC>0?`with at least ${MINC} closed positions`:'(no minimum number of closed positions)';
+// Rows arrive as short arrays with strategy and product in one lookup (keeps the file small); rebuild them here.
+(function hydrate(){const M=DATA.models,row=a=>({model:a[0],strategy:M[a[0]][0],product:M[a[0]][1],trades:a[1],win:a[2],net:a[3],corr:a[4]===undefined?null:a[4],differs:a[5],value:a[6]});
+  Object.values(DATA.cases).forEach(c=>{c.top=c.top.map(row);c.similar=c.similar.map(row);c.opposite=c.opposite.map(row);
+    Object.keys(c.tinfo).forEach(k=>{if(c.tinfo[k])c.tinfo[k]=row(c.tinfo[k])})})})();
+let klass=klasses.includes('crypto')?'crypto':klasses[0];
+const TL={similar:'Best similar strategy',opposite:'Best opposite strategy',overall:'Best overall strategy',winrate:'Best win rate'};
+const TK=Object.keys(TL);
+const RULES={net:`<b>Scenario: Top Net.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one with the highest net, then the lowest model id.`,win:`<b>Scenario: Top Win Rate.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the highest win rate, then net, then the lowest model id.`,side:`<b>Scenario: Top Buy Sell.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one whose stronger side (buy or sell) is highest, then net, then the lowest model id.`};
+let END,XMAX;function setMeta(){END=CLS[klass].last_minute;XMAX=Math.max(240,Math.ceil(END/60)*60)}setMeta();
+const hoursFor=(p,s)=>Object.values(cases).filter(c=>c.cls===klass&&c.product===p&&c.scenario===s).map(c=>c.hour).sort((a,b)=>a-b);
+const lastHOf=(p,s)=>{const h=hoursFor(p,s);return h[h.length-1]};
+const productsOf=k=>[...new Set(Object.values(cases).filter(c=>c.cls===k).map(c=>c.product))].sort((a,b)=>(a==='ALL'?-1:b==='ALL'?1:a.localeCompare(b)));
+let products=productsOf(klass);
+const PLABEL=p=>p==='ALL'?'All '+CLS[klass].label.toLowerCase()+' products':p;
+const fmtDate=d=>new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
+const POF={};Object.values(cases).forEach(c=>{[...c.top,...c.similar,...c.opposite,...Object.values(c.tinfo).filter(Boolean)].forEach(r=>{if(r.product)POF[r.model]=r.product})});
+const ptag=m=>product==='ALL'&&POF[m]?`<span class="tag grey">${POF[m]}</span>`:'';
+let product=products[0],scen='win',hour=7,target='similar',stage=0,eq={};
+function fillProducts(){$('product').innerHTML=products.map(p=>`<option value="${p}">${PLABEL(p)}</option>`).join('');$('product').value=product}
+$('scen').innerHTML=Object.entries(SC).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');$('scen').value=scen;
+const hr=$('hour');hr.step=1;
+function fitHour(){const hs=hoursFor(product,scen);if(!hs.length)return false;hr.min=hs[0];hr.max=hs[hs.length-1];
+  hour=hs.reduce((a,b)=>Math.abs(b-hour)<Math.abs(a-hour)?b:a,hs[0]);hr.value=hour;return true}
+fitHour();
+const key=(p,s,h)=>klass+'|'+p+'|'+s+'|'+String(h).padStart(2,'0');
+const cur=()=>cases[key(product,scen,hour)];
+// Value as known at the start of minute m (snapshots stamped within minute m are later than m:00:00).
+function at(arr,m){return lastAt(arr,m-1)}
+function bnd(arr,m){return m>=END?lastAt(arr,END):at(arr,m)}
+function lastAt(arr,m){let v=arr[0][1];for(const p of arr){if(p[0]<=m)v=p[1];else break}return v}
+function targetModel(c,t){return c.targets[t]||c.selected}
+function card(label,g,color,note){return `<div class="card" style="border-color:${color}"><span class="l" style="color:${color}">${label}</span><div class="m mono">${g.model}${ptag(g.model)}</div><div class="s mono">${g.strategy}</div><div class="d">${g.trades} closed · ${g.win}% win · corr ${g.corr===null?'n/a':g.corr.toFixed(2)}<br>net <b class="${cls(g.net)}">${fmt(g.net)}</b>${note?`<br><span style="color:var(--muted)">${note}</span>`:''}</div></div>`}
+// Chart geometry follows the real width of the screen, so text stays readable on a phone.
+function sizeSvg(id,mobileH,deskH){const svg=$(id);let w=svg.parentElement.clientWidth;if(!w)w=Math.max(280,Math.min(window.innerWidth,1040)-52);
+  const h=w<560?mobileH:deskH;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);return{w,h,L:w<560?40:50,R:w-12}}
+function labelTables(){document.querySelectorAll('table').forEach(t=>{const heads=[...t.querySelectorAll('thead th')].map(h=>h.textContent);
+  t.querySelectorAll('tbody tr').forEach(r=>{[...r.children].forEach((td,i)=>{if(!td.hasAttribute('colspan'))td.setAttribute('data-label',heads[i]||'')})})})}
+function renderSummary(){
+  const rows=TK.map(t=>{
+    const res=[];
+    [product].forEach(p=>{const lh=lastHOf(p,scen);for(const h of hoursFor(p,scen)){if(h>=lh)continue;const c0=cases[key(p,scen,h)];if(!c0)continue;
+      const path=switchPath(p,scen,h,t),sel=curves[c0.selected],stay=lastAt(sel,END)-at(sel,h*60);
+      res.push({sw:path[path.length-1].cum,stay})}});
+    const avg=k=>res.reduce((a,r)=>a+r[k],0)/(res.length||1);
+    return `<tr><td>${TL[t]}</td><td class="num">${res.length}</td><td class="num ${cls(avg('sw'))}">${fmt(Math.round(avg('sw')))}</td><td class="num ${cls(avg('stay'))}">${fmt(Math.round(avg('stay')))}</td><td class="num">${res.filter(r=>r.sw>r.stay).length} of ${res.length}</td></tr>`}).join('');
+  $('summary').innerHTML=rows;
+  $('honest').innerHTML=`<b>Reading this.</b> Each start is one hourly decision point on ${PLABEL(product).toLowerCase()} (every hour with a qualifying strategy) for the ${SC[scen]} scenario. "Better" counts starts where always switching ended the day ahead of staying with the selected strategy. One day is a small sample, so this demonstrates the method and does not prove that it works. You only switch when the other strategy's net is higher than the one you hold, so some hours have no switch.`;
+}
+function nameOf(m){return (DATA.models[m]||['(unknown)'])[0]}
+// Always switch, only when better: hold the selected strategy; at each hour move to the best strategy of the chosen type
+// only if its net (as known at that hour) is higher than the net of the strategy being held. Otherwise keep holding.
+function switchPath(prod,sc,S,t){
+  const rows=[];let cum=0;
+  const lastH=lastHOf(prod,sc);
+  let held=null;
+  for(let h=S;h<=lastH;h++){
+    const c=cases[key(prod,sc,h)];if(!c)break;
+    if(held===null)held=c.selected;
+    const cand=c.targets[t];let switched=false;
+    if(cand&&cand!==held&&at(curves[cand],h*60)>at(curves[held],h*60)){held=cand;switched=true}
+    const cv=curves[held],end=h<lastH?(h+1)*60:END,pnl=bnd(cv,end)-at(cv,h*60);
+    cum+=pnl;rows.push({h,model:held,strategy:nameOf(held),switched,pnl,cum,end});
+  }
+  return rows;
+}
+// The one-off switch at the decision time follows the same rule.
+function oneSwitch(c,t){const g=c.tinfo[t];return !!(g&&g.model!==c.selected&&g.net>c.similar[0].net)}
+function render(){
+  const c=cur(),hh=String(hour).padStart(2,'0');
+  $('ctxText').innerHTML=`<b>${CLS[klass].label}</b> · ${PLABEL(product)} · ${SC[scen]} · ${hh}:00`;
+  document.querySelectorAll('.stage').forEach(el=>el.style.opacity=c?1:.35);
+  $('hourLabel').textContent=hh+':00';
+  if(!c){$('ctxSnap').textContent='';$('asof').textContent='No strategy has data at this time for this product. Try a later hour or another product.';return}
+  $('ctxSnap').textContent='snapshot '+c.snap.slice(0,5);
+  $('asof').innerHTML=`Using the last snapshot at or before <b>${hh}:00:00</b> (taken ${c.snap}). Nothing later is used to choose.`;
+  $('rule1').innerHTML=RULES[scen]+` ${c.eligible} strategies qualify at this time. Only snapshots and closed positions up to the decision time count. Strategies with exactly the same net are clones and are listed once, so every strategy shown has a different net (up to 6).`;
+  const pw=product==='ALL'?'all '+CLS[klass].label.toLowerCase()+' products':'this product';document.querySelectorAll('.pw').forEach(e=>e.textContent=pw);document.querySelectorAll('.qualtxt').forEach(e=>e.textContent=MINC>0?`need at least ${MINC} closed positions and `:'');
+  $('top').innerHTML=c.top.map((t,i)=>`<tr class="${t.model===c.selected?'cand':''}"><td>${i+1}</td><td class="mono">${t.model}${ptag(t.model)}${t.model===c.selected?'<span class="tag cyan">selected</span>':''}</td><td class="mono">${t.strategy}</td><td class="num">${t.trades}</td><td class="num">${t.win}%</td><td class="num ${cls(t.net)}">${fmt(t.net)}</td></tr>`).join('');
+  const sel=c.similar[0];
+  $('pick1').innerHTML=`<b>Selected: ${sel.model}</b> (${sel.strategy}). ${sel.win}% of ${sel.trades} closed positions won, net ${fmt(sel.net)}. Next, compare it with other strategies.`;
+  const palette=['#ff8ea5','#ffd26d','#5de493','#b79cff','#ff9a5c','#9ad1ff'],decision=hour*60;
+  eq.chart0={leg:'leg0',upTo:decision,items:c.top.map((t,i)=>t.model===c.selected?{model:t.model,label:'selected',color:'#54d9ff',w:3.4}:{model:t.model,label:'#'+(i+1),color:palette[i%6],w:1.8})};
+  const cols={similar:'#c9f45c',opposite:'#ff8ea5',overall:'#ffd26d',winrate:'#5de493'};
+  $('cards').innerHTML=card('Selected (stage 1)',sel,'#54d9ff','')+TK.map(t=>{const g=c.tinfo[t];return g?card(TL[t],g,cols[t],g.model===c.selected?'same as selected':''):`<div class="card"><span class="l" style="color:${cols[t]}">${TL[t]}</span><div class="d" style="color:var(--muted)">none at this time</div></div>`}).join('');
+  const items=[{model:c.selected,label:'selected',color:'#54d9ff',w:3.4}],used=new Map([[c.selected,0]]);
+  TK.forEach(t=>{const m=c.targets[t];if(!m)return;if(used.has(m)){const it=items[used.get(m)];it.label+=' + '+TL[t].replace('Best ','').replace(' strategy','');return}used.set(m,items.length);items.push({model:m,label:TL[t].replace(' strategy',''),color:cols[t],w:2.2})});
+  eq.chart1={leg:'leg1',upTo:decision,items};
+  const rows=[],seen=new Map();
+  c.similar.slice().sort((a,b)=>b.net-a.net||(+a.model.slice(4))-(+b.model.slice(4))).forEach(g=>{
+    const k=[g.net,g.trades,g.win,g.corr].join('|');
+    if(seen.has(k)){seen.get(k).clones.push(g);return}
+    const r={g,clones:[]};seen.set(k,r);rows.push(r)});
+  const maxAbs=Math.max(1,...c.similar.map(g=>Math.abs(g.net)));
+  $('group').innerHTML=rows.map(r=>{const g=r.g,w=Math.round(Math.abs(g.net)/maxAbs*60),members=[g,...r.clones];
+    const isBest=members.some(x=>x.model===c.targets.similar),isCand=members.some(x=>x.model===c.selected);
+    const clone=r.clones.length?`<span class="tag grey">+${r.clones.length} identical</span>`:'';
+    return `<tr class="${isBest?'pick':isCand?'cand':''}"><td class="mono">${g.model}${isBest?'<span class="tag lime">best similar</span>':''}${isCand?'<span class="tag cyan">selected</span>':''}${clone}</td><td class="mono">${g.strategy}</td><td>${g.differs==='selected'?'selected':g.differs+' '+g.value}</td><td class="num">${g.trades}</td><td class="num">${g.win}%</td><td class="num">${g.corr===null?'n/a':g.corr.toFixed(2)}</td><td class="num ${cls(g.net)}">${fmt(g.net)}<span class="bar" style="width:${w}px;background:${g.net>=0?'var(--green)':'var(--pink)'}"></span></td></tr>`}).join('');
+  $('opp').innerHTML=c.opposite.length?c.opposite.map(g=>`<tr class="${g.model===c.targets.opposite?'pick':''}"><td class="mono">${g.model}${ptag(g.model)}${g.model===c.targets.opposite?'<span class="tag lime">best opposite</span>':''}</td><td class="mono">${g.strategy}</td><td class="num">${g.trades}</td><td class="num">${g.win}%</td><td class="num">${g.corr.toFixed(2)}</td><td class="num ${cls(g.net)}">${fmt(g.net)}</td></tr>`).join(''):'<tr><td colspan="6" style="color:var(--muted)">No opposite strategy with at least 6 closed positions at this time.</td></tr>';
+  $('chips').innerHTML=TK.map(t=>`<button class="chip ${t===target?'on':''}" data-t="${t}">${TL[t]}</button>`).join('');
+  document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{target=b.dataset.t;render()}));
+  const g=c.tinfo[target],m=targetModel(c,target),better=oneSwitch(c,target);
+  $('tinfo').innerHTML=g?(better?`<b>Switch from ${sel.model} to ${g.model}</b> (${g.strategy}): its net ${fmt(g.net)} is higher than ${fmt(sel.net)}. ${g.win}% win over ${g.trades} closed positions, correlation ${g.corr===null?'n/a':g.corr.toFixed(2)} with the selected strategy.`:`<b>No switch: stay with ${sel.model}.</b> The ${TL[target].toLowerCase()} is ${g.model} (${g.strategy}) with net ${fmt(g.net)}, which is not higher than ${fmt(sel.net)}.`):`<b>No ${TL[target].toLowerCase()} at this time</b>, so you stay with ${sel.model}.`;
+  $('legTarget').textContent=better?' (switch to)':' (comparison, not switched to)';
+  $('bestName').textContent=m;$('candName').textContent=c.selected;
+  const bc=curves[m],dm=hour*60,hd=$('head');
+  hd.min=dm;hd.max=Math.max(dm,bc[bc.length-1][0]);hd.step=5;hd.value=hd.max;
+  const aft=c.after[m]||[];
+  $('closed').innerHTML=aft.length?aft.map((t,i)=>`<tr><td>Position ${i+1}</td><td class="mono">${hhmm(t[0])}</td><td class="num ${cls(t[1])}">${fmt(t[1])}</td></tr>`).join('')+(aft.length>=14?'<tr><td colspan="3" style="color:var(--muted)">First 14 shown.</td></tr>':''):'<tr><td colspan="3" style="color:var(--muted)">No closed positions after this time.</td></tr>';
+  renderSummary();
+  redrawCharts();
+}
+function redrawCharts(){
+  if(!cur())return;
+  drawEquity('chart0');drawEquity('chart1');drawChart();drawChart2();labelTables();
+}
+function drawEquity(svgId){
+  const e=eq[svgId];if(!e)return;const{items,upTo,leg}=e;
+  const{w,h,L,R}=sizeSvg(svgId,230,260),T=12,B=h-28;
+  const clipped=items.map(it=>({...it,pts:curves[it.model].filter(p=>p[0]<upTo)})).filter(it=>it.pts.length);
+  const all=clipped.flatMap(it=>it.pts.map(p=>p[1])),mn=Math.min(0,...all),mx=Math.max(0,...all);
+  const X=v=>L+(v/Math.max(upTo,1))*(R-L),Y=v=>B-((v-mn)/((mx-mn)||1))*(B-T);
+  let s='';
+  [mn,0,mx].forEach(v=>{s+=`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?'#4a6f8a':'#1d3a52'}"/><text x="3" y="${Y(v)+4}" fill="#9cb2c4" font-size="11">${ax(v)}</text>`});
+  const step=w<560?(upTo>720?360:180):(upTo>720?240:120);
+  for(let m=0;m<=upTo;m+=step)s+=`<text x="${Math.min(Math.max(X(m),L+10),R-10)}" y="${h-8}" fill="#9cb2c4" font-size="11" text-anchor="middle">${hhmm(m)}</text>`;
+  clipped.slice().reverse().forEach(it=>{s+=`<polyline fill="none" stroke="${it.color}" stroke-width="${it.w}" stroke-linejoin="round" points="${it.pts.map(p=>X(p[0])+','+Y(p[1])).join(' ')}"/>`});
+  clipped.forEach(it=>{const l=it.pts[it.pts.length-1];s+=`<circle cx="${X(l[0])}" cy="${Y(l[1])}" r="${it.w>2?4.5:3}" fill="${it.color}" stroke="#081a2b" stroke-width="1.5"/>`});
+  $(svgId).innerHTML=s;
+  $(leg).innerHTML=items.map(it=>{const l=(curves[it.model].filter(p=>p[0]<upTo).slice(-1)[0]||[0,0])[1];return `<span><i class="dot" style="background:${it.color}"></i><b class="mono">${it.model}</b>${ptag(it.model)} ${it.label} <span class="${cls(l)}">${fmt(r1(l))}</span></span>`}).join('');
+}
+function drawChart(){
+  const c=cur(),dm=hour*60,head=+$('head').value,m=targetModel(c,target),bc=curves[m],cc=curves[c.selected];
+  const{w,h,L,R}=sizeSvg('chart',250,300),T=16,B=h-28;
+  const all=bc.concat(cc).map(p=>p[1]),mn=Math.min(0,...all),mx=Math.max(0,...all);
+  const X=v=>L+(v/XMAX)*(R-L),Y=v=>B-((v-mn)/((mx-mn)||1))*(B-T);
+  let s='';
+  [mn,0,mx].forEach(v=>{s+=`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?'#4a6f8a':'#1d3a52'}"/><text x="3" y="${Y(v)+4}" fill="#9cb2c4" font-size="11">${ax(v)}</text>`});
+  const hs=w<560?(XMAX>720?6:2):(XMAX>720?4:1);
+  for(let t=0;t<=XMAX/60;t+=hs)s+=`<text x="${Math.min(Math.max(X(t*60),L+10),R-10)}" y="${h-8}" fill="#9cb2c4" font-size="11" text-anchor="middle">${String(t%24).padStart(2,'0')}:00</text>`;
+  const line=(arr,color,wd,from,to,op)=>{const pts=arr.filter(p=>p[0]>=from&&p[0]<=to).map(p=>X(p[0])+','+Y(p[1])).join(' ');return pts?`<polyline fill="none" stroke="${color}" stroke-width="${wd}" stroke-linejoin="round" opacity="${op||1}" points="${pts}"/>`:''};
+  s+=line(cc,'#54d9ff',1.6,0,dm,.45)+line(bc,'#c9f45c',1.6,0,dm,.45)+line(cc,'#54d9ff',2.4,dm,head)+line(bc,'#c9f45c',3.4,dm,head);
+  const dx=X(dm),anchor=dx>w-70?'end':'start';
+  s+=`<line x1="${dx}" x2="${dx}" y1="${T}" y2="${B}" stroke="#ffd26d" stroke-dasharray="5 4"/><text x="${anchor==='end'?dx-4:dx+4}" y="${T+10}" fill="#ffd26d" font-size="11" text-anchor="${anchor}">decision</text>`;
+  s+=`<circle cx="${X(head)}" cy="${Y(lastAt(bc,head))}" r="5" fill="#c9f45c" stroke="#081a2b" stroke-width="2"/>`;
+  $('chart').innerHTML=s;
+  const b0=at(bc,dm),b1=lastAt(bc,head),c0=at(cc,dm),c1=lastAt(cc,head);
+  $('headLabel').textContent=hhmm(head);
+  const put=(id,v)=>{$(id).className=cls(v);$(id).textContent=fmt(r1(v))};
+  put('k1',b0);put('k2',b1-b0);put('k3',c1-c0);
+}
+function drawChart2(){
+  const c=cur(),rows=switchPath(product,scen,hour,target),sel=curves[c.selected],once=curves[oneSwitch(c,target)?c.tinfo[target].model:c.selected];
+  const stay=rows.map(r=>({end:r.end,cum:bnd(sel,r.end)-at(sel,hour*60)})),one=rows.map(r=>({end:r.end,cum:bnd(once,r.end)-at(once,hour*60)}));
+  const last=a=>a[a.length-1],put=(id,v)=>{$(id).className=cls(v);$(id).textContent=fmt(r1(v))};
+  put('w1',last(rows).cum);put('w2',last(stay).cum);put('w3',last(one).cum);
+  const mk=a=>[[hour*60,0]].concat(a.map(r=>[r.end,r.cum])),A=mk(rows),B=mk(stay),C=mk(one);
+  const{w,h,L,R}=sizeSvg('chart2',210,220),T=10,Bt=h-26;
+  const all=A.concat(B,C).map(p=>p[1]),mn=Math.min(0,...all),mx=Math.max(0,...all);
+  const X=v=>L+((v-hour*60)/((END-hour*60)||1))*(R-L),Y=v=>Bt-((v-mn)/((mx-mn)||1))*(Bt-T);
+  let s='';[mn,0,mx].forEach(v=>{s+=`<line x1="${L}" x2="${R}" y1="${Y(v)}" y2="${Y(v)}" stroke="${v===0?'#4a6f8a':'#1d3a52'}"/><text x="3" y="${Y(v)+4}" fill="#9cb2c4" font-size="11">${ax(v)}</text>`});
+  const every=w<560?Math.max(1,Math.ceil(rows.length/4)):1;
+  rows.forEach((r,i)=>{if((i%every)===every-1||i===rows.length-1)s+=`<text x="${Math.min(X(r.end),R-10)}" y="${h-7}" fill="#9cb2c4" font-size="10" text-anchor="middle">${hhmm(r.end>=1440?1439:r.end)}</text>`});
+  const pl=(a,color,wd)=>`<polyline fill="none" stroke="${color}" stroke-width="${wd}" stroke-linejoin="round" points="${a.map(p=>X(p[0])+','+Y(p[1])).join(' ')}"/>`;
+  $('chart2').innerHTML=s+pl(B,'#54d9ff',2)+pl(C,'#c9f45c',2)+pl(A,'#ffffff',3.2);
+  $('switches').innerHTML=rows.map((r,i)=>`<tr><td class="mono">${String(r.h).padStart(2,'0')}:00</td><td class="mono">${r.model}${ptag(r.model)}${r.switched?'<span class="tag lime">switch</span>':'<span class="tag grey">hold</span>'}</td><td class="mono">${r.strategy}</td><td class="num ${cls(r.pnl)}">${fmt(r1(r.pnl))}</td><td class="num ${cls(r.cum)}">${fmt(r1(r.cum))}</td></tr>`).join('');
+}
+function spark(series){
+  const n=series.length,mn=Math.min(0,...series),mx=Math.max(0,...series),span=(mx-mn)||1;
+  const X=i=>n>1?(i/(n-1))*160:0,Y=v=>66-((v-mn)/span)*60;
+  const line=series.map((v,i)=>X(i).toFixed(1)+','+Y(v).toFixed(1)).join(' '),z=Y(0).toFixed(1);
+  const up=series[n-1]>=0,col=up?'#5de493':'#ff8ea5';
+  return `<svg viewBox="0 0 160 72" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="160" y1="${z}" y2="${z}" stroke="#2a4c67" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/><polygon points="${X(0).toFixed(1)},${z} ${line} ${X(n-1).toFixed(1)},${z}" fill="${col}" fill-opacity=".18"/><polyline points="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
+}
+function renderRepo(){
+  const S=DATA.sample&&DATA.sample[klass];if(!S)return;
+  const lab=CLS[klass].label;
+  $('repoKicker').textContent=lab+' · '+fmtDate(CLS[klass].date);
+  $('repoNote').textContent=`A static sample of ${S.items.length} of the ${S.total.toLocaleString('en-US')} ${lab.toLowerCase()} strategies${MINC>0?' with at least '+MINC+' closed positions':''} (${S.distinct.toLocaleString('en-US')} of them have different results; the rest are clones). The sample is spread evenly from best to worst by net at the end of the day. Full-day equity curves, one card per strategy.`;
+  $('repoGrid').innerHTML=S.items.map(r=>`<article class="rc"><div class="n mono">${r.strategy}</div><div class="m mono">${r.model} · ${r.product}</div>${spark(r.series)}<div class="f"><span>${r.closed} closed · ${r.win}% win</span><b class="${cls(r.net)}">${fmt(r.net)}</b></div></article>`).join('');
+}
+function updateRepoBtn(){const S=DATA.sample&&DATA.sample[klass];$('repoBtn').style.display=S?'':'none';if(S)$('repoBtnSub').textContent=`A sample of ${S.items.length} of ${S.total.toLocaleString('en-US')} ${CLS[klass].label.toLowerCase()} strategies as equity curves`}
+function openRepo(){renderRepo();$('repo').hidden=false;document.body.style.overflow='hidden';$('repo').scrollTop=0;$('repoClose').focus()}
+function closeRepo(){$('repo').hidden=true;document.body.style.overflow=''}
+document.querySelectorAll('.openRepo').forEach(b=>b.addEventListener('click',openRepo));
+$('repoClose').addEventListener('click',closeRepo);
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('repo').hidden)closeRepo()});
+function go(n){stage=n;
+  document.querySelectorAll('.stage').forEach((el,i)=>el.classList.toggle('active',i===n));
+  document.querySelectorAll('.step,.tab').forEach(el=>el.classList.toggle('active',+el.dataset.go===n));
+  window.scrollTo({top:0,behavior:'smooth'});
+  requestAnimationFrame(redrawCharts);
+}
+document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.go)));
+function renderKlass(){$('klassWrap').style.display=klasses.length>1?'':'none';
+  $('klass').innerHTML=klasses.map(k=>`<button type="button" data-k="${k}" class="${k===klass?'on':''}">${CLS[k].label}</button>`).join('');
+  $('klass').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setKlass(b.dataset.k)))}
+function setKlass(k){if(k===klass)return;klass=k;setMeta();products=productsOf(k);product=products[0];
+  $('date').textContent=fmtDate(CLS[k].date);$('dd').textContent=$('date').textContent;
+  fillProducts();fitHour();renderKlass();render();updateRepoBtn();if(!$('repo').hidden)renderRepo()}
+$('product').addEventListener('change',e=>{product=e.target.value;fitHour();render()});
+$('scen').addEventListener('change',e=>{scen=e.target.value;fitHour();render()});
+hr.addEventListener('input',()=>{hour=+hr.value;render()});
+function stepHour(d){const hs=hoursFor(product,scen);if(!hs.length)return;const i=hs.indexOf(hour);hour=hs[Math.min(hs.length-1,Math.max(0,(i<0?0:i)+d))];hr.value=hour;render()}
+$('hPrev').addEventListener('click',()=>stepHour(-1));
+$('hNext').addEventListener('click',()=>stepHour(1));
+$('head').addEventListener('input',drawChart);
+let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redrawCharts,120)});
+$('date').textContent=fmtDate(CLS[klass].date);$('dd').textContent=$('date').textContent;
+if(window.matchMedia('(min-width:720px)').matches)$('about').open=true;
+$('stamp').textContent='Data as of '+klasses.map(k=>CLS[k].label+' '+CLS[k].last_snapshot).join(' · ')+' · built '+DATA.built_at+(DATA.rebuilt_as_of?' · rebuilt from stored data as it stood then (history copy)':'');
+fillProducts();renderKlass();
+render();updateRepoBtn();
+</script>
+</body>
+</html>
