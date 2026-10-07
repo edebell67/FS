@@ -1,12 +1,13 @@
 ---
 name: ep062-switch-explorer-rebuild
 description: Re-create the EP062 "Select. Compare. Switch." interactive web app on demand with up-to-date data, for crypto and forex (kept separate, chosen with an asset-class switch), including the hermes variant, a minimum-closed-positions option and the Join the Arena waitlist button. Use when asked to rebuild, refresh, update, regenerate, timestamp, restore or send a new version of the strategy selection / compare / switch explorer or its hermes version, or to build it for a different date, product, asset class or minimum. Produces ONE self-contained, timestamped html file (data embedded, no server, no data requests) that users open by double-clicking.
-version: 1.6.1
+version: 1.7.0
 ---
 
 # EP062 Switch Explorer: rebuild on demand
 
 > VERSION HISTORY
+> - v1.7.0 · 2026-10-07 · Deploy to the website: live home is https://thetechprinciple.com/epic/ep062/ (repo edebell67/epics, master, folder epic/ep062/); new "Deploy to /epic/ep062" section with the exact steps, page layout and checks.
 > - v1.6.1 · 2026-10-07 · The hermes variant carries the Net | Alt net toggle too (hermes builder v1.4.0, verifier 14 checks, 7 MB limit); it opens on Net; an older single-basis source is wrapped and shows no toggle.
 > - v1.6.0 · 2026-10-07 · Net | Alt net toggle: one file carries both return bases (net_return and alt_net_return) built from one fixed data cutoff; `--return-type both|net|alt` (default both); wording follows the basis; the hermes builder keeps the net basis; verification 28 checks; file about 5 MB with both classes on a full day (limit 7 MB).
 > - v1.5.0 · 2026-10-06 · Delivery update: Join the Arena waitlist button in the main explorer (the one allowed external link, checked by the verifier, 27 checks); hermes variant build and verification documented (`--source`, any minimum 1 to 12); a class with nothing qualifying on its newest day steps back to the previous day; minimum-closed variants (`-min3`, `-min6`) and the "wait for a snapshot, then rebuild" pipeline; commit rules for generated builds; reporting checklist.
@@ -136,8 +137,42 @@ Optional browser smoke test (the user never needs a server; this is only for tes
 
 - Send the timestamped file (not a copy renamed by hand). The `-latest` copy is for the team's own use.
 - **Report to the user:** file name; data-as-of date and time for each class (and say if one class fell back to an earlier day and why); the minimum closed positions applied; products and cases; file size; verification results (main and hermes); anything unusual (empty early hours, products skipped).
-- **Sending is the user's action.** Do not email, upload or publish a file unless the user explicitly asks in the current conversation; then confirm the recipient or destination first.
+- **Sending is the user's action.** Do not email, upload or publish a file unless the user explicitly asks in the current conversation; then confirm the recipient or destination first. The website destination is https://thetechprinciple.com/epic/ep062/ (see "Deploy to /epic/ep062").
 - **Keep history. Never delete a previous timestamped build** (about 2 to 3 MB each). Only the `-latest` copy is overwritten. A build that was never delivered and is plainly wrong (for example a mislabelled test build made minutes ago) may be removed, but say so. Restore a lost build with `--as-of`.
+
+## Deploy to /epic/ep062 (the website)
+
+The web apps live at **https://thetechprinciple.com/epic/ep062/** (landing page) with the two latest apps beside it. It is served by GitHub Pages from the separate repo `edebell67/epics`, branch `master`, folder `epic/ep062/`. (The FS repo also holds an older copy at `epics/ep_046_thetechprinciple/site/explorer/`; that is not the live site.)
+
+Only deploy when the user asks in the current conversation ("deploy", "publish", "push to /epic"). Publishing is outward-facing; confirm before the push.
+
+Layout of `epic/ep062/`:
+
+| File | Purpose |
+|---|---|
+| `index.html` | Landing page, title "Select. Compare. Switch.", two cards for the latest apps and an "Earlier builds" list. Uses the live site's `/styles.css`, root-relative links (`/#platforms`, `/#how-we-build`, `/#proof`, `/#contact`). |
+| `choose-compare-review-latest.html` | Latest hermes build (copy of the newest `hermes/strategy-selection-to-switch-hermes-*.html`). |
+| `select-compare-switch-latest.html` | Latest main build (copy of the newest `strategy-selection-to-switch-*-min6-toggle.html`). |
+| `builds/` | Every earlier build, kept for history. |
+
+Steps:
+
+1. Build and verify both files (sections above). Both must pass (28 and 14 checks).
+2. Clone `https://github.com/edebell67/epics.git` into the scratchpad (never work in a checkout with other people's changes). Confirm the default branch with `git symbolic-ref --short HEAD` (it is `master`).
+3. Move the current `*-latest.html` files into `epic/ep062/builds/` under their timestamped names (the files carry their own timestamp in the leading comment; keep the dated names the builder produced), then copy the two new builds in as the `*-latest.html` files. Never delete a previous build.
+4. Update `epic/ep062/index.html`: the "Latest data: ... as of HH:MM" sentence, and add the old latest to the "Earlier builds" lists (newest first, label = build date and time).
+5. Update `sitemap.xml`: the `https://thetechprinciple.com/epic/ep062/` entry's `<lastmod>`.
+6. Do NOT touch the nav, drawer and footer links in the root `index.html` unless they are missing; they are already there (`epic/ep062/`, labelled "Explorer" and "Strategy Explorer").
+7. Test locally: `python -m http.server <port>` in the clone, open `/epic/ep062/`, check that every link on the page returns 200 and the apps open (no page errors). Stop the server.
+8. Commit only the files you changed (`git add epic/ep062 sitemap.xml`, plus `index.html` only if you edited it). Put the commit message in a file and use `git commit -F`. The message must let another model understand the change: what was deployed, data-as-of per class, the minimum applied, the source commits in FS, and how to refresh. Use the message of the first deploy (`e897403`) as the template.
+9. Push to `master`, then poll https://thetechprinciple.com/epic/ep062/ and both `*-latest.html` URLs until they return 200 (GitHub Pages takes one to five minutes). Report the live URLs.
+
+Gotchas:
+
+- The environment's permission classifier blocks pushes to `edebell67/epics` unless the user has added a Bash allow rule or approves in the conversation. If blocked, stop, say what is staged, and let the user decide; do not look for another route.
+- The root site is the restructured site: its sections are `#platforms`, `#how-we-build`, `#proof`, `#contact`. The old FS `site/` anchors (`#services`, `#work`) do not exist there.
+- Each app keeps exactly one external link (the waitlist button). Do not add others when editing the landing page.
+- The repo is public: scan new builds for secrets before the push (the builds hold strategy performance data only).
 
 ## Housekeeping (this repo)
 
