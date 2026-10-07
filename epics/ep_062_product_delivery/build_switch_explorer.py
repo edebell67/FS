@@ -73,7 +73,14 @@ def correlation(a: list[float], b: list[float]) -> float | None:
     return sum((x - ma) * (y - mb) for x, y in zip(da, db)) / math.sqrt(va * vb)
 
 
-def load_product(cur, day: str, product: str, as_of=None):
+# Columns for each ranking basis. Everything downstream just sees 'net', so one switch ranks the whole page.
+RETURN_COLUMNS = {
+    "net": ("cum_net", "cum_buy_net", "cum_sell_net", "net_return"),
+    "alt": ("cum_alt_net", "cum_buy_alt_net", "cum_sell_alt_net", "alt_net_return"),
+}
+
+
+def load_product(cur, day: str, product: str, as_of=None, return_type: str = "net"):
     cur.execute(
         "select trim(model), max(strategy_name) from product_forex where lower(trim(product)) = %s group by 1",
         (product,),
@@ -81,8 +88,9 @@ def load_product(cur, day: str, product: str, as_of=None):
     meta = {m: s for m, s in cur.fetchall() if s}
     if not meta:
         return meta, {}, {}
+    c_net, c_buy, c_sell, c_trade = RETURN_COLUMNS[return_type]  # fixed whitelist, never user text
     cur.execute(
-        """select trim(model), snapshot_timestamp, cum_net, cum_buy_net, cum_sell_net
+        f"""select trim(model), snapshot_timestamp, {c_net}, {c_buy}, {c_sell}
            from tbl_dna_model_summary_snapshots_5min
            where snapshot_timestamp >= %s::date and snapshot_timestamp < %s::date + interval '1 day'
              and (%s::timestamp is null or snapshot_timestamp <= %s::timestamp)
@@ -91,9 +99,9 @@ def load_product(cur, day: str, product: str, as_of=None):
     )
     snaps = defaultdict(list)
     for m, ts, net, buy, sell in cur.fetchall():
-        snaps[m].append((ts.replace(tzinfo=None), float(net), float(buy), float(sell)))
+        snaps[m].append((ts.replace(tzinfo=None), float(net or 0), float(buy or 0), float(sell or 0)))
     cur.execute(
-        """select trim(model), last_update, net_return from combined_trades_closed
+        f"""select trim(model), last_update, {c_trade} from combined_trades_closed
            where lower(trim(product)) = %s and created >= %s::date
              and last_update >= %s::date and last_update < %s::date + interval '1 day'
              and (%s::timestamp is null or last_update <= %s::timestamp)""",
@@ -101,7 +109,7 @@ def load_product(cur, day: str, product: str, as_of=None):
     )
     closed = defaultdict(list)
     for m, ts, net in cur.fetchall():
-        closed[m].append((ts.replace(tzinfo=None), float(net)))
+        closed[m].append((ts.replace(tzinfo=None), float(net or 0)))
     return meta, snaps, closed
 
 
@@ -190,7 +198,7 @@ def distinct_by_net(rows):
     return out
 
 
-def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, last_hour: int, min_closed: int, product_of=None, cls: str = "crypto"):
+def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, last_hour: int, min_closed: int, product_of=None, cls: str = "crypto", rt: str = "net"):
     minute = lambda ts: ts.hour * 60 + ts.minute
     cases, curves = {}, {}
     pof = lambda m: (product_of or {}).get(m, product).upper()
@@ -227,9 +235,7 @@ def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, la
             ranked = sorted(eligible, key=rank_key)
             selected = ranked[0]
             top_six = distinct_by_net(ranked)[:6]  # no two with the same net
-            parts = NAME.match(selected["strategy"])
-            if not parts:
-                continue
+            parts = NAME.match(selected["strategy"])  # None when the name has no family_window_tp_sl form: no neighbours then
 
             def row(v, extra):
                 ck = (selected["model"], v["model"])
@@ -247,7 +253,7 @@ def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, la
                 if v["model"] == selected["model"] or v["product"] != selected["product"]:
                     continue  # similar = same product
                 other = NAME.match(v["strategy"])
-                if not other:
+                if not other or not parts:
                     continue
                 diff = [DIMS[i] for i in range(4) if parts.group(i + 1) != other.group(i + 1)]
                 if len(diff) == 1:
@@ -278,8 +284,8 @@ def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, la
             for v in top_six:
                 curves.setdefault(v["model"], curve(v["model"]))
             snap_ts = [x[0] for x in snaps[selected["model"]] if x[0] <= cut][-1]
-            cases[f"{cls}|{product.upper()}|{scenario}|{hour:02d}"] = dict(
-                cls=cls, product=product.upper(), scenario=scenario, hour=hour, eligible=len(eligible),
+            cases[f"{rt}|{cls}|{product.upper()}|{scenario}|{hour:02d}"] = dict(
+                rt=rt, cls=cls, product=product.upper(), scenario=scenario, hour=hour, eligible=len(eligible),
                 top=[dict(model=v["model"], strategy=v["strategy"], product=v["product"], trades=v["trades"], win=v["win"], net=v["net"]) for v in top_six],
                 selected=selected["model"], similar=similar, opposite=opposite[:5],
                 targets={k: (g["model"] if g else None) for k, g in targets.items()},
@@ -288,7 +294,7 @@ def build_cases(day: str, product: str, meta, snaps, closed, first_hour: int, la
     return cases, curves
 
 
-def pick_date(cur, product_type: str, min_hours: int) -> str:
+def candidate_days(cur, product_type: str, min_hours: int) -> list[str]:
     """Latest date whose snapshots cover at least `min_hours` different hours (a usable day); else the latest date."""
     cur.execute("select distinct trim(model) from product_forex where lower(trim(product_type)) = %s", (product_type,))
     class_models = {r[0] for r in cur.fetchall()}
@@ -307,13 +313,11 @@ def pick_date(cur, product_type: str, min_hours: int) -> str:
     days = cur.fetchall()
     if not days:
         raise SystemExit(f"No snapshots for {product_type} in the last 21 days")
-    for d, hours in days:
-        if hours >= min_hours:
-            return d.isoformat()
-    return days[0][0].isoformat()
+    usable = [d.isoformat() for d, hours in days if hours >= min_hours]
+    return usable or [days[0][0].isoformat()]
 
 
-def build_class(cur, cls: str, day: str, products_arg: list[str] | None, args):
+def build_class(cur, cls: str, day: str, products_arg: list[str] | None, args, rt: str = "net"):
     """All cases for one asset class. Crypto and forex are never pooled together."""
     if products_arg:
         products = products_arg
@@ -323,27 +327,27 @@ def build_class(cur, cls: str, day: str, products_arg: list[str] | None, args):
     cases, curves, loaded, last = {}, {}, [], None
     pool_meta, pool_snaps, pool_closed, product_of = {}, {}, {}, {}
     for product in products:
-        meta, snaps, closed = load_product(cur, day, product, args.as_of_by_class.get(cls))
+        meta, snaps, closed = load_product(cur, day, product, args.cutoff_by_class.get(cls), rt)
         if not snaps:
             print(f"  [{cls}] {product}: no snapshots on {day}, skipped")
             continue
         newest = max(x[0] for pts in snaps.values() for x in pts)
         last = newest if last is None or newest > last else last
-        c, k = build_cases(day, product, meta, snaps, closed, args.first_hour, min(22, newest.hour), args.min_closed, None, cls)
+        c, k = build_cases(day, product, meta, snaps, closed, args.first_hour, min(22, newest.hour), args.min_closed, None, cls, rt)
         pool_meta.update(meta); pool_snaps.update(snaps); pool_closed.update(closed)
         product_of.update({m: product for m in meta})
         if c:
             cases.update(c)
             curves.update(k)
             loaded.append(product.upper())
-        print(f"  [{cls}] {product}: {len(c)} cases")
+        print(f"  [{cls}/{rt}] {product}: {len(c)} cases")
     if len(loaded) > 1:
         newest_all = max(x[0] for pts in pool_snaps.values() for x in pts)
         c, k = build_cases(day, "all", pool_meta, pool_snaps, pool_closed, args.first_hour, min(22, newest_all.hour),
-                           args.min_closed, product_of, cls)
+                           args.min_closed, product_of, cls, rt)
         cases.update(c)
         curves.update(k)
-        print(f"  [{cls}] all products: {len(c)} cases")
+        print(f"  [{cls}/{rt}] all products: {len(c)} cases")
     if not cases:
         return None
     meta = dict(label=cls.capitalize(), date=day, products=loaded, last_snapshot=last.strftime("%d %b %H:%M"),
@@ -362,6 +366,7 @@ def main() -> int:
     ap.add_argument("--min-closed", type=int, default=0, help="optional minimum of closed positions to qualify (default 0 = no filter)")
     ap.add_argument("--out", help="output file (default: strategy-selection-to-switch-YYYYMMDD-HHMM.html in this folder)")
     ap.add_argument("--no-latest", action="store_true", help="do not refresh strategy-selection-to-switch-latest.html")
+    ap.add_argument("--return-type", default="both", choices=["both", "net", "alt"], help="both (default): one file with a Net | Alt net toggle; net or alt: a single basis. alt-only builds are named ...-alt.html and never touch -latest")
     ap.add_argument("--as-of", help="rebuild as the data stood at a past time: 'YYYY-MM-DD HH:MM' for every class, or 'crypto=YYYY-MM-DD HH:MM,forex=YYYY-MM-DD HH:MM'. Used to restore an earlier build for the history.")
     ap.add_argument("--dsn")
     args = ap.parse_args()
@@ -376,39 +381,63 @@ def main() -> int:
     if args.products and len(kinds) > 1:
         raise SystemExit("--products needs a single --product-type")
 
-    cases, curves, classes = {}, {}, {}
-    samples = {}
+    rts = ["net", "alt"] if args.return_type == "both" else [args.return_type]
+    started = dt.datetime.now()
+    # Both bases read the same data: nothing newer than the moment the build started (unless --as-of says otherwise).
+    args.cutoff_by_class = {cls_: args.as_of_by_class.get(cls_, started) for cls_ in kinds}
+    cases, classes = {}, {}
+    curves = {rt: {} for rt in rts}
+    samples = {rt: {} for rt in rts}
     with psycopg.connect(get_dsn(args.dsn)) as conn:
         cur = conn.cursor()
         for cls in kinds:
-            day = args.date or pick_date(cur, cls, args.min_hours)
-            print(f"{cls}: {day}")
-            built = build_class(cur, cls, day, [p.strip().lower() for p in args.products.split(",")] if args.products else None, args)
-            if built:
-                cases.update(built[0]); curves.update(built[1]); classes[cls] = built[2]
-                samples[cls] = built[3]
-            else:
-                print(f"  {cls}: nothing qualified on {day}, class left out")
+            # Newest day first; if nothing qualifies on it yet (for example early in the day with a minimum of closed
+            # positions), step back to the previous day with data. An explicit --date is never replaced.
+            days = [args.date] if args.date else candidate_days(cur, cls, args.min_hours)[:5]
+            built, chosen = None, None
+            for day in days:
+                print(f"{cls}: {day}")
+                products_arg = [p.strip().lower() for p in args.products.split(",")] if args.products else None
+                built = build_class(cur, cls, day, products_arg, args, rts[0])
+                if built:
+                    chosen = day
+                    break
+                print(f"  {cls}: nothing qualified on {day}" + (", trying the previous day" if day != days[-1] else ""))
+            if not built:
+                print(f"  {cls}: nothing qualified, class left out")
+                continue
+            results = {rts[0]: built}
+            for rt in rts[1:]:
+                results[rt] = build_class(cur, cls, chosen, products_arg, args, rt)
+            classes[cls] = built[2]
+            for rt, res in results.items():
+                if not res:
+                    raise SystemExit(f"{cls}: the {rt} basis produced nothing on {chosen} although {rts[0]} did")
+                cases.update(res[0])
+                curves[rt].update(res[1])
+                samples[rt][cls] = res[3]
     if not cases:
         raise SystemExit("No qualifying data")
     built = dt.datetime.now()
     models = compact_cases(cases)
-    data = dict(built_at=built.strftime("%d %b %Y %H:%M"), rebuilt_as_of=bool(args.as_of), min_closed=args.min_closed, scen=SCENARIOS, classes=classes, models=models, cases=cases, curves=curves,
+    data = dict(built_at=built.strftime("%d %b %Y %H:%M"), rebuilt_as_of=bool(args.as_of), return_types=rts, default_rt=rts[0],
+                min_closed=args.min_closed, scen=SCENARIOS, classes=classes, models=models, cases=cases, curves=curves,
                 sample=samples)
     summary = "; ".join(f"{k}: {v['date']} as of {v['last_snapshot']}" for k, v in classes.items())
     html = (TEMPLATE.read_text(encoding="utf-8")
             .replace("__BUILT_ISO__", built.strftime("%Y-%m-%dT%H:%M:%S"))
-            .replace("__DATA_SUMMARY__", summary)
-            .replace("__DATA__", json.dumps(data, separators=(",", ":"))))
+            .replace("__DATA_SUMMARY__", summary + ("; bases: " + " + ".join(rts))))
+    html = html.replace("__DATA__", json.dumps(data, separators=(",", ":")))
+    suffix = "-alt" if rts == ["alt"] else ""
     if args.as_of:
         newest = max(dt.datetime.strptime(f"{v['date']} {v['last_snapshot'][-5:]}", "%Y-%m-%d %H:%M") for v in classes.values())
-        default_name = f"strategy-selection-to-switch-asof-{newest:%Y%m%d-%H%M}.html"
+        default_name = f"strategy-selection-to-switch-asof-{newest:%Y%m%d-%H%M}{suffix}.html"
     else:
-        default_name = f"strategy-selection-to-switch-{built:%Y%m%d-%H%M}.html"
+        default_name = f"strategy-selection-to-switch-{built:%Y%m%d-%H%M}{suffix}.html"
     out = Path(args.out) if args.out else HERE / default_name
     out.write_text(html, encoding="utf-8")
-    print(f"wrote {out} ({len(html) / 1024:.0f} KB) - {len(cases)} cases - {summary}")
-    if not args.out and not args.no_latest and not args.as_of:
+    print(f"wrote {out} ({len(html) / 1024:.0f} KB) - {len(cases)} cases - {summary} - bases {'+'.join(rts)}")
+    if not args.out and not args.no_latest and not args.as_of and rts != ["alt"]:
         latest = HERE / "strategy-selection-to-switch-latest.html"
         latest.write_text(html, encoding="utf-8")
         print(f"refreshed {latest.name}")

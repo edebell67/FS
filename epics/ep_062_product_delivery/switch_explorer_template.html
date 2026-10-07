@@ -33,6 +33,8 @@ h1{font-size:30px;letter-spacing:-.04em;margin:6px 0 8px;line-height:1.05}
 .controls label{display:block;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:800;margin-bottom:6px}
 .controls select{width:100%;min-height:48px;background:#081a2b;border:1px solid #365a76;color:var(--white);border-radius:10px;padding:8px 10px}
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:8px}
+.rtnote{margin:6px 0 0;font-size:12px;line-height:1.45;color:var(--muted)}
+.rtnote b{color:var(--amber)}
 .seg button{min-height:48px;border:1px solid #365a76;border-radius:10px;background:#0a1d2e;color:#cfe2ee;font-weight:800;cursor:pointer}
 .seg button.on{background:var(--cyan);border-color:var(--cyan);color:#07111f}
 .hourrow{display:grid;grid-template-columns:48px 1fr 48px;gap:10px;align-items:center}
@@ -100,6 +102,10 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
 .honest b{color:var(--amber)}
 .disc{margin:16px 0 0;font-size:12px;color:var(--muted);line-height:1.55}
 
+/* Optional waitlist: the only external link in the file; it opens only when clicked */
+.waitlistBox{display:flex;flex-direction:column;align-items:stretch;justify-content:space-between;gap:16px;margin:10px 0 14px;padding:13px 14px;background:linear-gradient(110deg,#173b4c,#102740);border:1px solid #34718a;border-radius:14px}
+.waitlistBox b{display:block;color:var(--white);font-size:14px}.waitlistBox p{margin:2px 0;color:var(--muted);font-size:12px;line-height:1.4}.waitlistBox small{display:block;color:#c5d8e3;font-size:11px;line-height:1.35;margin-top:4px}
+.waitlistButton{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;border-radius:11px;padding:8px 14px;background:var(--lime);color:#07111f;text-decoration:none;font-weight:850;font-size:13px;box-shadow:0 4px 16px #0004}.waitlistButton:hover{filter:brightness(1.06)}
 /* Repository sheet: a static sample of the strategy repository as equity curves */
 .repoLink{width:100%;min-height:52px;border:1px solid var(--cyan);border-radius:12px;background:#0a2438;color:var(--white);padding:8px 14px;text-align:left;font-weight:700;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .repoLink small{display:block;color:var(--muted);font-weight:400;font-size:12px}
@@ -134,6 +140,7 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
   .stamp{display:inline-block}
   .intro{max-width:740px}
   .about summary{display:none}
+  .waitlistBox{flex-direction:row;align-items:center;padding:14px 18px}.waitlistBox p{font-size:13px}.waitlistButton{font-size:14px;padding:10px 18px}
   .controls{grid-template-columns:150px 190px 1fr;align-items:end;padding:14px}
   .controls .wide{grid-column:auto}
   .controls .asof{grid-column:1/-1}
@@ -179,8 +186,14 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
     <p class="intro">A scenario selects a strategy. It is compared with similar, opposite, overall and best win rate strategies. You switch only if a comparison strategy is performing better. Real data from <span id="date"></span>, embedded in this file; every choice uses only what was known at the decision time.</p>
   </details>
 
+  <aside class="waitlistBox" aria-label="Optional waitlist">
+    <div><b>Want updates about the Arena?</b><p>The optional waitlist is hosted separately from this historical explorer.</p><small>Joining does not guarantee live access.</small></div>
+    <a class="waitlistButton" href="https://thetechprinciple.com/waitlist/" target="_blank" rel="noopener noreferrer">Join the Arena waitlist <span aria-hidden="true">&#8599;</span></a>
+  </aside>
+
   <section class="controls" aria-label="Decision point">
     <div class="wide" id="klassWrap"><label>Asset class</label><div class="seg" id="klass" role="group" aria-label="Asset class"></div></div>
+    <div class="wide" id="rtWrap"><label>Return basis</label><div class="seg" id="rt" role="group" aria-label="Return basis"></div><p class="rtnote" id="rtNote"></p></div>
     <div><label for="product">Product</label><select id="product"></select></div>
     <div><label for="scen">Selection scenario</label><select id="scen"></select></div>
     <div class="wide"><label for="hour">Decision time <span id="hourLabel" class="mono"></span></label>
@@ -199,7 +212,7 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
     <h2>1 · Strategy selection</h2>
     <div class="rule" id="rule1"></div>
     <button type="button" class="textlink openRepo">Where do these strategies come from? Browse the repository as equity curves</button>
-    <div class="scroll"><table><thead><tr><th>#</th><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win rate</th><th class="num">Net</th></tr></thead><tbody id="top"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>#</th><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win rate</th><th class="num"><span class="Nw">Net</span></th></tr></thead><tbody id="top"></tbody></table></div>
     <h3>Equity curves of the selected strategies up to the decision time</h3>
     <div class="legend" id="leg0"></div>
     <svg id="chart0" viewBox="0 0 360 220" role="img" aria-label="Equity curves of the top six strategies"></svg>
@@ -209,28 +222,28 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
 
   <section class="stage" id="s1">
     <h2>2 · Compare with other strategies</h2>
-    <div class="rule"><b>Best similar</b>: same product, differs in exactly one setting (family, window, take-profit or stop-loss). <b>Best opposite</b>: its equity moves against the selected one (correlation of five-minute changes of -0.2 or lower). <b>Best overall</b>: highest net on <span class="pw">this product</span>. <b>Best win rate</b>: highest share of winning closed positions. Candidates <span class="qualtxt"></span>must be a different strategy with a different net from the selected one (identical results are clones and are never used). If no such strategy exists the card says so. Ties go to the lowest model id.</div>
+    <div class="rule"><b>Best similar</b>: same product, differs in exactly one setting (family, window, take-profit or stop-loss). <b>Best opposite</b>: its equity moves against the selected one (correlation of five-minute changes of -0.2 or lower). <b>Best overall</b>: highest <span class="nw">net</span> on <span class="pw">this product</span>. <b>Best win rate</b>: highest share of closed positions with a positive <span class="nw">net</span>. Candidates <span class="qualtxt"></span>must be a different strategy with a different <span class="nw">net</span> from the selected one (identical results are clones and are never used). If no such strategy exists the card says so. Ties go to the lowest model id.</div>
     <div class="cards" id="cards"></div>
     <h3>Equity curves of the selected strategy and its comparisons up to the decision time</h3>
     <div class="legend" id="leg1"></div>
     <svg id="chart1" viewBox="0 0 360 220" role="img" aria-label="Equity curves of the selected strategy and comparisons"></svg>
     <h3>Similar strategies</h3>
-    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th>Differs by</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num">Net</th></tr></thead><tbody id="group"></tbody></table></div>
-    <h3>Opposite strategies (best five by net)</h3>
-    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num">Net</th></tr></thead><tbody id="opp"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th>Differs by</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num"><span class="Nw">Net</span></th></tr></thead><tbody id="group"></tbody></table></div>
+    <h3>Opposite strategies (best five by <span class="nw">net</span>)</h3>
+    <div class="scroll"><table><thead><tr><th>Model</th><th>Strategy</th><th class="num">Closed</th><th class="num">Win</th><th class="num">Corr.</th><th class="num"><span class="Nw">Net</span></th></tr></thead><tbody id="opp"></tbody></table></div>
     <div class="nav"><button data-go="0">← Back</button><button class="primary" data-go="2">Next: switch →</button></div>
   </section>
 
   <section class="stage" id="s2">
     <h2>3 · Switch, only when better</h2>
-    <div class="rule">Pick what to switch to. The chart then shows what happened next; nothing after the decision time was used to choose it. <b>Always switch:</b> at every following hour the selection and comparison are run again, using only data up to that hour, and you move to the best strategy of the chosen type <b>only if its net is higher than the strategy you hold</b>; otherwise you stay. Switching is assumed free.</div>
+    <div class="rule">Pick what to switch to. The chart then shows what happened next; nothing after the decision time was used to choose it. <b>Always switch:</b> at every following hour the selection and comparison are run again, using only data up to that hour, and you move to the best strategy of the chosen type <b>only if its <span class="nw">net</span> is higher than the strategy you hold</b>; otherwise you stay. Switching is assumed free.</div>
     <div class="chips" id="chips"></div>
     <div class="callout" id="tinfo"></div>
     <div class="legend"><span><i class="dot" style="background:var(--lime)"></i><b class="mono" id="bestName"></b><span id="legTarget"></span></span><span><i class="dot" style="background:var(--cyan)"></i><span class="mono" id="candName"></span> (selected)</span><span><i class="dot" style="background:var(--amber)"></i>decision time</span></div>
     <svg id="chart" viewBox="0 0 360 230" role="img" aria-label="Equity curves"></svg>
     <div class="replay"><label for="head" class="mono" style="color:var(--muted);font-size:12px">Replay</label><input id="head" type="range"><span class="mono" id="headLabel"></span></div>
     <div class="kpis">
-      <div class="kpi"><span class="l">Comparison net at decision</span><b id="k1"></b></div>
+      <div class="kpi"><span class="l">Comparison <span class="nw">net</span> at decision</span><b id="k1"></b></div>
       <div class="kpi"><span class="l">Comparison, since decision</span><b id="k2"></b></div>
       <div class="kpi"><span class="l">Selected, since</span><b id="k3"></b></div>
     </div>
@@ -245,14 +258,14 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
     <h3>Hour by hour</h3>
     <div class="scroll"><table><thead><tr><th>From</th><th>Holding</th><th>Strategy</th><th class="num">Hour change</th><th class="num">Running total</th></tr></thead><tbody id="switches"></tbody></table></div>
     <h3>Closed positions after the switch</h3>
-    <div class="scroll"><table><thead><tr><th>Position</th><th>Time</th><th class="num">Net</th></tr></thead><tbody id="closed"></tbody></table></div>
+    <div class="scroll"><table><thead><tr><th>Position</th><th>Time</th><th class="num"><span class="Nw">Net</span></th></tr></thead><tbody id="closed"></tbody></table></div>
     <h3>Does switching pay?</h3>
     <div class="scroll"><table><thead><tr><th>Switch to</th><th class="num">Starts</th><th class="num">Avg always switch</th><th class="num">Avg stay with selected</th><th class="num">Better</th></tr></thead><tbody id="summary"></tbody></table></div>
     <div class="honest" id="honest"></div>
     <div class="nav"><button data-go="1">← Back</button><span></span></div>
   </section>
 
-  <p class="disc">Historical and analytical only. One day (<span id="dd"></span>), replayed from stored snapshots embedded in this file. It is not investment advice, a signal, a forecast or an execution workflow. Net is the five-minute snapshot's cumulative net return in the platform's units (closed plus open positions). Closed means closed positions.</p>
+  <p class="disc">Historical and analytical only. One day (<span id="dd"></span>), replayed from stored snapshots embedded in this file. It is not investment advice, a signal, a forecast or an execution workflow. <span class="Nw">Net</span> is the five-minute snapshot's cumulative <span class="nw">net</span> return in the platform's units (closed plus open positions). Closed means closed positions.</p>
 </main>
 
 <div class="sheet" id="repo" role="dialog" aria-modal="true" aria-labelledby="repoTitle" hidden>
@@ -260,7 +273,7 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
   <div class="sheetbody">
     <p class="rnote" id="repoNote"></p>
     <div class="rgrid" id="repoGrid"></div>
-    <p class="disc">A static sample for illustration. Each curve is a strategy's cumulative net return through the day as recorded by the platform. The explorer's selection, comparison and switching use only the data available at the decision time, never this view.</p>
+    <p class="disc">A static sample for illustration. Each curve is a strategy's cumulative <span class="nw">net</span> return through the day as recorded by the platform. The explorer's selection, comparison and switching use only the data available at the decision time, never this view.</p>
   </div>
 </div>
 
@@ -278,7 +291,13 @@ const ax=v=>Math.abs(v)>=1000?(v/1000).toFixed(1)+'k':String(Math.round(v));
 const cls=n=>n>0?'pos':n<0?'neg':'';
 const r1=x=>Math.round(x*10)/10;
 const hhmm=m=>String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');
-const cases=DATA.cases,curves=DATA.curves,SC=DATA.scen,CLS=DATA.classes,klasses=Object.keys(CLS);
+const cases=DATA.cases,SC=DATA.scen,CLS=DATA.classes,klasses=Object.keys(CLS);
+// Two return bases live in this file: net_return and alt_net_return (the platform's counterfactual measure).
+const RTS=DATA.return_types||['net'];
+let RT=DATA.default_rt||RTS[0];
+let curves=DATA.curves[RT];
+const NW=()=>RT==='alt'?'alt net':'net',NWC=()=>RT==='alt'?'Alt net':'Net';
+const scenName=k=>RT==='alt'?({net:'Top Alt Net',win:'Top Win Rate (alt)',side:'Top Buy Sell (alt)'})[k]:SC[k];
 const MINC=DATA.min_closed||0;
 const QUAL=MINC>0?`with at least ${MINC} closed positions`:'(no minimum number of closed positions)';
 // Rows arrive as short arrays with strategy and product in one lookup (keeps the file small); rebuild them here.
@@ -288,11 +307,11 @@ const QUAL=MINC>0?`with at least ${MINC} closed positions`:'(no minimum number o
 let klass=klasses.includes('crypto')?'crypto':klasses[0];
 const TL={similar:'Best similar strategy',opposite:'Best opposite strategy',overall:'Best overall strategy',winrate:'Best win rate'};
 const TK=Object.keys(TL);
-const RULES={net:`<b>Scenario: Top Net.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one with the highest net, then the lowest model id.`,win:`<b>Scenario: Top Win Rate.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the highest win rate, then net, then the lowest model id.`,side:`<b>Scenario: Top Buy Sell.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one whose stronger side (buy or sell) is highest, then net, then the lowest model id.`};
+const RULES=()=>({net:`<b>Scenario: ${scenName('net')}.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one with the highest ${NW()}, then the lowest model id.`,win:`<b>Scenario: ${scenName('win')}.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the highest win rate (share of closed positions with a positive ${NW()}), then ${NW()}, then the lowest model id.`,side:`<b>Scenario: ${scenName('side')}.</b> Of all strategies on <span class="pw">this product</span> ${QUAL}, take the one whose stronger side (buy or sell) is highest on ${NW()}, then ${NW()}, then the lowest model id.`});
 let END,XMAX;function setMeta(){END=CLS[klass].last_minute;XMAX=Math.max(240,Math.ceil(END/60)*60)}setMeta();
-const hoursFor=(p,s)=>Object.values(cases).filter(c=>c.cls===klass&&c.product===p&&c.scenario===s).map(c=>c.hour).sort((a,b)=>a-b);
+const hoursFor=(p,s)=>Object.values(cases).filter(c=>c.rt===RT&&c.cls===klass&&c.product===p&&c.scenario===s).map(c=>c.hour).sort((a,b)=>a-b);
 const lastHOf=(p,s)=>{const h=hoursFor(p,s);return h[h.length-1]};
-const productsOf=k=>[...new Set(Object.values(cases).filter(c=>c.cls===k).map(c=>c.product))].sort((a,b)=>(a==='ALL'?-1:b==='ALL'?1:a.localeCompare(b)));
+const productsOf=k=>[...new Set(Object.values(cases).filter(c=>c.rt===RT&&c.cls===k).map(c=>c.product))].sort((a,b)=>(a==='ALL'?-1:b==='ALL'?1:a.localeCompare(b)));
 let products=productsOf(klass);
 const PLABEL=p=>p==='ALL'?'All '+CLS[klass].label.toLowerCase()+' products':p;
 const fmtDate=d=>new Date(d+'T12:00:00').toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'});
@@ -300,19 +319,19 @@ const POF={};Object.values(cases).forEach(c=>{[...c.top,...c.similar,...c.opposi
 const ptag=m=>product==='ALL'&&POF[m]?`<span class="tag grey">${POF[m]}</span>`:'';
 let product=products[0],scen='win',hour=7,target='similar',stage=0,eq={};
 function fillProducts(){$('product').innerHTML=products.map(p=>`<option value="${p}">${PLABEL(p)}</option>`).join('');$('product').value=product}
-$('scen').innerHTML=Object.entries(SC).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');$('scen').value=scen;
+function fillScen(){$('scen').innerHTML=Object.keys(SC).map(k=>`<option value="${k}">${scenName(k)}</option>`).join('');$('scen').value=scen}fillScen();
 const hr=$('hour');hr.step=1;
 function fitHour(){const hs=hoursFor(product,scen);if(!hs.length)return false;hr.min=hs[0];hr.max=hs[hs.length-1];
   hour=hs.reduce((a,b)=>Math.abs(b-hour)<Math.abs(a-hour)?b:a,hs[0]);hr.value=hour;return true}
 fitHour();
-const key=(p,s,h)=>klass+'|'+p+'|'+s+'|'+String(h).padStart(2,'0');
+const key=(p,s,h)=>RT+'|'+klass+'|'+p+'|'+s+'|'+String(h).padStart(2,'0');
 const cur=()=>cases[key(product,scen,hour)];
 // Value as known at the start of minute m (snapshots stamped within minute m are later than m:00:00).
 function at(arr,m){return lastAt(arr,m-1)}
 function bnd(arr,m){return m>=END?lastAt(arr,END):at(arr,m)}
 function lastAt(arr,m){let v=arr[0][1];for(const p of arr){if(p[0]<=m)v=p[1];else break}return v}
 function targetModel(c,t){return c.targets[t]||c.selected}
-function card(label,g,color,note){return `<div class="card" style="border-color:${color}"><span class="l" style="color:${color}">${label}</span><div class="m mono">${g.model}${ptag(g.model)}</div><div class="s mono">${g.strategy}</div><div class="d">${g.trades} closed · ${g.win}% win · corr ${g.corr===null?'n/a':g.corr.toFixed(2)}<br>net <b class="${cls(g.net)}">${fmt(g.net)}</b>${note?`<br><span style="color:var(--muted)">${note}</span>`:''}</div></div>`}
+function card(label,g,color,note){return `<div class="card" style="border-color:${color}"><span class="l" style="color:${color}">${label}</span><div class="m mono">${g.model}${ptag(g.model)}</div><div class="s mono">${g.strategy}</div><div class="d">${g.trades} closed · ${g.win}% win · corr ${g.corr===null?'n/a':g.corr.toFixed(2)}<br>${NW()} <b class="${cls(g.net)}">${fmt(g.net)}</b>${note?`<br><span style="color:var(--muted)">${note}</span>`:''}</div></div>`}
 // Chart geometry follows the real width of the screen, so text stays readable on a phone.
 function sizeSvg(id,mobileH,deskH){const svg=$(id);let w=svg.parentElement.clientWidth;if(!w)w=Math.max(280,Math.min(window.innerWidth,1040)-52);
   const h=w<560?mobileH:deskH;svg.setAttribute('viewBox',`0 0 ${w} ${h}`);return{w,h,L:w<560?40:50,R:w-12}}
@@ -327,7 +346,7 @@ function renderSummary(){
     const avg=k=>res.reduce((a,r)=>a+r[k],0)/(res.length||1);
     return `<tr><td>${TL[t]}</td><td class="num">${res.length}</td><td class="num ${cls(avg('sw'))}">${fmt(Math.round(avg('sw')))}</td><td class="num ${cls(avg('stay'))}">${fmt(Math.round(avg('stay')))}</td><td class="num">${res.filter(r=>r.sw>r.stay).length} of ${res.length}</td></tr>`}).join('');
   $('summary').innerHTML=rows;
-  $('honest').innerHTML=`<b>Reading this.</b> Each start is one hourly decision point on ${PLABEL(product).toLowerCase()} (every hour with a qualifying strategy) for the ${SC[scen]} scenario. "Better" counts starts where always switching ended the day ahead of staying with the selected strategy. One day is a small sample, so this demonstrates the method and does not prove that it works. You only switch when the other strategy's net is higher than the one you hold, so some hours have no switch.`;
+  $('honest').innerHTML=`<b>Reading this.</b> Each start is one hourly decision point on ${PLABEL(product).toLowerCase()} (every hour with a qualifying strategy) for the ${scenName(scen)} scenario. "Better" counts starts where always switching ended the day ahead of staying with the selected strategy. One day is a small sample, so this demonstrates the method and does not prove that it works. You only switch when the other strategy's ${NW()} is higher than the one you hold, so some hours have no switch.`;
 }
 function nameOf(m){return (DATA.models[m]||['(unknown)'])[0]}
 // Always switch, only when better: hold the selected strategy; at each hour move to the best strategy of the chosen type
@@ -350,17 +369,18 @@ function switchPath(prod,sc,S,t){
 function oneSwitch(c,t){const g=c.tinfo[t];return !!(g&&g.model!==c.selected&&g.net>c.similar[0].net)}
 function render(){
   const c=cur(),hh=String(hour).padStart(2,'0');
-  $('ctxText').innerHTML=`<b>${CLS[klass].label}</b> · ${PLABEL(product)} · ${SC[scen]} · ${hh}:00`;
+  applyWording();
+  $('ctxText').innerHTML=`<b>${CLS[klass].label}</b> · ${PLABEL(product)} · ${scenName(scen)} · ${hh}:00${RTS.length>1?' · '+NWC():''}`;
   document.querySelectorAll('.stage').forEach(el=>el.style.opacity=c?1:.35);
   $('hourLabel').textContent=hh+':00';
   if(!c){$('ctxSnap').textContent='';$('asof').textContent='No strategy has data at this time for this product. Try a later hour or another product.';return}
   $('ctxSnap').textContent='snapshot '+c.snap.slice(0,5);
   $('asof').innerHTML=`Using the last snapshot at or before <b>${hh}:00:00</b> (taken ${c.snap}). Nothing later is used to choose.`;
-  $('rule1').innerHTML=RULES[scen]+` ${c.eligible} strategies qualify at this time. Only snapshots and closed positions up to the decision time count. Strategies with exactly the same net are clones and are listed once, so every strategy shown has a different net (up to 6).`;
+  $('rule1').innerHTML=RULES()[scen]+` ${c.eligible} strategies qualify at this time. Only snapshots and closed positions up to the decision time count. Strategies with exactly the same ${NW()} are clones and are listed once, so every strategy shown has a different ${NW()} (up to 6).`;
   const pw=product==='ALL'?'all '+CLS[klass].label.toLowerCase()+' products':'this product';document.querySelectorAll('.pw').forEach(e=>e.textContent=pw);document.querySelectorAll('.qualtxt').forEach(e=>e.textContent=MINC>0?`need at least ${MINC} closed positions and `:'');
   $('top').innerHTML=c.top.map((t,i)=>`<tr class="${t.model===c.selected?'cand':''}"><td>${i+1}</td><td class="mono">${t.model}${ptag(t.model)}${t.model===c.selected?'<span class="tag cyan">selected</span>':''}</td><td class="mono">${t.strategy}</td><td class="num">${t.trades}</td><td class="num">${t.win}%</td><td class="num ${cls(t.net)}">${fmt(t.net)}</td></tr>`).join('');
   const sel=c.similar[0];
-  $('pick1').innerHTML=`<b>Selected: ${sel.model}</b> (${sel.strategy}). ${sel.win}% of ${sel.trades} closed positions won, net ${fmt(sel.net)}. Next, compare it with other strategies.`;
+  $('pick1').innerHTML=`<b>Selected: ${sel.model}</b> (${sel.strategy}). ${sel.win}% of ${sel.trades} closed positions won, ${NW()} ${fmt(sel.net)}. Next, compare it with other strategies.`;
   const palette=['#ff8ea5','#ffd26d','#5de493','#b79cff','#ff9a5c','#9ad1ff'],decision=hour*60;
   eq.chart0={leg:'leg0',upTo:decision,items:c.top.map((t,i)=>t.model===c.selected?{model:t.model,label:'selected',color:'#54d9ff',w:3.4}:{model:t.model,label:'#'+(i+1),color:palette[i%6],w:1.8})};
   const cols={similar:'#c9f45c',opposite:'#ff8ea5',overall:'#ffd26d',winrate:'#5de493'};
@@ -378,11 +398,11 @@ function render(){
     const isBest=members.some(x=>x.model===c.targets.similar),isCand=members.some(x=>x.model===c.selected);
     const clone=r.clones.length?`<span class="tag grey">+${r.clones.length} identical</span>`:'';
     return `<tr class="${isBest?'pick':isCand?'cand':''}"><td class="mono">${g.model}${isBest?'<span class="tag lime">best similar</span>':''}${isCand?'<span class="tag cyan">selected</span>':''}${clone}</td><td class="mono">${g.strategy}</td><td>${g.differs==='selected'?'selected':g.differs+' '+g.value}</td><td class="num">${g.trades}</td><td class="num">${g.win}%</td><td class="num">${g.corr===null?'n/a':g.corr.toFixed(2)}</td><td class="num ${cls(g.net)}">${fmt(g.net)}<span class="bar" style="width:${w}px;background:${g.net>=0?'var(--green)':'var(--pink)'}"></span></td></tr>`}).join('');
-  $('opp').innerHTML=c.opposite.length?c.opposite.map(g=>`<tr class="${g.model===c.targets.opposite?'pick':''}"><td class="mono">${g.model}${ptag(g.model)}${g.model===c.targets.opposite?'<span class="tag lime">best opposite</span>':''}</td><td class="mono">${g.strategy}</td><td class="num">${g.trades}</td><td class="num">${g.win}%</td><td class="num">${g.corr.toFixed(2)}</td><td class="num ${cls(g.net)}">${fmt(g.net)}</td></tr>`).join(''):'<tr><td colspan="6" style="color:var(--muted)">No opposite strategy with at least 6 closed positions at this time.</td></tr>';
+  $('opp').innerHTML=c.opposite.length?c.opposite.map(g=>`<tr class="${g.model===c.targets.opposite?'pick':''}"><td class="mono">${g.model}${ptag(g.model)}${g.model===c.targets.opposite?'<span class="tag lime">best opposite</span>':''}</td><td class="mono">${g.strategy}</td><td class="num">${g.trades}</td><td class="num">${g.win}%</td><td class="num">${g.corr.toFixed(2)}</td><td class="num ${cls(g.net)}">${fmt(g.net)}</td></tr>`).join(''):'<tr><td colspan="6" style="color:var(--muted)">No opposite strategy'+(MINC>0?' with at least '+MINC+' closed positions':'')+' at this time.</td></tr>';
   $('chips').innerHTML=TK.map(t=>`<button class="chip ${t===target?'on':''}" data-t="${t}">${TL[t]}</button>`).join('');
   document.querySelectorAll('.chip').forEach(b=>b.addEventListener('click',()=>{target=b.dataset.t;render()}));
   const g=c.tinfo[target],m=targetModel(c,target),better=oneSwitch(c,target);
-  $('tinfo').innerHTML=g?(better?`<b>Switch from ${sel.model} to ${g.model}</b> (${g.strategy}): its net ${fmt(g.net)} is higher than ${fmt(sel.net)}. ${g.win}% win over ${g.trades} closed positions, correlation ${g.corr===null?'n/a':g.corr.toFixed(2)} with the selected strategy.`:`<b>No switch: stay with ${sel.model}.</b> The ${TL[target].toLowerCase()} is ${g.model} (${g.strategy}) with net ${fmt(g.net)}, which is not higher than ${fmt(sel.net)}.`):`<b>No ${TL[target].toLowerCase()} at this time</b>, so you stay with ${sel.model}.`;
+  $('tinfo').innerHTML=g?(better?`<b>Switch from ${sel.model} to ${g.model}</b> (${g.strategy}): its ${NW()} ${fmt(g.net)} is higher than ${fmt(sel.net)}. ${g.win}% win over ${g.trades} closed positions, correlation ${g.corr===null?'n/a':g.corr.toFixed(2)} with the selected strategy.`:`<b>No switch: stay with ${sel.model}.</b> The ${TL[target].toLowerCase()} is ${g.model} (${g.strategy}) with ${NW()} ${fmt(g.net)}, which is not higher than ${fmt(sel.net)}.`):`<b>No ${TL[target].toLowerCase()} at this time</b>, so you stay with ${sel.model}.`;
   $('legTarget').textContent=better?' (switch to)':' (comparison, not switched to)';
   $('bestName').textContent=m;$('candName').textContent=c.selected;
   const bc=curves[m],dm=hour*60,hd=$('head');
@@ -455,13 +475,13 @@ function spark(series){
   return `<svg viewBox="0 0 160 72" preserveAspectRatio="none" aria-hidden="true"><line x1="0" x2="160" y1="${z}" y2="${z}" stroke="#2a4c67" stroke-dasharray="3 3" vector-effect="non-scaling-stroke"/><polygon points="${X(0).toFixed(1)},${z} ${line} ${X(n-1).toFixed(1)},${z}" fill="${col}" fill-opacity=".18"/><polyline points="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg>`;
 }
 function renderRepo(){
-  const S=DATA.sample&&DATA.sample[klass];if(!S)return;
+  const S=DATA.sample&&DATA.sample[RT]&&DATA.sample[RT][klass];if(!S)return;
   const lab=CLS[klass].label;
   $('repoKicker').textContent=lab+' · '+fmtDate(CLS[klass].date);
-  $('repoNote').textContent=`A static sample of ${S.items.length} of the ${S.total.toLocaleString('en-US')} ${lab.toLowerCase()} strategies${MINC>0?' with at least '+MINC+' closed positions':''} (${S.distinct.toLocaleString('en-US')} of them have different results; the rest are clones). The sample is spread evenly from best to worst by net at the end of the day. Full-day equity curves, one card per strategy.`;
+  $('repoNote').textContent=`A static sample of ${S.items.length} of the ${S.total.toLocaleString('en-US')} ${lab.toLowerCase()} strategies${MINC>0?' with at least '+MINC+' closed positions':''} (${S.distinct.toLocaleString('en-US')} of them have different results; the rest are clones). The sample is spread evenly from best to worst by ${NW()} at the end of the day. Full-day equity curves, one card per strategy.`;
   $('repoGrid').innerHTML=S.items.map(r=>`<article class="rc"><div class="n mono">${r.strategy}</div><div class="m mono">${r.model} · ${r.product}</div>${spark(r.series)}<div class="f"><span>${r.closed} closed · ${r.win}% win</span><b class="${cls(r.net)}">${fmt(r.net)}</b></div></article>`).join('');
 }
-function updateRepoBtn(){const S=DATA.sample&&DATA.sample[klass];$('repoBtn').style.display=S?'':'none';if(S)$('repoBtnSub').textContent=`A sample of ${S.items.length} of ${S.total.toLocaleString('en-US')} ${CLS[klass].label.toLowerCase()} strategies as equity curves`}
+function updateRepoBtn(){const S=DATA.sample&&DATA.sample[RT]&&DATA.sample[RT][klass];$('repoBtn').style.display=S?'':'none';if(S)$('repoBtnSub').textContent=`A sample of ${S.items.length} of ${S.total.toLocaleString('en-US')} ${CLS[klass].label.toLowerCase()} strategies as equity curves`}
 function openRepo(){renderRepo();$('repo').hidden=false;document.body.style.overflow='hidden';$('repo').scrollTop=0;$('repoClose').focus()}
 function closeRepo(){$('repo').hidden=true;document.body.style.overflow=''}
 document.querySelectorAll('.openRepo').forEach(b=>b.addEventListener('click',openRepo));
@@ -474,12 +494,21 @@ function go(n){stage=n;
   requestAnimationFrame(redrawCharts);
 }
 document.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',()=>go(+b.dataset.go)));
+function applyWording(){document.querySelectorAll('.nw').forEach(e=>e.textContent=NW());document.querySelectorAll('.Nw').forEach(e=>e.textContent=NWC());document.title=RT==='alt'?'Select, Compare, Switch (alt net)':'Select, Compare, Switch'}
+function rtHint(){if(RT==='net')return 'Net return: what each closed position actually returned, after costs.';
+  const base='Alt net return: the platform\'s counterfactual measure, what a reversed position would have returned after the same cost.';
+  return klass==='forex'?base+' <b>For forex it is not a simple mirror of net return.</b>':base}
+function renderRT(){$('rtWrap').style.display=RTS.length>1?'':'none';
+  $('rt').innerHTML=RTS.map(r=>`<button type="button" data-r="${r}" class="${r===RT?'on':''}">${r==='alt'?'Alt net':'Net'}</button>`).join('');
+  $('rt').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setRT(b.dataset.r)));$('rtNote').innerHTML=rtHint();applyWording()}
+function setRT(r){if(r===RT)return;RT=r;curves=DATA.curves[RT];products=productsOf(klass);if(!products.includes(product))product=products[0];
+  fillProducts();fillScen();fitHour();renderRT();render();updateRepoBtn();if(!$('repo').hidden)renderRepo()}
 function renderKlass(){$('klassWrap').style.display=klasses.length>1?'':'none';
   $('klass').innerHTML=klasses.map(k=>`<button type="button" data-k="${k}" class="${k===klass?'on':''}">${CLS[k].label}</button>`).join('');
   $('klass').querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>setKlass(b.dataset.k)))}
 function setKlass(k){if(k===klass)return;klass=k;setMeta();products=productsOf(k);product=products[0];
   $('date').textContent=fmtDate(CLS[k].date);$('dd').textContent=$('date').textContent;
-  fillProducts();fitHour();renderKlass();render();updateRepoBtn();if(!$('repo').hidden)renderRepo()}
+  fillProducts();fitHour();renderKlass();renderRT();render();updateRepoBtn();if(!$('repo').hidden)renderRepo()}
 $('product').addEventListener('change',e=>{product=e.target.value;fitHour();render()});
 $('scen').addEventListener('change',e=>{scen=e.target.value;fitHour();render()});
 hr.addEventListener('input',()=>{hour=+hr.value;render()});
@@ -491,7 +520,7 @@ let rt;window.addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(redr
 $('date').textContent=fmtDate(CLS[klass].date);$('dd').textContent=$('date').textContent;
 if(window.matchMedia('(min-width:720px)').matches)$('about').open=true;
 $('stamp').textContent='Data as of '+klasses.map(k=>CLS[k].label+' '+CLS[k].last_snapshot).join(' · ')+' · built '+DATA.built_at+(DATA.rebuilt_as_of?' · rebuilt from stored data as it stood then (history copy)':'');
-fillProducts();renderKlass();
+fillProducts();renderKlass();renderRT();
 render();updateRepoBtn();
 </script>
 </body>
