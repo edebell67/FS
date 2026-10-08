@@ -113,13 +113,24 @@ def load_product(cur, day: str, product: str, as_of=None, return_type: str = "ne
     return meta, snaps, closed
 
 
+CURVE_STEP = 1  # minutes between curve points; --curve-step 2 keeps every 2nd minute (plus decision lookups) to stay under 7 MB
+
+
 def compress_curve(points):
     """One point per minute (the last), then only the first and last point of each flat run: same drawn shape,
-    same lookups, a quarter of the size."""
+    same lookups, a quarter of the size. With CURVE_STEP > 1 only every STEP-th minute is kept, plus the last minute
+    before each 5-minute mark (minute % 5 == 4), so the value shown at every 5-minute, 30-minute and hourly
+    decision (the last point strictly before the mark) is unchanged."""
     per_minute = {}
     for m, v in points:
         per_minute[m] = v
     pts = sorted(per_minute.items())
+    if CURVE_STEP > 1 and len(pts) > 2:
+        keep = [x for x in pts if x[0] % CURVE_STEP == 0 or x[0] % 5 == 4]
+        for x in (pts[0], pts[-1]):
+            if x not in keep:
+                keep.append(x)
+        pts = sorted(keep)
     out = []
     for i, (m, v) in enumerate(pts):
         before = pts[i - 1][1] if i > 0 else None
@@ -365,11 +376,14 @@ def main() -> int:
     ap.add_argument("--first-hour", type=int, default=3)
     ap.add_argument("--min-closed", type=int, default=0, help="optional minimum of closed positions to qualify (default 0 = no filter)")
     ap.add_argument("--out", help="output file (default: strategy-selection-to-switch-YYYYMMDD-HHMM.html in this folder)")
+    ap.add_argument("--curve-step", type=int, default=1, help="minutes between curve points (2 shrinks a full-day build under 7 MB)")
     ap.add_argument("--no-latest", action="store_true", help="do not refresh strategy-selection-to-switch-latest.html")
     ap.add_argument("--return-type", default="both", choices=["both", "net", "alt"], help="both (default): one file with a Net | Alt net toggle; net or alt: a single basis. alt-only builds are named ...-alt.html and never touch -latest")
     ap.add_argument("--as-of", help="rebuild as the data stood at a past time: 'YYYY-MM-DD HH:MM' for every class, or 'crypto=YYYY-MM-DD HH:MM,forex=YYYY-MM-DD HH:MM'. Used to restore an earlier build for the history.")
     ap.add_argument("--dsn")
     args = ap.parse_args()
+    global CURVE_STEP
+    CURVE_STEP = max(1, args.curve_step)
     kinds = ["crypto", "forex"] if args.product_type == "both" else [args.product_type]
     args.as_of_by_class = {}
     if args.as_of:
