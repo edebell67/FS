@@ -1,12 +1,13 @@
 ---
 name: ep062-switch-explorer-rebuild
 description: Re-create the EP062 "Select. Compare. Switch." interactive web app on demand with up-to-date data, for crypto and forex (kept separate, chosen with an asset-class switch), including the hermes variant, a minimum-closed-positions option and the Join the Arena waitlist button. Use when asked to rebuild, refresh, update, regenerate, timestamp, restore or send a new version of the strategy selection / compare / switch explorer or its hermes version, or to build it for a different date, product, asset class or minimum. Produces ONE self-contained, timestamped html file (data embedded, no server, no data requests) that users open by double-clicking.
-version: 1.7.0
+version: 1.7.1
 ---
 
 # EP062 Switch Explorer: rebuild on demand
 
 > VERSION HISTORY
+> - v1.7.1 · 2026-10-08 · Full-day builds: `--curve-step 2` (keep every second curve minute plus the last minute before each 5-minute mark; decision values unchanged) keeps a two-basis build under the 7 MB limit (a near-full day was 7.1 to 7.3 MB without it, 6.2 MB with it); rule 15 and the troubleshooting table updated.
 > - v1.7.0 · 2026-10-07 · Deploy to the website: live home is https://thetechprinciple.com/epic/ep062/ (repo edebell67/epics, master, folder epic/ep062/); new "Deploy to /epic/ep062" section with the exact steps, page layout and checks.
 > - v1.6.1 · 2026-10-07 · The hermes variant carries the Net | Alt net toggle too (hermes builder v1.4.0, verifier 14 checks, 7 MB limit); it opens on Net; an older single-basis source is wrapped and shows no toggle.
 > - v1.6.0 · 2026-10-07 · Net | Alt net toggle: one file carries both return bases (net_return and alt_net_return) built from one fixed data cutoff; `--return-type both|net|alt` (default both); wording follows the basis; the hermes builder keeps the net basis; verification 28 checks; file about 5 MB with both classes on a full day (limit 7 MB).
@@ -55,7 +56,7 @@ Edit the template or builder for any change. Never hand-edit a generated html: t
 
 ```powershell
 cd C:\Users\edebe\eds\epics\ep_062_product_delivery
-python build_switch_explorer.py
+python build_switch_explorer.py   # add --curve-step 2 for a full day (after about 17:00) so the file stays under 7 MB
 ```
 
 A full build (both classes) takes about 6 to 8 minutes. Run it in the background and wait for the final `wrote ...` and `refreshed ...` lines (the monitor must tolerate that long). `--product-type crypto` alone takes about a minute.
@@ -131,7 +132,7 @@ Optional browser smoke test (the user never needs a server; this is only for tes
 12. **Repository sample is static and illustrative.** An evenly spread sample (24 per class, best to worst by end-of-day net, distinct nets only, respecting any minimum) with full-day curves, never the whole repository, no sorting, search or paging; it states the real totals and that selection never uses it; two cards across on phones, three from 720 px, four from 1000 px; Escape closes. It lives inside the file.
 13. **Join the Arena waitlist button.** Exactly one `<a class="waitlistButton" href="https://thetechprinciple.com/waitlist/" target="_blank" rel="noopener noreferrer">` in the "Want updates about the Arena?" box below the intro, with the wording "The optional waitlist is hosted separately from this historical explorer." and "Joining does not guarantee live access." Never add another external link, tracking or form. Keep it in both the main template and the hermes template.
 14. **Net | Alt net toggle.** Both bases are in the one file; every word that says net comes from the chosen basis (`NW()`, `NWC()`, `scenName()` and the `nw` / `Nw` spans), never hard-coded. Open on Net. Product, scenario and hour stay put when flipping. Both bases must cover exactly the same cases (checked). Show the definition note under the toggle (alt net = the platform's counterfactual measure, what a reversed position would have returned after the same cost) and, for forex, "For forex it is not a simple mirror of net return." Evidence behind that note (combined_trades_closed, all history): crypto net + alt is a near constant -40 on 1.86 million positions (correlation -1.000, every product, both months), so alt is net reversed minus a fixed cost; forex is not (net + alt averages -28 with a standard deviation of 48; per-strategy averages correlate +0.35). Never describe alt as a pure mirror for forex. Do not use the word "trade" in the alt definition.
-15. **Keep the file small.** Curves keep one point per minute and only the first and last point of each flat run; case rows are short arrays with strategy names in one lookup, rebuilt by `hydrate()`. Aim for about 3 MB per basis (about 5 MB for a full day, both bases, both classes; verification flags files over 7 MB). If you change the data layout, change the builder, the template's `hydrate()` and `verify_explorer.py` together.
+15. **Keep the file small.** Curves keep one point per minute and only the first and last point of each flat run; case rows are short arrays with strategy names in one lookup, rebuilt by `hydrate()`. Aim for about 3 MB per basis (about 5 MB for a full day, both bases, both classes; verification flags files over 7 MB). A near-full day can reach 7.1 to 7.3 MB: build with `--curve-step 2` (every second curve minute, plus the last minute before each 5-minute mark, so the value at every 5-minute, 30-minute and hourly decision is unchanged; only the drawn line is slightly coarser), which gave 6.2 MB. If you change the data layout, change the builder, the template's `hydrate()` and `verify_explorer.py` together.
 
 ## Deliver
 
@@ -193,5 +194,5 @@ Gotchas:
 | Page shows the dim "No strategy has data at this time" notice | Early hours or an empty product; pick a later hour or another product. |
 | Stage 1 list shorter than 6 | Several strategies shared the same net and were collapsed as clones. Expected. |
 | Build is slow | Both classes take 6 to 8 minutes. Use `--product-type` or `--products` for a quick check, then run the full build in the background. |
-| File over about 7 MB | Too many products or the compact encoding was broken. Use `--products`, or check `compress_curve` and `compact_cases` in the builder. |
+| File over about 7 MB | A full day with both bases: rebuild with `--curve-step 2` (about 6.2 MB). Otherwise too many products or the compact encoding was broken: use `--products`, or check `compress_curve` and `compact_cases` in the builder. |
 | Verification fails on wording | Search the template for "trade" or "trading" in visible text and change to "switch" or "closed positions". |
