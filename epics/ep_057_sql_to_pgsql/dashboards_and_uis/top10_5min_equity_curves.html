@@ -734,6 +734,12 @@
 
           <!-- Configurable Exit Threshold Control (Default: 0, e.g. -50) -->
           <div class="flex items-center gap-1.5 bg-slate-900 px-2 py-0.5 rounded-lg border border-slate-800 text-[11px]">
+            <label for="overlayTopXInput" class="text-slate-400 font-semibold" title="Keep the current strategy while it remains among the top X ranked candidates">Hold if rank ≤</label>
+            <select id="overlayTopXInput" class="bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-amber-300 font-mono text-xs focus:outline-none focus:border-amber-500" title="Keep the current strategy while it remains in the top X">
+              <option value="1" selected>#1</option>
+              <option value="2">#2</option>
+              <option value="3">#3</option>
+            </select>
             <span id="thresholdLabel" class="text-slate-400 font-semibold" title="In Total Net, |Exit| is the minimum challenger lead required to rotate strategies">Lead &gt; |Exit|:</span>
             <input type="number" id="exitThresholdInput" value="0" step="10" class="w-16 bg-slate-950 border border-slate-700 rounded px-1.5 py-0.5 text-amber-300 font-mono text-center text-xs focus:outline-none focus:border-amber-500" title="Set exit threshold (e.g. 0, -25, -50, -100, -150)">
             <div class="flex items-center gap-0.5 ml-1">
@@ -1296,6 +1302,7 @@
     let showTradeValues = true; // $ value label per overlay trade (entry -> X exit)
     let lastOverlayTrades = null; // { model, trades, from, to } from the latest Tri-Split draw
     let exitThreshold = 0; // Configurable exit threshold for overlay trades ('X' signals)
+    let overlayTopX = 1; // Hold the current candidate while it remains within this rank
     let dailyTarget = 500; // Print T when cumulative overlay P&L first reaches this value; 0 disables it
     let hourlyReportFamily = 'all';
     let hourlyReportDate = null;
@@ -4631,6 +4638,13 @@ ${preview}`)) return;
       }
 
       // [V20260921_0308] Configurable Exit Threshold Controls
+      const overlayTopXInput = document.getElementById('overlayTopXInput');
+      if (overlayTopXInput) {
+        overlayTopXInput.addEventListener('change', (e) => {
+          overlayTopX = Math.max(1, Math.min(3, Number(e.target.value) || 1));
+          drawChart();
+        });
+      }
       const exitInput = document.getElementById('exitThresholdInput');
       if (exitInput) {
         exitInput.addEventListener('input', (e) => {
@@ -5437,7 +5451,9 @@ ${preview}`)) return;
           continue;
         }
 
-        if (leader.model.model !== position.model.model && leader.delta - heldDelta > threshold) {
+        const heldRankIndex = ranked.findIndex(item => item.model.model === position.model.model);
+        const heldRank = heldRankIndex < 0 ? Infinity : heldRankIndex + 1;
+        if (leader.model.model !== position.model.model && heldRank > overlayTopX && leader.delta - heldDelta > threshold) {
           closePosition(idx, time, true);
           position = { model: leader.model, entryIdx: idx, entryTime: time, entryVal: leader.delta };
           signals.push({ idx, time, type: 'B', model: leader.model.model, color: leader.model.color,
@@ -5567,9 +5583,11 @@ ${preview}`)) return;
           continue;
         }
 
+        const heldRankIndex = ranked.findIndex(item => item.model.model === position.model.model && item.side === position.side);
+        const heldRank = heldRankIndex < 0 ? Infinity : heldRankIndex + 1;
         const sameCandidate = leader.model.model === position.model.model && leader.side === position.side;
         const sameExposure = exposureFor(leader) === exposureFor(position);
-        if (!sameCandidate && !sameExposure && leader.delta - heldDelta > threshold) {
+        if (!sameCandidate && !sameExposure && heldRank > overlayTopX && leader.delta - heldDelta > threshold) {
           closePosition(idx, time, true);
           enter(leader, idx, time);
         }
