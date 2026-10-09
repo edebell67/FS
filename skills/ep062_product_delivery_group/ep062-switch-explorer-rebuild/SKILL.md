@@ -1,12 +1,13 @@
 ---
 name: ep062-switch-explorer-rebuild
 description: Re-create the EP062 "Select. Compare. Switch." interactive web app on demand with up-to-date data, for crypto and forex (kept separate, chosen with an asset-class switch), including the hermes variant, a minimum-closed-positions option and the Join the Arena waitlist button. Use when asked to rebuild, refresh, update, regenerate, timestamp, restore or send a new version of the strategy selection / compare / switch explorer or its hermes version, or to build it for a different date, product, asset class or minimum. Produces ONE self-contained, timestamped html file (data embedded, no server, no data requests) that users open by double-clicking.
-version: 1.7.1
+version: 1.8.0
 ---
 
 # EP062 Switch Explorer: rebuild on demand
 
 > VERSION HISTORY
+> - v1.8.0 · 2026-10-09 · Stable shareable address https://thetechprinciple.com/epic/ep062/latest/ (guided app; `latest/full.html` for the full app) with an `arc/` archive; `scripts/rotate_latest.py` moves the old latest into arc/ and installs the new builds; the explorers carry a "Where this comes from" section (the Scenario Engine screen, `assets/scenario_engine_screen.webp`, embedded as a data URI).
 > - v1.7.1 · 2026-10-08 · Full-day builds: `--curve-step 2` (keep every second curve minute plus the last minute before each 5-minute mark; decision values unchanged) keeps a two-basis build under the 7 MB limit (a near-full day was 7.1 to 7.3 MB without it, 6.2 MB with it); rule 15 and the troubleshooting table updated.
 > - v1.7.0 · 2026-10-07 · Deploy to the website: live home is https://thetechprinciple.com/epic/ep062/ (repo edebell67/epics, master, folder epic/ep062/); new "Deploy to /epic/ep062" section with the exact steps, page layout and checks.
 > - v1.6.1 · 2026-10-07 · The hermes variant carries the Net | Alt net toggle too (hermes builder v1.4.0, verifier 14 checks, 7 MB limit); it opens on Net; an older single-basis source is wrapped and shows no toggle.
@@ -143,30 +144,28 @@ Optional browser smoke test (the user never needs a server; this is only for tes
 
 ## Deploy to /epic/ep062 (the website)
 
-The web apps live at **https://thetechprinciple.com/epic/ep062/** (landing page) with the two latest apps beside it. It is served by GitHub Pages from the separate repo `edebell67/epics`, branch `master`, folder `epic/ep062/`. (The FS repo also holds an older copy at `epics/ep_046_thetechprinciple/site/explorer/`; that is not the live site.)
+The web apps live at **https://thetechprinciple.com/epic/ep062/** and a stable **latest** address that always serves the newest build and is the one to share (for example in a YouTube description): **https://thetechprinciple.com/epic/ep062/latest/** (the guided app) and **https://thetechprinciple.com/epic/ep062/latest/full.html** (the full app). It is served by GitHub Pages from the separate repo `edebell67/epics`, branch `master`, folder `epic/ep062/`. (The FS repo also holds an older copy at `epics/ep_046_thetechprinciple/site/explorer/`; that is not the live site.)
 
 Only deploy when the user asks in the current conversation ("deploy", "publish", "push to /epic"). Publishing is outward-facing; confirm before the push.
 
 Layout of `epic/ep062/`:
 
-| File | Purpose |
+| Path | Purpose |
 |---|---|
-| `index.html` | Landing page, title "Select. Compare. Switch.", two cards for the latest apps and an "Earlier builds" list. Uses the live site's `/styles.css`, root-relative links (`/#platforms`, `/#how-we-build`, `/#proof`, `/#contact`). |
-| `choose-compare-review-latest.html` | Latest hermes build (copy of the newest `hermes/strategy-selection-to-switch-hermes-*.html`). |
-| `select-compare-switch-latest.html` | Latest main build (copy of the newest `strategy-selection-to-switch-*-min6-toggle.html`). |
-| `builds/` | Every earlier build, kept for history. |
+| `latest/index.html` | The newest guided (hermes) build, opens straight at `/epic/ep062/latest/`. |
+| `latest/full.html` | The newest full (main) build. |
+| `arc/` | Every earlier build, kept for history (never delete). Dated names: `strategy-selection-to-switch-hermes-YYYYMMDD-HHMM.html` and `strategy-selection-to-switch-YYYYMMDD-HHMM-full.html`; older ones keep their original names. |
+| `index.html` | Landing page "Select. Compare. Switch.": two cards that link `latest/` and `latest/full.html`, the "Latest data" line, and an Archive list per app linking `arc/`. Uses the live site's `/styles.css` and root-relative links (`/#platforms`, `/#how-we-build`, `/#proof`, `/#contact`). |
 
-Steps:
+Steps (every new build):
 
 1. Build and verify both files (sections above). Both must pass (28 and 14 checks).
 2. Clone `https://github.com/edebell67/epics.git` into the scratchpad (never work in a checkout with other people's changes). Confirm the default branch with `git symbolic-ref --short HEAD` (it is `master`).
-3. Move the current `*-latest.html` files into `epic/ep062/builds/` under their timestamped names (the files carry their own timestamp in the leading comment; keep the dated names the builder produced), then copy the two new builds in as the `*-latest.html` files. Never delete a previous build.
-4. Update `epic/ep062/index.html`: the "Latest data: ... as of HH:MM" sentence, and add the old latest to the "Earlier builds" lists (newest first, label = build date and time).
-5. Update `sitemap.xml`: the `https://thetechprinciple.com/epic/ep062/` entry's `<lastmod>`.
-6. Do NOT touch the nav, drawer and footer links in the root `index.html` unless they are missing; they are already there (`epic/ep062/`, labelled "Explorer" and "Strategy Explorer").
-7. Test locally: `python -m http.server <port>` in the clone, open `/epic/ep062/`, check that every link on the page returns 200 and the apps open (no page errors). Stop the server.
-8. Commit only the files you changed (`git add epic/ep062 sitemap.xml`, plus `index.html` only if you edited it). Put the commit message in a file and use `git commit -F`. The message must let another model understand the change: what was deployed, data-as-of per class, the minimum applied, the source commits in FS, and how to refresh. Use the message of the first deploy (`e897403`) as the template.
-9. Push to `master`, then poll https://thetechprinciple.com/epic/ep062/ and both `*-latest.html` URLs until they return 200 (GitHub Pages takes one to five minutes). Report the live URLs.
+3. **Rotate:** run `python scripts/rotate_latest.py <clone>/epic/ep062 --guided <new hermes build> --full <new main build>` (add `--dry-run` first if unsure). It moves the files in `latest/` into `arc/` under dated names (read from each file's own generated stamp), installs the new builds in `latest/`, adds the old ones to the Archive lists on the landing page, updates the "Latest data" line and the sitemap `lastmod`. It refuses to overwrite an archived build. Never delete anything from `arc/`.
+4. Do NOT touch the nav, drawer and footer links in the root `index.html` unless they are missing; they are already there (`epic/ep062/`, labelled "Explorer" and "Strategy Explorer").
+5. Test locally: `python -m http.server <port>` in the clone, open `/epic/ep062/` and `/epic/ep062/latest/`, check that every link on the landing page returns 200 and the apps open (no page errors). Stop the server.
+6. Commit only the files you changed (`git add -A epic/ep062 sitemap.xml`). Put the commit message in a file and use `git commit -F`. The message must let another model understand the change: what was deployed, data-as-of per class, the minimum applied, the source commits in FS, and how it was refreshed. Use the earlier deploy commits as the template.
+7. Push to `master`, then poll https://thetechprinciple.com/epic/ep062/latest/ (and `latest/full.html`, and the landing page's "Latest data" line) until they return the new build (GitHub Pages takes one to five minutes). Report the live URLs.
 
 Gotchas:
 
@@ -174,6 +173,7 @@ Gotchas:
 - The root site is the restructured site: its sections are `#platforms`, `#how-we-build`, `#proof`, `#contact`. The old FS `site/` anchors (`#services`, `#work`) do not exist there.
 - Each app keeps exactly one external link (the waitlist button). Do not add others when editing the landing page.
 - The repo is public: scan new builds for secrets before the push (the builds hold strategy performance data only).
+- Browsers and YouTube cache the `latest/` URL briefly; the address itself never changes.
 
 ## Housekeeping (this repo)
 
