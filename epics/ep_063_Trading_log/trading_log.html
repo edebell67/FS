@@ -21,7 +21,8 @@ ul{list-style:none;margin:0;padding:0;max-height:calc(50vh - 90px);overflow-y:au
 .sec .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
 .cnt{margin-left:auto;background:var(--c);color:#0d1117;border-radius:10px;padding:0 10px;font-size:12px}
 h2.grp{font:700 15px system-ui,sans-serif;margin:18px 0 8px;padding:6px 12px;border-radius:6px;background:#1f2a44;color:#8fa0ff;letter-spacing:.05em;text-transform:uppercase}
-h2.grp.live{background:#3a2a10;color:#f0b24a}h2.grp small{font-weight:400;text-transform:none;opacity:.7}
+h2.grp.live{background:#3a2a10;color:#f0b24a}h3.pf{font:700 13px system-ui,sans-serif;margin:14px 0 6px;padding:4px 10px;border-left:4px solid #f0b24a;color:#f0b24a;background:#241c0c;border-radius:4px;letter-spacing:.05em}
+h2.grp small{font-weight:400;text-transform:none;opacity:.7}
 li{padding:6px 12px;border-bottom:1px solid #1b232e;white-space:pre-wrap;overflow-wrap:anywhere}
 li.closed{background:#161b22;color:#9aa7b4}
 .tag{color:#8fa0ff}.buy{color:#3fb950}.sell{color:#f85149}.pos{color:#3fb950}.neg{color:#f85149}
@@ -36,8 +37,7 @@ li.closed{background:#161b22;color:#9aa7b4}
 <details class="sec open" open><summary><span class="dot"></span>Open orders <span class="cnt" id="n-log-open">0</span></summary><ul id="log-open"></ul></details>
 <details class="sec closed" open><summary><span class="dot"></span>Closed orders <span class="cnt" id="n-log-closed">0</span></summary><ul id="log-closed"></ul></details>
 <h2 class="grp live">Live trades <small>(combined_trade_live)</small></h2>
-<details class="sec open" open><summary><span class="dot"></span>Open orders <span class="cnt" id="n-live-open">0</span></summary><ul id="live-open"></ul></details>
-<details class="sec closed" open><summary><span class="dot"></span>Closed orders <span class="cnt" id="n-live-closed">0</span></summary><ul id="live-closed"></ul></details>
+<div id="live-groups"></div>
 </main>
 <script>
 var timer,type='all',st=document.getElementById('status');
@@ -45,26 +45,34 @@ function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{
 function row(r){
   var tag=type==='all'?'<span class="tag">['+esc(r.product_type)+']</span> - ':'';
   var q=Math.round(r.quantity*1e6)/1e6, base=esc(r.model.toLowerCase())+'  '+esc(r.strategy)+'  <span class="'+esc(r.side)+'">'+esc(r.side)+'</span> '+q+' '+esc(r.product)+' '+r.entry_price;
-  if(r.portfolio)base='<span class="badge">'+esc(r.portfolio)+'</span> '+base;
   if(r.status==='closed'){
     var n=r.net_return==null?'':' <span class="'+(r.net_return>=0?'pos':'neg')+'">net '+r.net_return.toFixed(2)+'</span>';
     return '<li class="closed">'+tag+esc(r.closed_at)+' <span class="badge">CLOSED'+(r.close_type?' · '+esc(r.close_type):'')+'</span> '+base+' → exit '+(r.exit_price==null?'':r.exit_price)+n+'</li>';
   }
   return '<li>'+tag+esc(r.created)+'  '+base+'</li>';
 }
+var liveClosed={};
+document.addEventListener('toggle',function(e){var d=e.target;if(d.dataset&&d.dataset.k)liveClosed[d.dataset.k]=!d.open},true);
+function renderLive(rows){
+  var pfs=['LIVE','LIVE_ALT'];rows.forEach(function(r){var p=r.portfolio||'(none)';if(pfs.indexOf(p)<0)pfs.push(p)});
+  document.getElementById('live-groups').innerHTML=pfs.map(function(p){
+    return '<h3 class="pf">'+esc(p)+'</h3>'+['open','closed'].map(function(s){
+      var rs=rows.filter(function(r){return (r.portfolio||'(none)')===p&&r.status===s}),k=p+'|'+s;
+      return '<details class="sec '+s+'" data-k="'+esc(k)+'"'+(liveClosed[k]?'':' open')+'><summary><span class="dot"></span>'+(s==='open'?'Open':'Closed')+' orders <span class="cnt">'+rs.length+'</span></summary><ul>'+(rs.map(row).join('')||'<li>None</li>')+'</ul></details>'}).join('')}).join('');
+}
 var fq='';function load(){
   var t=type;
   var qs='&'+['model','strategy','product','signal'].map(function(k){return k+'='+encodeURIComponent(document.getElementById('f-'+k).value)}).join('&');
   fq=qs;
   Promise.all(['trade_log','live_trade_log'].map(function(ep){
-    return fetch('/api/'+ep+'?type='+t+'&limit=50'+qs,{cache:'no-store'}).then(function(r){return r.json()})})).then(function(res){
+    return fetch('/api/'+ep+'?type='+t+'&limit='+(ep==='live_trade_log'?200:50)+qs,{cache:'no-store'}).then(function(r){return r.json()})})).then(function(res){
     if(t!==type||fq!==qs)return;
     var d=res[0];
     res.forEach(function(x){if(x.error)throw new Error(x.error)});
-    [['log-',res[0]],['live-',res[1]]].forEach(function(g){['open','closed'].forEach(function(s){
-      var rs=g[1].rows.filter(function(r){return r.status===s});
-      document.getElementById(g[0]+s).innerHTML=rs.map(row).join('')||'<li>None</li>';
-      document.getElementById('n-'+g[0]+s).textContent=rs.length})});
+    ['open','closed'].forEach(function(s){var rs=res[0].rows.filter(function(r){return r.status===s});
+      document.getElementById('log-'+s).innerHTML=rs.map(row).join('')||'<li>None</li>';
+      document.getElementById('n-log-'+s).textContent=rs.length});
+    renderLive(res[1].rows);
     st.textContent='updated '+d.generated_at.slice(11)+' · auto-refresh 10s';
   }).catch(function(e){st.textContent='error: '+e.message}).then(function(){clearTimeout(timer);timer=setTimeout(load,10000)});
 }
