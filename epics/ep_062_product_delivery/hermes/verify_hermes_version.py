@@ -13,6 +13,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 
 WAITLIST = "https://thetechprinciple.com/waitlist/"
+ARCHIVE = "https://thetechprinciple.com/epic/ep062/#arc"
 NETWORK = re.compile(
     r"fetch\s*\(|XMLHttpRequest|import\s*\(|<script[^>]+src=|<link\b|@import|https?://|WebSocket|sendBeacon",
     re.I,
@@ -67,7 +68,9 @@ def main() -> int:
     if cta_ok:
         cta_ok = all(x in anchors[0] for x in ('noopener', 'noreferrer'))
     check(cta_ok and html.count(WAITLIST) == 1, "exactly one secure, external waitlist CTA")
-    sanitized = html.replace(WAITLIST, "#")
+    arch_ok = html.count(ARCHIVE) == 1 and bool(re.search(r'<a [^>]*class="archiveLink"[^>]*target="_blank"[^>]*noopener[^>]*>', html))
+    check(arch_ok, "exactly one secure previous-versions link")
+    sanitized = html.replace(WAITLIST, "#").replace(ARCHIVE, "#")
     check(not NETWORK.search(sanitized), "no other network, CDN, external script or stylesheet dependency")
     min_closed = data.get("min_closed")
     words = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve"}

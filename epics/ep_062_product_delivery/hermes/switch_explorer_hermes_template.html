@@ -31,7 +31,7 @@ select,input{font-size:16px}
 .ctx span{color:var(--muted);font-size:12px;white-space:nowrap}
 .brand{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
 h1{font:600 31px/1.03 Georgia,"Times New Roman",serif;letter-spacing:-.04em;margin:6px 0 8px}
-.stamp{display:block;font-size:12px;line-height:1.4;color:var(--lime);border:1px solid #3d6b2b;background:#13240f;border-radius:8px;padding:6px 10px;margin:0 0 10px}
+.archiveLink{display:inline-block;margin:6px 0 0;padding:4px 0;color:var(--cyan);font-size:12px;text-decoration:underline;text-underline-offset:3px}.archiveLink:hover{color:var(--white)}.stamp{display:block;font-size:12px;line-height:1.4;color:var(--lime);border:1px solid #3d6b2b;background:#13240f;border-radius:8px;padding:6px 10px;margin:0 0 10px}
 .intro{color:var(--muted);margin:6px 0 4px;line-height:1.5;font-size:15px}
 .about{margin:0 0 12px}
 .about summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--cyan);font-weight:700;list-style:none}
@@ -205,6 +205,7 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
   <div class="brand">The Tech Principle · strategy selection in three steps</div>
   <h1>Choose a strategy. See the comparison.</h1>
   <div class="stamp" id="stamp"></div>
+  <a class="archiveLink" href="https://thetechprinciple.com/epic/ep062/#arc" target="_blank" rel="noopener noreferrer">Previous versions of this app</a>
   <details class="about" id="about"><summary>How this works</summary>
     <p class="intro">Choose a market, product, ranking rule and hour. The app selects one strategy, compares alternatives, then shows a historical switch-versus-hold replay. Data from <span id="date"></span> is embedded in this file; only information available at the decision time is used to select.</p>
   </details>

@@ -29,8 +29,11 @@ def main(path: str) -> int:
     WAITLIST = "https://thetechprinciple.com/waitlist/"
     anchors = re.findall(r"<a[ 	][^>]*class=.waitlistButton.[^>]*>", html, re.I)
     cta_ok = len(anchors) == 1 and f'href="{WAITLIST}"' in anchors[0] and 'target="_blank"' in anchors[0]         and "noopener" in anchors[0] and "noreferrer" in anchors[0] and html.count(WAITLIST) == 1
-    check(cta_ok, "exactly one secure external link: the Join the Arena waitlist button")
-    html_for_net = html.replace(WAITLIST, "#")
+    check(cta_ok, "exactly one secure waitlist link (the Join the Arena button)")
+    ARCHIVE = "https://thetechprinciple.com/epic/ep062/#arc"
+    arch = re.findall(r"<a[ 	][^>]*class=.archiveLink.[^>]*>", html, re.I)
+    check(len(arch) == 1 and f'href="{ARCHIVE}"' in arch[0] and 'target="_blank"' in arch[0] and "noopener" in arch[0] and html.count(ARCHIVE) == 1, "exactly one secure previous-versions link")
+    html_for_net = html.replace(WAITLIST, "#").replace(ARCHIVE, "#")
     hits = NETWORK.findall(html_for_net)
     check(not hits, "self-contained (no fetch, external script, link, font or url)", f"{len(hits)} hits" if hits else "")
 

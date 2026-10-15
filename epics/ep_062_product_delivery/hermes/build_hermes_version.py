@@ -26,6 +26,7 @@ def newest_min6() -> Path:
 
 TEMPLATE = HERE / "switch_explorer_hermes_template.html"
 WAITLIST = "https://thetechprinciple.com/waitlist/"
+ARCHIVE = "https://thetechprinciple.com/epic/ep062/#arc"  # the one other approved external link (previous versions)
 NUMBER_WORDS = {1: "one", 2: "two", 3: "three", 4: "four", 5: "five", 6: "six", 7: "seven", 8: "eight", 9: "nine", 10: "ten", 11: "eleven", 12: "twelve"}
 
 
@@ -100,6 +101,8 @@ def main() -> None:
     )
     if html.count(WAITLIST) != 1:
         raise ValueError("Expected exactly one waitlist destination link")
+    if html.count(ARCHIVE) != 1:
+        raise ValueError("Expected exactly one previous-versions link")
     if re.search(r"<script\s+src=|<link[^>]+href=|@import\s+url\s*\(|\bfetch\s*\(", html, re.I):
         raise ValueError("Unexpected external dependency or network request in the output")
 

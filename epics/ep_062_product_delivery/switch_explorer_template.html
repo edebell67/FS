@@ -21,7 +21,7 @@ select,input{font-size:16px}
 .ctx span{color:var(--muted);font-size:12px;white-space:nowrap}
 .brand{font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
 h1{font-size:30px;letter-spacing:-.04em;margin:6px 0 8px;line-height:1.05}
-.stamp{display:block;font-size:12px;line-height:1.4;color:var(--lime);border:1px solid #3d6b2b;background:#13240f;border-radius:8px;padding:6px 10px;margin:0 0 10px}
+.archiveLink{display:inline-block;margin:6px 0 0;padding:4px 0;color:var(--cyan);font-size:12px;text-decoration:underline;text-underline-offset:3px}.archiveLink:hover{color:var(--white)}.stamp{display:block;font-size:12px;line-height:1.4;color:var(--lime);border:1px solid #3d6b2b;background:#13240f;border-radius:8px;padding:6px 10px;margin:0 0 10px}
 .intro{color:var(--muted);margin:6px 0 4px;line-height:1.5;font-size:15px}
 .about{margin:0 0 12px}
 .about summary{min-height:44px;display:flex;align-items:center;cursor:pointer;color:var(--cyan);font-weight:700;list-style:none}
@@ -182,6 +182,7 @@ svg{display:block;width:100%;height:auto;background:#081a2b;border:1px solid #28
   <div class="brand">The Tech Principle · strategy selection in three steps</div>
   <h1>Select. Compare. Switch.</h1>
   <div class="stamp" id="stamp"></div>
+  <a class="archiveLink" href="https://thetechprinciple.com/epic/ep062/#arc" target="_blank" rel="noopener noreferrer">Previous versions of this app</a>
   <details class="about" id="about"><summary>How this works</summary>
     <p class="intro">A scenario selects a strategy. It is compared with similar, opposite, overall and best win rate strategies. You switch only if a comparison strategy is performing better. Real data from <span id="date"></span>, embedded in this file; every choice uses only what was known at the decision time.</p>
   </details>

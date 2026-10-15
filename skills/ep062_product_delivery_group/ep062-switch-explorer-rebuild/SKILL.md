@@ -1,12 +1,13 @@
 ---
 name: ep062-switch-explorer-rebuild
 description: Re-create the EP062 "Select. Compare. Switch." interactive web app on demand with up-to-date data, for crypto and forex (kept separate, chosen with an asset-class switch), including the hermes variant, a minimum-closed-positions option and the Join the Arena waitlist button. Use when asked to rebuild, refresh, update, regenerate, timestamp, restore or send a new version of the strategy selection / compare / switch explorer or its hermes version, or to build it for a different date, product, asset class or minimum. Produces ONE self-contained, timestamped html file (data embedded, no server, no data requests) that users open by double-clicking.
-version: 1.8.0
+version: 1.8.1
 ---
 
 # EP062 Switch Explorer: rebuild on demand
 
 > VERSION HISTORY
+> - v1.8.1 · 2026-10-15 · Both apps carry a second approved external link, "Previous versions of this app" (class `archiveLink`, `https://thetechprinciple.com/epic/ep062/#arc`, new tab, noopener noreferrer), shown under the data-as-of banner; the verifiers now require exactly one waitlist link and exactly one previous-versions link (main 29 checks, hermes 15) and still block anything else; the hermes builder checks both.
 > - v1.8.0 · 2026-10-09 · Stable shareable address https://thetechprinciple.com/epic/ep062/latest/ (guided app; `latest/full.html` for the full app) with an `arc/` archive; `scripts/rotate_latest.py` moves the old latest into arc/ and installs the new builds; the explorers carry a "Where this comes from" section (the Scenario Engine screen, `assets/scenario_engine_screen.webp`, embedded as a data URI).
 > - v1.7.1 · 2026-10-08 · Full-day builds: `--curve-step 2` (keep every second curve minute plus the last minute before each 5-minute mark; decision values unchanged) keeps a two-basis build under the 7 MB limit (a near-full day was 7.1 to 7.3 MB without it, 6.2 MB with it); rule 15 and the troubleshooting table updated.
 > - v1.7.0 · 2026-10-07 · Deploy to the website: live home is https://thetechprinciple.com/epic/ep062/ (repo edebell67/epics, master, folder epic/ep062/); new "Deploy to /epic/ep062" section with the exact steps, page layout and checks.
@@ -110,7 +111,7 @@ cd C:\Users\edebe\eds
 python skills/ep062_product_delivery_group/ep062-switch-explorer-rebuild/scripts/verify_explorer.py epics/ep_062_product_delivery/<the build>.html
 ```
 
-Expect `28/28 checks passed` (the hermes verifier has its own 14). It confirms: reasonable size; **exactly one external link, the secure Join the Arena waitlist button, and nothing else** that could fetch (`fetch`, external script, link, font or url); DATA embedded in its compact form; a data-as-of stamp per asset class; the build timestamp embedded; every case belongs to a known class and product; **crypto and forex are kept separate (no strategy in both)**; wording rules; distinct net returns; no switch target that is, or clones, the selected strategy; every strategy has a curve; the closed-position filter wording matches what was applied; three scenarios; a static repository sample per class with the button and sheet; the only-if-better switching rule; **both return bases present with identical case coverage, the toggle, its note and the forex warning**; and the mobile-first markers. Any `FAIL` blocks delivery: fix the template or builder, rebuild, re-run. (Builds made before the waitlist button was added fail only that one check; that is expected.)
+Expect `29/29 checks passed` (the hermes verifier has its own 15). It confirms: reasonable size; **exactly two external links, the secure Join the Arena waitlist button and the secure "Previous versions of this app" link, and nothing else** that could fetch (`fetch`, external script, link, font or url); DATA embedded in its compact form; a data-as-of stamp per asset class; the build timestamp embedded; every case belongs to a known class and product; **crypto and forex are kept separate (no strategy in both)**; wording rules; distinct net returns; no switch target that is, or clones, the selected strategy; every strategy has a curve; the closed-position filter wording matches what was applied; three scenarios; a static repository sample per class with the button and sheet; the only-if-better switching rule; **both return bases present with identical case coverage, the toggle, its note and the forex warning**; and the mobile-first markers. Any `FAIL` blocks delivery: fix the template or builder, rebuild, re-run. (Builds made before the waitlist button was added fail only that one check; that is expected.)
 
 Optional browser smoke test (the user never needs a server; this is only for testing):
 1. `python -m http.server 8761 --bind 127.0.0.1` inside the folder holding the file, open `http://127.0.0.1:8761/<file>`.
@@ -119,7 +120,7 @@ Optional browser smoke test (the user never needs a server; this is only for tes
 
 ## Rules the page must keep
 
-1. **Single file, no server, no data requests.** Everything embedded; opens by double-click. Never add fetch calls, CDNs, web fonts, external scripts or images. The only external reference allowed is the one waitlist link below, which loads nothing until a user taps it.
+1. **Single file, no server, no data requests.** Everything embedded; opens by double-click. Never add fetch calls, CDNs, web fonts, external scripts or images. The only external references allowed are the waitlist link (rule 13) and the "Previous versions of this app" link under the data-as-of banner; neither loads anything until a user taps it.
 2. **Wording.** Say **"switch"** and **"closed positions"**. The word "trade" (also "trading") must not appear in visible text. The file name keeps `switch`.
 3. **No look-ahead.** Every choice at a decision hour uses only the last snapshot at or before `HH:00:00` and closed positions up to then. Charts and "at decision" figures use values strictly before the decision minute. Anything after the decision appears only as what happened next in stage 3.
 4. **Switch only when better.** Comparison targets are different strategies and can have a lower net than the selected one. "Always switch" and the one-off switch act only when the target's net (as known at that hour) is higher than the net of the strategy currently held; otherwise the page says "no switch" and holds. Hour-by-hour rows are tagged switch or hold.
@@ -159,7 +160,7 @@ Layout of `epic/ep062/`:
 
 Steps (every new build):
 
-1. Build and verify both files (sections above). Both must pass (28 and 14 checks).
+1. Build and verify both files (sections above). Both must pass (29 and 15 checks).
 2. Clone `https://github.com/edebell67/epics.git` into the scratchpad (never work in a checkout with other people's changes). Confirm the default branch with `git symbolic-ref --short HEAD` (it is `master`).
 3. **Rotate:** run `python scripts/rotate_latest.py <clone>/epic/ep062 --guided <new hermes build> --full <new main build>` (add `--dry-run` first if unsure). It moves the files in `latest/` into `arc/` under dated names (read from each file's own generated stamp), installs the new builds in `latest/`, adds the old ones to the Archive lists on the landing page, updates the "Latest data" line and the sitemap `lastmod`. It refuses to overwrite an archived build. Never delete anything from `arc/`.
 4. Do NOT touch the nav, drawer and footer links in the root `index.html` unless they are missing; they are already there (`epic/ep062/`, labelled "Explorer" and "Strategy Explorer").
@@ -171,7 +172,7 @@ Gotchas:
 
 - The environment's permission classifier blocks pushes to `edebell67/epics` unless the user has added a Bash allow rule or approves in the conversation. If blocked, stop, say what is staged, and let the user decide; do not look for another route.
 - The root site is the restructured site: its sections are `#platforms`, `#how-we-build`, `#proof`, `#contact`. The old FS `site/` anchors (`#services`, `#work`) do not exist there.
-- Each app keeps exactly one external link (the waitlist button). Do not add others when editing the landing page.
+- Each app keeps exactly two external links: the waitlist button and "Previous versions of this app" (`https://thetechprinciple.com/epic/ep062/#arc`, under the data-as-of banner). Do not add others without the user asking; update both verifiers and the hermes builder if you do.
 - The repo is public: scan new builds for secrets before the push (the builds hold strategy performance data only).
 - Browsers and YouTube cache the `latest/` URL briefly; the address itself never changes.
 
