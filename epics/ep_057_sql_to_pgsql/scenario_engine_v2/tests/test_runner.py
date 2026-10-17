@@ -259,3 +259,12 @@ def test_scenario_leaders_that_cannot_be_loaded_fail_the_race_only():
     assert mgr.wait(30) and r.progress.state == "failed"
     with pytest.raises(ValueError):
         mgr.submit(cfg("bad", ("DNA_1",), add_scenario_top=25))
+
+
+def test_limit_must_be_a_value_the_data_service_serves():
+    mgr = RaceManager(client_factory=lambda c: FakeClient())
+    for bad in (1, 5, 15, 50):
+        with pytest.raises(ValueError, match="10, 20 or 30"):
+            mgr.submit(cfg("bad", limit=bad))
+    mgr.submit(cfg("ok", limit=20))
+    assert mgr.wait(30)

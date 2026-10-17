@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.1.0 · 2026-10-17 · stage 2 (no-fetch): applyChartLock, resetAutomaticRankSchedule; EXTRAS (prelude / range shell / conditional pause shell).
 # v1.0.0 · 2026-10-17 · Initial version (stage 1: 8 controllers without network): state snapshot / apply code from page_state.FIELDS, __engineCommand, per-controller DOM shells copied from the original body and effect replay.
 """Used by tools/build_thin_page.py and by the differential test (tools/diff_page_js_vs_py.py with DIFF_WRAPPERS=1). The wrappers keep the original function names and signatures, so every caller in the page is unchanged.
 For each controller: (1) snapshot the page state, (2) one /engine/call {fn:'command'}, (3) apply the returned state in place, (4) run the DOM shell the original function had (copied from its body), (5) replay the effects in order."""
@@ -31,6 +32,15 @@ CONTROLLERS = {
                                  {"clearInterval": "if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; }",
                                   "setInterval": "if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]);"}),
     "updateAutoRefreshTop1Status": ("update_auto_refresh_status", "message = ''", "[message]", None, {}),
+
+    "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None, {}),
+    "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
+}
+# per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
+# when true after the call, also runs the original pauseReplay DOM lines
+EXTRAS = {
+    "applyChartLock": {"prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;", "range": (r"^\s*chartLockBtn\.setAttribute", r"^\s*scrubberTrack\.title"),
+                       "pause_if": "chartLocked"},
 }
 
 COMMON_EFFECTS = {

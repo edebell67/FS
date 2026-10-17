@@ -179,3 +179,10 @@ def test_data_service_proxy_forwards_requests_and_failures():
         srv.shutdown()
     dead = TestClient(create_app(RaceManager(), data_api="http://127.0.0.1:9"))
     assert dead.get("/api/live_day").status_code == 502
+
+
+def test_limit_validation_matches_the_data_service(api):
+    c, _ = api
+    assert c.post("/api/races", json={**BODY, "limit": 15}).status_code == 422
+    assert c.post("/api/races", json={**BODY, "limit": 20}).status_code == 201
+    assert c.post("/api/intelligence/report", json={"date": "2026-10-14", "limit": 50}).status_code == 422

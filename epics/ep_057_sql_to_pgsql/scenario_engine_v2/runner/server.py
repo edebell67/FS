@@ -48,7 +48,7 @@ class RaceRequest(BaseModel):
     product: str = "all"
     strategy_family: str = "all"
     return_type: str = Field("NET", pattern="^(NET|ALT)$")
-    limit: int = Field(10, ge=1, le=50)
+    limit: int = Field(10, ge=10, le=30, multiple_of=10)
     split_mode: str = Field("ALL_NET", pattern="^(ALL_NET|BUY_NET|SELL_NET|TRI_SPLIT|MULTI_SPLIT)$")
     baseline_index: int = Field(0, ge=0)
     exit_threshold: float = 0.0
@@ -101,7 +101,7 @@ class IntelRequest(BaseModel):
     models: list[str] = Field(default_factory=list, max_length=20)
     scenario: str = Field("top_net", max_length=80)
     return_type: str = Field("NET", pattern="^(NET|ALT)$")
-    limit: int = Field(10, ge=1, le=50)
+    limit: int = Field(10, ge=10, le=30, multiple_of=10)   # the data service serves 10, 20 or 30 strategies
     as_of_time: str | None = Field(None, pattern=r"^\d{2}:\d{2}$")
     top_n: int = Field(3, ge=1, le=10)
     window: int = Field(48, ge=8, le=500)

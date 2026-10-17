@@ -81,7 +81,7 @@ def create_router(factory, token: str | None = None) -> APIRouter:
                 return JSONResponse(old)
         end = body.get("window_end")
         day = (datetime.fromisoformat(end.replace("Z", "+00:00")) if end else datetime.now(timezone.utc))
-        spec = {"date": day.strftime("%Y-%m-%d"), "models": [s for s in body.get("strategy_ids") or []], "scenario": "top_net", "top_n": min(limit, 10), "limit": 50}
+        spec = {"date": day.strftime("%Y-%m-%d"), "models": [s for s in body.get("strategy_ids") or []], "scenario": "top_net", "top_n": min(limit, 10), "limit": 30}
         if end:
             spec["as_of_time"] = day.strftime("%H:%M")   # nothing after the window end is used
         try:

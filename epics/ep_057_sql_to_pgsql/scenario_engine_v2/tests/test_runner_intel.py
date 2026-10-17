@@ -25,6 +25,7 @@ class Data:
 
     def factory(self, spec):
         outer = self
+        assert spec.get("limit", 10) in (10, 20, 30), "the real data service only serves 10, 20 or 30 strategies"
 
         class C:
             portfolio_models, criteria_data = [], {}

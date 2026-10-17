@@ -55,8 +55,8 @@ class RaceConfig:
             raise ValueError("date is required")
         if any(str(m).upper() in LIVE_PORTFOLIOS for m in self.models()):
             raise HeadlessLiveModeError("live portfolios are not available to virtual races")
-        if self.limit < 1 or self.limit > 50:
-            raise ValueError("limit must be 1..50")
+        if self.limit not in (10, 20, 30):
+            raise ValueError("limit must be 10, 20 or 30 (what the data service serves)")
         if len(self.models()) > 20:
             raise ValueError("a race holds at most 20 strategies")
         if self.add_scenario_top < 0 or self.add_scenario_top > 19:
