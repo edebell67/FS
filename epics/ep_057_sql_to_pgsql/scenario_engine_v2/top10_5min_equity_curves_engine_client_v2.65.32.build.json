@@ -25,9 +25,19 @@
   "runner/static/engine_client.js",
   "runner/static/launch_panel.js"
  ],
+ "controllers_delegated": [
+  "movePortfolio",
+  "markPortfolioFixed",
+  "capturePortfolioScenario",
+  "persistPortfolioViewConfig",
+  "startReplay",
+  "pauseReplay",
+  "syncPortfolioViewRefresh",
+  "updateAutoRefreshTop1Status"
+ ],
  "lines_before": [
   1432,
   9054
  ],
- "bytes": 527667
+ "bytes": 540713
 }

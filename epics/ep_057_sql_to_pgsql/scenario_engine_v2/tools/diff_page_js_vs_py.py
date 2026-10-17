@@ -2,6 +2,7 @@
 #
 # VERSION HISTORY
 # v1.3.0 · 2026-10-17 · refreshPointInTimeHistory direct group (hourly cohorts) with a response matrix; history state fields.
+# v1.4.0 · 2026-10-17 · DIFF_WRAPPERS=1: run the engine-delegating controller wrappers (tools/controller_wrappers.py) instead of the originals; two passes (collect the requests, answer them with engine.rpc), compared with the Python expectation.
 # v1.3.1 · 2026-10-17 · refresh_point_in_time_history_twice (overlapping hourly-cohort refreshes).
 # v1.2.0 · 2026-10-17 · assignedPortfolioOverlayRule / activePortfolioOverlayRule direct groups; richer state (long names, 10+ members, live events, pinned / history maps, crypto, auto rank / minutes); refreshLiveData twice (stale response).
 # v1.1.0 · 2026-10-17 · fetch stub delivers each response as its own macrotask (issue order); settle waits on macrotasks; opt-in visibleModels write trace (DIFF_DEBUG_ID).
@@ -103,8 +104,12 @@ var portfolioMergeSelection, portfolioMergeSelection2, PORTFOLIO_VIEW_CACHE = ne
 function __fetchStub(fx){ __calls = [];
   globalThis.fetch = async (url) => { const u = String(url); __calls.push(u); await new Promise(res => __imm(res)); const r = fx[u] || { status: 404, payload: { error: 'not found' } };
     return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.payload }; }; }
+globalThis.__engReq = []; globalThis.__engMode = 'off'; globalThis.__engResp = {};
+globalThis.__engine = { call(req) { const key = JSON.stringify(req); __engReq.push(key);
+  if (__engMode === 'collect') return { ret: null, state: req.state, effects: [] };
+  const t = __engResp[key]; if (t === undefined) throw new Error('no engine answer recorded for ' + req.method); if (t.startsWith('ERROR:')) throw new Error(t); return JSON.parse(t); } };
 async function __page(fx, name, c, args){
-  __fetchStub(fx); __fx = []; globalThis.__recordViews = true;
+  __fetchStub(fx); __fx = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
   __ps_set(c.state);
   globalThis.portfolioViewConfigs = c.state.portfolio_view_configs; globalThis.livePortfolioStore = c.state.live_store;
   globalThis.__maxFrames = c.hooks.maxFrames; globalThis.__head = c.hooks.head; globalThis.__elig = c.hooks.eligible; globalThis.__candidates = c.hooks.candidates;
@@ -134,7 +139,7 @@ async function __page(fx, name, c, args){
   for (let i = 0; i < 40; i++) await new Promise(res => __imm(res));
   const norm = e => [e[0], { models: e[1].models, cachedAt: Math.abs(e[1].cachedAt - Date.now()) < 120000 ? 'NOW' : e[1].cachedAt }];
   return { state: __ps_get(), effects: __fx, calls: __calls, ret: ret === undefined ? null : ret, criteriaKeys: Object.keys(ALL_CRITERIA_DATA).sort(),
-    library: overlayRuleLibrary, viewCache: [...PORTFOLIO_VIEW_CACHE.entries()].map(norm), _dbg: dbg, _vlog: c.trace ? globalThis.__vlog : null };
+    library: overlayRuleLibrary, viewCache: [...PORTFOLIO_VIEW_CACHE.entries()].map(norm), _dbg: dbg, _vlog: c.trace ? globalThis.__vlog : null, _engReq: globalThis.__engReq };
 }
 """
 
@@ -153,7 +158,7 @@ JS_NAME = {"move_portfolio": "movePortfolio", "unique_portfolio_name": "uniquePo
            "trigger_selected_time_refresh": "triggerSelectedTimeRefresh", "start_replay": "startReplay", "pause_replay": "pauseReplay",
            "switch_date": "switchDate", "set_ranking_criteria": "setRankingCriteria", "activate_portfolio": "activatePortfolio",
            "refresh_live_data": "refreshLiveData", "refresh_point_in_time_selection": "refreshPointInTimeSelection",
-           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_point_in_time_history_twice": "__twiceHistory",
+           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
            "refresh_point_in_time_history": "__realHistory", "assigned_portfolio_overlay_rule": "assignedPortfolioOverlayRule", "active_portfolio_overlay_rule": "activePortfolioOverlayRule"}
 
 
@@ -354,6 +359,8 @@ def rand_case(rng: random.Random, method: str):
         st = PageState.from_snapshot(snap)
     elif method == "assigned_portfolio_overlay_rule":
         args = rng.choice([[], [pick()], [None], ["Alpha"], ["P1"]])
+    elif method == "update_auto_refresh_status":
+        args = rng.choice([[], [""], ["Checking top #1 at 10:00"], ["On"]])
     elif method == "refresh_live_data_twice":
         args = [st.current_date, rng.choice([st.current_date, "2026-10-13"]), rng.choice(["same", "change_filter"])]
     elif method == "refresh_point_in_time_selection":
@@ -457,21 +464,54 @@ def main():
             cid = len(cases) + 1
             cases.append({"id": cid, "call": "__page", "args": [fx, JS_NAME[method], {**case, "trace": str(cid) == os.environ.get("DIFF_DEBUG_ID")}, args], "method": method})
             expected[cid] = (method, exp)
-    spec = {"page": str(PAGE), "inventory": str(INVENTORY), "functions": PAGE_FUNCS, "extra": PAGE_EXTRA, "cases": [{k: v for k, v in c.items() if k != "method"} for c in cases]}
+    extra = PAGE_EXTRA
+    wrapped = bool(os.environ.get("DIFF_WRAPPERS"))
+    if wrapped:   # run the engine-delegating wrappers instead of the original functions
+        import build_inventory
+        import controller_wrappers as cw
+        inv_data = build_inventory.build(PAGE)
+        decls = cw.declarations(PAGE.read_text(encoding="utf-8"), {st["name"]: st["decl"] for st in inv_data["state"]})
+        fns = {f["name"]: f for f in inv_data["functions"]}
+        lines = PAGE.read_text(encoding="utf-8").split("\n")
+        extra += "\n" + cw.helper_block(decls) + "\n".join(cw.wrapper(n, "\n".join(lines[fns[n]["start_line"] - 1:fns[n]["end_line"]])) for n in cw.CONTROLLERS)
+        py_to_js = {v: k for k, v in JS_NAME.items()}
+        wrapped_methods = {cw.CONTROLLERS[n][0] for n in cw.CONTROLLERS}
+        cases = [c for c in cases if c["method"] in wrapped_methods]
+        expected = {cid: v for cid, v in expected.items() if v[0] in wrapped_methods}
+    spec = {"page": str(PAGE), "inventory": str(INVENTORY), "functions": PAGE_FUNCS, "extra": extra, "cases": [{k: v for k, v in c.items() if k != "method"} for c in cases]}
     workers = max(1, min(int(os.environ.get("DIFF_WORKERS", "8")), len(cases)))
-    results = []
-    with tempfile.TemporaryDirectory() as td:
-        procs = []
-        for k in range(workers):
-            sp = Path(td) / f"c{k}.json"
-            sp.write_text(json.dumps({**spec, "cases": spec["cases"][k::workers]}), encoding="utf-8")
-            procs.append(subprocess.Popen(["node", str(ROOT / "tools" / "js_runner.js"), str(sp)], stdout=subprocess.PIPE, stderr=subprocess.PIPE))
-        for pr in procs:
-            out, err = pr.communicate(timeout=3600)
-            if pr.returncode != 0:
-                print("NODE FAILED:", err.decode("utf-8", "replace")[-1500:])
-                sys.exit(2)
-            results.extend(json.loads(out.decode("utf-8")))
+
+    def run_js(case_list):
+        out_results = []
+        with tempfile.TemporaryDirectory() as td:
+            procs = []
+            for k in range(workers):
+                sp = Path(td) / f"c{k}.json"
+                sp.write_text(json.dumps({**spec, "cases": case_list[k::workers]}), encoding="utf-8")
+                procs.append(subprocess.Popen(["node", str(ROOT / "tools" / "js_runner.js"), str(sp)], stdout=subprocess.PIPE, stderr=subprocess.PIPE))
+            for pr in procs:
+                out, err = pr.communicate(timeout=3600)
+                if pr.returncode != 0:
+                    print("NODE FAILED:", err.decode("utf-8", "replace")[-1500:])
+                    sys.exit(2)
+                out_results.extend(json.loads(out.decode("utf-8")))
+        return out_results
+
+    if wrapped:
+        from engine import rpc as _rpc
+        for c in spec["cases"]:
+            c["args"][2]["engMode"] = "collect"
+        collected = {r["id"]: r for r in run_js(spec["cases"])}
+        for c in spec["cases"]:
+            r = collected[c["id"]]
+            answers = {}
+            for key in (r["result"].get("_engReq") or []) if r["ok"] else []:
+                try:
+                    answers[key] = json.dumps(_rpc.dispatch(json.loads(key)))
+                except Exception as e:  # noqa: BLE001
+                    answers[key] = f"ERROR: {type(e).__name__}: {e}"
+            c["args"][2]["engMode"], c["args"][2]["engResp"] = "answer", answers
+    results = run_js(spec["cases"])
     res = {r["id"]: r for r in results}
     summary, fails = {}, {}
     for cid, (method, exp) in expected.items():
@@ -491,6 +531,7 @@ def main():
         if vlog:
             print("VLOG", json.dumps(vlog))
         exp.pop("_vlog", None)
+        r["result"].pop("_engReq", None)
         dbg_js = r["result"].pop("_dbg", None)
         dbg_py = exp.pop("_dbg", None)
         d = diff(exp, r["result"])

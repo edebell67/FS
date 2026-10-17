@@ -1,0 +1,39 @@
+# epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/command.py — run a page controller in the engine on a state snapshot sent by the browser copy; returns the new state and the ordered effects.
+#
+# VERSION HISTORY
+# v1.0.1 · 2026-10-17 · optional `hooks` test seam.
+# v1.0.0 · 2026-10-17 · Initial version: stage 1 controllers that need no network (movePortfolio, markPortfolioFixed, capturePortfolioScenario, persistPortfolioViewConfig, startReplay, pauseReplay, syncPortfolioViewRefresh, updateAutoRefreshTop1Status).
+"""A command request: {"method": <Page method>, "args": [...], "state": <PageState.snapshot() of the page>, "criteriaData": {key: {date: [models]}} (only what the page's current view reads),
+"library": <overlay rule library>, "scenarioNames": {id: name}}. The answer: {"ret", "state", "effects"} where effects are the ordered persistence / timer / view calls the page must make
+(['view', name], ['savePortfolios'], ['localStorage.setItem', key], ['setInterval', ms], ...). The page is the authority for its own state: it sends the whole snapshot each time and applies the answer."""
+from __future__ import annotations
+
+from .data_client import DataClient
+from .page import Page
+from .page_state import PageState
+
+# controllers the browser copy may delegate (stage 1: none of them touches the network or starts a timer callback the engine would have to own)
+STAGE1 = ("move_portfolio", "mark_portfolio_fixed", "capture_portfolio_scenario", "persist_portfolio_view_config", "start_replay", "pause_replay",
+          "sync_portfolio_view_refresh", "update_auto_refresh_status")
+
+
+class CommandError(ValueError):
+    pass
+
+
+def run(req: dict) -> dict:
+    method = req.get("method")
+    if method not in STAGE1:
+        raise CommandError(f"controller {method!r} is not delegated to the engine yet")
+    state = PageState.from_snapshot(req["state"])
+    client = DataClient(None, "", live_date=state.live_date)
+    client.criteria_data = req.get("criteriaData") or {}
+    client.overlay_rule_library = req.get("library") or {"rules": [], "assignments": {}}
+    hooks = req.get("hooks")   # test seam only (the differential tests pin the replay head / frame count); the page never sends it
+    extra = {}
+    if hooks:
+        extra = dict(max_frames=lambda: hooks["maxFrames"], head_time=lambda: hooks["head"], eligible=lambda: hooks["eligible"], candidates=lambda: hooks["candidates"])
+    page = Page(state, client, scenario_names=req.get("scenarioNames") or {}, **extra)
+    ret = getattr(page, method)(*(req.get("args") or []))
+    page.settle()
+    return {"ret": ret, "state": state.snapshot(), "effects": state.effects}

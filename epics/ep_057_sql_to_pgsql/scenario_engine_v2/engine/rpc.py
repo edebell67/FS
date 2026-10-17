@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/rpc.py — the call contract between the browser copy of the page and the engine: overlay signals, trades, daily-target signal and both rotations.
 #
 # VERSION HISTORY
+# v1.1.0 · 2026-10-17 · fn 'command': page controllers run in the engine (engine/command.py).
 # v1.0.0 · 2026-10-17 · Initial version: dispatch(request) for computeTradeOverlaySignals, pairOverlayTrades, computeSplitTargetSignal, computeLeaderRotation, computeMultiSplitRotation (assigned-rule path included).
 """Arguments follow the page: computeLeaderRotation(models, metricKey, upToIdx, replaySeries), computeMultiSplitRotation(models, keys, upToIdx, replaySeries).
 A request is JSON: {"fn": <page function name>, "args": [...the page's arguments...], "globals": {...the page state that function reads...}, "rule": <assigned overlay rule or null>,
@@ -65,6 +66,12 @@ def _strip(result: dict) -> dict:
 
 def dispatch(req: dict):
     fn, args = req.get("fn"), req.get("args") or []
+    if fn == "command":   # a page controller run in the engine (engine/command.py)
+        from . import command
+        try:
+            return command.run(req)
+        except command.CommandError as e:
+            raise RpcError(str(e)) from e
     if fn == "computeTradeOverlaySignals":
         return core.overlay_signals(args[0], args[1], _num(_g(req, "exitThreshold")))
     if fn == "pairOverlayTrades":

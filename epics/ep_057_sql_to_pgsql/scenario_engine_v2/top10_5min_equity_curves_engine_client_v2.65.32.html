@@ -1985,10 +1985,9 @@
       triggerSelectedTimeRefresh();
     });
     function updateAutoRefreshTop1Status(message = '') {
-      if (!autoRefreshTop1Status) return;
-      autoRefreshTop1Status.textContent = message || (autoRefreshTop1Enabled
-        ? `On · ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} · every ${autoRefreshTop1Minutes}m at clock times`
-        : 'Off');
+      const res = __engineCommand('update_auto_refresh_status', [message]);
+      __engineReplay(res.effects, {  });
+      return res.ret;
     }
     function finishAutomaticTop1Refresh(at, message = '') {
       if (autoRefreshTop1RequestAt !== at) return;
@@ -2249,18 +2248,121 @@
       renderPortfolioTabs();
     }
 
+    // ---- controllers run in the Python engine (engine/command.py): the page sends its state, applies the answer in place, then replays the effects in order ----
+    function __engineSnapshot() { return { portfolios: Object.entries(portfolios), portfolio_criteria: portfolioCriteria, portfolio_scenario_configs: portfolioScenarioConfigs, portfolio_view_configs: portfolioViewConfigs, merge_selection: [...portfolioMergeSelection], active_portfolio: activePortfolioName, main_criteria: mainScenarioCriteria, main_view_config: mainScenarioViewConfig, similar_payload: similarStrategyPayload, live_store: livePortfolioStore, current_date: currentDate, current_criteria: currentCriteria, return_type: currentReturnType, product_type: currentProductType, product: currentProduct, strategy_family: currentStrategyFamily, model_limit: modelLimit, min_win_rate: minWinRate, split_mode: splitMode, chart_locked: chartLocked, chart_lock_before_live: liveModePriorChartLock, use_assigned_rule: useAssignedOverlayRule, editing_rule_id: editingNamedOverlayRuleId, pending_rule_config: pendingNamedOverlayRuleConfig, rank_select_value: (selectedTimeRankSelect ? selectedTimeRankSelect.value : null), selected_time_input: (selectedTimeInput ? selectedTimeInput.value : null), auto_direction_select: (autoRefreshTop1DirectionSelect ? autoRefreshTop1DirectionSelect.value : null), auto_rank_select: (autoRefreshTop1RankSelect ? autoRefreshTop1RankSelect.value : null), model_search_input: (modelSearchInput ? modelSearchInput.value : null), auto_enabled: autoRefreshTop1Enabled, auto_direction: autoRefreshTop1Direction, auto_rank: autoRefreshTop1Rank, auto_minutes: autoRefreshTop1Minutes, auto_last_minute: autoRefreshTop1LastMinute, auto_next_minute: autoRefreshTop1NextMinute, auto_context: autoRefreshTop1Context, auto_request_at: autoRefreshTop1RequestAt, pending_explicit_time: pendingExplicitTop1Time, explicit_refresh: selectedTimeExplicitRefresh, pit_mode: pointInTimeMode, pit_models: pointInTimeModels, pit_requested_key: pointInTimeRequestedKey, pit_request_sequence: pointInTimeRequestSequence, pit_history_key: pointInTimeHistoryKey, pit_history_sequence: pointInTimeHistorySequence, pit_hours: pointInTimeHours, pit_history_at: pointInTimeHistoryAt, pit_history_status_text: (pointInTimeHistoryStatus ? pointInTimeHistoryStatus.textContent : null), pit_history_near_viewport: pointInTimeHistoryNearViewport, pit_history_panel_hidden: Boolean(pointInTimeHistoryPanel && pointInTimeHistoryPanel.classList.contains('hidden')), pit_timeline_models: pointInTimeTimelineModels, pit_selection_preference: pointInTimeSelectionPreference, history: [...selectedTimeLeaderHistory.entries()], history_context: selectedTimeLeaderHistoryContext, scenario_removed: [...scenarioRemovedModels].map(String).sort(), top1_prev_mode: top1AtTimePreviousPointInTimeMode, search_loaded: modelSearchLoadedModels, search_sequence: modelSearchRequestSequence, pinned: [...pinnedComparisonModels.entries()], deep_link_only: deepLinkModelsOnly, portfolio_models: portfolioModels, visible: [...visibleModels].map(String).sort(), selected_model_index: selectedModelIndex, frame: currentFrameIndex, baseline: baselineFrameIndex, is_playing: isPlaying, replay_interval: replayInterval, date_switch_sequence: dateSwitchSequence, live_refresh_sequence: liveRefreshSequence, available_dates: availableDates, live_date: LIVE_DATE, pit_status: (pointInTimeStatus ? [pointInTimeStatus.textContent, pointInTimeStatus.className] : ['', '']), model_search_status: (modelSearchStatus ? modelSearchStatus.textContent : null), auto_status_text: (autoRefreshTop1Status ? autoRefreshTop1Status.textContent : null), live_refresh_in_flight: portfolioViewRefreshInFlight, portfolio_refresh_timer: portfolioViewRefreshTimer }; }
+    function __merge(current, value) {
+      if (Array.isArray(current) && Array.isArray(value)) { current.length = 0; value.forEach(x => current.push(x)); return current; }
+      if (current && value && typeof current === 'object' && typeof value === 'object' && !Array.isArray(current) && !Array.isArray(value)) {
+        Object.keys(current).forEach(k => { if (!(k in value)) delete current[k]; });
+        Object.keys(value).forEach(k => { current[k] = value[k]; });
+        return current;
+      }
+      return value;
+    }
+    function __engineApplyState(s, sent) {
+      const ch = k => JSON.stringify(s[k]) !== JSON.stringify(sent[k]);
+      if (ch('portfolios')) { Object.keys(portfolios).forEach(k => { delete portfolios[k]; }); s.portfolios.forEach(([k, v]) => { portfolios[k] = v; }); }
+      if (ch('portfolio_criteria')) portfolioCriteria = __merge(portfolioCriteria, s.portfolio_criteria);
+      if (ch('portfolio_scenario_configs')) portfolioScenarioConfigs = __merge(portfolioScenarioConfigs, s.portfolio_scenario_configs);
+      if (ch('portfolio_view_configs')) portfolioViewConfigs = __merge(portfolioViewConfigs, s.portfolio_view_configs);
+      if (ch('merge_selection')) { portfolioMergeSelection.clear(); s.merge_selection.forEach(x => portfolioMergeSelection.add(x)); }
+      if (ch('active_portfolio')) activePortfolioName = __merge(activePortfolioName, s.active_portfolio);
+      if (ch('main_criteria')) mainScenarioCriteria = __merge(mainScenarioCriteria, s.main_criteria);
+      if (ch('main_view_config')) mainScenarioViewConfig = __merge(mainScenarioViewConfig, s.main_view_config);
+      if (ch('similar_payload')) similarStrategyPayload = __merge(similarStrategyPayload, s.similar_payload);
+      if (ch('live_store')) livePortfolioStore = __merge(livePortfolioStore, s.live_store);
+      if (ch('current_date')) currentDate = __merge(currentDate, s.current_date);
+      if (ch('current_criteria')) currentCriteria = __merge(currentCriteria, s.current_criteria);
+      if (ch('return_type')) currentReturnType = __merge(currentReturnType, s.return_type);
+      if (ch('product_type')) currentProductType = __merge(currentProductType, s.product_type);
+      if (ch('product')) currentProduct = __merge(currentProduct, s.product);
+      if (ch('strategy_family')) currentStrategyFamily = __merge(currentStrategyFamily, s.strategy_family);
+      if (ch('model_limit')) modelLimit = __merge(modelLimit, s.model_limit);
+      if (ch('min_win_rate')) minWinRate = __merge(minWinRate, s.min_win_rate);
+      if (ch('split_mode')) splitMode = __merge(splitMode, s.split_mode);
+      if (ch('chart_locked')) chartLocked = __merge(chartLocked, s.chart_locked);
+      if (ch('chart_lock_before_live')) liveModePriorChartLock = __merge(liveModePriorChartLock, s.chart_lock_before_live);
+      if (ch('use_assigned_rule')) useAssignedOverlayRule = __merge(useAssignedOverlayRule, s.use_assigned_rule);
+      if (ch('editing_rule_id')) editingNamedOverlayRuleId = __merge(editingNamedOverlayRuleId, s.editing_rule_id);
+      if (ch('pending_rule_config')) pendingNamedOverlayRuleConfig = __merge(pendingNamedOverlayRuleConfig, s.pending_rule_config);
+      if (ch('rank_select_value') && selectedTimeRankSelect) selectedTimeRankSelect.value = s.rank_select_value;
+      if (ch('selected_time_input') && selectedTimeInput) selectedTimeInput.value = s.selected_time_input;
+      if (ch('auto_direction_select') && autoRefreshTop1DirectionSelect) autoRefreshTop1DirectionSelect.value = s.auto_direction_select;
+      if (ch('auto_rank_select') && autoRefreshTop1RankSelect) autoRefreshTop1RankSelect.value = s.auto_rank_select;
+      if (ch('model_search_input') && modelSearchInput) modelSearchInput.value = s.model_search_input;
+      if (ch('auto_enabled')) autoRefreshTop1Enabled = __merge(autoRefreshTop1Enabled, s.auto_enabled);
+      if (ch('auto_direction')) autoRefreshTop1Direction = __merge(autoRefreshTop1Direction, s.auto_direction);
+      if (ch('auto_rank')) autoRefreshTop1Rank = __merge(autoRefreshTop1Rank, s.auto_rank);
+      if (ch('auto_minutes')) autoRefreshTop1Minutes = __merge(autoRefreshTop1Minutes, s.auto_minutes);
+      if (ch('auto_last_minute')) autoRefreshTop1LastMinute = __merge(autoRefreshTop1LastMinute, s.auto_last_minute);
+      if (ch('auto_next_minute')) autoRefreshTop1NextMinute = __merge(autoRefreshTop1NextMinute, s.auto_next_minute);
+      if (ch('auto_context')) autoRefreshTop1Context = __merge(autoRefreshTop1Context, s.auto_context);
+      if (ch('auto_request_at')) autoRefreshTop1RequestAt = __merge(autoRefreshTop1RequestAt, s.auto_request_at);
+      if (ch('pending_explicit_time')) pendingExplicitTop1Time = __merge(pendingExplicitTop1Time, s.pending_explicit_time);
+      if (ch('explicit_refresh')) selectedTimeExplicitRefresh = __merge(selectedTimeExplicitRefresh, s.explicit_refresh);
+      if (ch('pit_mode')) pointInTimeMode = __merge(pointInTimeMode, s.pit_mode);
+      if (ch('pit_models')) pointInTimeModels = __merge(pointInTimeModels, s.pit_models);
+      if (ch('pit_requested_key')) pointInTimeRequestedKey = __merge(pointInTimeRequestedKey, s.pit_requested_key);
+      if (ch('pit_request_sequence')) pointInTimeRequestSequence = __merge(pointInTimeRequestSequence, s.pit_request_sequence);
+      if (ch('pit_history_key')) pointInTimeHistoryKey = __merge(pointInTimeHistoryKey, s.pit_history_key);
+      if (ch('pit_history_sequence')) pointInTimeHistorySequence = __merge(pointInTimeHistorySequence, s.pit_history_sequence);
+      if (ch('pit_hours')) pointInTimeHours = __merge(pointInTimeHours, s.pit_hours);
+      if (ch('pit_history_at')) pointInTimeHistoryAt = __merge(pointInTimeHistoryAt, s.pit_history_at);
+      if (ch('pit_history_status_text') && pointInTimeHistoryStatus) pointInTimeHistoryStatus.textContent = s.pit_history_status_text;
+      if (ch('pit_history_near_viewport')) pointInTimeHistoryNearViewport = __merge(pointInTimeHistoryNearViewport, s.pit_history_near_viewport);
+      if (ch('pit_timeline_models')) pointInTimeTimelineModels = __merge(pointInTimeTimelineModels, s.pit_timeline_models);
+      if (ch('pit_selection_preference')) pointInTimeSelectionPreference = __merge(pointInTimeSelectionPreference, s.pit_selection_preference);
+      if (ch('history')) { selectedTimeLeaderHistory.clear(); s.history.forEach(([k, v]) => selectedTimeLeaderHistory.set(k, v)); }
+      if (ch('history_context')) selectedTimeLeaderHistoryContext = __merge(selectedTimeLeaderHistoryContext, s.history_context);
+      if (ch('scenario_removed')) { scenarioRemovedModels.clear(); s.scenario_removed.forEach(x => scenarioRemovedModels.add(x)); }
+      if (ch('top1_prev_mode')) top1AtTimePreviousPointInTimeMode = __merge(top1AtTimePreviousPointInTimeMode, s.top1_prev_mode);
+      if (ch('search_loaded')) modelSearchLoadedModels = __merge(modelSearchLoadedModels, s.search_loaded);
+      if (ch('search_sequence')) modelSearchRequestSequence = __merge(modelSearchRequestSequence, s.search_sequence);
+      if (ch('pinned')) { pinnedComparisonModels.clear(); s.pinned.forEach(([k, v]) => pinnedComparisonModels.set(k, v)); }
+      if (ch('deep_link_only')) deepLinkModelsOnly = __merge(deepLinkModelsOnly, s.deep_link_only);
+      if (ch('portfolio_models')) portfolioModels = __merge(portfolioModels, s.portfolio_models);
+      if (ch('visible')) { visibleModels.clear(); s.visible.forEach(x => visibleModels.add(x)); }
+      if (ch('selected_model_index')) selectedModelIndex = __merge(selectedModelIndex, s.selected_model_index);
+      if (ch('frame')) currentFrameIndex = __merge(currentFrameIndex, s.frame);
+      if (ch('baseline')) baselineFrameIndex = __merge(baselineFrameIndex, s.baseline);
+      if (ch('is_playing')) isPlaying = __merge(isPlaying, s.is_playing);
+      if (ch('date_switch_sequence')) dateSwitchSequence = __merge(dateSwitchSequence, s.date_switch_sequence);
+      if (ch('live_refresh_sequence')) liveRefreshSequence = __merge(liveRefreshSequence, s.live_refresh_sequence);
+      if (ch('available_dates')) __merge(availableDates, s.available_dates);
+      if (ch('live_date')) __merge(LIVE_DATE, s.live_date);
+      if (ch('pit_status') && pointInTimeStatus) { pointInTimeStatus.textContent = s.pit_status[0]; pointInTimeStatus.className = s.pit_status[1]; }
+      if (ch('model_search_status') && modelSearchStatus) modelSearchStatus.textContent = s.model_search_status;
+      if (ch('auto_status_text') && autoRefreshTop1Status) autoRefreshTop1Status.textContent = s.auto_status_text;
+      if (ch('live_refresh_in_flight')) portfolioViewRefreshInFlight = __merge(portfolioViewRefreshInFlight, s.live_refresh_in_flight);
+    }
+    function __engineCriteria() {
+      const key = isMetricAwareCriteria(currentCriteria) ? `${currentCriteria}_${currentReturnType === 'ALT' ? 'alt' : 'net'}` : currentCriteria;
+      const out = {};
+      [key, 'top_net'].forEach(k => { const bucket = ALL_CRITERIA_DATA[k] && ALL_CRITERIA_DATA[k][currentDate]; if (bucket) out[k] = { [currentDate]: bucket }; });
+      return out;
+    }
+    function __engineCommand(method, args) {
+      const sent = __engineSnapshot();
+      const res = __engine.call({ fn: 'command', method, args, state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+        scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) });
+      __engineApplyState(res.state, sent);
+      return res;
+    }
+    function __engineReplay(effects, handlers) {
+      effects.forEach(effect => {
+        const name = effect[0];
+        if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }
+        if (name === 'localStorage.setItem') { const expr = {'strategyDirectoryPortfolioViewV1': () => JSON.stringify(portfolioViewConfigs), 'strategyDirectoryMainViewV1': () => JSON.stringify(mainScenarioViewConfig)}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }
+        if (handlers[name]) { handlers[name](effect); return; }
+        const common = {'savePortfolios': () => { savePortfolios(); }, 'saveCriteriaWorkspaces': () => { saveCriteriaWorkspaces(); }, 'renderPortfolioList': () => { renderPortfolioList(); }, 'refreshPointInTimeHistory': () => { refreshPointInTimeHistory(); }}[name];
+        if (common) common(); else throw new Error('engine effect not handled by the page: ' + name);
+      });
+    }
+
     function movePortfolio(name, offset) {
-      const names = Object.keys(portfolios);
-      const from = names.indexOf(name);
-      const to = from + Number(offset);
-      if (from < 0 || to < 0 || to >= names.length || !Number.isInteger(to)) return false;
-      [names[from], names[to]] = [names[to], names[from]];
-      const reordered = {};
-      names.forEach(portfolioName => { reordered[portfolioName] = portfolios[portfolioName]; });
-      portfolios = reordered;
-      savePortfolios();
-      renderPortfolioList();
-      return true;
+      const res = __engineCommand('move_portfolio', [name, offset]);
+      __engineReplay(res.effects, {  });
+      return res.ret;
     }
 
     function saveCriteriaWorkspaces() {
@@ -2358,13 +2460,9 @@
     }
 
     function persistPortfolioViewConfig(name = activePortfolioName) {
-      if (name) {
-        portfolioViewConfigs[name] = currentPortfolioViewConfig();
-        localStorage.setItem('strategyDirectoryPortfolioViewV1', JSON.stringify(portfolioViewConfigs));
-      } else {
-        mainScenarioViewConfig = currentPortfolioViewConfig();
-        localStorage.setItem('strategyDirectoryMainViewV1', JSON.stringify(mainScenarioViewConfig));
-      }
+      const res = __engineCommand('persist_portfolio_view_config', arguments.length === 0 || arguments[0] === undefined ? [] : [name]);
+      __engineReplay(res.effects, {  });
+      return res.ret;
     }
 
     function applyPortfolioViewConfig(config) {
@@ -3386,28 +3484,15 @@
     }
 
     function capturePortfolioScenario(name, criteria = currentCriteria) {
-      portfolioScenarioConfigs[name] = {
-        criteria, returnType: currentReturnType, productType: currentProductType,
-        product: currentProduct, strategyFamily: currentStrategyFamily,
-        limit: modelLimit, minWinRate,
-      };
-      portfolioViewConfigs[name] = currentPortfolioViewConfig();
-      localStorage.setItem('strategyDirectoryPortfolioViewV1', JSON.stringify(portfolioViewConfigs));
-      portfolioCriteria[name] = criteria;
-      saveCriteriaWorkspaces();
+      const res = __engineCommand('capture_portfolio_scenario', [name, criteria]);
+      __engineReplay(res.effects, {  });
+      return res.ret;
     }
 
     function markPortfolioFixed(name) {
-      if (!name || !portfolioScenarioConfigs[name]) return;
-      delete portfolioScenarioConfigs[name];
-      saveCriteriaWorkspaces();
-      if (activePortfolioName === name && pointInTimeMode) {
-        pointInTimeMode = false;
-        pointInTimeModels = null;
-        pointInTimeRequestedKey = '';
-        pointInTimeRequestSequence++;
-        updatePointInTimeToggleUI();
-      }
+      const res = __engineCommand('mark_portfolio_fixed', [name]);
+      __engineReplay(res.effects, {  });
+      return res.ret;
     }
 
     function applyDisplayTheme(theme = displayTheme) {
@@ -3879,12 +3964,9 @@ ${preview}`)) return;
     }
 
     function syncPortfolioViewRefresh() {
-      if (portfolioViewRefreshTimer !== null) {
-        clearInterval(portfolioViewRefreshTimer);
-        portfolioViewRefreshTimer = null;
-      }
-      if (!activePortfolioName || currentDate !== LIVE_DATE || location.protocol === 'file:') return;
-      portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, PORTFOLIO_VIEW_REFRESH_MS);
+      const res = __engineCommand('sync_portfolio_view_refresh', []);
+      __engineReplay(res.effects, { 'clearInterval': effect => { if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; } }, 'setInterval': effect => { if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]); } });
+      return res.ret;
     }
 
     document.addEventListener('visibilitychange', () => {
@@ -6141,29 +6223,23 @@ ${preview}`)) return;
     }
 
     function startReplay() {
-      const maxF = getMaxFrames();
-      // If at end of session OR if current head is before the baseline point, restart directly from baseline
-      if (currentFrameIndex >= maxF - 1 || currentFrameIndex < baselineFrameIndex) {
-        currentFrameIndex = baselineFrameIndex;
-      }
-      isPlaying = true;
+      const res = __engineCommand('start_replay', []);
       playIcon.textContent = '⏸';
       playBtnText.textContent = 'Pause';
       playBtn.classList.remove('bg-sky-600', 'hover:bg-sky-500');
       playBtn.classList.add('bg-amber-600', 'hover:bg-amber-500');
-      startPlaybackLoop();
+      __engineReplay(res.effects, { 'startPlaybackLoop': effect => { startPlaybackLoop(); } });
+      return res.ret;
     }
 
     function pauseReplay() {
-      isPlaying = false;
+      const res = __engineCommand('pause_replay', []);
       playIcon.textContent = '▶';
       playBtnText.textContent = baselineFrameIndex > 0 ? 'Play from Base' : 'Play';
       playBtn.classList.add('bg-sky-600', 'hover:bg-sky-500');
       playBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-      if (replayInterval) {
-        clearInterval(replayInterval);
-        replayInterval = null;
-      }
+      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } });
+      return res.ret;
     }
 
     function startPlaybackLoop() {

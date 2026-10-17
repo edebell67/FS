@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tests/test_parity_page_controller.py — pytest wrapper over the page-controller differential tools (page JS in Node vs Python): Page, RuleEditor, replay_models, availableDates; slow tier = mutation check.
 #
 # VERSION HISTORY
+# v1.3.0 · 2026-10-17 · wrapper mode: the 8 stage-1 engine-delegating controllers (DIFF_WRAPPERS=1) vs the originals.
 # v1.2.0 · 2026-10-17 · the engine-client page's stubs (answered by engine/rpc.py) vs the page's original overlay / rotation functions.
 # v1.1.0 · 2026-10-17 · history / lookup groups, hourly report, drift-check test.
 # v1.0.0 · 2026-10-17 · Initial version: one test per method / function group (every group must pass with 0 failures), a coverage test (no group silently missing), and the mutation check behind RUN_SLOW=1.
@@ -76,6 +77,24 @@ PAGE_METHODS = ["move_portfolio", "unique_portfolio_name", "mark_portfolio_fixed
 @pytest.mark.parametrize("method", PAGE_METHODS)
 def test_page_method_matches_page(page_rows, method):
     _all_pass(page_rows, [method])
+
+
+STAGE1_METHODS = ["move_portfolio", "mark_portfolio_fixed", "capture_portfolio_scenario", "persist_portfolio_view_config", "start_replay", "pause_replay",
+                  "sync_portfolio_view_refresh", "update_auto_refresh_status"]
+
+
+@pytest.fixture(scope="module")
+def wrapper_rows():
+    os.environ["DIFF_WRAPPERS"] = "1"
+    try:
+        return _run("diff_page_js_vs_py.py", "--cases", CASES)
+    finally:
+        os.environ.pop("DIFF_WRAPPERS", None)
+
+
+@pytest.mark.parametrize("method", STAGE1_METHODS)
+def test_engine_delegating_wrapper_matches_original(wrapper_rows, method):
+    _all_pass(wrapper_rows, [method])
 
 
 def test_page_methods_cover_every_ported_state_function(page_rows):
