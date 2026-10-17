@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/mutate_check.py — mutation check for the page controller (engine/page.py, page_state.py, rule_editor.py).
 #
 # VERSION HISTORY
+# v1.6.0 · 2026-10-17 · runner 'wrap' (diff_page_js_vs_py with DIFF_WRAPPERS=1: the engine-delegating controller wrappers).
 # v1.5.0 · 2026-10-17 · runner 'intel' (intelligence + watches tests).
 # v1.4.0 · 2026-10-17 · runner 'thin' (rebuilds the engine-client page, then diff_thin_js_vs_py); fname may be relative to the package root (tools/…, runner/static/…).
 # v1.3.1 · 2026-10-17 · a pytest run that ends in an ERROR (not a test failure) is a CRASH, not a kill: errors under parallel load had been counted as kills.
@@ -44,7 +45,7 @@ def run_one(m):
         d = Path(td)
         shutil.copytree(V2 / "engine", d / "engine", ignore=shutil.ignore_patterns("__pycache__"))
         shutil.copytree(V2 / "tools", d / "tools", ignore=shutil.ignore_patterns("__pycache__"))
-        if runner in ("pytest", "thin", "intel"):
+        if runner in ("pytest", "thin", "intel", "wrapjs"):
             shutil.copytree(V2 / "runner", d / "runner", ignore=shutil.ignore_patterns("__pycache__"))
             shutil.copytree(V2 / "tests", d / "tests", ignore=shutil.ignore_patterns("__pycache__"))
         (d / rel).write_text(src.replace(old, new), encoding="utf-8")
@@ -58,10 +59,12 @@ def run_one(m):
                 return name, ("KILLED" if refused else "CRASH"), "build refused: " + (b.stdout + b.stderr)[-160:].replace("\n", " ")
         shutil.copy2(PAGE, d / PAGE.name)
         shutil.copytree(INV.parent, d / INV.parent.name, dirs_exist_ok=True)
-        if runner == "page":
+        if runner in ("page", "wrap"):
             cmd = [sys.executable, str(d / "tools" / "diff_page_js_vs_py.py"), str(PAGE), "--inventory", str(INV), "--cases", CASES, "--methods", methods]
         elif runner == "pytest":
             cmd = [sys.executable, "-m", "pytest", str(d / "tests" / "test_runner.py"), str(d / "tests" / "test_runner_server.py"), "-q", "-x", "-p", "no:cacheprovider"]
+        elif runner == "wrapjs":
+            cmd = [sys.executable, "-m", "pytest", str(d / "tests" / "test_controller_wrappers.py"), "-q", "-x", "-p", "no:cacheprovider"]
         elif runner == "reports":
             cmd = [sys.executable, str(d / "tools" / "diff_reports_js_vs_py.py"), "--cases", CASES]
         elif runner == "intel":
@@ -75,8 +78,8 @@ def run_one(m):
         else:
             cmd = [sys.executable, str(d / "tools" / "diff_rule_editor_js_vs_py.py"), "--cases", CASES, "--methods", methods]
         r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=1800, cwd=str(V2),
-                           env={**os.environ, "PYTHONIOENCODING": "utf-8", "DIFF_WORKERS": "4"})
-        if runner in ("pytest", "intel"):
+                           env={**os.environ, "PYTHONIOENCODING": "utf-8", "DIFF_WORKERS": "4", **({"DIFF_WRAPPERS": "1"} if runner == "wrap" else {})})
+        if runner in ("pytest", "intel", "wrapjs"):
             tail = r.stdout.strip().splitlines()[-1:] or [""]
             if r.returncode != 0 and not re.search(r"\d+ failed", r.stdout):
                 tail = [r.stdout[-700:].replace("\n", " | ")]

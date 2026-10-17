@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/mutants_page.py — the mutant list for tools/mutate_check.py.
 #
 # VERSION HISTORY
+# v1.3.0 · 2026-10-17 · wrapper / command mutants (runner 'wrap').
 # v1.2.0 · 2026-10-17 · thin-page mutants (rpc.py + generated stubs).
 # v1.1.0 · 2026-10-17 · replay_models mutants; EQUIVALENT list.
 # v1.0.0 · 2026-10-17 · Initial version: mutants for engine/page.py, engine/page_state.py (via the JS state generator) and engine/rule_editor.py.
@@ -13,6 +14,8 @@ R = "reports"
 T = "pytest"
 H = "thin"
 I = "intel"
+W = "wrap"
+J = "wrapjs"
 MUTANTS = [
     # ---- page.py: view config / persistence
     ("persist: main key", "page.py", '"strategyDirectoryMainViewV1"', '"strategyDirectoryPortfolioViewV1"', P, "persist_portfolio_view_config,switch_date"),
@@ -218,10 +221,22 @@ MUTANTS = [
     ("view: background render", "page.py", '            s.visible = {m.get("model") for m in s.portfolio_models}\n            self.render_all()\n\n    def _timeout', '            s.visible = {m.get("model") for m in s.portfolio_models}\n\n    def _timeout', P, "load_portfolio_data,switch_date"),
     ("view: lock state", "page.py", '        self.view("updateChartLockControlState")\n        if s.chart_locked:', "        if s.chart_locked:", P, "apply_chart_lock"),
     ("view: persist view", "data_client.py", '            self.on_effect("view", "persistPortfolioView")  # persistPortfolioView(cacheKey, entry)\n', "", P, "load_portfolio_data,activate_portfolio"),
+    # ---- stage 1 controller wrappers (tools/controller_wrappers.py) and engine/command.py, checked in wrapper mode
+    ("wrap: effects order", "tools/controller_wrappers.py", "effects.forEach(effect => {{", "effects.slice().reverse().forEach(effect => {{", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
+    ("wrap: return value", "tools/controller_wrappers.py", "return res.ret;", "return undefined;", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
+    ("command: hooks head", "command.py", 'head_time=lambda: hooks["head"]', "head_time=lambda: None", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
+    ("wrapjs: storage main key", "tools/controller_wrappers.py", '"strategyDirectoryMainViewV1": "JSON.stringify(mainScenarioViewConfig)"', '"strategyDirectoryMainViewV1": "JSON.stringify(portfolioViewConfigs)"', J, ""),
+    ("wrapjs: criteria sent", "tools/controller_wrappers.py", "[key, 'top_net'].forEach", "['top_net'].forEach", J, ""),
+    ("wrapjs: play shell", "tools/controller_wrappers.py", "(playIcon|playBtnText|playBtn)", "(playIcon)", J, "", 2),
+    ("wrapjs: persist arg", "tools/controller_wrappers.py", "arguments.length === 0 || arguments[0] === undefined ? [] : [name]", "[name]", J, ""),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).
 EQUIVALENT = {
+    "wrap: apply skips unchanged guard": "applying a field the engine did not change writes back the value the page already holds; it is only an optimisation.",
+    "wrap: set sorted": "the engine rebuilds the set from the list, so the order the page sends does not matter.",
+    "command: library": "no stage 1 controller reads the overlay rule library (it is sent for the later stages).",
+    "command: settle": "no stage 1 controller leaves pending work (they do not fetch); settle() is for the later stages.",
     "arena: allowed ids": "load_models already restricts the report to the requested strategies, so the extra filter is defence in depth.",
     "dates: noon": "Noon vs midnight only matters at a DST gap at 00:00 (not in this machine's timezone); the date arithmetic is identical otherwise.",
     "editor: exit default": "Number('') is 0, the same as the default, so `value || 0` cannot change the result.",
