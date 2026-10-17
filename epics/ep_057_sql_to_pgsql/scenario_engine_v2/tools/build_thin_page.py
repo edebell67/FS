@@ -131,7 +131,7 @@ def main():
     for name in cw.CONTROLLERS:   # stage 1 controllers: delegated to the engine through __engineCommand
         if name not in fn:
             sys.exit(f"BUILD REFUSED: controller not in the page: {name}")
-        new = (cw.helper_block(decls).split("\n") if first else []) + cw.wrapper(name, body(name)).split("\n")
+        new = (cw.helper_block(decls).split("\n") if first else []) + cw.wrapper(name, body(name), body).split("\n")
         first = False
         edits.append((fn[name]["start_line"], fn[name]["end_line"], new))
     for start, end, new in sorted(edits, key=lambda e: -e[0]):

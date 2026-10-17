@@ -473,7 +473,9 @@ def main():
         decls = cw.declarations(PAGE.read_text(encoding="utf-8"), {st["name"]: st["decl"] for st in inv_data["state"]})
         fns = {f["name"]: f for f in inv_data["functions"]}
         lines = PAGE.read_text(encoding="utf-8").split("\n")
-        extra += "\n" + cw.helper_block(decls) + "\n".join(cw.wrapper(n, "\n".join(lines[fns[n]["start_line"] - 1:fns[n]["end_line"]])) for n in cw.CONTROLLERS)
+        def _body(n):
+            return "\n".join(lines[fns[n]["start_line"] - 1:fns[n]["end_line"]])
+        extra += "\n" + cw.helper_block(decls) + "\n".join(cw.wrapper(n, _body(n), _body) for n in cw.CONTROLLERS)
         py_to_js = {v: k for k, v in JS_NAME.items()}
         wrapped_methods = {cw.CONTROLLERS[n][0] for n in cw.CONTROLLERS}
         cases = [c for c in cases if c["method"] in wrapped_methods]

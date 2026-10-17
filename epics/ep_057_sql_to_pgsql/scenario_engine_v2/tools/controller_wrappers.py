@@ -33,12 +33,14 @@ CONTROLLERS = {
                                   "setInterval": "if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]);"}),
     "updateAutoRefreshTop1Status": ("update_auto_refresh_status", "message = ''", "[message]", None, {}),
 
-    "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None, {}),
-    "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
 }
+# NOT yet delegated (timer effects carry no callback identity; needs engine-named timers):
+#     "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None, {}),
+#     "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
 EXTRAS = {
+    "resetAutomaticRankSchedule": {"flag": "autoRefreshTop1RequestAt !== null", "flag_shell": r"^\s*applySelectedTimeBtn\?\."},
     "applyChartLock": {"prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;", "range": (r"^\s*chartLockBtn\.setAttribute", r"^\s*scrubberTrack\.title"),
                        "pause_if": "chartLocked"},
 }
@@ -133,13 +135,40 @@ def helper_block(state_decls: dict) -> str:
 """
 
 
-def wrapper(name: str, original_body: str) -> str:
+def _lines(body: str, rx: str):
+    return [l.strip() for l in body.split("\n") if re.match(rx, l)]
+
+
+PLAY_SHELL = r"^\s*(playIcon|playBtnText|playBtn)\b"
+
+
+def wrapper(name: str, original_body: str, get_body=None) -> str:
+    """get_body(name) -> the original source of another page function (needed for pause_if)."""
     method, params, argexpr, shell_re, effects = CONTROLLERS[name]
+    ex = EXTRAS.get(name, {})
     shell = ""
     if shell_re:
-        shell = "\n".join("      " + l.strip() for l in original_body.split("\n") if re.match(shell_re, l))
+        shell = "\n".join("      " + l for l in _lines(original_body, shell_re))
+    if ex.get("range"):
+        out, on = [], False
+        for l in original_body.split("\n"):
+            if re.match(ex["range"][0], l):
+                on = True
+            if on:
+                out.append("      " + l.strip())
+            if on and re.match(ex["range"][1], l):
+                break
+        shell = "\n".join(out)
+    if ex.get("pause_if"):
+        pause = "\n".join("        " + l for l in _lines(get_body("pauseReplay"), PLAY_SHELL))
+        shell += f"\n      if ({ex['pause_if']}) {{\n{pause}\n      }}"
+    flag = ""
+    if ex.get("flag"):
+        flag = f"      const __was = {ex['flag']};\n"
+        shell = "      if (__was) {\n" + "\n".join("        " + l for l in _lines(original_body, ex["flag_shell"])) + "\n      }"
+    prelude = f"      {ex['prelude']}\n" if ex.get("prelude") else ""
     handlers = ", ".join(f"'{k}': effect => {{ {v} }}" for k, v in effects.items())
     shell_block = f"\n{shell}" if shell else ""
     asyncs = "async " if original_body.lstrip().startswith("async") else ""
-    return (f"    {asyncs}function {name}({params}) {{\n      const res = __engineCommand('{method}', {argexpr});{shell_block}\n"
+    return (f"    {asyncs}function {name}({params}) {{\n{prelude}{flag}      const res = __engineCommand('{method}', {argexpr});{shell_block}\n"
             f"      __engineReplay(res.effects, {{ {handlers} }});\n      return res.ret;\n    }}")

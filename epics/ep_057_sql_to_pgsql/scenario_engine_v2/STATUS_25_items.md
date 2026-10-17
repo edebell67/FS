@@ -1,6 +1,6 @@
 # Scenario engine v2 — status of the 25 items (2026-10-17)
 
-Package: `epics/ep_057_sql_to_pgsql/scenario_engine_v2/`. Local commits only (not pushed): 08146ed0, c94ae7a2, d4633ce0, 106f8dc4, 667ca88e, 98261e91.
+Parent epic: EP057 (`epics/ep_057_sql_to_pgsql`); the arena side is EP052. Package: `epics/ep_057_sql_to_pgsql/scenario_engine_v2/`. Task files for this work are in `workstream/050_review/general` (not 300_complete: awaiting acceptance). Local commits only (not pushed): 08146ed0, c94ae7a2, d4633ce0, 106f8dc4, 667ca88e, 98261e91.
 Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `20261017_190000_ep057_997_arena_strategy_intelligence.md` (mirrored in `obs/Hermes Task Memory/workstream_mirror/`).
 
 | # | Item | Status | Evidence / what is left |
@@ -20,7 +20,7 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 | 25 | Cleanup | Done | |
 
 ## Left to do
-1. **Stage 2 controller move** (activate/switch date/set ranking/refresh and the rest): needs a server-side per-page session that owns the data caches (ALL_CRITERIA_DATA, portfolio view caches, rule library, trade cache, portfolioModels), then a wrapper-vs-original differential per controller. Not started; first candidates with no fetch: `applyChartLock`, `resetAutomaticRankSchedule` (both already ported in `engine/page.py`; their DOM-shell lines must be copied into wrappers).
+1. **Stage 2 controller move** (activate/switch date/set ranking/refresh and the rest): needs a server-side per-page session that owns the data caches (ALL_CRITERIA_DATA, portfolio view caches, rule library, trade cache, portfolioModels), then a wrapper-vs-original differential per controller. Tried 2026-10-17: `applyChartLock` / `resetAutomaticRankSchedule` wrappers work except where the engine schedules timers (effects `setTimeout`/`clearTimeout` carry no callback identity, 19–80 of 80 cases fail on that). So the next step is engine-named timers (a callback registry) before any more controllers can move; generator support (EXTRAS) is in `tools/controller_wrappers.py`, the two are parked in comments. Original candidates with no fetch: `applyChartLock`, `resetAutomaticRankSchedule` (both already ported in `engine/page.py`; their DOM-shell lines must be copied into wrappers).
 2. **Item 22 run:** `cd epics/ep_052_strategy_directory_agentic_trade_arena/lean_delivery/app && EP052_TEST_DATABASE_ADMIN_URL='postgresql://postgres:<password>@localhost:5432/postgres' python -m pytest tests -q`
 3. **Item 23** acceptance (yours); **item 19** only if you change your mind.
 4. Not done: per-agent quota on races; validating signal usefulness on history; speeding up the 38 ms / 0.5 s redraws.

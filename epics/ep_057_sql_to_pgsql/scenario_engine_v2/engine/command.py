@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/command.py — run a page controller in the engine on a state snapshot sent by the browser copy; returns the new state and the ordered effects.
 #
 # VERSION HISTORY
+# v1.1.0 · 2026-10-17 · stage 2 (no fetch): apply_chart_lock, reset_automatic_rank_schedule.
 # v1.0.1 · 2026-10-17 · optional `hooks` test seam.
 # v1.0.0 · 2026-10-17 · Initial version: stage 1 controllers that need no network (movePortfolio, markPortfolioFixed, capturePortfolioScenario, persistPortfolioViewConfig, startReplay, pauseReplay, syncPortfolioViewRefresh, updateAutoRefreshTop1Status).
 """A command request: {"method": <Page method>, "args": [...], "state": <PageState.snapshot() of the page>, "criteriaData": {key: {date: [models]}} (only what the page's current view reads),
@@ -14,7 +15,8 @@ from .page_state import PageState
 
 # controllers the browser copy may delegate (stage 1: none of them touches the network or starts a timer callback the engine would have to own)
 STAGE1 = ("move_portfolio", "mark_portfolio_fixed", "capture_portfolio_scenario", "persist_portfolio_view_config", "start_replay", "pause_replay",
-          "sync_portfolio_view_refresh", "update_auto_refresh_status")
+          "sync_portfolio_view_refresh", "update_auto_refresh_status",
+          "apply_chart_lock", "reset_automatic_rank_schedule")   # last two: stage 2, no fetch
 
 
 class CommandError(ValueError):
