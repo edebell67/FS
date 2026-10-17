@@ -17,7 +17,9 @@ from .page_state import PageState
 # controllers the browser copy may delegate (stage 1: none of them touches the network or starts a timer callback the engine would have to own)
 STAGE1 = ("move_portfolio", "mark_portfolio_fixed", "capture_portfolio_scenario", "persist_portfolio_view_config", "start_replay", "pause_replay",
           "sync_portfolio_view_refresh", "update_auto_refresh_status",
-          "apply_chart_lock", "reset_automatic_rank_schedule")   # last two: stage 2, no fetch
+          "apply_chart_lock", "reset_automatic_rank_schedule",
+          "unique_portfolio_name", "current_portfolio_view_config", "apply_portfolio_view_config", "get_merged_portfolio_models", "auto_pin_live_portfolio_strategies",
+          "schedule_point_in_time_selection", "schedule_automatic_top1_refresh", "apply_selected_time", "trigger_selected_time_refresh")   # last two: stage 2, no fetch
 
 
 class CommandError(ValueError):

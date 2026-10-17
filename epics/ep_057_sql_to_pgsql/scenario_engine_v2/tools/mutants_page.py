@@ -230,12 +230,12 @@ MUTANTS = [
     ("wrap: skip view call", "tools/controller_wrappers.py", 'and not (ex.get("skip") and re.match(ex["skip"], l))', '', W, "apply_chart_lock,reset_automatic_rank_schedule"),
     ("wrap: timer at index", "tools/controller_wrappers.py", "op.at === at", "op.at === 0", W, "apply_chart_lock,reset_automatic_rank_schedule"),
     # ---- stage 1 controller wrappers (tools/controller_wrappers.py) and engine/command.py, checked in wrapper mode
-    ("wrap: effects order", "tools/controller_wrappers.py", "effects.forEach(effect => {{", "effects.slice().reverse().forEach(effect => {{", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
+    ("wrap: effects order", "tools/controller_wrappers.py", "effects.forEach((effect, at) => {{", "effects.slice().reverse().forEach((effect, at) => {{", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
     ("wrap: return value", "tools/controller_wrappers.py", "return res.ret;", "return undefined;", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
     ("command: hooks head", "command.py", 'head_time=lambda: hooks["head"]', "head_time=lambda: None", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
     ("wrapjs: storage main key", "tools/controller_wrappers.py", '"strategyDirectoryMainViewV1": "JSON.stringify(mainScenarioViewConfig)"', '"strategyDirectoryMainViewV1": "JSON.stringify(portfolioViewConfigs)"', J, ""),
     ("wrapjs: criteria sent", "tools/controller_wrappers.py", "[key, 'top_net'].forEach", "['top_net'].forEach", J, ""),
-    ("wrapjs: play shell", "tools/controller_wrappers.py", "(playIcon|playBtnText|playBtn)", "(playIcon)", J, "", 2),
+    ("wrapjs: play shell", "tools/controller_wrappers.py", "(playIcon|playBtnText|playBtn)", "(playIcon)", J, "", 3),
     ("wrapjs: persist arg", "tools/controller_wrappers.py", "arguments.length === 0 || arguments[0] === undefined ? [] : [name]", "[name]", J, ""),
 ]
 

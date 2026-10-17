@@ -59,14 +59,15 @@ globalThis.API_BASE = 'http://api';
 globalThis.location = { href: 'http://h/p/page.html', protocol: 'http:', origin: 'http://h' };
 globalThis.history = { replaceState(){} };
 var __fx = [], __calls = [], __timers = [];
-const __el = () => new Proxy({ options: [] }, { get: (t, p) => p === 'classList' ? { add(){}, remove(){}, toggle(){}, contains(){ return false; } }
-  : (p in t ? t[p] : (typeof p === 'string' && /^(setAttribute|removeAttribute|appendChild|addEventListener|focus|close|showModal)$/.test(p) ? () => {} : undefined)),
-  set: (t, p, v) => { t[p] = v; return true; } });
+var __dom = [];
+const __el = (name = '?') => new Proxy({ options: [] }, { get: (t, p) => p === 'classList' ? { add(...a){ __dom.push([name, 'classList.add', a]); }, remove(...a){ __dom.push([name, 'classList.remove', a]); }, toggle(...a){ __dom.push([name, 'classList.toggle', a]); }, contains(){ return false; } }
+  : (p in t ? t[p] : (typeof p === 'string' && /^(setAttribute|removeAttribute|appendChild|addEventListener|focus|close|showModal)$/.test(p) ? (...a) => { __dom.push([name, p, a]); } : undefined)),
+  set: (t, p, v) => { if (typeof p === 'string') __dom.push([name, p, v]); t[p] = v; return true; } });
 globalThis.document = { getElementById: () => null, createElement: () => __el(), hidden: false };
 ['chartLockBtn','chartLockIcon','chartLockLabel','playBtn','stepBackBtn','stepFwdBtn','restartBtn','setBaseAtHeadBtn','resetBaselineBtn','scrubberTrack',
  'productTypeFilter','modelLimitFilter','winRateSlider','winRateValBadge','winRateDisplayBadge','productFilter','autoRefreshTop1Toggle','autoRefreshTop1Interval',
  'applySelectedTimeBtn','returnTypeNetBtn','returnTypeAltBtn','playIcon','playBtnText','catalogPortfolioFilter','portfolioList','similarStrategyModal',
- 'modelSearchStatus'].forEach(n => { globalThis[n] = __el(); });
+ 'modelSearchStatus'].forEach(n => { globalThis[n] = __el(n); });
 ['updateDateLabelAndTitle','updateScrubberUI','updateRibbon','renderCards','drawChart','updateScenarioUI','updatePointInTimeToggleUI','syncLiveAltReporting',
  'syncLiveModeUI','setupDateTabs','renderPortfolioTabs','syncAssignedOverlayRuleUI','updateStrategyFamilyOptions','syncSplitModeControls',
  'renderLivePortfolioTransition','renderPointInTimeHistory','setLiveBadge','cacheLiveChartResponse','scheduleLiveChartCacheFallback','persistPortfolioView',
@@ -98,7 +99,7 @@ var portfolioMergeSelection, portfolioMergeSelection2, PORTFOLIO_VIEW_CACHE = ne
   TP_SL_SCENARIO_IDS = new Set(), liveChartDataLoadedKeys = new Set(), productFilterDummy = null, initialLiveDataAvailable = false, pendingFilterDataRefresh = false,
   overlayRuleLibrary = { rules: [], assignments: {} }, overlayRuleLibraryRequest = null, mainScenarioViewConfig = null, livePortfolioActiveModels = {},
   MOMENTUM_SCENARIO_IDS = new Set(['top3_momentum_net', 'top3_momentum_alt']), pointInTimeHistoryNearViewport = false, modelSearchTimer = null,
-  pointInTimeDebounceTimer = null, deepLinkModel = '', portfolioViewRefreshTimer = null, pointInTimeRequestSequence = 0, selectedTimeInput = { value: '' },
+  pointInTimeDebounceTimer = null, deepLinkModel = '', portfolioViewRefreshTimer = null, pointInTimeRequestSequence = 0, selectedTimeInput = __el('selectedTimeInput'),
   pointInTimeStatus = { textContent: '', className: '' }, SCENARIOS_CATALOGUE = [], ALL_CRITERIA_DATA = {}, replayInterval = null,
   portfolioViewConfigs = {}, strategyCatalogue = [], similarStrategyPayload = null;
 function __fetchStub(fx){ __calls = [];
@@ -109,7 +110,7 @@ globalThis.__engine = { call(req) { const key = JSON.stringify(req); __engReq.pu
   if (__engMode === 'collect') { const k = __engResp[key]; return k !== undefined && !k.startsWith('ERROR:') ? JSON.parse(k) : { ret: null, state: req.state, effects: [] }; }
   const t = __engResp[key]; if (t === undefined) throw new Error('no engine answer recorded for ' + req.method); if (t.startsWith('ERROR:')) throw new Error(t); return JSON.parse(t); } };
 async function __page(fx, name, c, args){
-  __fetchStub(fx); __fx = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
+  __fetchStub(fx); __fx = []; __dom = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
   __ps_set(c.state);
   globalThis.portfolioViewConfigs = c.state.portfolio_view_configs; globalThis.livePortfolioStore = c.state.live_store;
   globalThis.__maxFrames = c.hooks.maxFrames; globalThis.__head = c.hooks.head; globalThis.__elig = c.hooks.eligible; globalThis.__candidates = c.hooks.candidates;
@@ -119,6 +120,7 @@ async function __page(fx, name, c, args){
   globalThis.SCENARIOS_CATALOGUE = []; globalThis.pointInTimeRequestSequence = c.state.pit_request_sequence;
   globalThis.deepLinkModel = ''; globalThis.pendingFilterDataRefresh = false;
   let ret;
+  __dom = [];   // the writes made while the page set up its mirrored state are not part of the call
   let dbg = null;
   globalThis.__vlog = [];
   if (c.trace) { let __vm = globalThis.visibleModels; Object.defineProperty(globalThis, 'visibleModels', { configurable: true, get(){ return __vm; },
@@ -138,7 +140,7 @@ async function __page(fx, name, c, args){
   } catch (e) { ret = { error: true }; dbg = String(e && e.message || e); }
   for (let i = 0; i < 40; i++) await new Promise(res => __imm(res));
   const norm = e => [e[0], { models: e[1].models, cachedAt: Math.abs(e[1].cachedAt - Date.now()) < 120000 ? 'NOW' : e[1].cachedAt }];
-  return { state: __ps_get(), effects: __fx, calls: __calls, ret: ret === undefined ? null : ret, criteriaKeys: Object.keys(ALL_CRITERIA_DATA).sort(),
+  return { state: __ps_get(), effects: __fx, calls: __calls, dom: __dom, ret: ret === undefined ? null : ret, criteriaKeys: Object.keys(ALL_CRITERIA_DATA).sort(),
     library: overlayRuleLibrary, viewCache: [...PORTFOLIO_VIEW_CACHE.entries()].map(norm), _dbg: dbg, _vlog: c.trace ? globalThis.__vlog : null, _engReq: globalThis.__engReq };
 }
 """
@@ -526,6 +528,12 @@ def main():
             c["args"][2]["engMode"] = "answer"
     results = run_js(spec["cases"])
     res = {r["id"]: r for r in results}
+    orig_dom = {}
+    if wrapped:   # the same cases through the ORIGINAL page functions: the DOM writes (and nothing else) the wrapper must reproduce
+        ospec = {**spec, "extra": PAGE_EXTRA, "cases": [{**c, "args": [c["args"][0], c["args"][1], {**c["args"][2], "engMode": "off", "engResp": {}}, c["args"][3]]} for c in spec["cases"]]}
+        spec_backup, spec = spec, ospec
+        orig_dom = {r["id"]: (r["result"].get("dom") if r["ok"] else None) for r in run_js(ospec["cases"])}
+        spec = spec_backup
     summary, fails = {}, {}
     for cid, (method, exp) in expected.items():
         r = res[cid]
@@ -545,9 +553,13 @@ def main():
             print("VLOG", json.dumps(vlog))
         exp.pop("_vlog", None)
         r["result"].pop("_engReq", None)
+        dom_js = r["result"].pop("dom", None)
         dbg_js = r["result"].pop("_dbg", None)
         dbg_py = exp.pop("_dbg", None)
         d = diff(exp, r["result"])
+        if not d and wrapped and orig_dom.get(cid) is not None and dom_js != orig_dom[cid]:
+            n = next((i for i, (x, y) in enumerate(zip(dom_js or [], orig_dom[cid])) if x != y), min(len(dom_js or []), len(orig_dom[cid])))
+            d = f".dom[{n}]: original {json.dumps(orig_dom[cid][n:n + 1])[:200]} vs wrapper {json.dumps((dom_js or [])[n:n + 1])[:200]} (lengths {len(orig_dom[cid])}/{len(dom_js or [])})"
         if d and (dbg_js or dbg_py):
             d += f"   [js error: {dbg_js}] [py error: {dbg_py}]"
         if d:
