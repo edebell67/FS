@@ -59,3 +59,28 @@ def test_the_report_uses_no_data_after_the_as_of_point():
 def test_thin_samples_say_so():
     r = intel.report([model("A", [1, 2, 3, 4]), model("B", [1, 1, 2, 2])])
     assert r["confidence"] == "low" and any("weak" in c for c in r["caveats"]) and any("fewer than three" in c for c in r["caveats"])
+
+
+def test_max_drawdown_is_the_worst_peak_to_trough_fall():
+    top = intel.top_performers({"X": [0, 10, 5, 12, 4, 6]}, {"X": "t"}, 1)[0]
+    assert top["max_drawdown"] == -8 and top["net"] == 6 and top["momentum"] == 6 - 0
+
+
+def test_spread_needs_at_least_eight_points():
+    assert intel.spread_signal("A", "B", [1.0] * 7, [0.0, 1, 0, 1, 0, 1, 0]) is None
+    assert intel.spread_signal("A", "B", [float(i % 3) for i in range(8)], [0.0] * 8) is not None
+
+
+def _spread(values):
+    return intel.spread_signal("A", "B", values, [0.0] * len(values), window=len(values), z_hi=1.5)
+
+
+def test_spread_states_widening_collapsing_stretched_normal():
+    flat = [0.0, 0.2, -0.1, 0.1, 0.0, -0.2, 0.1, 0.0, 0.1, -0.1, 0.0, 0.1]
+    widening = flat + [0.8, 1.6, 3.0, 5.0]               # |z| climbing past the threshold
+    collapsing = flat + [5.0, 5.0, 5.0, 1.5, 0.3, 0.0]   # was far out, is coming back
+    stretched = flat + [5.0, 5.0, 5.0, 5.0, 5.0]         # far out and not moving
+    assert _spread(widening)["state"] == "widening"
+    assert _spread(collapsing)["state"] == "collapsing"
+    assert _spread(stretched)["state"] == "stretched"
+    assert _spread(flat)["state"] == "normal"

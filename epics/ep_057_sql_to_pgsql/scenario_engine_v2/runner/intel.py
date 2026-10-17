@@ -22,7 +22,8 @@ def load_models(client, *, date, models=(), scenario="top_net", return_type="NET
     if models:
         key = ",".join(models)
         client.fetch_portfolio_data(f"{date}|{key}", date, key, False)
-        return list(client.portfolio_models)
+        wanted = {m.lower() for m in models}
+        return [m for m in client.portfolio_models if str(m.get("model", "")).lower() in wanted]   # only the requested strategies are ranked
     res = client.refresh_live_data(date, product_type=product_type, product=product, strategy_family=strategy_family, limit=limit, criteria=scenario, return_type=return_type)
     if not res.get("ok"):
         raise RuntimeError(f"live day unavailable: {res.get('url')}")

@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-17 · POST /v1/queries: the EP052 arena's external intelligence provider contract.
 # v1.3.0 · 2026-10-17 · /api/intelligence/report, watches and events (proactive intelligence for agents).
 # v1.2.0 · 2026-10-17 · add_scenario_top.
 # v1.1.0 · 2026-10-17 · POST /engine/call, /engine/client.js, the engine-client page route and a same-origin proxy to the data service (/api/*, static assets).
@@ -24,6 +25,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from engine import rpc
 
+from .arena_provider import create_router as create_arena_router
 from .intel import WatchRegistry, build_report, default_factory
 from .manager import DEFAULT_MAX_CONCURRENT, HARD_LIMIT, RaceManager
 from .race import RaceConfig
@@ -211,6 +213,8 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
     @app.get("/dashboard")
     def dashboard():
         return FileResponse(HERE / "static" / "dashboard.html", media_type="text/html")
+
+    app.include_router(create_arena_router(factory))   # EP052 arena intelligence provider (POST /v1/queries), before the catch-all proxy
 
     # ---- the engine contract for the browser copy of the scenario page (engine/rpc.py) ----
     @app.post("/engine/call")

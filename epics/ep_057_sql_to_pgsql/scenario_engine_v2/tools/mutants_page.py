@@ -12,6 +12,7 @@ D = "dates"
 R = "reports"
 T = "pytest"
 H = "thin"
+I = "intel"
 MUTANTS = [
     # ---- page.py: view config / persistence
     ("persist: main key", "page.py", '"strategyDirectoryMainViewV1"', '"strategyDirectoryPortfolioViewV1"', P, "persist_portfolio_view_config,switch_date"),
@@ -184,10 +185,35 @@ MUTANTS = [
     ("thin: stub replay", "tools/build_thin_page.py", "replayIndex: replayIndex >= 0 ? replayIndex : null,", "replayIndex: null,", H, ""),
     ("thin: stub rule", "tools/build_thin_page.py", "const rule = activePortfolioName ? activePortfolioOverlayRule() : null;", "const rule = null;", H, ""),
     ("thin: stub overlay args", "tools/build_thin_page.py", "args: [seriesSlice, basePt], globals: {g} }});", "args: [basePt, seriesSlice], globals: {g} }});", H, ""),
+    # ---- intelligence (engine/intelligence.py, runner/intel.py)
+    ("intel: rank order", "intelligence.py", 'rows.sort(key=lambda r: (-r["net"], r["model"]))', 'rows.sort(key=lambda r: (r["net"], r["model"]))', I, ""),
+    ("intel: drawdown", "intelligence.py", "worst = min(worst, v - peak)", "worst = max(worst, v - peak)", I, ""),
+    ("intel: cluster threshold", "intelligence.py", "if c >= threshold:", "if c > 2:", I, ""),
+    ("intel: min sample", "intelligence.py", "if n < 8:\n        return None", "if n < 2:\n        return None", I, ""),
+    ("intel: z sign", "intelligence.py", "z = (spread[-1] - m) / sd", "z = (m - spread[-1]) / sd", I, ""),
+    ("intel: widening", "intelligence.py", 'abs(z) > abs(z_prev) + 0.05:\n        state = "widening"', 'abs(z) < abs(z_prev) + 0.05:\n        state = "widening"', I, ""),
+    ("intel: leader", "intelligence.py", '"leader": a if spread[-1] > 0 else b', '"leader": b if spread[-1] > 0 else a', I, ""),
+    ("intel: no look-ahead", "intelligence.py", "vals = vals[:as_of_index + 1]", "vals = vals", I, ""),
+    ("intel: confidence", "intelligence.py", '"low" if sample < window else', '"high" if sample < window else', I, ""),
+    ("intel: caveat thin", "intelligence.py", "if len(curves) < 3:", "if len(curves) < 1:", I, ""),
+    ("watch: top change", "runner/intel.py", 'set(top_now) != set(st["top"])', "False", I, ""),
+    ("watch: dedupe spread", "runner/intel.py", "if key not in seen:", "if True:", I, ""),
+    ("watch: per-agent limit", "runner/intel.py", ">= MAX_WATCHES_PER_AGENT:", ">= MAX_WATCHES_PER_AGENT + 5:", I, ""),
+    ("watch: clear on pull", "runner/intel.py", "            if clear:\n                self.events[agent].clear()", "            pass", I, ""),
+    ("watch: as-of time", "runner/intel.py", 'idx = [i for i, t in enumerate(times) if t <= spec["as_of_time"]]', 'idx = [i for i, t in enumerate(times) if t >= spec["as_of_time"]]', I, ""),
+    ("arena: token check", "runner/arena_provider.py", "if not hmac.compare_digest(authorization.encode(), (\"Bearer \" + secret).encode()):", "if False:", I, ""),
+    ("arena: agent identity", "runner/arena_provider.py", "if not x_ep052_agent_id:", "if False:", I, ""),
+    ("arena: limit", "runner/arena_provider.py", "return out[:limit], note", "return out, note", I, ""),
+    ("arena: retry identity", "runner/arena_provider.py", "if identity in deliveries:", "if False:", I, ""),
+    ("arena: conflict", "runner/arena_provider.py", "if old_fp != fp:\n                    raise", "if False:\n                    raise", I, ""),
+    ("arena: window end", "runner/arena_provider.py", "spec[\"as_of_time\"] = day.strftime(\"%H:%M\")", "pass", I, ""),
+    ("arena: kind check", "runner/arena_provider.py", "if kind not in KINDS or", "if", I, ""),
+    ("arena: mode", "runner/arena_provider.py", '"mode": "external"', '"mode": "simulated_random"', I, ""),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).
 EQUIVALENT = {
+    "arena: allowed ids": "load_models already restricts the report to the requested strategies, so the extra filter is defence in depth.",
     "dates: noon": "Noon vs midnight only matters at a DST gap at 00:00 (not in this machine's timezone); the date arithmetic is identical otherwise.",
     "editor: exit default": "Number('') is 0, the same as the default, so `value || 0` cannot change the result.",
     "models: head clamp": "currentFrameIndex < 0 takes the other branch, so max(0, ...) is redundant.",
