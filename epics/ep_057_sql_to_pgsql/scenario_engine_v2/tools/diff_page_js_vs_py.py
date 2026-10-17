@@ -106,7 +106,7 @@ function __fetchStub(fx){ __calls = [];
     return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.payload }; }; }
 globalThis.__engReq = []; globalThis.__engMode = 'off'; globalThis.__engResp = {};
 globalThis.__engine = { call(req) { const key = JSON.stringify(req); __engReq.push(key);
-  if (__engMode === 'collect') return { ret: null, state: req.state, effects: [] };
+  if (__engMode === 'collect') { const k = __engResp[key]; return k !== undefined && !k.startsWith('ERROR:') ? JSON.parse(k) : { ret: null, state: req.state, effects: [] }; }
   const t = __engResp[key]; if (t === undefined) throw new Error('no engine answer recorded for ' + req.method); if (t.startsWith('ERROR:')) throw new Error(t); return JSON.parse(t); } };
 async function __page(fx, name, c, args){
   __fetchStub(fx); __fx = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
@@ -501,18 +501,29 @@ def main():
 
     if wrapped:
         from engine import rpc as _rpc
+        pending_cases = {c["id"]: c for c in spec["cases"]}
         for c in spec["cases"]:
-            c["args"][2]["engMode"] = "collect"
-        collected = {r["id"]: r for r in run_js(spec["cases"])}
+            c["args"][2]["engMode"], c["args"][2]["engResp"] = "collect", {}
+        for _round in range(8):   # a controller's later requests depend on earlier answers (the fallback path): collect until no new request appears
+            collected = {r["id"]: r for r in run_js(list(pending_cases.values()))}
+            pending_cases = {}
+            for cid, c in {c["id"]: c for c in spec["cases"]}.items():
+                r = collected.get(cid)
+                if r is None:
+                    continue
+                answers = c["args"][2]["engResp"]
+                new_keys = [k for k in ((r["result"].get("_engReq") or []) if r["ok"] else []) if k not in answers]
+                for key in new_keys:
+                    try:
+                        answers[key] = json.dumps(_rpc.dispatch(json.loads(key)))
+                    except Exception as e:  # noqa: BLE001
+                        answers[key] = f"ERROR: {type(e).__name__}: {e}"
+                if new_keys:
+                    pending_cases[cid] = c
+            if not pending_cases:
+                break
         for c in spec["cases"]:
-            r = collected[c["id"]]
-            answers = {}
-            for key in (r["result"].get("_engReq") or []) if r["ok"] else []:
-                try:
-                    answers[key] = json.dumps(_rpc.dispatch(json.loads(key)))
-                except Exception as e:  # noqa: BLE001
-                    answers[key] = f"ERROR: {type(e).__name__}: {e}"
-            c["args"][2]["engMode"], c["args"][2]["engResp"] = "answer", answers
+            c["args"][2]["engMode"] = "answer"
     results = run_js(spec["cases"])
     res = {r["id"]: r for r in results}
     summary, fails = {}, {}

@@ -116,6 +116,7 @@ class PageState:
                 v = OrderedDict(v)
             setattr(self, py, v)
         self.effects: list = []
+        self.timer_ops: list = []   # named timer operations tied to the setTimeout / clearTimeout effect at index `at`: {op, timer, ms, call, args, at}
         self.update(init)
 
     def update(self, init: dict) -> "PageState":

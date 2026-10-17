@@ -38,3 +38,16 @@ def test_persist_sends_no_argument_when_called_without_one():
 def test_wrapper_returns_the_engine_value_and_replays_in_order():
     w = cw.wrapper("movePortfolio", "")
     assert "return res.ret;" in w and "__engineReplay(res.effects" in w
+
+
+def test_engine_names_the_timers_it_starts_and_clears():
+    """The harness stubs setTimeout and cannot see which page timer variable holds the handle, so pin the engine's named timer operations here."""
+    sys.path.insert(0, str(ROOT))
+    from engine import command
+    from engine.page_state import PageState
+    st = PageState()
+    st.pit_mode, st.current_date = True, "2026-10-14"
+    r = command.run({"method": "apply_chart_lock", "args": [True, False], "state": st.snapshot(), "hooks": {"maxFrames": 10, "head": "10:00", "eligible": [], "candidates": []}})
+    ops = r["timers"]
+    assert ops[-1] == {"op": "set", "timer": "pointInTimeDebounceTimer", "ms": 180, "call": "refreshPointInTimeSelection", "args": ["10:00"], "at": ops[-1]["at"]}
+    assert r["effects"][ops[-1]["at"]] == ["setTimeout", 180] and r["effects"][ops[0]["at"]] == ["clearTimeout"]

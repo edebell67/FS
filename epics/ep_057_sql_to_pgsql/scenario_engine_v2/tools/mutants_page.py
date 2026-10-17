@@ -221,6 +221,14 @@ MUTANTS = [
     ("view: background render", "page.py", '            s.visible = {m.get("model") for m in s.portfolio_models}\n            self.render_all()\n\n    def _timeout', '            s.visible = {m.get("model") for m in s.portfolio_models}\n\n    def _timeout', P, "load_portfolio_data,switch_date"),
     ("view: lock state", "page.py", '        self.view("updateChartLockControlState")\n        if s.chart_locked:', "        if s.chart_locked:", P, "apply_chart_lock"),
     ("view: persist view", "data_client.py", '            self.on_effect("view", "persistPortfolioView")  # persistPortfolioView(cacheKey, entry)\n', "", P, "load_portfolio_data,activate_portfolio"),
+    # ---- stage 2: engine-named timers, needsNetwork fallback
+    ("timer: clear op dropped", "page.py", 'self.s.timer_ops.append({"op": "clear"', 'self.s.timer_ops.append({"op": "noop"', W, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("timer: set op dropped", "page.py", 'self.s.timer_ops.append({"op": "set"', 'self.s.timer_ops.append({"op": "noop"', J, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("timer: wrong timer name", "page.py", '180, "pointInTimeDebounceTimer"', '180, "modelSearchTimer"', J, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("command: needsNetwork ignored", "command.py", "    if wanted:", "    if False:", W, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("wrap: fallback removed", "tools/controller_wrappers.py", 'if ex.get("fallback"):', 'if False:', W, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("wrap: skip view call", "tools/controller_wrappers.py", 'and not (ex.get("skip") and re.match(ex["skip"], l))', '', W, "apply_chart_lock,reset_automatic_rank_schedule"),
+    ("wrap: timer at index", "tools/controller_wrappers.py", "op.at === at", "op.at === 0", W, "apply_chart_lock,reset_automatic_rank_schedule"),
     # ---- stage 1 controller wrappers (tools/controller_wrappers.py) and engine/command.py, checked in wrapper mode
     ("wrap: effects order", "tools/controller_wrappers.py", "effects.forEach(effect => {{", "effects.slice().reverse().forEach(effect => {{", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
     ("wrap: return value", "tools/controller_wrappers.py", "return res.ret;", "return undefined;", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),

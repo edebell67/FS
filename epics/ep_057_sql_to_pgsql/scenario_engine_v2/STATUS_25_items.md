@@ -7,8 +7,8 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 |---|------|--------|-------------------------|
 | 1–13 | Engine core (Page controller, tests, mutation tests, map/drift, version blocks, task files) | Done | Differential tests page JS (Node) vs Python on real :8765 data + synthetic; ~190 mutants killed (documented equivalents in `tools/mutants_page.py`); `check_drift.py` clean |
 | 14 | Parallel headless instances (max 5, configurable) | Done | `runner/manager.py`, `tests/test_runner*.py` |
-| 15 | Thin browser copy without embedded engine | Partly | Generated page `top10_5min_equity_curves_engine_client_v2.65.32.html`. Overlay/rotation engine and 8 no-network controllers run in Python. The other ~33 controllers still run in the page |
-| 16 | Browser parity verification | Partly | Parity proven for the delegated parts (slice 1 + stage 1: 80/80 per controller, real-browser run). Not yet proven for the remaining controllers |
+| 15 | Thin browser copy without embedded engine | Partly | Generated page `top10_5min_equity_curves_engine_client_v2.65.32.html`. Overlay/rotation engine and 10 controllers run in Python (8 no-network + `applyChartLock`, `resetAutomaticRankSchedule`, which fall back to the page's own copy when they need the network). The other ~31 controllers still run in the page |
+| 16 | Browser parity verification | Partly | Parity proven for the delegated parts (slice 1 + stage 1 + chart lock / rank schedule: wrapper-vs-original differential, 80/80 for all 10 controllers, 200/200 for the two newest; 7 new mutants killed). Not yet proven for the remaining controllers |
 | 17 | Launch headless races from the browser | Done | `runner/static/launch_panel.js`, tests |
 | 18 | Reporting dashboard | Done | `/dashboard` on :8766 |
 | 19 | Deactivate the embedded version | Declined by you | Original left untouched; task `…998_deactivate_embedded_version` stays in backlog |
@@ -20,7 +20,7 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 | 25 | Cleanup | Done | |
 
 ## Left to do
-1. **Stage 2 controller move** (activate/switch date/set ranking/refresh and the rest): needs a server-side per-page session that owns the data caches (ALL_CRITERIA_DATA, portfolio view caches, rule library, trade cache, portfolioModels), then a wrapper-vs-original differential per controller. Tried 2026-10-17: `applyChartLock` / `resetAutomaticRankSchedule` wrappers work except where the engine schedules timers (effects `setTimeout`/`clearTimeout` carry no callback identity, 19–80 of 80 cases fail on that). So the next step is engine-named timers (a callback registry) before any more controllers can move; generator support (EXTRAS) is in `tools/controller_wrappers.py`, the two are parked in comments. Original candidates with no fetch: `applyChartLock`, `resetAutomaticRankSchedule` (both already ported in `engine/page.py`; their DOM-shell lines must be copied into wrappers).
+1. **Stage 2 controller move (continuing)**: engine-named timers are done (`timer_ops` tied to effect indexes; `modelSearchTimer`, `pointInTimeDebounceTimer`) and the `needsNetwork` fallback exists. Still to move: the ~31 controllers that fetch or own data caches (activate/switch date/set ranking/refresh, etc.), which needs the server-side per-page session owning ALL_CRITERIA_DATA, portfolio view caches, rule library, trade cache. Next: `schedulePointInTimeSelection` / `applySelectedTime` / `switchDate` use the same timers and can follow.
 2. **Item 22 run:** `cd epics/ep_052_strategy_directory_agentic_trade_arena/lean_delivery/app && EP052_TEST_DATABASE_ADMIN_URL='postgresql://postgres:<password>@localhost:5432/postgres' python -m pytest tests -q`
 3. **Item 23** acceptance (yours); **item 19** only if you change your mind.
 4. Not done: per-agent quota on races; validating signal usefulness on history; speeding up the 38 ms / 0.5 s redraws.

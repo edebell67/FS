@@ -105,9 +105,16 @@ class Page:
             s.visible = {m.get("model") for m in s.portfolio_models}
             self.render_all()
 
-    def _timeout(self, fn, delay):
+    def _timeout(self, fn, delay, name=None, call=None, args=None):
+        """Record a page timer. `name`/`call`/`args` name the callback (the page's own timer variable and the controller it fires) so a browser copy can re-create the timer."""
         self.fx("setTimeout", delay)
+        if name:
+            self.s.timer_ops.append({"op": "set", "timer": name, "ms": delay, "call": call, "args": list(args or []), "at": len(self.s.effects) - 1})
         self._timers.append(fn)
+
+    def _clear_timer(self, name):
+        self.fx("clearTimeout")
+        self.s.timer_ops.append({"op": "clear", "timer": name, "at": len(self.s.effects) - 1})
 
     def run_timers(self):
         """Run the timer callbacks recorded so far (the page's debounces); they may record more."""
@@ -310,7 +317,7 @@ class Page:
         s.pending_explicit_time = scheduled
         s.explicit_refresh = True
         s.pit_requested_key = ""
-        self.fx("clearTimeout")
+        self._clear_timer("pointInTimeDebounceTimer")
         self.update_auto_refresh_status(f"Checking {s.auto_direction} #{pu.js_str(s.auto_rank)} at {scheduled}…")
         self._fire(self.begin_refresh_point_in_time_selection(scheduled))
 
@@ -330,11 +337,11 @@ class Page:
                 s.pit_request_sequence += 1
                 s.pit_requested_key = ""
         if not s.explicit_refresh and s.is_playing and at and not re.search(r":00$", at):
-            self.fx("clearTimeout")
+            self._clear_timer("pointInTimeDebounceTimer")
             return
-        self.fx("clearTimeout")
+        self._clear_timer("pointInTimeDebounceTimer")
         if not s.explicit_refresh:
-            self._timeout(lambda: self._fire(self.begin_refresh_point_in_time_selection(at)), 180)
+            self._timeout(lambda: self._fire(self.begin_refresh_point_in_time_selection(at)), 180, "pointInTimeDebounceTimer", "refreshPointInTimeSelection", [at])
 
     def apply_selected_time(self):
         s = self.s
@@ -348,9 +355,9 @@ class Page:
             s.pit_status = ["Choose a valid time in HH:MM format", "text-[10px] font-bold text-rose-300"]
             return
         self.pause_replay()
-        self.fx("clearTimeout")
+        self._clear_timer("pointInTimeDebounceTimer")
         s.search_sequence += 1
-        self.fx("clearTimeout")
+        self._clear_timer("modelSearchTimer")
         s.search_loaded = []
         s.model_search_input = ""
         self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
@@ -794,7 +801,7 @@ class Page:
         s.search_loaded = []
         s.pinned.clear()
         s.search_sequence += 1
-        self.fx("clearTimeout")
+        self._clear_timer("modelSearchTimer")
         s.portfolio_view_configs[name] = self.current_portfolio_view_config()
         self.activate_portfolio(name)
         return name
@@ -978,7 +985,7 @@ class Page:
         date_data = self.begin_refresh_live_data(date_key) if (refresh_data and DATE_RE.fullmatch(date_key or "")) else None
         self.pause_replay()
         s.search_sequence += 1
-        self.fx("clearTimeout")
+        self._clear_timer("modelSearchTimer")
         s.search_loaded = []
         if date_key != s.current_date:
             s.pinned.clear()
@@ -998,7 +1005,7 @@ class Page:
                 return
         s.pit_requested_key = ""
         s.pit_request_sequence += 1
-        self.fx("clearTimeout")
+        self._clear_timer("pointInTimeDebounceTimer")
         if date_data is not None:
             self._fire(date_data)
         if not DATE_RE.fullmatch(s.current_date or "") and s.pit_mode:
@@ -1027,7 +1034,7 @@ class Page:
         deep = getattr(self, "deep_link_model", None)
         is_deep = bool(deep and query and str(deep).lower() == query.lower())
         if not is_deep and query and len(query) >= 6 and re.fullmatch(r"[a-z0-9._-]+", query, re.I):
-            self._timeout(lambda: None, 350)
+            self._timeout(lambda: None, 350, "modelSearchTimer", "loadModelSearchFromDatabase", [query])
         self.settle()
 
     def set_ranking_criteria(self, criteria):
@@ -1069,7 +1076,7 @@ class Page:
                 s.history.clear()
                 s.history_context = ""
                 s.search_sequence += 1
-                self.fx("clearTimeout")
+                self._clear_timer("modelSearchTimer")
                 s.search_loaded = []
                 s.model_search_input = ""
         if criteria in MOMENTUM_SCENARIO_IDS and not s.active_portfolio:

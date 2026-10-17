@@ -32,16 +32,15 @@ CONTROLLERS = {
                                  {"clearInterval": "if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; }",
                                   "setInterval": "if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]);"}),
     "updateAutoRefreshTop1Status": ("update_auto_refresh_status", "message = ''", "[message]", None, {}),
-
+    "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None,
+                       {"clearInterval": "if (replayInterval) { clearInterval(replayInterval); replayInterval = null; }"}),
+    "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
 }
-# NOT yet delegated (timer effects carry no callback identity; needs engine-named timers):
-#     "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None, {}),
-#     "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
 EXTRAS = {
-    "resetAutomaticRankSchedule": {"flag": "autoRefreshTop1RequestAt !== null", "flag_shell": r"^\s*applySelectedTimeBtn\?\."},
-    "applyChartLock": {"prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;", "range": (r"^\s*chartLockBtn\.setAttribute", r"^\s*scrubberTrack\.title"),
+    "resetAutomaticRankSchedule": {"fallback": True, "flag": "autoRefreshTop1RequestAt !== null", "flag_shell": r"^\s*applySelectedTimeBtn\?\."},
+    "applyChartLock": {"fallback": True, "prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;", "range": (r"^\s*chartLockBtn\.setAttribute", r"^\s*scrubberTrack\.title"), "skip": r"^\s*updateChartLockControlState\(\);",
                        "pause_if": "chartLocked"},
 }
 
@@ -119,12 +118,21 @@ def helper_block(state_decls: dict) -> str:
       const sent = __engineSnapshot();
       const res = __engine.call({{ fn: 'command', method, args, state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }});
-      __engineApplyState(res.state, sent);
+      if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
     }}
-    function __engineReplay(effects, handlers) {{
-      effects.forEach(effect => {{
+    function __engineTimer(op) {{
+      const timer = op.timer;
+      if (timer !== 'modelSearchTimer' && timer !== 'pointInTimeDebounceTimer') throw new Error('unknown engine timer: ' + timer);
+      if (op.op === 'clear') {{ clearTimeout(timer === 'modelSearchTimer' ? modelSearchTimer : pointInTimeDebounceTimer); return; }}
+      const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
+      if (timer === 'modelSearchTimer') modelSearchTimer = setTimeout(run, op.ms); else pointInTimeDebounceTimer = setTimeout(run, op.ms);
+    }}
+    globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a) }};
+    function __engineReplay(effects, handlers, timers) {{
+      effects.forEach((effect, at) => {{
         const name = effect[0];
+        if (name === 'setTimeout' || name === 'clearTimeout') {{ (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }}   // named timers are re-created from `timers`
         if (name === 'view') {{ if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }}
         if (name === 'localStorage.setItem') {{ const expr = {{{", ".join(f"'{k}': () => {v}" for k, v in STORAGE.items())}}}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }}
         if (handlers[name]) {{ handlers[name](effect); return; }}
@@ -154,7 +162,7 @@ def wrapper(name: str, original_body: str, get_body=None) -> str:
         for l in original_body.split("\n"):
             if re.match(ex["range"][0], l):
                 on = True
-            if on:
+            if on and not (ex.get("skip") and re.match(ex["skip"], l)):   # `skip`: view calls the engine's effects already replay
                 out.append("      " + l.strip())
             if on and re.match(ex["range"][1], l):
                 break
@@ -170,5 +178,9 @@ def wrapper(name: str, original_body: str, get_body=None) -> str:
     handlers = ", ".join(f"'{k}': effect => {{ {v} }}" for k, v in effects.items())
     shell_block = f"\n{shell}" if shell else ""
     asyncs = "async " if original_body.lstrip().startswith("async") else ""
-    return (f"    {asyncs}function {name}({params}) {{\n{prelude}{flag}      const res = __engineCommand('{method}', {argexpr});{shell_block}\n"
-            f"      __engineReplay(res.effects, {{ {handlers} }});\n      return res.ret;\n    }}")
+    fallback_fn, fallback = "", ""
+    if ex.get("fallback"):   # the controller may want the network: the engine then answers needsNetwork and the page runs its own copy of the original
+        fallback_fn = original_body.replace(f"function {name}(", f"function __original_{name}(", 1) + "\n"
+        fallback = f"\n      if (res.needsNetwork) return __original_{name}.apply(this, arguments);"
+    return (fallback_fn + f"    {asyncs}function {name}({params}) {{\n{prelude}{flag}      const res = __engineCommand('{method}', {argexpr});{fallback}{shell_block}\n"
+            f"      __engineReplay(res.effects, {{ {handlers} }}, res.timers);\n      return res.ret;\n    }}")

@@ -1986,7 +1986,7 @@
     });
     function updateAutoRefreshTop1Status(message = '') {
       const res = __engineCommand('update_auto_refresh_status', [message]);
-      __engineReplay(res.effects, {  });
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
     function finishAutomaticTop1Refresh(at, message = '') {
@@ -2019,7 +2019,7 @@
       persistPortfolioViewConfig();
       if (autoRefreshTop1Enabled && headTime) scheduleAutomaticTop1Refresh(headTime);
     });
-    function resetAutomaticRankSchedule() {
+    function __original_resetAutomaticRankSchedule() {
       autoRefreshTop1Direction = autoRefreshTop1DirectionSelect?.value === 'bottom' ? 'bottom' : 'top';
       autoRefreshTop1Rank = Math.max(1, Math.min(5, Number(autoRefreshTop1RankSelect?.value) || 1));
       if (autoRefreshTop1RequestAt !== null) {
@@ -2040,6 +2040,17 @@
         ? `On · ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} · every ${autoRefreshTop1Minutes}m at clock times` : 'Off');
       persistPortfolioViewConfig();
       if (autoRefreshTop1Enabled && headTime) scheduleAutomaticTop1Refresh(headTime);
+    }
+    function resetAutomaticRankSchedule() {
+      const __was = autoRefreshTop1RequestAt !== null;
+      const res = __engineCommand('reset_automatic_rank_schedule', []);
+      if (res.needsNetwork) return __original_resetAutomaticRankSchedule.apply(this, arguments);
+      if (__was) {
+        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
+        applySelectedTimeBtn?.removeAttribute('aria-busy');
+      }
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
     autoRefreshTop1DirectionSelect?.addEventListener('change', resetAutomaticRankSchedule);
     autoRefreshTop1RankSelect?.addEventListener('change', resetAutomaticRankSchedule);
@@ -2345,12 +2356,21 @@
       const sent = __engineSnapshot();
       const res = __engine.call({ fn: 'command', method, args, state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) });
-      __engineApplyState(res.state, sent);
+      if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
     }
-    function __engineReplay(effects, handlers) {
-      effects.forEach(effect => {
+    function __engineTimer(op) {
+      const timer = op.timer;
+      if (timer !== 'modelSearchTimer' && timer !== 'pointInTimeDebounceTimer') throw new Error('unknown engine timer: ' + timer);
+      if (op.op === 'clear') { clearTimeout(timer === 'modelSearchTimer' ? modelSearchTimer : pointInTimeDebounceTimer); return; }
+      const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
+      if (timer === 'modelSearchTimer') modelSearchTimer = setTimeout(run, op.ms); else pointInTimeDebounceTimer = setTimeout(run, op.ms);
+    }
+    globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a) };
+    function __engineReplay(effects, handlers, timers) {
+      effects.forEach((effect, at) => {
         const name = effect[0];
+        if (name === 'setTimeout' || name === 'clearTimeout') { (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }   // named timers are re-created from `timers`
         if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }
         if (name === 'localStorage.setItem') { const expr = {'strategyDirectoryPortfolioViewV1': () => JSON.stringify(portfolioViewConfigs), 'strategyDirectoryMainViewV1': () => JSON.stringify(mainScenarioViewConfig)}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }
         if (handlers[name]) { handlers[name](effect); return; }
@@ -2361,7 +2381,7 @@
 
     function movePortfolio(name, offset) {
       const res = __engineCommand('move_portfolio', [name, offset]);
-      __engineReplay(res.effects, {  });
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
@@ -2461,7 +2481,7 @@
 
     function persistPortfolioViewConfig(name = activePortfolioName) {
       const res = __engineCommand('persist_portfolio_view_config', arguments.length === 0 || arguments[0] === undefined ? [] : [name]);
-      __engineReplay(res.effects, {  });
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
@@ -3485,13 +3505,13 @@
 
     function capturePortfolioScenario(name, criteria = currentCriteria) {
       const res = __engineCommand('capture_portfolio_scenario', [name, criteria]);
-      __engineReplay(res.effects, {  });
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
     function markPortfolioFixed(name) {
       const res = __engineCommand('mark_portfolio_fixed', [name]);
-      __engineReplay(res.effects, {  });
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
@@ -3965,7 +3985,7 @@ ${preview}`)) return;
 
     function syncPortfolioViewRefresh() {
       const res = __engineCommand('sync_portfolio_view_refresh', []);
-      __engineReplay(res.effects, { 'clearInterval': effect => { if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; } }, 'setInterval': effect => { if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]); } });
+      __engineReplay(res.effects, { 'clearInterval': effect => { if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; } }, 'setInterval': effect => { if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]); } }, res.timers);
       return res.ret;
     }
 
@@ -6228,7 +6248,7 @@ ${preview}`)) return;
       playBtnText.textContent = 'Pause';
       playBtn.classList.remove('bg-sky-600', 'hover:bg-sky-500');
       playBtn.classList.add('bg-amber-600', 'hover:bg-amber-500');
-      __engineReplay(res.effects, { 'startPlaybackLoop': effect => { startPlaybackLoop(); } });
+      __engineReplay(res.effects, { 'startPlaybackLoop': effect => { startPlaybackLoop(); } }, res.timers);
       return res.ret;
     }
 
@@ -6238,7 +6258,7 @@ ${preview}`)) return;
       playBtnText.textContent = baselineFrameIndex > 0 ? 'Play from Base' : 'Play';
       playBtn.classList.add('bg-sky-600', 'hover:bg-sky-500');
       playBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } });
+      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } }, res.timers);
       return res.ret;
     }
 
@@ -6534,7 +6554,7 @@ ${preview}`)) return;
           : 'Lock the baseline and keep the chart at the latest point';
     }
 
-    function applyChartLock(locked, persist = true) {
+    function __original_applyChartLock(locked, persist = true) {
       if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;
       chartLocked = !!locked;
       if (persist) persistPortfolioViewConfig();
@@ -6562,6 +6582,33 @@ ${preview}`)) return;
         drawChart();
         schedulePointInTimeSelection();
       }
+    }
+    function applyChartLock(locked, persist = true) {
+      if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;
+      const res = __engineCommand('apply_chart_lock', [locked, persist]);
+      if (res.needsNetwork) return __original_applyChartLock.apply(this, arguments);
+      chartLockBtn.setAttribute('aria-pressed', String(chartLocked));
+      chartLockIcon.textContent = chartLocked ? '🔒' : '🔓';
+      chartLockLabel.textContent = chartLocked ? 'Chart locked' : 'Chart unlocked';
+      chartLockBtn.className = chartLocked
+      ? 'px-2.5 py-1 rounded-lg border border-lime-400/60 bg-lime-500 text-slate-950 text-xs font-black transition shadow shadow-lime-500/20'
+      : 'px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white text-xs font-bold transition';
+      [playBtn, stepBackBtn, stepFwdBtn, restartBtn, setBaseAtHeadBtn, resetBaselineBtn].forEach(control => {
+      control.disabled = chartLocked;
+      control.classList.toggle('opacity-40', chartLocked);
+      control.classList.toggle('cursor-not-allowed', chartLocked);
+      });
+      scrubberTrack.setAttribute('aria-disabled', String(chartLocked));
+      scrubberTrack.classList.toggle('cursor-not-allowed', chartLocked);
+      scrubberTrack.title = chartLocked ? 'Chart locked — unlock to scrub or reposition the baseline' : 'Scrub replay head';
+      if (chartLocked) {
+        playIcon.textContent = '▶';
+        playBtnText.textContent = baselineFrameIndex > 0 ? 'Play from Base' : 'Play';
+        playBtn.classList.add('bg-sky-600', 'hover:bg-sky-500');
+        playBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
+      }
+      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } }, res.timers);
+      return res.ret;
     }
 
     function setupEventListeners() {

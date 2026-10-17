@@ -33,11 +33,13 @@
   "startReplay",
   "pauseReplay",
   "syncPortfolioViewRefresh",
-  "updateAutoRefreshTop1Status"
+  "updateAutoRefreshTop1Status",
+  "applyChartLock",
+  "resetAutomaticRankSchedule"
  ],
  "lines_before": [
   1432,
   9054
  ],
- "bytes": 540713
+ "bytes": 544218
 }
