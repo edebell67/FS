@@ -1,0 +1,220 @@
+<!doctype html>
+<!-- epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/static/dashboard.html — reporting dashboard for virtual strategy races (served at :8766/dashboard).
+     VERSION HISTORY
+     v1.0.0 · 2026-10-17 · Initial version: live list of races (state, progress, leader, standings), parallel-cap control, launch form, cancel; mobile-first, light/dark. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Virtual Race Dashboard</title>
+<style>
+  :root {
+    --bg: #f4f6f8; --panel: #ffffff; --ink: #0f172a; --muted: #64748b; --line: #dbe2ea; --accent: #0369a1; --accent-ink: #ffffff;
+    --ok: #15803d; --warn: #b45309; --bad: #b91c1c; --run: #0369a1; --track: #e2e8f0; --chip: #eef2f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0b1220; --panel: #111a2c; --ink: #e5edf7; --muted: #8fa1b8; --line: #22304a; --accent: #38bdf8; --accent-ink: #04202e;
+      --ok: #4ade80; --warn: #fbbf24; --bad: #f87171; --run: #38bdf8; --track: #1b2740; --chip: #17233a;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0b1220; --panel: #111a2c; --ink: #e5edf7; --muted: #8fa1b8; --line: #22304a; --accent: #38bdf8; --accent-ink: #04202e;
+    --ok: #4ade80; --warn: #fbbf24; --bad: #f87171; --run: #38bdf8; --track: #1b2740; --chip: #17233a;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); font: 14px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 14px 16px 40px; }
+  header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; margin-bottom: 12px; }
+  h1 { font-size: 18px; margin: 0; }
+  .sub { color: var(--muted); font-size: 12px; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-bottom: 12px; }
+  .kpi, .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .kpi b { display: block; font-size: 22px; line-height: 1.1; }
+  .kpi span { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 2px; }
+  input, select, button { font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 7px 10px; min-height: 36px; }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  button { cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+  button.ghost { background: transparent; }
+  button:disabled { opacity: .5; cursor: default; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  details.panel { margin-bottom: 12px; } summary { cursor: pointer; font-weight: 600; }
+  .races { display: grid; gap: 10px; }
+  .race { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .race h3 { margin: 0; font-size: 15px; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; }
+  .pill { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--chip); font-weight: 600; }
+  .pill.running { color: var(--run); } .pill.completed { color: var(--ok); } .pill.failed { color: var(--bad); } .pill.cancelled { color: var(--warn); } .pill.queued { color: var(--muted); }
+  .bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; margin: 8px 0; }
+  .bar > i { display: block; height: 100%; background: var(--run); transition: width .4s; }
+  .meta { display: flex; flex-wrap: wrap; gap: 4px 16px; color: var(--muted); font-size: 12px; }
+  .meta b { color: var(--ink); font-weight: 600; }
+  .stand { margin-top: 8px; display: grid; gap: 4px; }
+  .stand div { display: grid; grid-template-columns: minmax(90px, 140px) 1fr 72px; gap: 8px; align-items: center; font-size: 12px; }
+  .stand .track { height: 6px; background: var(--track); border-radius: 99px; position: relative; }
+  .stand .track i { position: absolute; top: 0; bottom: 0; left: 50%; border-radius: 99px; background: var(--ok); }
+  .stand .track i.neg { background: var(--bad); }
+  .stand .val { text-align: right; font-variant-numeric: tabular-nums; }
+  .empty { color: var(--muted); text-align: center; padding: 28px 8px; }
+  .err { color: var(--bad); font-size: 12px; margin-top: 6px; word-break: break-word; }
+  .toast { position: fixed; left: 16px; right: 16px; bottom: 16px; max-width: 520px; margin: 0 auto; background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 10px 12px; display: none; }
+  .toast.bad { border-left-color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Virtual Race Dashboard</h1>
+    <span class="sub" id="conn">connecting…</span>
+    <span class="sub" id="build"></span>
+  </header>
+
+  <section class="kpis" aria-label="Summary">
+    <div class="kpi"><b id="k-running">0</b><span>Running</span></div>
+    <div class="kpi"><b id="k-queued">0</b><span>Queued</span></div>
+    <div class="kpi"><b id="k-completed">0</b><span>Completed</span></div>
+    <div class="kpi"><b id="k-failed">0</b><span>Failed / cancelled</span></div>
+    <div class="kpi">
+      <span>Parallel cap</span>
+      <div class="row" style="margin-top:4px">
+        <input id="cap" type="number" min="1" max="64" style="width:72px" aria-label="Maximum races running at once">
+        <button id="cap-apply" class="ghost" type="button">Set</button>
+      </div>
+    </div>
+  </section>
+
+  <details class="panel" id="launch">
+    <summary>Launch a virtual race</summary>
+    <form id="form" class="grid" style="margin-top:10px">
+      <div><label for="f-start">Start strategy</label><input id="f-start" placeholder="DNA_201700" autocomplete="off"></div>
+      <div><label for="f-add">Competitors (comma separated)</label><input id="f-add" placeholder="DNA_201701, DNA_201702" autocomplete="off"></div>
+      <div><label for="f-date">Date</label><input id="f-date" type="date" required></div>
+      <div><label for="f-scenario">Scenario (when no strategies named)</label><input id="f-scenario" value="top_net"></div>
+      <div><label for="f-return">Return type</label><select id="f-return"><option>NET</option><option>ALT</option></select></div>
+      <div><label for="f-rule">Overlay rule id (optional)</label><input id="f-rule" autocomplete="off"></div>
+      <div style="align-self:end"><button class="primary" type="submit" id="f-go">Launch race</button></div>
+    </form>
+    <div class="sub" style="margin-top:8px">Races are virtual: they replay recorded curves and never place orders or change shared data.</div>
+  </details>
+
+  <section id="races" class="races" aria-live="polite"></section>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function () {
+  'use strict';
+  var BASE = location.origin.indexOf(':8766') > -1 ? '' : 'http://127.0.0.1:8766';
+  var $ = function (id) { return document.getElementById(id); };
+  var timer = null, lastOk = 0, expanded = {};
+
+  function toast(msg, bad) {
+    var t = $('toast'); t.textContent = msg; t.className = 'toast' + (bad ? ' bad' : ''); t.style.display = 'block';
+    clearTimeout(toast._t); toast._t = setTimeout(function () { t.style.display = 'none'; }, 4500);
+  }
+  function api(method, path, body) {
+    return fetch(BASE + path, { method: method, headers: body ? { 'Content-Type': 'application/json' } : undefined, body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { if (!r.ok) throw new Error(j.detail || ('HTTP ' + r.status)); return j; }); });
+  }
+  function el(tag, cls, text) { var e = document.createElement(tag); if (cls) e.className = cls; if (text !== undefined) e.textContent = text; return e; }
+  function fmtTime(ts) { return ts ? new Date(ts * 1000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—'; }
+  function elapsed(r) {
+    var end = r.finished_at || (Date.now() / 1000), start = r.started_at;
+    if (!start) return '—';
+    var s = Math.max(0, Math.round(end - start)); return s < 60 ? s + 's' : Math.floor(s / 60) + 'm ' + (s % 60) + 's';
+  }
+  function money(v) { return (v >= 0 ? '+' : '−') + '$' + Math.abs(v).toFixed(2); }
+
+  function standings(r, detail) {
+    var box = el('div', 'stand'), rows = (detail && detail.standings) || [];
+    if (!rows.length) return box;
+    var max = Math.max.apply(null, rows.map(function (x) { return Math.abs(x.net); }).concat([1e-9]));
+    rows.forEach(function (x) {
+      var d = el('div'); d.appendChild(el('span', '', x.model));
+      var tr = el('span', 'track'), bar = el('i', x.net < 0 ? 'neg' : '');
+      var w = Math.min(50, 50 * Math.abs(x.net) / max);
+      bar.style.width = w + '%'; if (x.net < 0) bar.style.left = (50 - w) + '%';
+      tr.appendChild(bar); d.appendChild(tr); d.appendChild(el('span', 'val', money(x.net))); box.appendChild(d);
+    });
+    return box;
+  }
+
+  function card(r, detail) {
+    var c = el('article', 'race');
+    var h = el('h3'); h.appendChild(document.createTextNode(r.name || r.race_id));
+    h.appendChild(el('span', 'pill ' + r.state, r.state));
+    var cfg = r.config || {}, models = [cfg.start_model].concat(cfg.add_models || []).filter(Boolean);
+    c.appendChild(h);
+    var meta = el('div', 'meta');
+    [['Date', cfg.date], ['Strategies', models.length ? models.join(', ') : (cfg.scenario + ' leaders')], ['Elapsed', elapsed(r)], ['Started', fmtTime(r.started_at)], ['Leader', r.leader || '—']].forEach(function (p) {
+      var s = el('span'); s.appendChild(document.createTextNode(p[0] + ' ')); s.appendChild(el('b', '', String(p[1] === undefined || p[1] === null ? '—' : p[1]))); meta.appendChild(s);
+    });
+    c.appendChild(meta);
+    var bar = el('div', 'bar'), fill = el('i'); fill.style.width = (r.pct || 0) + '%'; bar.appendChild(fill); c.appendChild(bar);
+    c.appendChild(el('div', 'sub', 'frame ' + r.frame + ' of ' + (r.frames || '?') + ' · ' + (r.pct || 0) + '%'));
+    if (r.error) c.appendChild(el('div', 'err', r.error));
+    if (detail) {
+      c.appendChild(standings(r, detail));
+      var info = el('div', 'meta'); info.style.marginTop = '8px';
+      [['Lead changes', detail.lead_changes], ['Rotation net', detail.rotation_net === null || detail.rotation_net === undefined ? '—' : money(detail.rotation_net)]].forEach(function (p) {
+        var s = el('span'); s.appendChild(document.createTextNode(p[0] + ' ')); s.appendChild(el('b', '', String(p[1]))); info.appendChild(s);
+      });
+      c.appendChild(info);
+    }
+    var actions = el('div', 'row'); actions.style.marginTop = '10px';
+    if (r.state === 'running' || r.state === 'queued') {
+      var cb = el('button', 'ghost', 'Cancel'); cb.type = 'button';
+      cb.onclick = function () { api('DELETE', '/api/races/' + r.race_id).then(refresh).catch(function (e) { toast(e.message, true); }); };
+      actions.appendChild(cb);
+    }
+    if (r.state === 'completed') {
+      var tb = el('button', 'ghost', expanded[r.race_id] ? 'Hide standings' : 'Show standings'); tb.type = 'button';
+      tb.onclick = function () { expanded[r.race_id] = !expanded[r.race_id]; refresh(); };
+      actions.appendChild(tb);
+    }
+    c.appendChild(actions);
+    return c;
+  }
+
+  function render(data, details) {
+    var c = data.counts;
+    $('k-running').textContent = c.running; $('k-queued').textContent = c.queued; $('k-completed').textContent = c.completed;
+    $('k-failed').textContent = c.failed + c.cancelled;
+    if (document.activeElement !== $('cap')) $('cap').value = c.max_concurrent;
+    var box = $('races'); box.replaceChildren();
+    if (!data.races.length) { box.appendChild(el('div', 'empty', 'No races yet. Launch one above, or from the scenario page.')); return; }
+    data.races.forEach(function (r) { box.appendChild(card(r, details[r.race_id])); });
+  }
+
+  function refresh() {
+    return api('GET', '/api/races').then(function (data) {
+      var want = data.races.filter(function (r) { return r.state === 'completed' && expanded[r.race_id]; });
+      return Promise.all(want.map(function (r) { return api('GET', '/api/races/' + r.race_id).then(function (d) { return [r.race_id, d]; }); })).then(function (pairs) {
+        var details = {}; pairs.forEach(function (p) { details[p[0]] = p[1]; });
+        render(data, details); lastOk = Date.now(); $('conn').textContent = 'live · updated ' + new Date().toLocaleTimeString();
+      });
+    }).catch(function (e) { $('conn').textContent = 'offline — ' + e.message; });
+  }
+  function loop() { clearTimeout(timer); if (!document.hidden) refresh(); timer = setTimeout(loop, 2000); }
+
+  $('cap-apply').onclick = function () {
+    api('PUT', '/api/config', { max_concurrent: parseInt($('cap').value, 10) }).then(function (j) { toast('Parallel cap set to ' + j.max_concurrent); refresh(); }).catch(function (e) { toast(e.message, true); });
+  };
+  $('f-date').value = new Date().toISOString().slice(0, 10);
+  $('form').onsubmit = function (ev) {
+    ev.preventDefault();
+    var add = $('f-add').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean), start = $('f-start').value.trim() || null;
+    var body = { name: (start || $('f-scenario').value) + ' race', start_model: start, add_models: add, date: $('f-date').value, scenario: $('f-scenario').value.trim() || 'top_net', return_type: $('f-return').value };
+    if ($('f-rule').value.trim()) body.overlay_rule_id = $('f-rule').value.trim();
+    $('f-go').disabled = true;
+    api('POST', '/api/races', body).then(function (r) { toast('Launched ' + r.name + ' (' + r.race_id + ')'); refresh(); }).catch(function (e) { toast(e.message, true); }).then(function () { $('f-go').disabled = false; });
+  };
+  api('GET', '/healthz').then(function (h) { $('build').textContent = 'build ' + h.build_sha + ' · virtual only'; }).catch(function () {});
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) loop(); });
+  loop();
+})();
+</script>
+</body>
+</html>

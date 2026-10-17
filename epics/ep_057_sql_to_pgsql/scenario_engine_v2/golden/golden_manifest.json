@@ -1,0 +1,59 @@
+{
+ "page_version": "v2.65.24",
+ "source_sha256": "e5b32c83f4a637b6d991269310ce4b82f3261f2d1bafae2b7cf8b82555ac6a32",
+ "captured": "2026-10-16",
+ "method": "built-in browser; state read via getEligibleModels() after series length was stable for 3s; payload = criteria,date,splitMode,returnType + per model [time,net,buy,sell,alt_net,open,trades] for every point; SHA-256 of JSON.stringify(payload)",
+ "limitation": "Hash-only goldens (plus summary). They prove the page reproduces itself; the engine-core task needs full series, to be dumped by the parity harness from the page and the engine side by side. Sets B and C show a single eligible model: confirmed the page still shows 1 after 12 s, so this is the page's behaviour, not a capture bug.",
+ "sets": [
+  {
+   "id": "A",
+   "url": "?product_type=forex&product=all&scenario=top_net&date=2026-10-14&models=DNA_201700&models_only=1",
+   "sha256": "51d01aeb5265deb2d00b614fe14c3beb97dd16389d83e599185aee67df1811da",
+   "bytes": 10547,
+   "models": [
+    "DNA_201700"
+   ],
+   "points_per_model": 335,
+   "first_net": -25,
+   "last_net": 500,
+   "last_time": "23:58",
+   "captures": 2,
+   "reproducible": true
+  },
+  {
+   "id": "B",
+   "url": "?product_type=forex&product=all&scenario=top_net&date=2026-10-14",
+   "sha256": "7b7de183d1f84e68659fe9f0c4308fbda1081ce858d12d374f3070aed0713db9",
+   "bytes": 10865,
+   "models": [
+    "DNA_200968"
+   ],
+   "last_net": 970,
+   "captures": 2,
+   "reproducible": true,
+   "note": "only 1 model eligible after load for this view"
+  },
+  {
+   "id": "C",
+   "url": "?product_type=forex&product=all&scenario=top_buy_sell_net&date=2026-10-13",
+   "sha256": "03bfa8b4a9c673687f8bee8c3f0fca5947b54a7cadb86efe9720757d4aa72543",
+   "bytes": 10422,
+   "models": [
+    "DNA_208518"
+   ],
+   "last_net": 475,
+   "captures": 2,
+   "reproducible": true
+  }
+ ],
+ "known_findings": [
+  "setReturnType is declared twice in the page; the later declaration wins at runtime, so the engine must carry the later one"
+ ],
+ "independent_verification": {
+  "date": "2026-10-16",
+  "method": "payload rebuilt in Python from /api/portfolio_day (series) and, for set B, /api/point_in_time_scenario (trades count), hashed with JSON.stringify-equivalent serialisation",
+  "A": "reproduced",
+  "B": "reproduced only after taking the trades count from point_in_time_scenario (24); portfolio_day reports 25 for the same model/day: the two endpoints disagree",
+  "C": "reproduced"
+ }
+}
