@@ -94,3 +94,15 @@ def test_the_limit_caps_groups_that_hold_more_ids(client):
     full = client.post("/v1/queries", json=body("correlated_groups", limit=3), headers=HEAD).json()
     capped = client.post("/v1/queries", json=body("correlated_groups", limit=1), headers=HEAD).json()
     assert len(full["strategy_ids"]) >= 2 and len(capped["strategy_ids"]) == 1
+
+
+def test_the_opt_in_arena_profile_points_at_this_provider():
+    if not ARENA.exists():
+        pytest.skip("arena source not present")
+    sys.path.insert(0, str(ARENA))
+    from lean_exchange.config import load_settings
+    profile = ARENA.parent / "config.ep057_intelligence.toml"
+    live = ARENA.parent / "config.toml"
+    st = load_settings(profile)
+    assert st.intelligence_url == "http://127.0.0.1:8766/v1/queries" and st.intelligence_mode == "external"
+    assert load_settings(live).intelligence_url != st.intelligence_url      # the running arena's config is untouched
