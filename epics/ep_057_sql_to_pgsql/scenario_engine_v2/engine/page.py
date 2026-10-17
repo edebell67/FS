@@ -67,6 +67,14 @@ class Page:
     def fx(self, *a):
         self.s.effects.append(list(a))
 
+    def view(self, *names):
+        """The page calls a view function here (recorded as ['view', name]; the browser copy replays it)."""
+        for n in names:
+            self.fx("view", n)
+
+    def render_all(self):
+        self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+
     def defer(self, fn, wait=None):
         """Queue a continuation; with `wait`, it is runnable only once that request has been answered."""
         self._micro.append((fn, wait))
@@ -95,6 +103,7 @@ class Page:
         self.auto_pin_live_portfolio_strategies()
         if background:
             s.visible = {m.get("model") for m in s.portfolio_models}
+            self.render_all()
 
     def _timeout(self, fn, delay):
         self.fx("setTimeout", delay)
@@ -184,9 +193,11 @@ class Page:
         s.chart_locked = bool(locked)
         if persist:
             self.persist_portfolio_view_config()
+        self.view("updateChartLockControlState")
         if s.chart_locked:
             self.pause_replay()
             s.frame = max(0, self.max_frames() - 1)
+            self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
             self.schedule_point_in_time_selection()
 
     def apply_portfolio_view_config(self, config):
@@ -224,6 +235,7 @@ class Page:
         s.chart_lock_before_live = config["chartLockBeforeLive"] if isinstance(config.get("chartLockBeforeLive"), bool) else None
         if isinstance(config.get("chartLocked"), bool):
             self.apply_chart_lock(config["chartLocked"], False)
+        self.view("syncAssignedOverlayRuleUI", "updateStrategyFamilyOptions", "syncSplitModeControls", "updateScenarioUI")
 
     # ------------------------------------------------------------------ replay
     def start_replay(self):
@@ -330,6 +342,7 @@ class Page:
         if not s.pit_mode:
             s.pit_mode = True
             s.pit_models = before
+            self.view("updatePointInTimeToggleUI")
         requested_at = s.selected_time_input
         if pu.clock_minutes(requested_at) is None:
             s.pit_status = ["Choose a valid time in HH:MM format", "text-[10px] font-bold text-rose-300"]
@@ -340,6 +353,7 @@ class Page:
         self.fx("clearTimeout")
         s.search_loaded = []
         s.model_search_input = ""
+        self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
         s.selected_time_input = requested_at
         s.pending_explicit_time = requested_at
         s.explicit_refresh = True
@@ -351,6 +365,7 @@ class Page:
         s = self.s
         if s.deep_link_only:
             s.deep_link_only = False
+            self.view("updateScenarioUI")
         self.apply_selected_time()
         self.settle()
 
@@ -383,9 +398,9 @@ class Page:
         s.frame, s.selected_model_index, s.visible = st.frame_index, st.selected_model_index, set(st.visible)
         s.pit_request_sequence = st.request_sequence
         s.pit_history_at = st.history_at
-        if st.render_history:
-            st.render_history = False
-            self.fx("renderPointInTimeHistory")
+        for kind, name in st.events:
+            (self.fx if kind == "fx" else self.view)(name)
+        st.events = []
         if st.selected_time_input is not None:
             s.selected_time_input = st.selected_time_input
 
@@ -489,6 +504,10 @@ class Page:
 
         def apply():
             s = self.s
+            if pending.failed:  # offline: only a newer request makes the answer irrelevant
+                if seq == s.live_refresh_sequence:
+                    self.view("setLiveBadge")
+                return None
             # a newer request or a changed filter makes this response stale
             if seq != s.live_refresh_sequence or req != (s.product_type, s.product, s.strategy_family, s.model_limit, s.return_type,
                                                            s.current_criteria):
@@ -500,6 +519,7 @@ class Page:
             res = pending.finish()
             if not res.get("ok"):
                 return None
+            self.view("cacheLiveChartResponse", "updateStrategyFamilyOptions", "setLiveBadge")
             s.product = self.client.current_product
             if not on_target or s.is_playing:
                 return res
@@ -515,8 +535,9 @@ class Page:
                                 load.finish()
                             s.visible = {m.get("model") for m in s.portfolio_models}
                             # (armed live mode would jump to the newest frame here; live mode is refused headless)
+                            self.render_all()
                         except Exception:  # noqa: BLE001 - the page shows 'Portfolio: unavailable'
-                            pass
+                            self.view("setLiveBadge")
                     if load.shared:
                         self.defer(after_load, load.root)  # it waits on a request another caller made: that caller resumes first
                     else:
@@ -532,6 +553,7 @@ class Page:
                 s.frame = max_f - 1
             if s.baseline > max_f - 1:
                 s.baseline = 0
+            self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
             self.schedule_point_in_time_selection()
             return res
         return Pending(apply, issued=pending.issued)
@@ -618,6 +640,7 @@ class Page:
             s.pit_models = None
             s.pit_requested_key = ""
             s.pit_request_sequence += 1
+            self.view("updatePointInTimeToggleUI")
 
     def capture_portfolio_scenario(self, name, criteria=None):
         s = self.s
@@ -645,6 +668,7 @@ class Page:
         if reset_index:
             s.selected_model_index = 0
         s.frame = self.max_frames() - 1
+        self.render_all()
 
     def remove_model_from_portfolio(self, name, model):
         s = self.s
@@ -669,9 +693,11 @@ class Page:
         self.mark_portfolio_fixed(name)
         s.portfolios[name].append(model)
         self.fx("savePortfolios")
+        self.view("populateCataloguePortfolioOptions")
         if s.active_portfolio == name:
             self._reload_active_view()
         self.fx("renderPortfolioList")
+        self.view("renderStrategyCatalogue")
         self.settle()
 
     def move_model_between_portfolios(self, src, dst, model):
@@ -707,12 +733,14 @@ class Page:
         self.fx("localStorage.setItem", "strategyDirectoryPortfolioViewV1")
         if was_active:
             s.active_portfolio = None
+            self.view("syncLiveAltReporting")
             s.portfolio_models = []
             self.apply_portfolio_view_config(s.main_view_config or {"criteria": s.main_criteria})
             s.main_criteria = s.current_criteria
         self.fx("saveCriteriaWorkspaces")
         self.fx("savePortfolios")
         if was_active:
+            self.view("updateScenarioUI")
             self._await(self.begin_refresh_live_data(s.current_date))
             self.switch_date(s.current_date)
         self.fx("renderPortfolioList")
@@ -840,6 +868,7 @@ class Page:
             if was_latest:
                 s.frame = self.max_frames() - 1
             s.visible = {m.get("model") for m in self._eligible()}
+            self.render_all()
         except Exception:  # noqa: BLE001
             pass
         finally:
@@ -860,6 +889,7 @@ class Page:
         saved_selection = str(pu.js_str(stm.js_or(saved.get("selectedAtTime"), "")))
         if any(d.get("id") == saved_date for d in s.available_dates):
             s.current_date = saved_date
+            self.view("setupDateTabs")
         rules_ready = self.client.begin_load_overlay_rule_library()  # requested first, applied after the portfolio paints
         dynamic = s.portfolio_scenario_configs.get(name) or None
         s.pit_mode = bool(dynamic and s.pit_selection_preference)
@@ -872,6 +902,7 @@ class Page:
         s.auto_context = ""
         s.deep_link_only = False
         s.active_portfolio = name
+        self.view("syncLiveModeUI", "syncLiveAltReporting")
         s.chart_lock_before_live = saved["chartLockBeforeLive"] if isinstance(saved.get("chartLockBeforeLive"), bool) else None
         saved_view = raw_saved if raw_saved is not None else (dynamic if dynamic else {
             "criteria": stm.js_or(s.portfolio_criteria.get(name), s.main_criteria), "returnType": "NET", "productType": "all", "product": "all",
@@ -884,6 +915,7 @@ class Page:
             else bool(self.assigned_portfolio_overlay_rule(name))})
         s.portfolio_view_configs[name] = self.current_portfolio_view_config()
         self.fx("localStorage.setItem", "strategyDirectoryPortfolioViewV1")
+        self.view("updatePointInTimeToggleUI", "renderPortfolioTabs", "updateScenarioUI", "setLiveBadge")
         activation_date = s.current_date
         activation_key = ",".join(s.portfolios.get(name) or [])
 
@@ -907,9 +939,13 @@ class Page:
                 s.frame = idx if idx >= 0 else 0
             else:
                 s.frame = max(0, self.max_frames() - 1)
+            self.view("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart", "updateScrubberUI")
             if re.fullmatch(r"[0-9]{2}:[0-9]{2}", saved_selection):
                 s.selected_time_input = saved_selection
             self.persist_portfolio_view_config(name)
+            self.view("renderLivePortfolioTransition", "syncLiveModeUI")
+            if s.portfolio_models or data_settled:
+                self.view("setLiveBadge")
             if s.pit_mode:
                 self.schedule_point_in_time_selection()
 
@@ -920,6 +956,8 @@ class Page:
             try:
                 needs_final = load.finish()
             except Exception:  # noqa: BLE001 - 'Portfolio: unavailable'
+                if s.active_portfolio == name and s.current_date == activation_date:
+                    self.view("setLiveBadge")
                 return None
             if not needs_final:
                 return None
@@ -929,6 +967,8 @@ class Page:
             return None
         self._fire(Pending(after_load, issued=load.issued))
         self._fire(rules_ready)
+        if s.active_portfolio == name:   # reached before the (un-awaited) load answers
+            self.view("syncAssignedOverlayRuleUI", "drawChart")
         self.settle()
 
     def switch_date(self, date_key, skip_portfolio_load=False, refresh_data=False):
@@ -947,6 +987,7 @@ class Page:
             s.pit_models = []
         s.current_date = date_key
         self.persist_portfolio_view_config()
+        self.view("scheduleLiveChartCacheFallback")
         if date_key != s.live_date and not refresh_data:
             self.tick()
             try:
@@ -965,17 +1006,21 @@ class Page:
             s.pit_models = None
             s.pit_requested_key = ""
             s.pit_request_sequence += 1
+            self.view("updatePointInTimeToggleUI")
         s.baseline = 0
         if s.active_portfolio and not skip_portfolio_load:
             try:
                 self._await(self.begin_load_portfolio_data())
             except Exception:  # noqa: BLE001
                 s.portfolio_models = []
+        self.view("updateDateLabelAndTitle", "updateStrategyFamilyOptions")
         max_f = self.max_frames()
         s.frame = max_f - 1
         s.visible = {m.get("model") for m in self._eligible()}
         s.selected_model_index = 0
+        self.view("updateScrubberUI")
         self.persist_portfolio_view_config()
+        self.view("updateRibbon", "renderCards", "drawChart")
         self.schedule_point_in_time_selection()
         self.sync_portfolio_view_refresh()
         query = str(s.model_search_input or "").strip()
@@ -1035,17 +1080,22 @@ class Page:
             s.history_context = ""
         if is_top1 and s.active_portfolio:
             s.active_portfolio = None
+            self.view("syncLiveAltReporting", "renderPortfolioTabs")
             s.portfolio_models = []
         s.current_criteria = criteria
+        self.view("updatePointInTimeToggleUI")
         if s.active_portfolio:
             name = s.active_portfolio
             s.portfolio_criteria[name] = criteria
             self.fx("saveCriteriaWorkspaces")
             self.persist_portfolio_view_config(name)
+            self.view("setLiveBadge")
             refresh = self.begin_refresh_live_data(s.current_date, skip_portfolio_refresh=True)
             s.visible = {m.get("model") for m in self._eligible()}
             s.selected_model_index = 0
+            self.view("updateScenarioUI", "updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
             self._fire(refresh)
+            self.view("setLiveBadge")
             if s.pit_mode:
                 self.schedule_point_in_time_selection()
             self.settle()
@@ -1058,8 +1108,9 @@ class Page:
             bucket = self.client.criteria_data.get(key, {}).get(s.current_date)
             ready = isinstance(bucket, list) and len(bucket) > 0
             if not ready:
-                ready = False  # paintLiveChartCache() is a browser cache: nothing to paint headless
+                self.view("setLiveBadge", "paintLiveChartCache")  # paintLiveChartCache() is a browser cache: nothing to paint headless
             self._fire(self.begin_refresh_live_data(s.current_date))
+        self.view("updateScenarioUI")
         if not ready:
             self.settle()
             return
@@ -1070,6 +1121,7 @@ class Page:
             s.frame = max_f - 1
         if s.baseline >= max_f:
             s.baseline = 0
+        self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
         self.schedule_point_in_time_selection()
         self.persist_portfolio_view_config(None)
         self.settle()

@@ -69,9 +69,9 @@ globalThis.document = { getElementById: () => null, createElement: () => __el(),
 ['updateDateLabelAndTitle','updateScrubberUI','updateRibbon','renderCards','drawChart','updateScenarioUI','updatePointInTimeToggleUI','syncLiveAltReporting',
  'syncLiveModeUI','setupDateTabs','renderPortfolioTabs','syncAssignedOverlayRuleUI','updateStrategyFamilyOptions','syncSplitModeControls',
  'renderLivePortfolioTransition','renderPointInTimeHistory','setLiveBadge','cacheLiveChartResponse','scheduleLiveChartCacheFallback','persistPortfolioView',
- 'updateChartLockControlState','populateCataloguePortfolioOptions','renderStrategyCatalogue','refreshLiveStoreUi'].forEach(n => { globalThis[n] = function(){}; });
+ 'updateChartLockControlState','populateCataloguePortfolioOptions','renderStrategyCatalogue','refreshLiveStoreUi'].forEach(n => { globalThis[n] = function(){ if (globalThis.__recordViews) __fx.push(['view', n]); }; });
 globalThis.liveChartCacheKey = () => 'k';
-globalThis.paintLiveChartCache = () => false;
+globalThis.paintLiveChartCache = () => { if (globalThis.__recordViews) __fx.push(['view', 'paintLiveChartCache']); return false; };
 globalThis.isLiveModePortfolio = () => false; globalThis.isLiveModeArmed = () => false;
 globalThis.confirm = () => true; globalThis.alert = () => {};
 globalThis.savePortfolios = () => { __fx.push(['savePortfolios']); };
@@ -104,7 +104,7 @@ function __fetchStub(fx){ __calls = [];
   globalThis.fetch = async (url) => { const u = String(url); __calls.push(u); await new Promise(res => __imm(res)); const r = fx[u] || { status: 404, payload: { error: 'not found' } };
     return { ok: r.status >= 200 && r.status < 300, status: r.status, json: async () => r.payload }; }; }
 async function __page(fx, name, c, args){
-  __fetchStub(fx); __fx = [];
+  __fetchStub(fx); __fx = []; globalThis.__recordViews = true;
   __ps_set(c.state);
   globalThis.portfolioViewConfigs = c.state.portfolio_view_configs; globalThis.livePortfolioStore = c.state.live_store;
   globalThis.__maxFrames = c.hooks.maxFrames; globalThis.__head = c.hooks.head; globalThis.__elig = c.hooks.eligible; globalThis.__candidates = c.hooks.candidates;
@@ -175,6 +175,8 @@ def diff(py, js, path=""):
         return None
     if isinstance(py, list):
         if not isinstance(js, list) or len(py) != len(js):
+            if path.endswith("effects") and isinstance(js, list):
+                return f"{path}: py {json.dumps(py)[:260]} vs js {json.dumps(js)[:260]}"
             return f"{path}: length py {len(py) if isinstance(py, list) else py!r} vs js {len(js) if isinstance(js, list) else js!r}"
         for i, (a, b) in enumerate(zip(py, js)):
             d = diff(a, b, f"{path}[{i}]")
@@ -199,6 +201,8 @@ def responder(url: str):
     q = {k: v[0] for k, v in parse_qs(u.query).items()}
     seed = int(hashlib.md5(url.encode()).hexdigest()[:6], 16)
     if u.path.endswith("/api/live_day"):
+        if seed % 6 == 0:
+            return 500, {"error": "down"}   # some live-day requests fail: the page shows its offline badge
         scen = q.get("scenario", "top_net")
         return 200, {"products": ["gbp", "eur"], scen: [mk(1 + seed % 3), mk(5 + seed % 4)], "top_net": [mk(2)], "generated_at": "2026-10-14T12:00:00"}
     if u.path.endswith("/api/portfolio_day"):

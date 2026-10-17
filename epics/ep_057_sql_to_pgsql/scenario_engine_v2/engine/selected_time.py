@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/selected_time.py — selected-time ("point in time") cohort: the request and the merge of leaders, history, pinned and searched models (port of refreshPointInTimeSelection).
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-17 · events: the ordered view calls / effects of a lookup (replaces render_history).
 # v1.3.0 · 2026-10-17 · render_history flag (the page re-renders the hourly-cohort list after a lookup).
 # v1.2.1 · 2026-10-17 · the point-in-time Pending is marked issued (a request is in flight), so responses apply in issue order.
 # v1.2.0 · 2026-10-17 · request_sequence (pointInTimeRequestSequence) is incremented per request and checked on completion: 'context changed' and 'lookup canceled' outcomes.
@@ -62,7 +63,7 @@ class SelectedTimeState:
     status: str = ""
     status_class: str = ""
     history_at: str = ""
-    render_history: bool = False   # the page calls renderPointInTimeHistory() after a successful lookup
+    events: list = field(default_factory=list)   # ordered view calls / effects the page makes during a lookup: ("view", name) or ("fx", name); the caller replays and clears them
     visible: set = field(default_factory=set)
     frame_index: int = -1
     selected_time_input: str | None = None
@@ -116,6 +117,7 @@ def begin_point_in_time_selection(st: SelectedTimeState, client: DataClient, opt
         st.status = f"Auto-add {req_dir} #{pu.js_str(req_rank)} at {at}…"
     elif explicit:
         st.status = f"Finding top {pu.js_str(pu.selected_time_rank_count(opt_state.get('rank_select_value')))} as of {at}…"
+        st.events += [("view", "renderCards"), ("view", "drawChart")]
     else:
         st.status = f"Loading as of {at}…"
     st.request_sequence += 1
@@ -234,6 +236,7 @@ def begin_point_in_time_selection(st: SelectedTimeState, client: DataClient, opt
             if retain:
                 st.selected_model_index = 0
                 st.visible = {m.get("model") for m in out}
+                st.events.append(("view", "updatePointInTimeToggleUI"))
             st.visible = {m.get("model") for m in eligible_models}
             st.status_class = "text-[10px] text-cyan-300"
             if retain:
@@ -267,9 +270,10 @@ def begin_point_in_time_selection(st: SelectedTimeState, client: DataClient, opt
             else:
                 st.status = f"{at_time} · {len(leaders)} selected"
             st.history_at = f"{str(at_time)[:2]}:00"
-            st.render_history = True
+            st.events.append(("fx", "renderPointInTimeHistory"))
             if was_at_latest:
                 st.frame_index = max(0, max_frames - 1)
+            st.events += [("view", n) for n in ("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")]
             if explicit:
                 st.selected_time_input = at
             return {"ran": True, "url": url}
@@ -300,6 +304,7 @@ def begin_point_in_time_selection(st: SelectedTimeState, client: DataClient, opt
             st.requested_key = ""
             st.status = f"Lookup failed for {at}: {error}"
             st.status_class = "text-[10px] font-bold text-rose-300"
+            st.events += [("view", n) for n in ("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart")]
             return {"ran": True, "url": url}
 
     return Pending(apply, issued=True)

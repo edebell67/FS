@@ -135,7 +135,6 @@ MUTANTS = [
     ("history: hours must be a list", "page.py", "s.pit_hours = hours if isinstance(hours, list) else []", "s.pit_hours = hours", P, "refresh_point_in_time_history"),
     ("history: count text", "page.py", 'f"{len(s.pit_hours)} hourly cohorts', 'f"{len(s.pit_hours) + 1} hourly cohorts', P, "refresh_point_in_time_history"),
     ("history: at propagates", "page.py", "        s.pit_history_at = st.history_at\n", "", P, "switch_date,refresh_point_in_time_selection,schedule_point_in_time_selection"),
-    ("history: render effect", "page.py", '            st.render_history = False\n            self.fx("renderPointInTimeHistory")', "            st.render_history = False", P, "refresh_point_in_time_selection,switch_date"),
     ("rule: active needs flag", "page.py", "if not self.s.active_portfolio or not self.s.use_assigned_rule:", "if not self.s.active_portfolio:", P, "active_portfolio_overlay_rule"),
     ("hourly: interval default", "reports.py", "js_or(interval_value, report_interval, 60)", "js_or(interval_value, report_interval, 30)", R, ""),
     ("hourly: date fallback", "reports.py", 'js_or(report_date, live_date)', 'report_date', R, ""),
@@ -209,6 +208,16 @@ MUTANTS = [
     ("arena: window end", "runner/arena_provider.py", "spec[\"as_of_time\"] = day.strftime(\"%H:%M\")", "pass", I, ""),
     ("arena: kind check", "runner/arena_provider.py", "if kind not in KINDS or", "if", I, ""),
     ("arena: mode", "runner/arena_provider.py", '"mode": "external"', '"mode": "simulated_random"', I, ""),
+    # ---- view calls (the order the browser copy will replay)
+    ("view: events replay", "page.py", '        for kind, name in st.events:\n            (self.fx if kind == "fx" else self.view)(name)\n        st.events = []\n', "        st.events = []\n", P, "refresh_point_in_time_selection,switch_date"),
+    ("view: reload render", "page.py", "        s.frame = self.max_frames() - 1\n        self.render_all()\n", "        s.frame = self.max_frames() - 1\n", P, "remove_model_from_portfolio,add_catalogue_model"),
+    ("view: offline badge", "page.py", '                if seq == s.live_refresh_sequence:\n                    self.view("setLiveBadge")\n', "                pass\n", P, "refresh_live_data"),
+    ("view: switch fallback", "page.py", '        self.view("scheduleLiveChartCacheFallback")\n', "", P, "switch_date"),
+    ("view: activate final", "page.py", '            self.view("syncAssignedOverlayRuleUI", "drawChart")\n        self.settle()', "            pass\n        self.settle()", P, "activate_portfolio"),
+    ("view: ranking badge", "page.py", '            self.view("setLiveBadge")\n            refresh = self.begin_refresh_live_data', "            refresh = self.begin_refresh_live_data", P, "set_ranking_criteria"),
+    ("view: background render", "page.py", '            s.visible = {m.get("model") for m in s.portfolio_models}\n            self.render_all()\n\n    def _timeout', '            s.visible = {m.get("model") for m in s.portfolio_models}\n\n    def _timeout', P, "load_portfolio_data,switch_date"),
+    ("view: lock state", "page.py", '        self.view("updateChartLockControlState")\n        if s.chart_locked:', "        if s.chart_locked:", P, "apply_chart_lock"),
+    ("view: persist view", "data_client.py", '            self.on_effect("view", "persistPortfolioView")  # persistPortfolioView(cacheKey, entry)\n', "", P, "load_portfolio_data,activate_portfolio"),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).

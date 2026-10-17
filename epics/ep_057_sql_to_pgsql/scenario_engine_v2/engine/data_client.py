@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/data_client.py — headless data layer: the page's fetchers (live day, portfolio day, model search, deep links, catalogue, rules, source trades, historical curves) over an injectable transport.
 #
 # VERSION HISTORY
+# v1.4.1 · 2026-10-17 · records the persistPortfolioView view call (browser copy replays it).
 # v1.4.0 · 2026-10-17 · send(): PUT / POST through an injectable write transport (refused when none is set); HeadlessWriteRefused.
 # v1.3.2 · 2026-10-17 · Pending.shared: a caller that joins an in-flight request resumes after the original awaiter.
 # v1.3.1 · 2026-10-17 · One in-flight portfolio request per cache key (PORTFOLIO_VIEW_REQUESTS): a second caller shares it.
@@ -53,6 +54,7 @@ class Pending:
 
     def __init__(self, apply, issued=False):
         self._apply, self.done, self.result, self.issued, self.seq = apply, False, None, issued, next(_SEQ)
+        self.failed = False  # a failed live-day request (see begin_refresh_live_data)
         self.shared = False  # True if this only waits on a request another caller already made
         self.root = None     # ...and that request (a joiner resumes once it is done, after its original awaiter)
 
@@ -195,7 +197,9 @@ class DataClient:
                     self.criteria_data.setdefault(key, {})[target_date] = value
             return {"ok": True, "url": url, "scenario": self.live_scenario(criteria, return_type), "products": products,
                     "product": product, "tp_sl_ids": tp_sl_ids}
-        return Pending(apply, issued=True)
+        pend = Pending(apply, issued=True)
+        pend.failed = err is not None or not _is_ok(resp[0])   # known as soon as the answer is in: a failed request changes nothing but the badge
+        return pend
 
     def refresh_live_data(self, target_date, **kw) -> dict:
         """The data half of refreshLiveData: request the live-day payload and file every scenario array under criteria_data."""
@@ -277,6 +281,7 @@ class DataClient:
             stamps = [t for t in (js_date_parse_ms(p.get("generated_at")) for p in payloads) if t == t and abs(t) != float("inf")]
             entry = {"models": models, "cachedAt": max(stamps) if stamps else self.now_ms()}
             self.portfolio_view_cache[cache_key] = entry
+            self.on_effect("view", "persistPortfolioView")  # persistPortfolioView(cacheKey, entry)
             self.remember_portfolio_view(portfolio_name, date, model_key, entry)
             while len(self.portfolio_view_cache) > PORTFOLIO_VIEW_CACHE_MAX:
                 self.portfolio_view_cache.popitem(last=False)
