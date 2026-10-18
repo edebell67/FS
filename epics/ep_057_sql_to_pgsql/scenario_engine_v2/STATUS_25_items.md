@@ -7,8 +7,8 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 |---|------|--------|-------------------------|
 | 1–13 | Engine core (Page controller, tests, mutation tests, map/drift, version blocks, task files) | Done | Differential tests page JS (Node) vs Python on real :8765 data + synthetic; ~190 mutants killed (documented equivalents in `tools/mutants_page.py`); `check_drift.py` clean |
 | 14 | Parallel headless instances (max 5, configurable) | Done | `runner/manager.py`, `tests/test_runner*.py` |
-| 15 | Thin browser copy without embedded engine | Partly | Generated page `top10_5min_equity_curves_engine_client_v2.65.32.html`. Overlay/rotation engine and 10 controllers run in Python (8 no-network + `applyChartLock`, `resetAutomaticRankSchedule`, which fall back to the page's own copy when they need the network). The other ~31 controllers still run in the page |
-| 16 | Browser parity verification | Partly | Parity proven for the delegated parts (slice 1 + stage 1 + chart lock / rank schedule: wrapper-vs-original differential, 80/80 for all 10 controllers, 200/200 for the two newest; 7 new mutants killed). Not yet proven for the remaining controllers |
+| 15 | Thin browser copy without embedded engine | Closed as-is | Closed as-is by your decision (2026-10-18 'leave as is'): the engine runs the rule logic and 10 controllers; the ~31 fetching controllers stay in the page as a documented boundary. Plan to move them later: DESIGN_stage2_session_and_timers.md (begin/finish protocol; engine side for refreshLiveData built in engine/twophase.py, uncommitted) |
+| 16 | Browser parity verification | Closed as-is | Closed as-is by your decision (2026-10-18): parity proven for everything delegated (80/80 per controller, mutants, browser run); not claimed for the controllers that stay in the page |
 | 17 | Launch headless races from the browser | Done | `runner/static/launch_panel.js`, tests |
 | 18 | Reporting dashboard | Done | `/dashboard` on :8766 |
 | 19 | Deactivate the embedded version | Declined by you | Original left untouched; task `…998_deactivate_embedded_version` stays in backlog |
