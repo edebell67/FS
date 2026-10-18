@@ -25,10 +25,18 @@ def test_engine_is_sent_the_criteria_buckets_it_reads():
     assert "[key, 'top_net'].forEach" in h
 
 
-def test_play_and_pause_keep_the_dom_shell_lines():
-    for name in ("startReplay", "pauseReplay"):
-        w = cw.wrapper(name, BODY)
-        assert "playIcon.className" in w and "playBtnText.textContent" in w and "playBtn.classList.add" in w and "other()" not in w
+def test_play_and_pause_dom_writes_come_from_the_engine_as_dom_effects():
+    """The play button's look is no longer copied into the wrapper: the engine emits it as 'dom' effects and the page replays them."""
+    import sys
+    sys.path.insert(0, str(ROOT))
+    from engine import command
+    from engine.page_state import PageState
+    st = PageState()
+    st.current_date = "2026-10-14"
+    r = command.run({"method": "pause_replay", "args": [], "state": st.snapshot(), "hooks": {"maxFrames": 10, "head": "10:00", "eligible": [], "candidates": []}})
+    dom = [e for e in r["effects"] if e[0] == "dom"]
+    assert ["dom", "playIcon", "set", ["textContent", "▶"]] in dom and ["dom", "playBtnText", "set", ["textContent", "Play"]] in dom
+    assert "other()" not in cw.wrapper("pauseReplay", BODY)
 
 
 def test_persist_sends_no_argument_when_called_without_one():

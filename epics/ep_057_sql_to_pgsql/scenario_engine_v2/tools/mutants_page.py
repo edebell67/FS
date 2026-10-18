@@ -235,7 +235,7 @@ MUTANTS = [
     ("command: hooks head", "command.py", 'head_time=lambda: hooks["head"]', "head_time=lambda: None", W, "move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status"),
     ("wrapjs: storage main key", "tools/controller_wrappers.py", '"strategyDirectoryMainViewV1": "JSON.stringify(mainScenarioViewConfig)"', '"strategyDirectoryMainViewV1": "JSON.stringify(portfolioViewConfigs)"', J, ""),
     ("wrapjs: criteria sent", "tools/controller_wrappers.py", "[key, 'top_net'].forEach", "['top_net'].forEach", J, ""),
-    ("wrapjs: play shell", "tools/controller_wrappers.py", "(playIcon|playBtnText|playBtn)", "(playIcon)", J, "", 3),
+    ("wrapjs: pause icon", "page.py", 'self.dom("playIcon", "set", "textContent", "▶")', 'self.dom("playIcon", "set", "textContent", "⏸")', J, ""),
     ("wrapjs: persist arg", "tools/controller_wrappers.py", "arguments.length === 0 || arguments[0] === undefined ? [] : [name]", "[name]", J, ""),
 ]
 
