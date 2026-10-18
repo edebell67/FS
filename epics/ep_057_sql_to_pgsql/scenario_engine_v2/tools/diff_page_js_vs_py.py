@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_page_js_vs_py.py — differential test of the page controller: the page's own state-changing functions (Node VM) vs engine/page.py, whole-state comparison.
 #
 # VERSION HISTORY
+# v1.4.2 · 2026-10-18 · move_model_between_portfolios cases include a destination at / just under the ten-strategy limit.
 # v1.3.0 · 2026-10-17 · refreshPointInTimeHistory direct group (hourly cohorts) with a response matrix; history state fields.
 # v1.4.1 · 2026-10-18 · the Python expectation leaves out 'dom' effects (engine-emitted DOM writes; the JS stubs do not record DOM writes).
 # v1.4.0 · 2026-10-17 · DIFF_WRAPPERS=1: run the engine-delegating controller wrappers (tools/controller_wrappers.py) instead of the originals; two passes (collect the requests, answer them with engine.rpc), compared with the Python expectation.
@@ -337,7 +338,17 @@ def rand_case(rng: random.Random, method: str):
         args = [pick(), rng.choice(["M1", "M5", "M9"])]
     elif method == "move_model_between_portfolios":
         a, b = pick(), pick()
-        args = [a, b, rng.choice((st.portfolios.get(a) or ["M1"]) + ["M9"])]
+        if len(ports) >= 2 and rng.random() < 0.4:   # a real move into a destination at (or just under) the ten-strategy limit
+            a, b = rng.sample(ports, 2)
+            table = {n: list(models) for n, models in snap["portfolios"]}   # the snapshot keeps portfolios as [name, models] pairs, in tab order
+            if not table.get(a):
+                table[a] = ["M1", "M2"]
+            table[b] = [f"Z{i}" for i in range(rng.choice([9, 10]))]
+            snap["portfolios"] = [[n, table[n]] for n, _ in snap["portfolios"]]
+            st = PageState.from_snapshot(snap)
+            args = [a, b, rng.choice(st.portfolios[a])]
+        else:
+            args = [a, b, rng.choice((st.portfolios.get(a) or ["M1"]) + ["M9"])]
     elif method == "create_similar_portfolio":
         args = [rng.choice(["family", "tp", "window", "bogus"])]
     elif method == "live_portfolio_models_for_date":

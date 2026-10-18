@@ -44,11 +44,15 @@
   "schedulePointInTimeSelection",
   "scheduleAutomaticTop1Refresh",
   "applySelectedTime",
-  "triggerSelectedTimeRefresh"
+  "triggerSelectedTimeRefresh",
+  "removeModelFromPortfolio",
+  "addCatalogueModel",
+  "moveModelBetweenPortfolios",
+  "repopulateActivePortfolioFromCriteria"
  ],
  "lines_before": [
   1432,
   9054
  ],
- "bytes": 545190
+ "bytes": 546152
 }

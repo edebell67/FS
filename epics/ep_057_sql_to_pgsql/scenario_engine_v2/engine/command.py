@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/command.py — run a page controller in the engine on a state snapshot sent by the browser copy; returns the new state and the ordered effects.
 #
 # VERSION HISTORY
+# v1.3.0 · 2026-10-18 · staged controllers (page.STAGES): {"stage": N, "ctx", "result"} resumes a controller after the page awaited a page async function; the answer carries {"await": {fn, args}, "ctx", "stage"} while one is outstanding.
 # v1.2.0 · 2026-10-17 · a controller that wants the network answers {needsNetwork: true} (the page then runs its own copy); timers: named timer operations tied to effect indexes.
 # v1.1.0 · 2026-10-17 · stage 2 (no fetch): apply_chart_lock, reset_automatic_rank_schedule.
 # v1.0.1 · 2026-10-17 · optional `hooks` test seam.
@@ -11,7 +12,7 @@
 from __future__ import annotations
 
 from .data_client import DataClient
-from .page import Page
+from .page import STAGES, Page
 from .page_state import PageState
 
 # controllers the browser copy may delegate (stage 1: none of them touches the network or starts a timer callback the engine would have to own)
@@ -19,7 +20,8 @@ STAGE1 = ("move_portfolio", "mark_portfolio_fixed", "capture_portfolio_scenario"
           "sync_portfolio_view_refresh", "update_auto_refresh_status",
           "apply_chart_lock", "reset_automatic_rank_schedule",
           "unique_portfolio_name", "current_portfolio_view_config", "apply_portfolio_view_config", "get_merged_portfolio_models", "auto_pin_live_portfolio_strategies",
-          "schedule_point_in_time_selection", "schedule_automatic_top1_refresh", "apply_selected_time", "trigger_selected_time_refresh")   # last two: stage 2, no fetch
+          "schedule_point_in_time_selection", "schedule_automatic_top1_refresh", "apply_selected_time", "trigger_selected_time_refresh",   # last two: stage 2, no fetch
+          *STAGES)   # staged: the page awaits a page async function between the stages
 
 
 class CommandError(ValueError):
@@ -51,11 +53,22 @@ def run(req: dict) -> dict:
     if hooks:
         extra = dict(max_frames=lambda: hooks["maxFrames"], head_time=lambda: hooks["head"], eligible=lambda: hooks["eligible"], candidates=lambda: hooks["candidates"])
     page = Page(state, client, scenario_names=req.get("scenarioNames") or {}, **extra)
+    pending_await, calls = None, []
     try:
-        ret = getattr(page, method)(*(req.get("args") or []))
-        page.settle()
+        if method in STAGES:   # one stage: the page performs the awaited function and calls again with {stage, ctx, result}
+            stage = int(req.get("stage") or 0)
+            ret, pending_await, calls = page.run_stage(method, stage, req.get("args"), req.get("ctx"), req.get("result"))
+        else:
+            ret = getattr(page, method)(*(req.get("args") or []))
+            page.settle()
     except NeedsNetwork:
         wanted.append("raised")
     if wanted:
         return {"needsNetwork": True}
-    return {"ret": ret, "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops}
+    if pending_await is not None:
+        return {"await": {"fn": pending_await.fn, "args": pending_await.args}, "ctx": pending_await.ctx, "stage": int(req.get("stage") or 0) + 1,
+                "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "calls": calls}
+    out = {"ret": ret, "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops}
+    if method in STAGES:
+        out["calls"] = calls
+    return out

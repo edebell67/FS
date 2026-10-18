@@ -40,10 +40,19 @@ CONTROLLERS = {
     "scheduleAutomaticTop1Refresh": ("schedule_automatic_top1_refresh", "at", "[at]", None, {}),
     "applySelectedTime": ("apply_selected_time", "", "[]", None, {}),
     "triggerSelectedTimeRefresh": ("trigger_selected_time_refresh", "", "[]", None, {}),
+    # staged: the page awaits a page async function between engine stages (engine/page.py STAGES)
+    "removeModelFromPortfolio": ("remove_model_from_portfolio", "name, model", "[name, model]", None, {}),
+    "addCatalogueModel": ("add_catalogue_model", "model", "[name, model]", None, {}),
+    "moveModelBetweenPortfolios": ("move_model_between_portfolios", "sourceName, destinationName, model", "[sourceName, destinationName, model]", None, {}),
+    "repopulateActivePortfolioFromCriteria": ("repopulate_active_portfolio_from_criteria", "", "[]", None, {}),
 }
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
 EXTRAS = {
+    "removeModelFromPortfolio": {"staged": True},
+    "addCatalogueModel": {"staged": True, "prelude": "const name = catalogPortfolioFilter.value; if (name && portfolios[name] && !portfolios[name].includes(model) && portfolios[name].length >= 10) alert(`${name} already contains the maximum of 10 strategies.`);"},
+    "moveModelBetweenPortfolios": {"staged": True, "prelude": "if (sourceName && destinationName && sourceName !== destinationName && portfolios[sourceName]?.includes(model) && portfolios[destinationName] && !portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) alert(`${destinationName} already contains the maximum of 10 strategies.`);"},
+    "repopulateActivePortfolioFromCriteria": {"staged": True},
     "schedulePointInTimeSelection": {"fallback": True},
     "scheduleAutomaticTop1Refresh": {"fallback": True},
     "applySelectedTime": {"fallback": True},
@@ -134,9 +143,9 @@ def helper_block(state_decls: dict) -> str:
       [key, 'top_net'].forEach(k => {{ const bucket = ALL_CRITERIA_DATA[k] && ALL_CRITERIA_DATA[k][currentDate]; if (bucket) out[k] = {{ [currentDate]: bucket }}; }});
       return out;
     }}
-    function __engineCommand(method, args) {{
+    function __engineCommand(method, args, extra) {{
       const sent = __engineSnapshot();
-      const res = __engine.call({{ fn: 'command', method, args, state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+      const res = __engine.call({{ fn: 'command', method, args, ...(extra || {{}}), state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }});
       if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
@@ -152,6 +161,7 @@ def helper_block(state_decls: dict) -> str:
       put(setTimeout(run, op.ms));
     }}
     globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) }};
+    const __awaitTargets = {{ loadPortfolioData: (...a) => loadPortfolioData(...a) }};   // page async functions an engine stage may ask the page to await
     const __domTargets = {{ {dom_table} }};
     function __engineDom(effect) {{
       const [, element, op, args] = effect;
@@ -216,6 +226,18 @@ def wrapper(name: str, original_body: str, get_body=None) -> str:
         shell = "      if (__was) {\n" + "\n".join("        " + l for l in _lines(original_body, ex["flag_shell"])) + "\n      }"
     prelude = f"      {ex['prelude']}\n" if ex.get("prelude") else ""
     handlers = ", ".join(f"'{k}': effect => {{ {v} }}" for k, v in effects.items())
+    if ex.get("staged"):   # the page awaits between engine stages; each stage runs on the page's CURRENT state
+        return (f"    async function {name}({params}) {{\n{prelude}      let res = __engineCommand('{method}', {argexpr});\n"
+                f"      if (res.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
+                f"      __engineReplay(res.effects, {{ {handlers} }}, res.timers);\n"
+                f"      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));\n"
+                f"      while (res.await) {{\n"
+                f"        const out = await __awaitTargets[res.await.fn](...res.await.args);\n"
+                f"        res = __engineCommand('{method}', null, {{ stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out }});\n"
+                f"        if (res.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
+                f"        __engineReplay(res.effects, {{ {handlers} }}, res.timers);\n"
+                f"        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));\n"
+                f"      }}\n      return res.ret;\n    }}")
     shell_block = f"\n{shell}" if shell else ""
     asyncs = "async " if original_body.lstrip().startswith("async") else ""
     fallback_fn, fallback = "", ""

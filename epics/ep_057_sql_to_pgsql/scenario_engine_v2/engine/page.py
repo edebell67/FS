@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-18 · staged controllers: a controller that awaits a page async function is split at the await (Await + STAGES + run_staged); the one-go method is the stages driven in Python, the browser copy drives them across the real await.
 # v1.3.0 · 2026-10-17 · refresh_point_in_time_history (hourly cohorts).
 # v1.2.0 · 2026-10-17 · max frames / replay head / eligible models / candidates default to replay_models (the page's own logic); injected hooks still win (the differential tests).
 # v1.1.0 · 2026-10-17 · Responses are applied in issue order (outstanding Pendings; joiners of a shared request resume after its original awaiter); fetch_guard / on_fetched / on_timeout wiring; Page.rule_editor (overlay-rule editor).
@@ -43,6 +44,22 @@ def _truthy(v) -> bool:
     return stm.js_truthy(v)
 
 
+class Await:
+    """A stage's request to the host: 'await this page async function, then resume me with its result'. `ctx` is what the stage wants back on resume (what the page's closure captured)."""
+
+    def __init__(self, fn: str, args=None, ctx=None):
+        self.fn, self.args, self.ctx = fn, list(args or []), ctx or {}
+
+
+# controller name -> its stage methods; stage 0 takes the call's arguments, stage N takes (ctx, result of the awaited function)
+STAGES = {
+    "remove_model_from_portfolio": ("_remove_model_0", "_remove_model_1"),
+    "add_catalogue_model": ("_add_catalogue_0", "_add_catalogue_1"),
+    "move_model_between_portfolios": ("_move_model_0", "_move_model_1"),
+    "repopulate_active_portfolio_from_criteria": ("_repopulate_0", "_repopulate_1"),
+}
+
+
 class Page:
     def __init__(self, state: PageState, client, *, max_frames=None, head_time=None, eligible=None, candidates=None,
                  scenario_names=None):
@@ -55,6 +72,7 @@ class Page:
         self._micro: list = []
         self._timers: list = []
         self._outstanding: list = []   # fire-and-forget Pendings, applied in issue order
+        self._calls: list = []         # page functions a stage asks the host to call once it returns (staged controllers)
         client.on_effect = self.fx  # persistence the client does on the page's behalf (rememberPortfolioView)
         client.on_timeout = lambda fn, delay: self._timeout(fn, delay)
         client.fetch_guard = lambda name, date, key: (self.s.active_portfolio == name and self.s.current_date == date
@@ -111,6 +129,45 @@ class Page:
             if self._outstanding:
                 self._outstanding.sort(key=lambda p: p.seq)
                 self._outstanding.pop(0).finish()
+
+    def run_staged(self, name, *args):
+        """The one-go form of a staged controller: run each stage, resolving every Await the way the page would (in Python), then let un-awaited work finish."""
+        stages = STAGES[name]
+        out = getattr(self, stages[0])(*args)
+        self._flush_calls()
+        i = 0
+        while isinstance(out, Await):
+            i += 1
+            result = self._resolve_await(out)
+            out = getattr(self, stages[i])(out.ctx, result)
+            self._flush_calls()
+        self.settle()
+        return out
+
+    def run_stage(self, name, stage, args=None, ctx=None, result=None):
+        """One stage of a staged controller (what a browser copy asks for): returns (ret, Await | None, page calls to make afterwards)."""
+        fn = getattr(self, STAGES[name][stage])
+        out = fn(*(args or [])) if stage == 0 else fn(ctx or {}, result)
+        calls, self._calls = self._calls, []
+        return (None, out, calls) if isinstance(out, Await) else (out, None, calls)
+
+    def _call(self, fn, *args):
+        """Ask the host to call a page function at the end of this stage (the page's own, possibly delegated, copy runs it)."""
+        self._calls.append([fn, list(args)])
+
+    def _flush_calls(self):
+        """The one-go form of those calls: run the engine's own implementation, in order."""
+        calls, self._calls = self._calls, []
+        for fn, args in calls:
+            if fn == "schedulePointInTimeSelection":
+                self.schedule_point_in_time_selection(*args)
+            else:
+                raise ValueError(f"no engine implementation for page call {fn!r}")
+
+    def _resolve_await(self, aw):
+        if aw.fn == "loadPortfolioData":
+            return self._await(self.begin_load_portfolio_data(*aw.args))
+        raise ValueError(f"no engine implementation for awaited page function {aw.fn!r}")
 
     def _on_fetched(self, background):
         s = self.s
@@ -744,8 +801,11 @@ class Page:
         return out
 
     def _reload_active_view(self, reset_index=False):
-        s = self.s
         self._await(self.begin_load_portfolio_data())
+        self._reload_suffix(reset_index)
+
+    def _reload_suffix(self, reset_index=False):
+        s = self.s
         s.visible = {m.get("model") for m in s.portfolio_models}
         if reset_index:
             s.selected_model_index = 0
@@ -753,44 +813,62 @@ class Page:
         self.render_all()
 
     def remove_model_from_portfolio(self, name, model):
+        return self.run_staged("remove_model_from_portfolio", name, model)
+
+    def _remove_model_0(self, name, model):
         s = self.s
         if name not in s.portfolios:
-            return
+            return None
         self.mark_portfolio_fixed(name)
         s.portfolios[name] = [i for i in s.portfolios[name] if i != model]
         self.fx("savePortfolios")
         if s.active_portfolio == name:
-            self._reload_active_view(reset_index=True)
+            return Await("loadPortfolioData")
         self.fx("renderPortfolioList")
-        self.settle()
+        return None
+
+    def _remove_model_1(self, ctx, result):
+        self._reload_suffix(reset_index=True)
+        self.fx("renderPortfolioList")
 
     def add_catalogue_model(self, name, model):
+        return self.run_staged("add_catalogue_model", name, model)
+
+    def _add_catalogue_0(self, name, model):
         s = self.s
         if not name or name not in s.portfolios:
-            return
+            return None
         if model in s.portfolios[name]:
-            return
+            return None
         if len(s.portfolios[name]) >= 10:
-            return  # the page alerts "already contains the maximum of 10 strategies"
+            return None  # the page alerts "already contains the maximum of 10 strategies"
         self.mark_portfolio_fixed(name)
         s.portfolios[name].append(model)
         self.fx("savePortfolios")
         self.view("populateCataloguePortfolioOptions")
         if s.active_portfolio == name:
-            self._reload_active_view()
+            return Await("loadPortfolioData")
         self.fx("renderPortfolioList")
         self.view("renderStrategyCatalogue")
-        self.settle()
+        return None
+
+    def _add_catalogue_1(self, ctx, result):
+        self._reload_suffix()
+        self.fx("renderPortfolioList")
+        self.view("renderStrategyCatalogue")
 
     def move_model_between_portfolios(self, src, dst, model):
+        return self.run_staged("move_model_between_portfolios", src, dst, model)
+
+    def _move_model_0(self, src, dst, model):
         s = self.s
         if not src or not dst or src == dst:
-            return
+            return None
         if model not in (s.portfolios.get(src) or []) or dst not in s.portfolios:
-            return
+            return None
         if model not in s.portfolios[dst] and len(s.portfolios[dst]) >= 10:
             self.fx("renderPortfolioList")  # (the page alerts first)
-            return
+            return None
         s.portfolios[src] = [i for i in s.portfolios[src] if i != model]
         if model not in s.portfolios[dst]:
             s.portfolios[dst].append(model)
@@ -798,9 +876,13 @@ class Page:
         self.mark_portfolio_fixed(dst)
         self.fx("savePortfolios")
         if s.active_portfolio in (src, dst):
-            self._reload_active_view(reset_index=True)
+            return Await("loadPortfolioData")
         self.fx("renderPortfolioList")
-        self.settle()
+        return None
+
+    def _move_model_1(self, ctx, result):
+        self._reload_suffix(reset_index=True)
+        self.fx("renderPortfolioList")
 
     def remove_portfolios(self, names):
         s = self.s
@@ -840,21 +922,26 @@ class Page:
         self.remove_portfolios(names)
 
     def repopulate_active_portfolio_from_criteria(self):
+        return self.run_staged("repopulate_active_portfolio_from_criteria")
+
+    def _repopulate_0(self):
         s = self.s
         if not s.active_portfolio:
-            return
+            return None
         name = s.active_portfolio
         s.portfolios[name] = [m.get("model") for m in self._candidates()[:10]]
         self.capture_portfolio_scenario(name, s.current_criteria)
         self.fx("savePortfolios")
-        self._await(self.begin_load_portfolio_data())
+        return Await("loadPortfolioData")
+
+    def _repopulate_1(self, ctx, result):
+        s = self.s
         s.visible = {m.get("model") for m in s.portfolio_models}
         s.selected_model_index = 0
         s.frame = self.max_frames() - 1
         s.baseline = 0
         if s.pit_mode:
-            self.schedule_point_in_time_selection()
-        self.settle()
+            self._call("schedulePointInTimeSelection")
 
     def create_similar_portfolio(self, dimension):
         s = self.s

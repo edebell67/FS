@@ -2353,9 +2353,9 @@
       [key, 'top_net'].forEach(k => { const bucket = ALL_CRITERIA_DATA[k] && ALL_CRITERIA_DATA[k][currentDate]; if (bucket) out[k] = { [currentDate]: bucket }; });
       return out;
     }
-    function __engineCommand(method, args) {
+    function __engineCommand(method, args, extra) {
       const sent = __engineSnapshot();
-      const res = __engine.call({ fn: 'command', method, args, state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+      const res = __engine.call({ fn: 'command', method, args, ...(extra || {}), state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) });
       if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
@@ -2371,6 +2371,7 @@
       put(setTimeout(run, op.ms));
     }
     globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) };
+    const __awaitTargets = { loadPortfolioData: (...a) => loadPortfolioData(...a) };   // page async functions an engine stage may ask the page to await
     const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
     function __engineDom(effect) {
       const [, element, op, args] = effect;
@@ -3543,19 +3544,18 @@
     }
 
     async function removeModelFromPortfolio(name, model) {
-      if (!portfolios[name]) return;
-      markPortfolioFixed(name);
-      portfolios[name] = portfolios[name].filter(id => id !== model);
-      savePortfolios();
-      if (activePortfolioName === name) {
-        await loadPortfolioData();
-        visibleModels = new Set(portfolioModels.map(item => item.model));
-        selectedModelIndex = 0;
-        const maxFrames = getMaxFrames();
-        currentFrameIndex = maxFrames - 1;
-        updateDateLabelAndTitle(); updateScrubberUI(); updateRibbon(); renderCards(); drawChart();
+      let res = __engineCommand('remove_model_from_portfolio', [name, model]);
+      if (res.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
+      __engineReplay(res.effects, {  }, res.timers);
+      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      while (res.await) {
+        const out = await __awaitTargets[res.await.fn](...res.await.args);
+        res = __engineCommand('remove_model_from_portfolio', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
+        if (res.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
+        __engineReplay(res.effects, {  }, res.timers);
+        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
       }
-      renderPortfolioList();
+      return res.ret;
     }
 
     async function deletePortfolio(name) {
@@ -3621,25 +3621,19 @@ ${preview}`)) return;
     }
 
     async function addCatalogueModel(model) {
-      const name = catalogPortfolioFilter.value;
-      if (!name || !portfolios[name]) return;
-      if (portfolios[name].includes(model)) return;
-      if (portfolios[name].length >= 10) {
-        alert(`${name} already contains the maximum of 10 strategies.`);
-        return;
+      const name = catalogPortfolioFilter.value; if (name && portfolios[name] && !portfolios[name].includes(model) && portfolios[name].length >= 10) alert(`${name} already contains the maximum of 10 strategies.`);
+      let res = __engineCommand('add_catalogue_model', [name, model]);
+      if (res.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
+      __engineReplay(res.effects, {  }, res.timers);
+      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      while (res.await) {
+        const out = await __awaitTargets[res.await.fn](...res.await.args);
+        res = __engineCommand('add_catalogue_model', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
+        if (res.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
+        __engineReplay(res.effects, {  }, res.timers);
+        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
       }
-      markPortfolioFixed(name);
-      portfolios[name].push(model);
-      savePortfolios();
-      populateCataloguePortfolioOptions();
-      if (activePortfolioName === name) {
-        await loadPortfolioData();
-        visibleModels = new Set(portfolioModels.map(item => item.model));
-        currentFrameIndex = getMaxFrames() - 1;
-        updateDateLabelAndTitle(); updateScrubberUI(); updateRibbon(); renderCards(); drawChart();
-      }
-      renderPortfolioList();
-      renderStrategyCatalogue();
+      return res.ret;
     }
 
     function renderStrategyCatalogue() {
@@ -3713,26 +3707,19 @@ ${preview}`)) return;
     }
 
     async function moveModelBetweenPortfolios(sourceName, destinationName, model) {
-      if (!sourceName || !destinationName || sourceName === destinationName) return;
-      if (!portfolios[sourceName]?.includes(model) || !portfolios[destinationName]) return;
-      if (!portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) {
-        alert(`${destinationName} already contains the maximum of 10 strategies.`);
-        renderPortfolioList();
-        return;
+      if (sourceName && destinationName && sourceName !== destinationName && portfolios[sourceName]?.includes(model) && portfolios[destinationName] && !portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) alert(`${destinationName} already contains the maximum of 10 strategies.`);
+      let res = __engineCommand('move_model_between_portfolios', [sourceName, destinationName, model]);
+      if (res.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
+      __engineReplay(res.effects, {  }, res.timers);
+      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      while (res.await) {
+        const out = await __awaitTargets[res.await.fn](...res.await.args);
+        res = __engineCommand('move_model_between_portfolios', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
+        if (res.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
+        __engineReplay(res.effects, {  }, res.timers);
+        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
       }
-      portfolios[sourceName] = portfolios[sourceName].filter(id => id !== model);
-      if (!portfolios[destinationName].includes(model)) portfolios[destinationName].push(model);
-      markPortfolioFixed(sourceName);
-      markPortfolioFixed(destinationName);
-      savePortfolios();
-      if (activePortfolioName === sourceName || activePortfolioName === destinationName) {
-        await loadPortfolioData();
-        visibleModels = new Set(portfolioModels.map(item => item.model));
-        selectedModelIndex = 0;
-        currentFrameIndex = getMaxFrames() - 1;
-        updateDateLabelAndTitle(); updateScrubberUI(); updateRibbon(); renderCards(); drawChart();
-      }
-      renderPortfolioList();
+      return res.ret;
     }
 
     function getMergedPortfolioModels() {
@@ -4005,18 +3992,18 @@ ${preview}`)) return;
     });
 
     async function repopulateActivePortfolioFromCriteria() {
-      if (!activePortfolioName) return;
-      const portfolioName = activePortfolioName;
-      const candidates = getScenarioCandidates(currentCriteria).slice(0, 10);
-      portfolios[portfolioName] = candidates.map(model => model.model);
-      capturePortfolioScenario(portfolioName, currentCriteria);
-      savePortfolios();
-      await loadPortfolioData();
-      visibleModels = new Set(portfolioModels.map(model => model.model));
-      selectedModelIndex = 0;
-      currentFrameIndex = getMaxFrames() - 1;
-      baselineFrameIndex = 0;
-      if (pointInTimeMode) schedulePointInTimeSelection();
+      let res = __engineCommand('repopulate_active_portfolio_from_criteria', []);
+      if (res.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
+      __engineReplay(res.effects, {  }, res.timers);
+      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      while (res.await) {
+        const out = await __awaitTargets[res.await.fn](...res.await.args);
+        res = __engineCommand('repopulate_active_portfolio_from_criteria', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
+        if (res.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
+        __engineReplay(res.effects, {  }, res.timers);
+        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      }
+      return res.ret;
     }
 
     async function activatePortfolio(name) {
