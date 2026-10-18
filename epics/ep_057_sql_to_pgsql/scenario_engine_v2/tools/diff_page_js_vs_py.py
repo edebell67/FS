@@ -1,6 +1,9 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_page_js_vs_py.py — differential test of the page controller: the page's own state-changing functions (Node VM) vs engine/page.py, whole-state comparison.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-10-18 · wrapper mode: the oracle is the ORIGINAL page's JS result (state, effects, fetches, return value), not the Python expectation: the wrapper runs on the real event loop, so a hop-count quirk of the Python event-loop model in a failure path must not decide it.
+# v1.6.0 · 2026-10-18 · failing /api/portfolio_day (1 in 7 URLs); refresh_live_data_filter_change (one call, filter changed while in flight); frame / baseline at the boundary for refresh_live_data; extras (data-layer flags + criteria sizes) compared against the original in wrapper mode.
+# v1.5.0 · 2026-10-18 · view calls record their arguments (vargs); in wrapper mode they are compared against the original page's (args-bearing views: setLiveBadge, cacheLiveChartResponse); engine-answer rounds 8 -> 30.
 # v1.4.2 · 2026-10-18 · move_model_between_portfolios cases include a destination at / just under the ten-strategy limit.
 # v1.3.0 · 2026-10-17 · refreshPointInTimeHistory direct group (hourly cohorts) with a response matrix; history state fields.
 # v1.4.1 · 2026-10-18 · the Python expectation leaves out 'dom' effects (engine-emitted DOM writes; the JS stubs do not record DOM writes).
@@ -60,7 +63,7 @@ PAGE_EXTRA = js_state_code() + r"""
 globalThis.API_BASE = 'http://api';
 globalThis.location = { href: 'http://h/p/page.html', protocol: 'http:', origin: 'http://h' };
 globalThis.history = { replaceState(){} };
-var __fx = [], __calls = [], __timers = [];
+var __fx = [], __calls = [], __timers = [], __vargs = [];
 var __dom = [];
 const __el = (name = '?') => new Proxy({ options: [] }, { get: (t, p) => p === 'classList' ? { add(...a){ __dom.push([name, 'classList.add', a]); }, remove(...a){ __dom.push([name, 'classList.remove', a]); }, toggle(...a){ __dom.push([name, 'classList.toggle', a]); }, contains(){ return false; } }
   : (p in t ? t[p] : (typeof p === 'string' && /^(setAttribute|removeAttribute|appendChild|addEventListener|focus|close|showModal)$/.test(p) ? (...a) => { __dom.push([name, p, a]); } : undefined)),
@@ -73,7 +76,7 @@ globalThis.document = { getElementById: () => null, createElement: () => __el(),
 ['updateDateLabelAndTitle','updateScrubberUI','updateRibbon','renderCards','drawChart','updateScenarioUI','updatePointInTimeToggleUI','syncLiveAltReporting',
  'syncLiveModeUI','setupDateTabs','renderPortfolioTabs','syncAssignedOverlayRuleUI','updateStrategyFamilyOptions','syncSplitModeControls',
  'renderLivePortfolioTransition','renderPointInTimeHistory','setLiveBadge','cacheLiveChartResponse','scheduleLiveChartCacheFallback','persistPortfolioView',
- 'updateChartLockControlState','populateCataloguePortfolioOptions','renderStrategyCatalogue','refreshLiveStoreUi'].forEach(n => { globalThis[n] = function(){ if (globalThis.__recordViews) __fx.push(['view', n]); }; });
+ 'updateChartLockControlState','populateCataloguePortfolioOptions','renderStrategyCatalogue','refreshLiveStoreUi'].forEach(n => { globalThis[n] = function(...a){ if (globalThis.__recordViews) { __fx.push(['view', n]); __vargs.push([n, JSON.stringify(a).replace(/Live · updated [^"]*/, 'Live · updated T')]); } }; });
 globalThis.liveChartCacheKey = () => 'k';
 globalThis.paintLiveChartCache = () => { if (globalThis.__recordViews) __fx.push(['view', 'paintLiveChartCache']); return false; };
 globalThis.isLiveModePortfolio = () => false; globalThis.isLiveModeArmed = () => false;
@@ -112,7 +115,7 @@ globalThis.__engine = { call(req) { const key = JSON.stringify(req); __engReq.pu
   if (__engMode === 'collect') { const k = __engResp[key]; return k !== undefined && !k.startsWith('ERROR:') ? JSON.parse(k) : { ret: null, state: req.state, effects: [] }; }
   const t = __engResp[key]; if (t === undefined) throw new Error('no engine answer recorded for ' + req.method); if (t.startsWith('ERROR:')) throw new Error(t); return JSON.parse(t); } };
 async function __page(fx, name, c, args){
-  __fetchStub(fx); __fx = []; __dom = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
+  __fetchStub(fx); __fx = []; __dom = []; __vargs = []; globalThis.__recordViews = true; globalThis.__engReq = []; globalThis.__engMode = c.engMode || 'off'; globalThis.__engResp = c.engResp || {}; globalThis.__engineHooks = c.hooks;
   __ps_set(c.state);
   globalThis.portfolioViewConfigs = c.state.portfolio_view_configs; globalThis.livePortfolioStore = c.state.live_store;
   globalThis.__maxFrames = c.hooks.maxFrames; globalThis.__head = c.hooks.head; globalThis.__elig = c.hooks.eligible; globalThis.__candidates = c.hooks.candidates;
@@ -120,7 +123,7 @@ async function __page(fx, name, c, args){
   globalThis.PORTFOLIO_VIEW_CACHE = new Map(c.viewCache); globalThis.PORTFOLIO_VIEW_REQUESTS = new Map();
   globalThis.PORTFOLIO_LAST_VIEW_CACHE = new Map(c.lastView); globalThis.historicalCurveLoads = new Map(); globalThis.TP_SL_SCENARIO_IDS = new Set();
   globalThis.SCENARIOS_CATALOGUE = []; globalThis.pointInTimeRequestSequence = c.state.pit_request_sequence;
-  globalThis.deepLinkModel = ''; globalThis.pendingFilterDataRefresh = false;
+  globalThis.deepLinkModel = ''; globalThis.pendingFilterDataRefresh = false; liveChartDataLoadedKeys.clear(); globalThis.initialLiveDataAvailable = false;
   let ret;
   __dom = [];   // the writes made while the page set up its mirrored state are not part of the call
   let dbg = null;
@@ -135,6 +138,8 @@ async function __page(fx, name, c, args){
       if (args[2] === 'change_filter') globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10;
       const b = refreshLiveData(args[1]);
       await a; await b;
+    } else if (name === '__filterLive') {
+      const a = refreshLiveData(args[0]); globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10; await a;
     } else if (name === '__twiceHistory') {
       const a = __realRefreshHistory(); globalThis.pointInTimeHistoryKey = ''; const b = __realRefreshHistory();
       await a; await b;
@@ -142,7 +147,8 @@ async function __page(fx, name, c, args){
   } catch (e) { ret = { error: true }; dbg = String(e && e.message || e); }
   for (let i = 0; i < 40; i++) await new Promise(res => __imm(res));
   const norm = e => [e[0], { models: e[1].models, cachedAt: Math.abs(e[1].cachedAt - Date.now()) < 120000 ? 'NOW' : e[1].cachedAt }];
-  return { state: __ps_get(), effects: __fx, calls: __calls, dom: __dom, ret: ret === undefined ? null : ret, criteriaKeys: Object.keys(ALL_CRITERIA_DATA).sort(),
+  return { state: __ps_get(), effects: __fx, calls: __calls, dom: __dom, vargs: __vargs, extras: { loaded: [...liveChartDataLoadedKeys].sort(), initial: initialLiveDataAvailable, pending: pendingFilterDataRefresh,
+    crit: Object.fromEntries(Object.entries(ALL_CRITERIA_DATA).map(([k, v]) => [k, Object.fromEntries(Object.entries(v).map(([d, l]) => [d, Array.isArray(l) ? l.length : null]))])) }, ret: ret === undefined ? null : ret, criteriaKeys: Object.keys(ALL_CRITERIA_DATA).sort(),
     library: overlayRuleLibrary, viewCache: [...PORTFOLIO_VIEW_CACHE.entries()].map(norm), _dbg: dbg, _vlog: c.trace ? globalThis.__vlog : null, _engReq: globalThis.__engReq };
 }
 """
@@ -162,7 +168,7 @@ JS_NAME = {"move_portfolio": "movePortfolio", "unique_portfolio_name": "uniquePo
            "trigger_selected_time_refresh": "triggerSelectedTimeRefresh", "start_replay": "startReplay", "pause_replay": "pauseReplay",
            "switch_date": "switchDate", "set_ranking_criteria": "setRankingCriteria", "activate_portfolio": "activatePortfolio",
            "refresh_live_data": "refreshLiveData", "refresh_point_in_time_selection": "refreshPointInTimeSelection",
-           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
+           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_live_data_filter_change": "__filterLive", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
            "refresh_point_in_time_history": "__realHistory", "assigned_portfolio_overlay_rule": "assignedPortfolioOverlayRule", "active_portfolio_overlay_rule": "activePortfolioOverlayRule"}
 
 
@@ -215,6 +221,8 @@ def responder(url: str):
         scen = q.get("scenario", "top_net")
         return 200, {"products": ["gbp", "eur"], scen: [mk(1 + seed % 3), mk(5 + seed % 4)], "top_net": [mk(2)], "generated_at": "2026-10-14T12:00:00"}
     if u.path.endswith("/api/portfolio_day"):
+        if seed % 7 == 0:
+            return 500, {"error": "db down"}   # some portfolio loads fail: the controllers' catch paths
         ids = [m for m in q.get("models", "").split(",") if m]
         return 200, {"models": [mk(int(hashlib.md5(m.encode()).hexdigest()[:4], 16) % 90 + 1, start=seed % 3 * 2) | {"model": m} for m in ids], "generated_at": "2026-10-14T12:00:00"}
     if u.path.endswith("/api/overlay_rules"):
@@ -375,12 +383,19 @@ def rand_case(rng: random.Random, method: str):
         args = rng.choice([[], [pick()], [None], ["Alpha"], ["P1"]])
     elif method == "update_auto_refresh_status":
         args = rng.choice([[], [""], ["Checking top #1 at 10:00"], ["On"]])
+    elif method == "refresh_live_data_filter_change":
+        args = [rng.choice([st.current_date, "2026-10-13"])]
     elif method == "refresh_live_data_twice":
         args = [st.current_date, rng.choice([st.current_date, "2026-10-13"]), rng.choice(["same", "change_filter"])]
     elif method == "refresh_point_in_time_selection":
         args = [rng.choice([None, "10:05", "11:00"])]
     elif method == "load_portfolio_data":
         args = [{"preferCache": rng.choice([True, False])}]
+    if method in ("refresh_live_data", "refresh_live_data_twice", "refresh_live_data_filter_change"):   # the head / baseline exactly at the last frame
+        if rng.random() < 0.4:
+            snap["frame"] = hooks["maxFrames"] - 1
+        if rng.random() < 0.3:
+            snap["baseline"] = hooks["maxFrames"] - 1
     library = {"rules": [{"id": "r1", "name": "R1", "config": {"interval_minutes": 30, "rules": []}}], "assignments": rng.choice([{}, {"P1": "r1"}, {"Alpha": "r1"}])}
     view_cache = []
     for n in ports:
@@ -418,6 +433,15 @@ def run_twice_live(page, st, date_a, date_b, mode):
     return None
 
 
+def run_filter_live(page, st, date):
+    """One refreshLiveData call whose filter changes while the request is in flight: its answer must be dropped."""
+    first = page.begin_refresh_live_data(date)
+    st.model_limit = 20 if st.model_limit != 20 else 10
+    page._await(first)
+    page.settle()
+    return None
+
+
 def run_twice_history(page, st):
     """Two overlapping hourly-cohort refreshes with the same context (the key was reset in between): only the newest response may apply."""
     first = page.begin_refresh_point_in_time_history()
@@ -446,6 +470,8 @@ def run_python(method, case, args):
     try:
         if method == "refresh_live_data_twice":
             ret = run_twice_live(page, st, *pa)
+        elif method == "refresh_live_data_filter_change":
+            ret = run_filter_live(page, st, *pa)
         elif method == "refresh_point_in_time_history_twice":
             ret = run_twice_history(page, st)
         else:
@@ -492,6 +518,9 @@ def main():
         extra += "\n" + cw.helper_block(decls) + "\n".join(cw.wrapper(n, _body(n), _body) for n in cw.CONTROLLERS)
         py_to_js = {v: k for k, v in JS_NAME.items()}
         wrapped_methods = {cw.CONTROLLERS[n][0] for n in cw.CONTROLLERS}
+        if "refresh_live_data" in wrapped_methods:   # two overlapping calls: the page's event loop interleaves the engine stages
+            wrapped_methods.add("refresh_live_data_twice")
+            wrapped_methods.add("refresh_live_data_filter_change")
         cases = [c for c in cases if c["method"] in wrapped_methods]
         expected = {cid: v for cid, v in expected.items() if v[0] in wrapped_methods}
     spec = {"page": str(PAGE), "inventory": str(INVENTORY), "functions": PAGE_FUNCS, "extra": extra, "cases": [{k: v for k, v in c.items() if k != "method"} for c in cases]}
@@ -518,7 +547,7 @@ def main():
         pending_cases = {c["id"]: c for c in spec["cases"]}
         for c in spec["cases"]:
             c["args"][2]["engMode"], c["args"][2]["engResp"] = "collect", {}
-        for _round in range(8):   # a controller's later requests depend on earlier answers (the fallback path): collect until no new request appears
+        for _round in range(30):   # a controller's later requests depend on earlier answers (the fallback path): collect until no new request appears
             collected = {r["id"]: r for r in run_js(list(pending_cases.values()))}
             pending_cases = {}
             for cid, c in {c["id"]: c for c in spec["cases"]}.items():
@@ -541,10 +570,19 @@ def main():
     results = run_js(spec["cases"])
     res = {r["id"]: r for r in results}
     orig_dom = {}
+    orig_vargs = {}
+    orig_extras = {}
+    orig_res = {}
     if wrapped:   # the same cases through the ORIGINAL page functions: the DOM writes (and nothing else) the wrapper must reproduce
         ospec = {**spec, "extra": PAGE_EXTRA, "cases": [{**c, "args": [c["args"][0], c["args"][1], {**c["args"][2], "engMode": "off", "engResp": {}}, c["args"][3]]} for c in spec["cases"]]}
         spec_backup, spec = spec, ospec
-        orig_dom = {r["id"]: (r["result"].get("dom") if r["ok"] else None) for r in run_js(ospec["cases"])}
+        orig_run = run_js(ospec["cases"])
+        orig_res = {r["id"]: r for r in orig_run}
+        if os.environ.get("DIFF_DEBUG_ID") and int(os.environ["DIFF_DEBUG_ID"]) in orig_res:
+            print("DEBUG ORIG:", json.dumps(orig_res[int(os.environ["DIFF_DEBUG_ID"])]))
+        orig_dom = {r["id"]: (r["result"].get("dom") if r["ok"] else None) for r in orig_run}
+        orig_vargs = {r["id"]: (r["result"].get("vargs") if r["ok"] else None) for r in orig_run}
+        orig_extras = {r["id"]: (r["result"].get("extras") if r["ok"] else None) for r in orig_run}
         spec = spec_backup
     summary, fails = {}, {}
     for cid, (method, exp) in expected.items():
@@ -566,12 +604,23 @@ def main():
         exp.pop("_vlog", None)
         r["result"].pop("_engReq", None)
         dom_js = r["result"].pop("dom", None)
+        vargs_js = r["result"].pop("vargs", None)
+        extras_js = r["result"].pop("extras", None)
         dbg_js = r["result"].pop("_dbg", None)
         dbg_py = exp.pop("_dbg", None)
-        d = diff(exp, r["result"])
+        if wrapped and orig_res.get(cid) and orig_res[cid]["ok"]:
+            oc = {k: v for k, v in orig_res[cid]["result"].items() if k not in ("dom", "vargs", "extras", "_dbg", "_vlog", "_engReq")}
+            d = diff(oc, r["result"])
+        else:
+            d = diff(exp, r["result"])
         if not d and wrapped and orig_dom.get(cid) is not None and dom_js != orig_dom[cid]:
             n = next((i for i, (x, y) in enumerate(zip(dom_js or [], orig_dom[cid])) if x != y), min(len(dom_js or []), len(orig_dom[cid])))
             d = f".dom[{n}]: original {json.dumps(orig_dom[cid][n:n + 1])[:200]} vs wrapper {json.dumps((dom_js or [])[n:n + 1])[:200]} (lengths {len(orig_dom[cid])}/{len(dom_js or [])})"
+        if not d and wrapped and orig_vargs.get(cid) is not None and vargs_js != orig_vargs[cid]:
+            n = next((i for i, (x, y) in enumerate(zip(vargs_js or [], orig_vargs[cid])) if x != y), min(len(vargs_js or []), len(orig_vargs[cid])))
+            d = f".viewArgs[{n}]: original {json.dumps(orig_vargs[cid][n:n + 1])[:200]} vs wrapper {json.dumps((vargs_js or [])[n:n + 1])[:200]} (lengths {len(orig_vargs[cid])}/{len(vargs_js or [])})"
+        if not d and wrapped and orig_extras.get(cid) is not None and extras_js != orig_extras[cid]:
+            d = f".extras (data-layer flags / criteria sizes): original {json.dumps(orig_extras[cid])[:300]} vs wrapper {json.dumps(extras_js)[:300]}"
         if d and (dbg_js or dbg_py):
             d += f"   [js error: {dbg_js}] [py error: {dbg_py}]"
         if d:

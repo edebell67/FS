@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page_state.py — the page's global state as one object, defined once in a table that also generates the JS code used to test it.
 #
 # VERSION HISTORY
+# v1.5.0 · 2026-10-18 · view_args: arguments of view calls (index of the ['view', name] effect -> args), for the browser copy.
 # v1.4.0 · 2026-10-17 · hourly-cohort history state (pit_hours, pit_history_at, status text, viewport / panel flags).
 # v1.3.0 · 2026-10-17 · model_search_status (the model-search status line).
 # v1.2.0 · 2026-10-17 · editing_rule_id / pending_rule_config (the overlay-rule editor's state).
@@ -116,6 +117,7 @@ class PageState:
                 v = OrderedDict(v)
             setattr(self, py, v)
         self.effects: list = []
+        self.view_args: dict = {}   # arguments of view calls: index of the ['view', name] effect -> [args]
         self.timer_ops: list = []   # named timer operations tied to the setTimeout / clearTimeout effect at index `at`: {op, timer, ms, call, args, at}
         self.update(init)
 

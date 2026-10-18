@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-18 · the staged shell is a reusable driver (__drive / __apply / __resume): started page promises keep a handle, a continuation can be attached to a handle and runs later as its own engine stage; fallback to the original function for what the engine refuses (live portfolios).
+# v1.3.0 · 2026-10-18 · staged shells: Await.catch, args-bearing views (viewArgs), page flags, per-controller extra await targets (refreshLiveData's data layer).
 # v1.1.0 · 2026-10-17 · stage 2 (no-fetch): applyChartLock, resetAutomaticRankSchedule; EXTRAS (prelude / range shell / conditional pause shell).
 # v1.0.0 · 2026-10-17 · Initial version (stage 1: 8 controllers without network): state snapshot / apply code from page_state.FIELDS, __engineCommand, per-controller DOM shells copied from the original body and effect replay.
 """Used by tools/build_thin_page.py and by the differential test (tools/diff_page_js_vs_py.py with DIFF_WRAPPERS=1). The wrappers keep the original function names and signatures, so every caller in the page is unchanged.
@@ -45,10 +47,40 @@ CONTROLLERS = {
     "addCatalogueModel": ("add_catalogue_model", "model", "[name, model]", None, {}),
     "moveModelBetweenPortfolios": ("move_model_between_portfolios", "sourceName, destinationName, model", "[sourceName, destinationName, model]", None, {}),
     "repopulateActivePortfolioFromCriteria": ("repopulate_active_portfolio_from_criteria", "", "[]", None, {}),
+    "removePortfolios": ("remove_portfolios", "names", "[names]", None, {}),
+    "switchDate": ("switch_date", "dateKey, { skipPortfolioLoad = false, refreshData = false } = {}", "[dateKey, skipPortfolioLoad, refreshData]", None, {}),
+    "refreshActivePortfolioView": ("refresh_active_portfolio_view", "", "[]", None, {}),
+    "setRankingCriteria": ("set_ranking_criteria", "criteria", "[criteria]", None, {}),
+    "refreshLiveData": ("refresh_live_data", "targetDate = LIVE_DATE, { skipPortfolioRefresh = false } = {}", "[targetDate, skipPortfolioRefresh]", None, {}),
 }
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
+SWITCH_PRE = """    // page-only code of switchDate (the URL and the date pills): the engine asks for it by name
+    globalThis.__switchDateUrl = dateKey => {
+      const nextUrl = new URL(location.href);
+      nextUrl.searchParams.set('date', dateKey);
+      history.replaceState(null, '', nextUrl);
+    };
+    globalThis.__switchDatePills = () => {
+      availableDates.forEach(d => {
+        const tab = document.getElementById(`tab_${d.id}`);
+        if (tab) {
+          tab.className = `date-pill px-2.5 py-1 text-xs font-bold font-mono rounded ${
+            d.id === currentDate ? 'bg-sky-600 text-white shadow' : 'text-slate-400 hover:text-white'
+          }`;
+          if (d.id === currentDate) tab.setAttribute('aria-current', 'date');
+          else tab.removeAttribute('aria-current');
+        }
+      });
+    };
+"""
+LIVE_TARGETS = '\n      fetchLiveDay: async (path) => {\n        const requestUrl = `${API_BASE}${path}`;\n        let res, payload;\n        const early = window.__ep057EarlyChartRequest;\n        if (early && !early.used && early.url === requestUrl) {\n          early.used = true;\n          const outcome = await early.request;\n          if (!outcome.error) {\n            res = outcome.response;\n            payload = outcome.payload;\n          }\n        }\n        if (!res) {\n          res = await fetch(requestUrl, { cache: \'no-store\' });\n          payload = await res.json();\n        }\n        if (!res.ok) throw new Error(payload.error || res.status);\n        __box.payload = payload;\n        return true;\n      },\n      applyLivePayload: (targetDate, requestedScenario, requestedProductType, requestedProduct, requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType) => {\n        const payload = __box.payload;\n        liveChartDataLoadedKeys.add(liveChartCacheKey(targetDate));\n        cacheLiveChartResponse(payload, targetDate, requestedScenario, requestedProductType, requestedProduct,\n          requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType);\n        if (productFilter) {\n          const products = Array.isArray(payload.products) ? payload.products : [];\n          productFilter.innerHTML = \'<option value="all">All</option>\' + products.map(product =>\n            `<option value="${product}">${product.toUpperCase()}</option>`\n          ).join(\'\');\n          if (!products.includes(currentProduct)) currentProduct = \'all\';\n          productFilter.value = currentProduct;\n        }\n        syncTpSlScenarios(Array.isArray(payload.tp_sl_scenarios) ? payload.tp_sl_scenarios : []);\n        Object.keys(payload).forEach(sc => {\n          if (!Array.isArray(payload[sc])) return;\n          ALL_CRITERIA_DATA[sc] ||= {};\n          ALL_CRITERIA_DATA[sc][targetDate] = payload[sc];\n        });\n        pendingFilterDataRefresh = false;\n        if (targetDate === LIVE_DATE) initialLiveDataAvailable = true;\n        updateStrategyFamilyOptions();\n        const t = new Date().toLocaleTimeString([], { hour: \'2-digit\', minute: \'2-digit\' });\n        setLiveBadge(targetDate === LIVE_DATE ? `Live · updated ${t}` : `${targetDate} · ${modelLimit} models`, \'ok\');\n      },\n      syncLivePortfolioScreenState: (targetDate) => syncLivePortfolioScreenState(targetDate),'
 EXTRAS = {
+    "setRankingCriteria": {"staged": True},
+    "removePortfolios": {"staged": True},
+    "switchDate": {"staged": True, "pre": SWITCH_PRE},
+    "refreshActivePortfolioView": {"staged": True, "prelude": "if (document.hidden) return;"},
+    "refreshLiveData": {"staged": True, "locals": "      const __box = { payload: null };   // the live-day payload stays in the page: it is the page's data layer\n", "targets": LIVE_TARGETS},
     "removeModelFromPortfolio": {"staged": True},
     "addCatalogueModel": {"staged": True, "prelude": "const name = catalogPortfolioFilter.value; if (name && portfolios[name] && !portfolios[name].includes(model) && portfolios[name].length >= 10) alert(`${name} already contains the maximum of 10 strategies.`);"},
     "moveModelBetweenPortfolios": {"staged": True, "prelude": "if (sourceName && destinationName && sourceName !== destinationName && portfolios[sourceName]?.includes(model) && portfolios[destinationName] && !portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) alert(`${destinationName} already contains the maximum of 10 strategies.`);"},
@@ -145,7 +177,7 @@ def helper_block(state_decls: dict) -> str:
     }}
     function __engineCommand(method, args, extra) {{
       const sent = __engineSnapshot();
-      const res = __engine.call({{ fn: 'command', method, args, ...(extra || {{}}), state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+      const res = __engine.call({{ fn: 'command', method, args, ...(extra || {{}}), state: sent, flags: {{ liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }}, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }});
       if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
@@ -161,7 +193,8 @@ def helper_block(state_decls: dict) -> str:
       put(setTimeout(run, op.ms));
     }}
     globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) }};
-    const __awaitTargets = {{ loadPortfolioData: (...a) => loadPortfolioData(...a) }};   // page async functions an engine stage may ask the page to await
+    const __awaitTargets = {{ loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, {{ skipPortfolioRefresh: !!skip }}), switchDate: (...a) => switchDate(...a),
+      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a) }};   // page async functions an engine stage may ask the page to await
     const __domTargets = {{ {dom_table} }};
     function __engineDom(effect) {{
       const [, element, op, args] = effect;
@@ -178,12 +211,12 @@ def helper_block(state_decls: dict) -> str:
         if (!hasProduct && args[0] !== 'all') {{ const option = document.createElement('option'); option.value = args[0]; option.textContent = args[0].toUpperCase(); target.appendChild(option); }}
       }} else throw new Error('unknown engine dom op: ' + op);
     }}
-    function __engineReplay(effects, handlers, timers) {{
+    function __engineReplay(effects, handlers, timers, viewArgs) {{
       effects.forEach((effect, at) => {{
         const name = effect[0];
         if (name === 'dom') {{ __engineDom(effect); return; }}
         if (name === 'setTimeout' || name === 'clearTimeout' || name === 'setInterval' || name === 'clearInterval') {{ (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }}   // named timers are re-created from `timers`
-        if (name === 'view') {{ if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }}
+        if (name === 'view') {{ if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](...((viewArgs && viewArgs[at]) || [])); return; }}
         if (name === 'localStorage.setItem') {{ const expr = {{{", ".join(f"'{k}': () => {v}" for k, v in STORAGE.items())}}}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }}
         if (handlers[name]) {{ handlers[name](effect); return; }}
         const common = {{{", ".join(f"'{k}': () => {{ {v} }}" for k, v in COMMON_EFFECTS.items())}}}[name];
@@ -227,17 +260,51 @@ def wrapper(name: str, original_body: str, get_body=None) -> str:
     prelude = f"      {ex['prelude']}\n" if ex.get("prelude") else ""
     handlers = ", ".join(f"'{k}': effect => {{ {v} }}" for k, v in effects.items())
     if ex.get("staged"):   # the page awaits between engine stages; each stage runs on the page's CURRENT state
-        return (f"    async function {name}({params}) {{\n{prelude}      let res = __engineCommand('{method}', {argexpr});\n"
-                f"      if (res.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
-                f"      __engineReplay(res.effects, {{ {handlers} }}, res.timers);\n"
-                f"      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));\n"
-                f"      while (res.await) {{\n"
-                f"        const out = await __awaitTargets[res.await.fn](...res.await.args);\n"
-                f"        res = __engineCommand('{method}', null, {{ stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out }});\n"
-                f"        if (res.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
-                f"        __engineReplay(res.effects, {{ {handlers} }}, res.timers);\n"
-                f"        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));\n"
-                f"      }}\n      return res.ret;\n    }}")
+        extra_targets = ex.get("targets", "")
+        locals_ = ex.get("locals", "")
+        pre = ex.get("pre", "")
+        fb_fn, fb = "", f"throw new Error('engine stage for {method} needs the network');"
+        if ex.get("fallback"):   # something the engine refuses (a live portfolio): the page runs its own copy of the original, whole
+            fb_fn = original_body.replace(f"function {name}(", f"function __original_{name}(", 1) + "\n"
+            fb = f"return __original_{name}.apply(this, arguments);"
+        return (fb_fn + pre + f"    async function {name}({params}) {{\n{prelude}{locals_}      const __targets = {{ ...__awaitTargets,{extra_targets} }};\n"
+                f"      const __handles = {{}};\n"
+                f"      const __apply = r => {{\n"
+                f"        __engineReplay(r.effects, {{ {handlers} }}, r.timers, r.viewArgs);\n"
+                f"        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));\n"
+                f"      }};\n"
+                f"      const __resume = (stage, ctx, result) => {{\n"
+                f"        const r2 = __engineCommand('{method}', null, {{ stage, ctx, result }});\n"
+                f"        if (r2.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
+                f"        __apply(r2);\n"
+                f"        return __drive(r2);\n"
+                f"      }};\n"
+                f"      const __drive = async res => {{\n"
+                f"        while (res.await) {{\n"
+                f"          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;\n"
+                f"          let out;\n"
+                f"          if (aw.attach) {{   // run a stage when a started page promise settles (a detached .then)\n"
+                f"            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, {{ ok: v === undefined ? null : v }}), e => __resume(aw.attach, ctxNow, {{ error: String(e && e.message || e) }})).catch(e => console.warn('{method} continuation failed:', e));\n"
+                f"            out = null;\n"
+                f"          }} else if (aw.fire) {{   // start a page async function and carry on; keep the promise under a handle if asked\n"
+                f"            const p = Promise.resolve(__targets[aw.fn](...aw.args));\n"
+                f"            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));\n"
+                f"            out = null;\n"
+                f"          }} else if (aw.sync) out = __targets[aw.fn](...aw.args);\n"
+                f"          else if (aw.catch) {{ try {{ out = {{ ok: await __targets[aw.fn](...aw.args) }}; }} catch (e) {{ out = {{ error: String(e && e.message || e) }}; }} }}\n"
+                f"          else out = await __targets[aw.fn](...aw.args);\n"
+                f"          if (stageNow === 'done') break;\n"
+                f"          res = __engineCommand('{method}', null, {{ stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out }});\n"
+                f"          if (res.needsNetwork) throw new Error('engine stage for {method} needs the network');\n"
+                f"          __apply(res);\n"
+                f"        }}\n"
+                f"        return res.ret;\n"
+                f"      }};\n"
+                f"      let res = __engineCommand('{method}', {argexpr});\n"
+                f"      if (res.needsNetwork) {fb}\n"
+                f"      __apply(res);\n"
+                f"      return __drive(res);\n"
+                f"    }}")
     shell_block = f"\n{shell}" if shell else ""
     asyncs = "async " if original_body.lstrip().startswith("async") else ""
     fallback_fn, fallback = "", ""

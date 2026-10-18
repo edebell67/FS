@@ -2355,7 +2355,7 @@
     }
     function __engineCommand(method, args, extra) {
       const sent = __engineSnapshot();
-      const res = __engine.call({ fn: 'command', method, args, ...(extra || {}), state: sent, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+      const res = __engine.call({ fn: 'command', method, args, ...(extra || {}), state: sent, flags: { liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) });
       if (!res.needsNetwork) __engineApplyState(res.state, sent);
       return res;
@@ -2371,7 +2371,8 @@
       put(setTimeout(run, op.ms));
     }
     globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) };
-    const __awaitTargets = { loadPortfolioData: (...a) => loadPortfolioData(...a) };   // page async functions an engine stage may ask the page to await
+    const __awaitTargets = { loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, { skipPortfolioRefresh: !!skip }), switchDate: (...a) => switchDate(...a),
+      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a) };   // page async functions an engine stage may ask the page to await
     const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
     function __engineDom(effect) {
       const [, element, op, args] = effect;
@@ -2388,12 +2389,12 @@
         if (!hasProduct && args[0] !== 'all') { const option = document.createElement('option'); option.value = args[0]; option.textContent = args[0].toUpperCase(); target.appendChild(option); }
       } else throw new Error('unknown engine dom op: ' + op);
     }
-    function __engineReplay(effects, handlers, timers) {
+    function __engineReplay(effects, handlers, timers, viewArgs) {
       effects.forEach((effect, at) => {
         const name = effect[0];
         if (name === 'dom') { __engineDom(effect); return; }
         if (name === 'setTimeout' || name === 'clearTimeout' || name === 'setInterval' || name === 'clearInterval') { (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }   // named timers are re-created from `timers`
-        if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }
+        if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](...((viewArgs && viewArgs[at]) || [])); return; }
         if (name === 'localStorage.setItem') { const expr = {'strategyDirectoryPortfolioViewV1': () => JSON.stringify(portfolioViewConfigs), 'strategyDirectoryMainViewV1': () => JSON.stringify(mainScenarioViewConfig)}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }
         if (handlers[name]) { handlers[name](effect); return; }
         const common = {'savePortfolios': () => { savePortfolios(); }, 'saveCriteriaWorkspaces': () => { saveCriteriaWorkspaces(); }, 'renderPortfolioList': () => { renderPortfolioList(); }, 'refreshPointInTimeHistory': () => { refreshPointInTimeHistory(); }}[name];
@@ -3544,18 +3545,43 @@
     }
 
     async function removeModelFromPortfolio(name, model) {
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('remove_model_from_portfolio', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('remove_model_from_portfolio continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('remove_model_from_portfolio', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
       let res = __engineCommand('remove_model_from_portfolio', [name, model]);
       if (res.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
-      __engineReplay(res.effects, {  }, res.timers);
-      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      while (res.await) {
-        const out = await __awaitTargets[res.await.fn](...res.await.args);
-        res = __engineCommand('remove_model_from_portfolio', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
-        if (res.needsNetwork) throw new Error('engine stage for remove_model_from_portfolio needs the network');
-        __engineReplay(res.effects, {  }, res.timers);
-        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      }
-      return res.ret;
+      __apply(res);
+      return __drive(res);
     }
 
     async function deletePortfolio(name) {
@@ -3574,30 +3600,43 @@ ${preview}`)) return;
     }
 
     async function removePortfolios(names) {
-      const wasActive = names.includes(activePortfolioName);
-      names.forEach(name => {
-        delete portfolios[name];
-        delete portfolioCriteria[name];
-        delete portfolioScenarioConfigs[name];
-        delete portfolioViewConfigs[name];
-        portfolioMergeSelection.delete(name);
-      });
-      localStorage.setItem('strategyDirectoryPortfolioViewV1', JSON.stringify(portfolioViewConfigs));
-      if (wasActive) {
-        activePortfolioName = null;
-        syncLiveAltReporting();
-        portfolioModels = [];
-        applyPortfolioViewConfig(mainScenarioViewConfig || { criteria: mainScenarioCriteria });
-        mainScenarioCriteria = currentCriteria;
-      }
-      saveCriteriaWorkspaces();
-      savePortfolios();
-      if (wasActive) {
-        updateScenarioUI();
-        await refreshLiveData(currentDate);
-        await switchDate(currentDate);
-      }
-      renderPortfolioList();
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('remove_portfolios', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for remove_portfolios needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('remove_portfolios continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('remove_portfolios', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for remove_portfolios needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('remove_portfolios', [names]);
+      if (res.needsNetwork) throw new Error('engine stage for remove_portfolios needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function setCatalogueOptions(select, values, allLabel, preferredValue = select.value) {
@@ -3622,18 +3661,43 @@ ${preview}`)) return;
 
     async function addCatalogueModel(model) {
       const name = catalogPortfolioFilter.value; if (name && portfolios[name] && !portfolios[name].includes(model) && portfolios[name].length >= 10) alert(`${name} already contains the maximum of 10 strategies.`);
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('add_catalogue_model', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('add_catalogue_model continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('add_catalogue_model', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
       let res = __engineCommand('add_catalogue_model', [name, model]);
       if (res.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
-      __engineReplay(res.effects, {  }, res.timers);
-      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      while (res.await) {
-        const out = await __awaitTargets[res.await.fn](...res.await.args);
-        res = __engineCommand('add_catalogue_model', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
-        if (res.needsNetwork) throw new Error('engine stage for add_catalogue_model needs the network');
-        __engineReplay(res.effects, {  }, res.timers);
-        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      }
-      return res.ret;
+      __apply(res);
+      return __drive(res);
     }
 
     function renderStrategyCatalogue() {
@@ -3708,18 +3772,43 @@ ${preview}`)) return;
 
     async function moveModelBetweenPortfolios(sourceName, destinationName, model) {
       if (sourceName && destinationName && sourceName !== destinationName && portfolios[sourceName]?.includes(model) && portfolios[destinationName] && !portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) alert(`${destinationName} already contains the maximum of 10 strategies.`);
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('move_model_between_portfolios', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('move_model_between_portfolios continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('move_model_between_portfolios', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
       let res = __engineCommand('move_model_between_portfolios', [sourceName, destinationName, model]);
       if (res.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
-      __engineReplay(res.effects, {  }, res.timers);
-      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      while (res.await) {
-        const out = await __awaitTargets[res.await.fn](...res.await.args);
-        res = __engineCommand('move_model_between_portfolios', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
-        if (res.needsNetwork) throw new Error('engine stage for move_model_between_portfolios needs the network');
-        __engineReplay(res.effects, {  }, res.timers);
-        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      }
-      return res.ret;
+      __apply(res);
+      return __drive(res);
     }
 
     function getMergedPortfolioModels() {
@@ -3962,23 +4051,44 @@ ${preview}`)) return;
     // it reads /api/portfolio_day and does not invoke live rule evaluation or
     // order execution. Historical portfolio dates remain fixed to that date.
     async function refreshActivePortfolioView() {
-      if (portfolioViewRefreshInFlight || document.hidden || !activePortfolioName || currentDate !== LIVE_DATE) return;
-      const portfolioName = activePortfolioName;
-      const models = portfolios[portfolioName] || [];
-      if (!models.length) return;
-      const wasAtLatestFrame = currentFrameIndex < 0 || currentFrameIndex >= getMaxFrames() - 1;
-      portfolioViewRefreshInFlight = true;
-      try {
-        await loadPortfolioData();
-        if (activePortfolioName !== portfolioName || currentDate !== LIVE_DATE) return;
-        if (wasAtLatestFrame) currentFrameIndex = getMaxFrames() - 1;
-        visibleModels = new Set(getEligibleModels().map(model => model.model));
-        updateDateLabelAndTitle(); updateScrubberUI(); updateRibbon(); renderCards(); drawChart();
-      } catch (error) {
-        console.warn('Latest portfolio snapshot refresh failed:', error);
-      } finally {
-        portfolioViewRefreshInFlight = false;
-      }
+      if (document.hidden) return;
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('refresh_active_portfolio_view', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for refresh_active_portfolio_view needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('refresh_active_portfolio_view continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('refresh_active_portfolio_view', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for refresh_active_portfolio_view needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('refresh_active_portfolio_view', []);
+      if (res.needsNetwork) throw new Error('engine stage for refresh_active_portfolio_view needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function syncPortfolioViewRefresh() {
@@ -3992,18 +4102,43 @@ ${preview}`)) return;
     });
 
     async function repopulateActivePortfolioFromCriteria() {
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('repopulate_active_portfolio_from_criteria', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('repopulate_active_portfolio_from_criteria continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('repopulate_active_portfolio_from_criteria', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
       let res = __engineCommand('repopulate_active_portfolio_from_criteria', []);
       if (res.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
-      __engineReplay(res.effects, {  }, res.timers);
-      (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      while (res.await) {
-        const out = await __awaitTargets[res.await.fn](...res.await.args);
-        res = __engineCommand('repopulate_active_portfolio_from_criteria', null, { stage: res.stage, ctx: res.ctx, result: out === undefined ? null : out });
-        if (res.needsNetwork) throw new Error('engine stage for repopulate_active_portfolio_from_criteria needs the network');
-        __engineReplay(res.effects, {  }, res.timers);
-        (res.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      }
-      return res.ret;
+      __apply(res);
+      return __drive(res);
     }
 
     async function activatePortfolio(name) {
@@ -4586,25 +4721,12 @@ ${preview}`)) return;
     }
 
     async function refreshLiveData(targetDate = LIVE_DATE, { skipPortfolioRefresh = false } = {}) {
-      if (!LIVE_DATE) return;
-      const refreshSequence = ++liveRefreshSequence;
-      const requestedProductType = currentProductType;
-      const requestedProduct = currentProduct;
-      const requestedStrategyFamily = currentStrategyFamily;
-      const requestedLimit = modelLimit;
-      const requestedCriteria = currentCriteria;
-      const requestedReturnType = currentReturnType;
-      const requestedScenario = requestedCriteria === 'top1_at_time'
-        ? (requestedReturnType === 'ALT' ? 'top_alt_net' : 'top_net')
-        : isMetricAwareCriteria(requestedCriteria)
-          ? `${requestedCriteria}_${requestedReturnType === 'ALT' ? 'alt' : 'net'}`
-          : requestedCriteria;
-      let payload;
-      try {
-        const displayMetric = requestedReturnType === 'ALT' ? 'alt' : 'net';
-        const requestUrl = `${API_BASE}/api/live_day?date=${encodeURIComponent(targetDate)}&product_type=${encodeURIComponent(requestedProductType)}&product=${encodeURIComponent(requestedProduct)}&strategy_family=${encodeURIComponent(requestedStrategyFamily)}&limit=${requestedLimit}&scenario=${encodeURIComponent(requestedScenario)}&display_metric=${displayMetric}`;
+      const __box = { payload: null };   // the live-day payload stays in the page: it is the page's data layer
+      const __targets = { ...__awaitTargets,
+      fetchLiveDay: async (path) => {
+        const requestUrl = `${API_BASE}${path}`;
+        let res, payload;
         const early = window.__ep057EarlyChartRequest;
-        let res;
         if (early && !early.used && early.url === requestUrl) {
           early.used = true;
           const outcome = await early.request;
@@ -4618,87 +4740,71 @@ ${preview}`)) return;
           payload = await res.json();
         }
         if (!res.ok) throw new Error(payload.error || res.status);
-      } catch (err) {
-        if (refreshSequence !== liveRefreshSequence) return;
-        console.warn('Live refresh failed:', err);
-        setLiveBadge('Live: offline', 'err');
-        return;
-      }
-
-      // A periodic refresh may still be in flight when the user changes a
-      // filter. Never allow its stale response to replace the latest choice.
-      if (refreshSequence !== liveRefreshSequence ||
-          requestedProductType !== currentProductType ||
-          requestedProduct !== currentProduct ||
-          requestedStrategyFamily !== currentStrategyFamily ||
-          requestedLimit !== modelLimit ||
-          requestedReturnType !== currentReturnType ||
-          requestedCriteria !== currentCriteria) return;
-
-      liveChartDataLoadedKeys.add(liveChartCacheKey(targetDate));
-      cacheLiveChartResponse(payload, targetDate, requestedScenario, requestedProductType, requestedProduct,
-        requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType);
-      if (productFilter) {
-        const products = Array.isArray(payload.products) ? payload.products : [];
-        productFilter.innerHTML = '<option value="all">All</option>' + products.map(product =>
-          `<option value="${product}">${product.toUpperCase()}</option>`
-        ).join('');
-        if (!products.includes(currentProduct)) currentProduct = 'all';
-        productFilter.value = currentProduct;
-      }
-
-      const onTarget = currentDate === targetDate;
-      // -1 is the documented sentinel for the latest available frame.
-      const wasAtEnd = onTarget && (currentFrameIndex < 0 || currentFrameIndex >= getMaxFrames() - 1);
-      const prevModels = new Set(onTarget ? getEligibleModels().map(m => m.model) : []);
-
-      syncTpSlScenarios(Array.isArray(payload.tp_sl_scenarios) ? payload.tp_sl_scenarios : []);
-      Object.keys(payload).forEach(sc => {
-        if (!Array.isArray(payload[sc])) return;
-        ALL_CRITERIA_DATA[sc] ||= {};
-        ALL_CRITERIA_DATA[sc][targetDate] = payload[sc];
-      });
-      pendingFilterDataRefresh = false;
-      if (targetDate === LIVE_DATE) initialLiveDataAvailable = true;
-      updateStrategyFamilyOptions();
-
-      const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      setLiveBadge(targetDate === LIVE_DATE ? `Live · updated ${t}` : `${targetDate} · ${modelLimit} models`, 'ok');
-
-      // Only re-render when viewing the live tab and not mid-replay
-      // (a running replay picks up the longer series on its own).
-      if (!onTarget || isPlaying) return;
-      let liveModelChanged = false;
-      if (['LIVE', 'LIVE_ALT'].includes(String(activePortfolioName || '').toUpperCase())) {
-        liveModelChanged = await syncLivePortfolioScreenState(targetDate);
-      }
-      if (activePortfolioName && !skipPortfolioRefresh) {
-        try {
-          // syncLivePortfolioScreenState has already loaded/rendered the new
-          // model when a timed switch changed it. Avoid the duplicate SQL load.
-          if (!liveModelChanged) await loadPortfolioData();
-          visibleModels = new Set(portfolioModels.map(model => model.model));
-          if (isLiveModeArmed() && targetDate === LIVE_DATE) currentFrameIndex = Math.max(0, getMaxFrames() - 1);
-          updateDateLabelAndTitle();
-          updateScrubberUI();
-          updateRibbon();
-          renderCards();
-          drawChart();
-        } catch (error) {
-          console.warn('Portfolio refresh failed:', error);
-          setLiveBadge('Portfolio: unavailable', 'err');
+        __box.payload = payload;
+        return true;
+      },
+      applyLivePayload: (targetDate, requestedScenario, requestedProductType, requestedProduct, requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType) => {
+        const payload = __box.payload;
+        liveChartDataLoadedKeys.add(liveChartCacheKey(targetDate));
+        cacheLiveChartResponse(payload, targetDate, requestedScenario, requestedProductType, requestedProduct,
+          requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType);
+        if (productFilter) {
+          const products = Array.isArray(payload.products) ? payload.products : [];
+          productFilter.innerHTML = '<option value="all">All</option>' + products.map(product =>
+            `<option value="${product}">${product.toUpperCase()}</option>`
+          ).join('');
+          if (!products.includes(currentProduct)) currentProduct = 'all';
+          productFilter.value = currentProduct;
         }
-        return;
-      }
-      getEligibleModels().forEach(m => { if (!prevModels.has(m.model)) visibleModels.add(m.model); });
-      const maxF = getMaxFrames();
-      if (wasAtEnd || currentFrameIndex > maxF - 1) currentFrameIndex = maxF - 1;
-      if (baselineFrameIndex > maxF - 1) baselineFrameIndex = 0;
-      updateScrubberUI();
-      updateRibbon();
-      renderCards();
-      drawChart();
-      schedulePointInTimeSelection();
+        syncTpSlScenarios(Array.isArray(payload.tp_sl_scenarios) ? payload.tp_sl_scenarios : []);
+        Object.keys(payload).forEach(sc => {
+          if (!Array.isArray(payload[sc])) return;
+          ALL_CRITERIA_DATA[sc] ||= {};
+          ALL_CRITERIA_DATA[sc][targetDate] = payload[sc];
+        });
+        pendingFilterDataRefresh = false;
+        if (targetDate === LIVE_DATE) initialLiveDataAvailable = true;
+        updateStrategyFamilyOptions();
+        const t = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setLiveBadge(targetDate === LIVE_DATE ? `Live · updated ${t}` : `${targetDate} · ${modelLimit} models`, 'ok');
+      },
+      syncLivePortfolioScreenState: (targetDate) => syncLivePortfolioScreenState(targetDate), };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('refresh_live_data', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for refresh_live_data needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('refresh_live_data continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('refresh_live_data', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for refresh_live_data needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('refresh_live_data', [targetDate, skipPortfolioRefresh]);
+      if (res.needsNetwork) throw new Error('engine stage for refresh_live_data needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function getSelectedTimeNoteEntries(model) {
@@ -5012,150 +5118,43 @@ ${preview}`)) return;
     // CRITERIA SELECTION (NET RETURN vs WIN RATE)
     // ==========================================
     async function setRankingCriteria(criteria) {
-      const isTop1AtTime = criteria === 'top1_at_time';
-      const wasTop1AtTime = currentCriteria === 'top1_at_time';
-      if (currentCriteria === criteria && (!activePortfolioName || portfolioScenarioConfig()) && !isTop1AtTime && !deepLinkModelsOnly) return;
-      // A scenario selection explicitly restores that scenario's cohort while
-      // leaving the linked model IDs pinned for comparison.
-      deepLinkModelsOnly = false;
-      if (criteria !== currentCriteria) {
-        pointInTimeRequestedKey = '';
-        pointInTimeRequestSequence++;
-        pendingExplicitTop1Time = null;
-        selectedTimeExplicitRefresh = false;
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-      }
-      if (criteria !== currentCriteria && pointInTimeMode && !isTop1AtTime && !wasTop1AtTime) {
-        pointInTimeRequestedKey = '';
-        pointInTimeRequestSequence++;
-        pendingExplicitTop1Time = null;
-        selectedTimeExplicitRefresh = false;
-        pointInTimeModels = [];
-        selectedTimeLeaderHistory.clear();
-        selectedTimeLeaderHistoryContext = '';
-      }
-      if (isTop1AtTime && !wasTop1AtTime) {
-        top1AtTimePreviousPointInTimeMode = pointInTimeMode;
-        pointInTimeMode = true;
-        pointInTimeModels = [];
-      } else if (!isTop1AtTime && wasTop1AtTime) {
-        pointInTimeMode = Boolean(top1AtTimePreviousPointInTimeMode || autoRefreshTop1Enabled);
-        top1AtTimePreviousPointInTimeMode = null;
-        pointInTimeModels = pointInTimeMode ? [] : null;
-      }
-      if (isTop1AtTime || wasTop1AtTime) {
-        pointInTimeRequestedKey = '';
-        pointInTimeRequestSequence++;
-        pointInTimeHistoryKey = '';
-        pointInTimeHistorySequence++;
-        // A pending explicit refresh belongs to the old scenario. Invalidate it
-        // so its response cannot overwrite the scenario the user just chose.
-        pendingExplicitTop1Time = null;
-        if (wasTop1AtTime && !isTop1AtTime) {
-          selectedTimeLeaderHistory.clear();
-          selectedTimeLeaderHistoryContext = '';
-          modelSearchRequestSequence++;
-          clearTimeout(modelSearchTimer);
-          modelSearchLoadedModels = [];
-          if (modelSearchInput) modelSearchInput.value = '';
-          if (modelSearchStatus) modelSearchStatus.textContent = '';
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('set_ranking_criteria', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for set_ranking_criteria needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('set_ranking_criteria continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('set_ranking_criteria', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for set_ranking_criteria needs the network');
+          __apply(res);
         }
-      }
-      if (MOMENTUM_SCENARIO_IDS.has(criteria) && !activePortfolioName) {
-        // Momentum scenarios represent a point-in-time cohort. Default the
-        // picker and chart to the scenario's three leaders at the replay head.
-        selectedTimeRankSelect.value = '3';
-        applySelectedTimeBtn.textContent = 'Refresh & Add #1–#3';
-        pointInTimeMode = true;
-        pointInTimeModels = [];
-        selectedTimeLeaderHistory.clear();
-        selectedTimeLeaderHistoryContext = '';
-      }
-
-      // This scenario is a replay investigation, so choosing it from a named
-      // portfolio returns to the main Scenario workspace without editing that portfolio.
-      if (isTop1AtTime && activePortfolioName) {
-        activePortfolioName = null;
-        syncLiveAltReporting();
-        portfolioModels = [];
-        renderPortfolioTabs();
-      }
-      currentCriteria = criteria;
-      updatePointInTimeToggleUI();
-
-      if (activePortfolioName) {
-        const portfolioName = activePortfolioName;
-        portfolioCriteria[portfolioName] = criteria;
-        saveCriteriaWorkspaces();
-        persistPortfolioViewConfig(portfolioName);
-        setLiveBadge(`Portfolio · ${portfolioName} · refreshing in background`, 'idle');
-        // The portfolio already owns its assigned strategy IDs and loaded
-        // curves. A scenario choice must only change display criteria; never
-        // wait for scenario data before drawing those existing portfolio lines.
-        const scenarioRefresh = refreshLiveData(currentDate, { skipPortfolioRefresh: true });
-        visibleModels = new Set(getEligibleModels().map(model => model.model));
-        selectedModelIndex = 0;
-        const candidates = portfolioModels;
-        updateScenarioUI();
-        updateDateLabelAndTitle();
-        updateScrubberUI();
-        updateRibbon();
-        renderCards();
-        drawChart();
-        void scenarioRefresh.catch(error => console.warn('Portfolio scenario refresh failed:', error));
-        setLiveBadge(`Portfolio · ${portfolioName} · ${candidates.length} strategies`, 'ok');
-        if (pointInTimeMode) schedulePointInTimeSelection();
-        return;
-      }
-
-      mainScenarioCriteria = criteria;
-      saveCriteriaWorkspaces();
-      let scenarioDataReady = true;
-      // Paint the chart from the data already in the page first. Fetch the
-      // selected scenario for this date in the background so changing a
-      // scenario never leaves the chart blank while PostgreSQL responds.
-      if (!isTop1AtTime && /^\d{4}-\d{2}-\d{2}$/.test(currentDate)) {
-        const datasetKey = isMetricAwareCriteria(criteria)
-          ? `${criteria}_${currentReturnType === 'ALT' ? 'alt' : 'net'}`
-          : criteria;
-        scenarioDataReady = Array.isArray(ALL_CRITERIA_DATA[datasetKey]?.[currentDate]) &&
-          ALL_CRITERIA_DATA[datasetKey][currentDate].length > 0;
-        if (!scenarioDataReady) {
-          setLiveBadge(`Loading ${SCENARIOS_CATALOGUE.find(s => s.id === criteria)?.name || criteria} · keeping current chart visible`, 'idle');
-          // Reuse a previously viewed chart immediately while the API refreshes
-          // the same date/filter/scenario combination in the background.
-          scenarioDataReady = paintLiveChartCache(currentDate) &&
-            Array.isArray(ALL_CRITERIA_DATA[datasetKey]?.[currentDate]) &&
-            ALL_CRITERIA_DATA[datasetKey][currentDate].length > 0;
-        }
-        refreshLiveData(currentDate).catch(error => console.warn('Scenario refresh failed:', error));
-      }
-      updateScenarioUI();
-      // If this scenario is not in the page's preloaded data, keep the
-      // existing chart and cards rendered until its scenario-specific data
-      // arrives. The refresh handler paints the new scenario on completion.
-      if (!scenarioDataReady) return;
-      
-      const eligible = getEligibleModels();
-      visibleModels = new Set(eligible.map(m => m.model));
-      selectedModelIndex = 0;
-
-      const maxF = getMaxFrames();
-      if (currentFrameIndex >= maxF) {
-        currentFrameIndex = maxF - 1;
-      }
-      if (baselineFrameIndex >= maxF) {
-        baselineFrameIndex = 0;
-      }
-
-      updateDateLabelAndTitle();
-      updateScrubberUI();
-      updateRibbon();
-      renderCards();
-      drawChart();
-      schedulePointInTimeSelection();
-      persistPortfolioViewConfig(null);
+        return res.ret;
+      };
+      let res = __engineCommand('set_ranking_criteria', [criteria]);
+      if (res.needsNetwork) throw new Error('engine stage for set_ranking_criteria needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function updateScenarioUI() {
@@ -6090,63 +6089,13 @@ ${preview}`)) return;
       return Math.max(...eligible.map(m => m.series.length));
     }
 
-    async function switchDate(dateKey, { skipPortfolioLoad = false, refreshData = false } = {}) {
-      const switchSequence = ++dateSwitchSequence;
-      // Start the selected-date DB request immediately. The optional static
-      // historical bundle can be absent (and commonly is), so waiting for its
-      // 404 before starting the API request needlessly delays first chart data.
-      const dateDataRequest = refreshData && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)
-        ? refreshLiveData(dateKey)
-        : null;
-      pauseReplay();
-      modelSearchRequestSequence++;
-      clearTimeout(modelSearchTimer);
-      modelSearchLoadedModels = [];
-      if (dateKey !== currentDate) {
-        pinnedComparisonModels.clear();
-        pointInTimeTimelineModels = [];
-      }
-      if (currentCriteria === 'top1_at_time') pointInTimeModels = [];
-      currentDate = dateKey;
-      persistPortfolioViewConfig();
-      scheduleLiveChartCacheFallback(dateKey);
-      // Historical dates selected in the live dashboard are served by the
-      // PostgreSQL API. Do not block the UI waiting for an optional static
-      // JSON bundle (most recent dates do not have one, causing a slow 404).
-      // Keep the bundle loader only for offline/non-refresh date switches.
-      if (dateKey !== LIVE_DATE && !refreshData) {
-        try { await ensureHistoricalDataLoaded(dateKey); }
-        catch (error) { console.warn('Historical chart data load failed:', error); }
-        if (switchSequence !== dateSwitchSequence || currentDate !== dateKey) return;
-      }
-      if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-        const nextUrl = new URL(location.href);
-        nextUrl.searchParams.set('date', dateKey);
-        history.replaceState(null, '', nextUrl);
-      }
-      pointInTimeRequestedKey = '';
-      pointInTimeRequestSequence++;
-      clearTimeout(pointInTimeDebounceTimer);
-      if (refreshData && /^\d{4}-\d{2}-\d{2}$/.test(dateKey)) {
-        // The selected-date request was started before the optional static
-        // historical bundle lookup above.
-        dateDataRequest?.catch(error => console.warn('Date refresh failed:', error));
-      }
-      if (!/^\d{4}-\d{2}-\d{2}$/.test(currentDate) && pointInTimeMode) {
-        pointInTimeMode = false;
-        pointInTimeModels = null;
-        pointInTimeRequestedKey = '';
-        pointInTimeRequestSequence++;
-        updatePointInTimeToggleUI();
-      }
-      baselineFrameIndex = 0; // reset baseline when switching date
-      if (activePortfolioName && !skipPortfolioLoad) {
-        try { await loadPortfolioData(); } catch (error) { portfolioModels = []; console.warn('Portfolio date load failed:', error); }
-      }
-      
-      updateDateLabelAndTitle();
-      updateStrategyFamilyOptions();
-
+    // page-only code of switchDate (the URL and the date pills): the engine asks for it by name
+    globalThis.__switchDateUrl = dateKey => {
+      const nextUrl = new URL(location.href);
+      nextUrl.searchParams.set('date', dateKey);
+      history.replaceState(null, '', nextUrl);
+    };
+    globalThis.__switchDatePills = () => {
       availableDates.forEach(d => {
         const tab = document.getElementById(`tab_${d.id}`);
         if (tab) {
@@ -6157,27 +6106,45 @@ ${preview}`)) return;
           else tab.removeAttribute('aria-current');
         }
       });
-
-      const maxF = getMaxFrames();
-      currentFrameIndex = maxF - 1; // default to full view
-
-      const eligible = getEligibleModels();
-      visibleModels = new Set(eligible.map(m => m.model));
-      selectedModelIndex = 0;
-
-      updateScrubberUI();
-      persistPortfolioViewConfig();
-      updateRibbon();
-      renderCards();
-      drawChart();
-      schedulePointInTimeSelection();
-      syncPortfolioViewRefresh();
-      const searchQuery = modelSearchInput?.value.trim();
-      const isDeepLinkedSearch = deepLinkModel && searchQuery &&
-        deepLinkModel.toLocaleLowerCase() === searchQuery.toLocaleLowerCase();
-      if (!isDeepLinkedSearch && searchQuery && searchQuery.length >= 6 && /^[a-z0-9._-]+$/i.test(searchQuery)) {
-        modelSearchTimer = setTimeout(() => loadModelSearchFromDatabase(searchQuery), 350);
-      }
+    };
+    async function switchDate(dateKey, { skipPortfolioLoad = false, refreshData = false } = {}) {
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('switch_date', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for switch_date needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('switch_date continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('switch_date', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for switch_date needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('switch_date', [dateKey, skipPortfolioLoad, refreshData]);
+      if (res.needsNetwork) throw new Error('engine stage for switch_date needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function updateDeltaButtonsUI() {

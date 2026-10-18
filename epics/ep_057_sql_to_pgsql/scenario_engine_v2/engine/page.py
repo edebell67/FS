@@ -1,6 +1,10 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-10-18 · set_ranking_criteria in stages (its one-go form is the stages driven in Python: fired refreshes, paintLiveChartCache, schedulePointInTimeSelection resolved by _resolve_await).
+# v1.6.0 · 2026-10-18 · staged remove_portfolios, switch_date, refresh_active_portfolio_view (Await.fire: start a page async function without waiting for it).
+# v1.5.1 · 2026-10-18 · FIX: a failing portfolio load inside refresh_live_data is caught (the page's try / catch wraps the await), it no longer escapes the controller; found by failing /api/portfolio_day fixtures.
+# v1.5.0 · 2026-10-18 · refresh_live_data in stages for the browser copy (the page fetches and files the live-day payload, the engine decides); Await.next / catch; view_with (view calls with arguments); page flags.
 # v1.4.0 · 2026-10-18 · staged controllers: a controller that awaits a page async function is split at the await (Await + STAGES + run_staged); the one-go method is the stages driven in Python, the browser copy drives them across the real await.
 # v1.3.0 · 2026-10-17 · refresh_point_in_time_history (hourly cohorts).
 # v1.2.0 · 2026-10-17 · max frames / replay head / eligible models / candidates default to replay_models (the page's own logic); injected hooks still win (the differential tests).
@@ -47,8 +51,12 @@ def _truthy(v) -> bool:
 class Await:
     """A stage's request to the host: 'await this page async function, then resume me with its result'. `ctx` is what the stage wants back on resume (what the page's closure captured)."""
 
-    def __init__(self, fn: str, args=None, ctx=None):
+    def __init__(self, fn: str, args=None, ctx=None, next=None, catch=False, fire=False, sync=False):
         self.fn, self.args, self.ctx = fn, list(args or []), ctx or {}
+        self.fire = fire      # start the page function and carry on without waiting for it (the page logs a failure)
+        self.sync = sync      # a synchronous page function: call it and resume in the same turn (an await would let other async work slip in between)
+        self.next = next      # name of the stage method to resume with (default: the next entry of STAGES[name])
+        self.catch = catch    # the page reports a failure of the awaited function as {"error": msg} instead of letting it propagate
 
 
 # controller name -> its stage methods; stage 0 takes the call's arguments, stage N takes (ctx, result of the awaited function)
@@ -57,13 +65,21 @@ STAGES = {
     "add_catalogue_model": ("_add_catalogue_0", "_add_catalogue_1"),
     "move_model_between_portfolios": ("_move_model_0", "_move_model_1"),
     "repopulate_active_portfolio_from_criteria": ("_repopulate_0", "_repopulate_1"),
+    # refresh_live_data is staged only for the browser copy; its one-go form (begin_refresh_live_data / _apply_live) keeps the event-loop model the headless races use
+    "set_ranking_criteria": ("_rank_0", "_rank_portfolio_1", "_rank_main_1", "_rank_main_2", "_rank_main_3", "_rank_done"),
+    "remove_portfolios": ("_remove_portfolios_0", "_remove_portfolios_1", "_remove_portfolios_2"),
+    "switch_date": ("_switch_0", "_switch_1", "_switch_2", "_switch_3", "_switch_4"),
+    "refresh_active_portfolio_view": ("_refresh_view_0", "_refresh_view_1"),
+    "refresh_live_data": ("_refresh_live_0", "_refresh_live_1", "_refresh_live_after_data", "_refresh_live_after_sync", "_refresh_live_after_load"),
 }
+STAGE_METHODS = {fn for names in STAGES.values() for fn in names}   # the only methods a browser may ask to resume
 
 
 class Page:
     def __init__(self, state: PageState, client, *, max_frames=None, head_time=None, eligible=None, candidates=None,
-                 scenario_names=None):
+                 scenario_names=None, flags=None):
         self.s, self.client = state, client
+        self.flags = flags or {}   # facts only the page knows (e.g. liveArmed)
         self._max_frames = max_frames or (lambda: rm.get_max_frames(self.s, self.client))
         self._head_time = head_time or (lambda: rm.point_in_time_at_replay_head(self.s, self.client))
         self._eligible = eligible or (lambda: rm.get_eligible_models(self.s, self.client))
@@ -99,6 +115,11 @@ class Page:
         else:
             self.dom(b, "classList.remove", "click-feedback-pending")
             self.dom(b, "removeAttribute", "aria-busy")
+
+    def view_with(self, name, *args):
+        """A view call that takes arguments (['view', name] as before; the browser copy passes `args`)."""
+        self.fx("view", name)
+        self.s.view_args[len(self.s.effects) - 1] = list(args)
 
     def view(self, *names):
         """The page calls a view function here (recorded as ['view', name]; the browser copy replays it)."""
@@ -139,15 +160,20 @@ class Page:
         while isinstance(out, Await):
             i += 1
             result = self._resolve_await(out)
-            out = getattr(self, stages[i])(out.ctx, result)
+            out = getattr(self, out.next or stages[i])(out.ctx, result)
             self._flush_calls()
         self.settle()
         return out
 
     def run_stage(self, name, stage, args=None, ctx=None, result=None):
         """One stage of a staged controller (what a browser copy asks for): returns (ret, Await | None, page calls to make afterwards)."""
-        fn = getattr(self, STAGES[name][stage])
-        out = fn(*(args or [])) if stage == 0 else fn(ctx or {}, result)
+        if isinstance(stage, str):
+            if stage not in STAGE_METHODS:
+                raise ValueError(f"not a stage method: {stage!r}")
+            fn, first = getattr(self, stage), False
+        else:
+            fn, first = getattr(self, STAGES[name][stage]), stage == 0
+        out = fn(*(args or [])) if first else fn(ctx or {}, result)
         calls, self._calls = self._calls, []
         return (None, out, calls) if isinstance(out, Await) else (out, None, calls)
 
@@ -161,12 +187,24 @@ class Page:
         for fn, args in calls:
             if fn == "schedulePointInTimeSelection":
                 self.schedule_point_in_time_selection(*args)
+            elif fn.startswith("__"):
+                pass   # page-only DOM / URL code the engine does not model
             else:
                 raise ValueError(f"no engine implementation for page call {fn!r}")
 
     def _resolve_await(self, aw):
         if aw.fn == "loadPortfolioData":
             return self._await(self.begin_load_portfolio_data(*aw.args))
+        if aw.fn == "refreshLiveData" and aw.fire:   # started, not waited for: the request goes out now, the answer is applied after the caller
+            skip = bool(aw.args[1]) if len(aw.args) > 1 else False
+            self._fire(self.begin_refresh_live_data(aw.args[0], skip))
+            return None
+        if aw.fn == "paintLiveChartCache":   # a browser cache: nothing to paint headless (the page's stub says 'not painted')
+            self.view("paintLiveChartCache")
+            return False
+        if aw.fn == "schedulePointInTimeSelection":
+            self.schedule_point_in_time_selection()
+            return None
         raise ValueError(f"no engine implementation for awaited page function {aw.fn!r}")
 
     def _on_fetched(self, background):
@@ -680,22 +718,95 @@ class Page:
                     if load.shared:
                         self.defer(after_load, load.root)  # it waits on a request another caller made: that caller resumes first
                     else:
-                        if not load.done:
-                            self._await(load)
+                        try:
+                            if not load.done:
+                                self._await(load)
+                        except Exception:  # noqa: BLE001 - the page's try / catch wraps the await too: 'Portfolio: unavailable'
+                            self.view_with("setLiveBadge", "Portfolio: unavailable", "err")
+                            return res
                         after_load()
                     return res
-            for m in self._eligible():
-                if m.get("model") not in prev_models:
-                    s.visible.add(m.get("model"))
-            max_f = self.max_frames()
-            if was_at_end or s.frame > max_f - 1:
-                s.frame = max_f - 1
-            if s.baseline > max_f - 1:
-                s.baseline = 0
-            self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
-            self.schedule_point_in_time_selection()
+            self._live_finish(prev_models, was_at_end)
             return res
         return apply()
+
+    # ---- refreshLiveData in stages (browser copy). The page keeps the data layer (fetch, file the payload in ALL_CRITERIA_DATA, the product filter, the scenario cards, the
+    # badges); the engine does the stale-response guards and everything that follows. The live-portfolio tail (orders) stays in the page.
+    def _refresh_live_0(self, target_date=None, skip_portfolio_refresh=False):
+        s = self.s
+        if not s.live_date:
+            return None
+        target_date = s.live_date if target_date is None else target_date
+        s.live_refresh_sequence += 1
+        url = self.client.live_day_url(target_date, s.product_type, s.product, s.strategy_family, s.model_limit, s.current_criteria, s.return_type)
+        ctx = {"seq": s.live_refresh_sequence, "req": [s.product_type, s.product, s.strategy_family, s.model_limit, s.return_type, s.current_criteria],
+               "target_date": target_date, "skip": bool(skip_portfolio_refresh), "scenario": self.client.live_scenario(s.current_criteria, s.return_type)}
+        return Await("fetchLiveDay", [url], ctx, next="_refresh_live_1", catch=True)
+
+    def _refresh_live_1(self, ctx, result):
+        s = self.s
+        if not (result or {}).get("ok"):   # offline: only a newer request makes the answer irrelevant
+            if ctx["seq"] == s.live_refresh_sequence:
+                self.view_with("setLiveBadge", "Live: offline", "err")
+            return None
+        if ctx["seq"] != s.live_refresh_sequence or tuple(ctx["req"]) != (s.product_type, s.product, s.strategy_family, s.model_limit, s.return_type, s.current_criteria):
+            return None   # a newer request or a changed filter makes this response stale
+        on_target = s.current_date == ctx["target_date"]
+        was_at_end = on_target and (s.frame < 0 or s.frame >= self.max_frames() - 1)
+        prev = sorted({m.get("model") for m in self._eligible()}) if on_target else []
+        pt, p, fam, lim, rt, crit = ctx["req"]
+        return Await("applyLivePayload", [ctx["target_date"], ctx["scenario"], pt, p, fam, lim, crit, rt],
+                     {**ctx, "on_target": on_target, "was_at_end": was_at_end, "prev": prev}, next="_refresh_live_after_data")
+
+    def _refresh_live_after_data(self, ctx, result):
+        s = self.s
+        if not ctx["on_target"] or s.is_playing:
+            return None
+        if s.active_portfolio:
+            if str(s.active_portfolio).upper() in LIVE_PORTFOLIOS:   # the live-mode screen state (orders live there) stays in the page; the engine resumes after it
+                return Await("syncLivePortfolioScreenState", [ctx["target_date"]], ctx, next="_refresh_live_after_sync")
+            if not ctx["skip"]:
+                return Await("loadPortfolioData", [], ctx, next="_refresh_live_after_load", catch=True)
+        self._live_finish(ctx["prev"], ctx["was_at_end"], staged=True)
+        return None
+
+    def _refresh_live_after_sync(self, ctx, result):
+        s = self.s
+        if s.active_portfolio and not ctx["skip"]:
+            if not result:   # the sync did not already load a new model
+                return Await("loadPortfolioData", [], ctx, next="_refresh_live_after_load", catch=True)
+            return self._refresh_live_after_load(ctx, None)
+        self._live_finish(ctx["prev"], ctx["was_at_end"], staged=True)
+        return None
+
+    def _refresh_live_after_load(self, ctx, result):
+        s = self.s
+        if (result or {}).get("error"):   # the page shows 'Portfolio: unavailable'
+            self.view_with("setLiveBadge", "Portfolio: unavailable", "err")
+            return None
+        s.visible = {m.get("model") for m in s.portfolio_models}
+        if self.flags.get("liveArmed") and ctx["target_date"] == s.live_date:
+            s.frame = max(0, self.max_frames() - 1)
+        self.render_all()
+        return None
+
+    def _live_finish(self, prev_models, was_at_end, staged=False):
+        """The end of refreshLiveData when no portfolio refresh follows: new models become visible, the head and baseline are clamped, the view redraws."""
+        s = self.s
+        prev_models = set(prev_models)
+        for m in self._eligible():
+            if m.get("model") not in prev_models:
+                s.visible.add(m.get("model"))
+        max_f = self.max_frames()
+        if was_at_end or s.frame > max_f - 1:
+            s.frame = max_f - 1
+        if s.baseline > max_f - 1:
+            s.baseline = 0
+        self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+        if staged:
+            self._call("schedulePointInTimeSelection")
+        else:
+            self.schedule_point_in_time_selection()
 
     def refresh_live_data(self, target_date=None, skip_portfolio_refresh=False):
         r = self._await(self.begin_refresh_live_data(target_date, skip_portfolio_refresh))
@@ -910,6 +1021,39 @@ class Page:
         self.fx("renderPortfolioList")
         self.settle()
 
+    # staged form (browser copy): the two awaits are page async functions (refreshLiveData, switchDate)
+    def _remove_portfolios_0(self, names):
+        s = self.s
+        was_active = s.active_portfolio in names
+        for name in names:
+            s.portfolios.pop(name, None)
+            s.portfolio_criteria.pop(name, None)
+            s.portfolio_scenario_configs.pop(name, None)
+            s.portfolio_view_configs.pop(name, None)
+            if name in s.merge_selection:
+                s.merge_selection.remove(name)
+        self.fx("localStorage.setItem", "strategyDirectoryPortfolioViewV1")
+        if was_active:
+            s.active_portfolio = None
+            self.view("syncLiveAltReporting")
+            s.portfolio_models = []
+            self.apply_portfolio_view_config(s.main_view_config or {"criteria": s.main_criteria})
+            s.main_criteria = s.current_criteria
+        self.fx("saveCriteriaWorkspaces")
+        self.fx("savePortfolios")
+        if was_active:
+            self.view("updateScenarioUI")
+            return Await("refreshLiveData", [s.current_date], next="_remove_portfolios_1")
+        self.fx("renderPortfolioList")
+        return None
+
+    def _remove_portfolios_1(self, ctx, result):
+        return Await("switchDate", [self.s.current_date], next="_remove_portfolios_2")
+
+    def _remove_portfolios_2(self, ctx, result):
+        self.fx("renderPortfolioList")
+        return None
+
     def delete_portfolio(self, name, confirmed=True):
         if name not in self.s.portfolios or not confirmed:
             return
@@ -1044,6 +1188,33 @@ class Page:
         finally:
             s.live_refresh_in_flight = False
         self.settle()
+
+    # staged form (browser copy) of refresh_active_portfolio_view
+    def _refresh_view_0(self):
+        s = self.s
+        if s.live_refresh_in_flight or not s.active_portfolio or s.current_date != s.live_date:
+            return None
+        name = s.active_portfolio
+        if not (s.portfolios.get(name) or []):
+            return None
+        was_latest = s.frame < 0 or s.frame >= self.max_frames() - 1
+        s.live_refresh_in_flight = True
+        return Await("loadPortfolioData", [], {"name": name, "was_latest": was_latest}, next="_refresh_view_1", catch=True)
+
+    def _refresh_view_1(self, ctx, result):
+        s = self.s
+        try:
+            if (result or {}).get("error"):   # the page only warns
+                return None
+            if s.active_portfolio != ctx["name"] or s.current_date != s.live_date:
+                return None
+            if ctx["was_latest"]:
+                s.frame = self.max_frames() - 1
+            s.visible = {m.get("model") for m in self._eligible()}
+            self.render_all()
+            return None
+        finally:
+            s.live_refresh_in_flight = False
 
     # ------------------------------------------------------------------ navigation
     def activate_portfolio(self, name):
@@ -1200,19 +1371,97 @@ class Page:
             self._timeout(lambda: None, 350, "modelSearchTimer", "loadModelSearchFromDatabase", [query])
         self.settle()
 
+    # ---- switchDate in stages (browser copy). Awaited page functions: refreshLiveData (started, not waited for), ensureHistoricalDataLoaded, loadPortfolioData,
+    # schedulePointInTimeSelection (the page's own, delegated, copy). Page-only DOM (the URL, the date pills) is asked of the page by name.
+    def _switch_0(self, date_key, skip_portfolio_load=False, refresh_data=False):
+        s = self.s
+        s.date_switch_sequence += 1
+        ctx = {"seq": s.date_switch_sequence, "date": date_key, "skip": bool(skip_portfolio_load), "refresh": bool(refresh_data), "hist": False}
+        if refresh_data and DATE_RE.fullmatch(date_key or ""):
+            return Await("refreshLiveData", [date_key], ctx, next="_switch_1", fire=True)
+        return self._switch_1(ctx, None)
+
+    def _switch_1(self, ctx, result):
+        s = self.s
+        date_key = ctx["date"]
+        self.pause_replay()
+        s.search_sequence += 1
+        self._clear_timer("modelSearchTimer")
+        s.search_loaded = []
+        if date_key != s.current_date:
+            s.pinned.clear()
+            s.pit_timeline_models = []
+        if s.current_criteria == "top1_at_time":
+            s.pit_models = []
+        s.current_date = date_key
+        self.persist_portfolio_view_config()
+        self.view_with("scheduleLiveChartCacheFallback", date_key)
+        if date_key != s.live_date and not ctx["refresh"]:
+            return Await("ensureHistoricalDataLoaded", [date_key], {**ctx, "hist": True}, next="_switch_2", catch=True)
+        return self._switch_2(ctx, None)
+
+    def _switch_2(self, ctx, result):
+        s = self.s
+        date_key = ctx["date"]
+        if ctx["hist"] and (ctx["seq"] != s.date_switch_sequence or s.current_date != date_key):
+            return None
+        if DATE_RE.fullmatch(date_key or ""):
+            self._call("__switchDateUrl", date_key)
+        s.pit_requested_key = ""
+        s.pit_request_sequence += 1
+        self._clear_timer("pointInTimeDebounceTimer")
+        if not DATE_RE.fullmatch(s.current_date or "") and s.pit_mode:
+            s.pit_mode = False
+            s.pit_models = None
+            s.pit_requested_key = ""
+            s.pit_request_sequence += 1
+            self.view("updatePointInTimeToggleUI")
+        s.baseline = 0
+        if s.active_portfolio and not ctx["skip"]:
+            return Await("loadPortfolioData", [], ctx, next="_switch_3", catch=True)
+        return self._switch_3(ctx, None)
+
+    def _switch_3(self, ctx, result):
+        s = self.s
+        if (result or {}).get("error"):   # the page warns and shows no portfolio curves
+            s.portfolio_models = []
+        self.view("updateDateLabelAndTitle", "updateStrategyFamilyOptions")
+        self._call("__switchDatePills")
+        s.frame = self.max_frames() - 1
+        s.visible = {m.get("model") for m in self._eligible()}
+        s.selected_model_index = 0
+        self.view("updateScrubberUI")
+        self.persist_portfolio_view_config()
+        self.view("updateRibbon", "renderCards", "drawChart")
+        return Await("schedulePointInTimeSelection", [], ctx, next="_switch_4", sync=True)
+
+    def _switch_4(self, ctx, result):
+        s = self.s
+        self.sync_portfolio_view_refresh()
+        query = str(s.model_search_input or "").strip()
+        deep = getattr(self, "deep_link_model", None)
+        is_deep = bool(deep and query and str(deep).lower() == query.lower())
+        if not is_deep and query and len(query) >= 6 and re.fullmatch(r"[a-z0-9._-]+", query, re.I):
+            self._timeout(lambda: None, 350, "modelSearchTimer", "loadModelSearchFromDatabase", [query])
+        return None
+
     def set_ranking_criteria(self, criteria):
+        return self.run_staged("set_ranking_criteria", criteria)
+
+    def _rank_0(self, criteria):
         s = self.s
         is_top1 = criteria == "top1_at_time"
         was_top1 = s.current_criteria == "top1_at_time"
         if (s.current_criteria == criteria and (not s.active_portfolio or s.portfolio_scenario_configs.get(s.active_portfolio))
                 and not is_top1 and not s.deep_link_only):
-            return
+            return None
         s.deep_link_only = False
         if criteria != s.current_criteria:
             s.pit_requested_key = ""
             s.pit_request_sequence += 1
             s.pending_explicit_time = None
             s.explicit_refresh = False
+            self.pending_button(False)
         if criteria != s.current_criteria and s.pit_mode and not is_top1 and not was_top1:
             s.pit_requested_key = ""
             s.pit_request_sequence += 1
@@ -1244,6 +1493,7 @@ class Page:
                 s.model_search_input = ""
         if criteria in MOMENTUM_SCENARIO_IDS and not s.active_portfolio:
             s.rank_select_value = "3"
+            self.dom("applySelectedTimeBtn", "set", "textContent", "Refresh & Add #1–#3")
             s.pit_mode = True
             s.pit_models = []
             s.history.clear()
@@ -1254,36 +1504,52 @@ class Page:
             s.portfolio_models = []
         s.current_criteria = criteria
         self.view("updatePointInTimeToggleUI")
+        ctx = {"criteria": criteria, "is_top1": is_top1}
         if s.active_portfolio:
             name = s.active_portfolio
             s.portfolio_criteria[name] = criteria
             self.fx("saveCriteriaWorkspaces")
             self.persist_portfolio_view_config(name)
-            self.view("setLiveBadge")
-            refresh = self.begin_refresh_live_data(s.current_date, skip_portfolio_refresh=True)
-            s.visible = {m.get("model") for m in self._eligible()}
-            s.selected_model_index = 0
-            self.view("updateScenarioUI", "updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
-            self._fire(refresh)
-            self.view("setLiveBadge")
-            if s.pit_mode:
-                self.schedule_point_in_time_selection()
-            self.settle()
-            return
+            self.view_with("setLiveBadge", f"Portfolio · {name} · refreshing in background", "idle")
+            return Await("refreshLiveData", [s.current_date, True], {**ctx, "name": name}, next="_rank_portfolio_1", fire=True)
         s.main_criteria = criteria
         self.fx("saveCriteriaWorkspaces")
-        ready = True
         if not is_top1 and DATE_RE.fullmatch(s.current_date or ""):
-            key = f"{criteria}_{'alt' if s.return_type == 'ALT' else 'net'}" if pu.is_metric_aware_criteria(criteria) else criteria
-            bucket = self.client.criteria_data.get(key, {}).get(s.current_date)
-            ready = isinstance(bucket, list) and len(bucket) > 0
-            if not ready:
-                self.view("setLiveBadge", "paintLiveChartCache")  # paintLiveChartCache() is a browser cache: nothing to paint headless
-            self._fire(self.begin_refresh_live_data(s.current_date))
+            if not self._rank_ready(criteria):
+                name = self.scenario_names.get(criteria) or criteria
+                self.view_with("setLiveBadge", f"Loading {name} · keeping current chart visible", "idle")
+                return Await("paintLiveChartCache", [s.current_date], ctx, next="_rank_main_1", sync=True)
+            return Await("refreshLiveData", [s.current_date], {**ctx, "ready": True}, next="_rank_main_2", fire=True)
+        return self._rank_main_2({**ctx, "ready": True}, None)
+
+    def _rank_ready(self, criteria):
+        """The scenario's data for the current date is already in the page."""
+        s = self.s
+        key = f"{criteria}_{'alt' if s.return_type == 'ALT' else 'net'}" if pu.is_metric_aware_criteria(criteria) else criteria
+        bucket = self.client.criteria_data.get(key, {}).get(s.current_date)
+        return isinstance(bucket, list) and len(bucket) > 0
+
+    def _rank_portfolio_1(self, ctx, result):
+        s = self.s
+        s.visible = {m.get("model") for m in self._eligible()}
+        s.selected_model_index = 0
+        candidates = len(s.portfolio_models)
+        self.view("updateScenarioUI", "updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+        self.view_with("setLiveBadge", f"Portfolio · {ctx['name']} · {candidates} strategies", "ok")
+        if s.pit_mode:
+            return Await("schedulePointInTimeSelection", [], ctx, next="_rank_done", sync=True)
+        return None
+
+    def _rank_main_1(self, ctx, painted):
+        """After paintLiveChartCache: the scenario is ready if the page painted a cached chart that holds the data."""
+        ready = bool(painted) and self._rank_ready(ctx["criteria"])
+        return Await("refreshLiveData", [self.s.current_date], {**ctx, "ready": ready}, next="_rank_main_2", fire=True)
+
+    def _rank_main_2(self, ctx, result):
+        s = self.s
         self.view("updateScenarioUI")
-        if not ready:
-            self.settle()
-            return
+        if not ctx["ready"]:
+            return None
         s.visible = {m.get("model") for m in self._eligible()}
         s.selected_model_index = 0
         max_f = self.max_frames()
@@ -1292,6 +1558,11 @@ class Page:
         if s.baseline >= max_f:
             s.baseline = 0
         self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
-        self.schedule_point_in_time_selection()
+        return Await("schedulePointInTimeSelection", [], ctx, next="_rank_main_3", sync=True)
+
+    def _rank_main_3(self, ctx, result):
         self.persist_portfolio_view_config(None)
-        self.settle()
+        return None
+
+    def _rank_done(self, ctx, result):
+        return None

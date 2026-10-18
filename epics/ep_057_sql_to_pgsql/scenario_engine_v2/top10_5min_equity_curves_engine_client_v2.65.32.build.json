@@ -48,11 +48,16 @@
   "removeModelFromPortfolio",
   "addCatalogueModel",
   "moveModelBetweenPortfolios",
-  "repopulateActivePortfolioFromCriteria"
+  "repopulateActivePortfolioFromCriteria",
+  "removePortfolios",
+  "switchDate",
+  "refreshActivePortfolioView",
+  "setRankingCriteria",
+  "refreshLiveData"
  ],
  "lines_before": [
   1432,
   9054
  ],
- "bytes": 546152
+ "bytes": 548941
 }

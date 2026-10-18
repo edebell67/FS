@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/command.py — run a page controller in the engine on a state snapshot sent by the browser copy; returns the new state and the ordered effects.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-18 · answers carry viewArgs; requests may carry `flags` (page facts) and a stage given by name.
 # v1.3.0 · 2026-10-18 · staged controllers (page.STAGES): {"stage": N, "ctx", "result"} resumes a controller after the page awaited a page async function; the answer carries {"await": {fn, args}, "ctx", "stage"} while one is outstanding.
 # v1.2.0 · 2026-10-17 · a controller that wants the network answers {needsNetwork: true} (the page then runs its own copy); timers: named timer operations tied to effect indexes.
 # v1.1.0 · 2026-10-17 · stage 2 (no fetch): apply_chart_lock, reset_automatic_rank_schedule.
@@ -52,11 +53,12 @@ def run(req: dict) -> dict:
     extra = {}
     if hooks:
         extra = dict(max_frames=lambda: hooks["maxFrames"], head_time=lambda: hooks["head"], eligible=lambda: hooks["eligible"], candidates=lambda: hooks["candidates"])
-    page = Page(state, client, scenario_names=req.get("scenarioNames") or {}, **extra)
+    page = Page(state, client, scenario_names=req.get("scenarioNames") or {}, flags=req.get("flags"), **extra)
     pending_await, calls = None, []
     try:
         if method in STAGES:   # one stage: the page performs the awaited function and calls again with {stage, ctx, result}
-            stage = int(req.get("stage") or 0)
+            stage = req.get("stage") or 0
+            stage = stage if isinstance(stage, str) else int(stage)
             ret, pending_await, calls = page.run_stage(method, stage, req.get("args"), req.get("ctx"), req.get("result"))
         else:
             ret = getattr(page, method)(*(req.get("args") or []))
@@ -66,9 +68,10 @@ def run(req: dict) -> dict:
     if wanted:
         return {"needsNetwork": True}
     if pending_await is not None:
-        return {"await": {"fn": pending_await.fn, "args": pending_await.args}, "ctx": pending_await.ctx, "stage": int(req.get("stage") or 0) + 1,
-                "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "calls": calls}
-    out = {"ret": ret, "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops}
+        nxt = pending_await.next if pending_await.next else int(req.get("stage") or 0) + 1
+        return {"await": {"fn": pending_await.fn, "args": pending_await.args, "catch": pending_await.catch, "fire": pending_await.fire, "sync": pending_await.sync}, "ctx": pending_await.ctx, "stage": nxt,
+                "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "calls": calls, "viewArgs": state.view_args}
+    out = {"ret": ret, "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "viewArgs": state.view_args}
     if method in STAGES:
         out["calls"] = calls
     return out
