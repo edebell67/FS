@@ -67,3 +67,12 @@ def test_the_point_in_time_fetch_targets_report_the_real_http_status():
     for name in ("fetchPointInTime", "fetchPointInTimeHours"):
         line = next(l for l in h.split("\n") if l.strip().startswith(name + ":") or (name + ": async") in l)
         assert "status: response.status" in line and "cache: 'no-store'" in line and "await response.json()" in line
+
+
+def test_activate_portfolio_keeps_its_original_only_for_what_the_engine_refuses():
+    """A LIVE / LIVE_ALT tab places orders: the engine answers needsNetwork and the page runs its own copy. Every other staged shell throws instead."""
+    orig = "    async function activatePortfolio(name) {\n      await Promise.resolve(1);\n    }"
+    w = cw.wrapper("activatePortfolio", orig)
+    assert "function __original_activatePortfolio(" in w and "return __original_activatePortfolio.apply(this, arguments);" in w
+    other = cw.wrapper("removePortfolios", "    async function removePortfolios(names) {\n    }")
+    assert "__original_" not in other and "needs the network" in other

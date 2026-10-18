@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_page_js_vs_py.py — differential test of the page controller: the page's own state-changing functions (Node VM) vs engine/page.py, whole-state comparison.
 #
 # VERSION HISTORY
+# v1.8.1 · 2026-10-18 · FAIL_PORTFOLIO_DAY switch (default on): the models harness, which shares this fixture server, turns the failing portfolio loads off so its own cases keep their strength.
+# v1.8.0 · 2026-10-18 · add_catalogue_model cases pad the target portfolio to 9 / 10 strategies; refresh_active_portfolio_view_twice (two overlapping calls; wrapper mode only: the Python event-loop model cannot overlap one-go calls).
 # v1.7.0 · 2026-10-18 · wrapper mode: the oracle is the ORIGINAL page's JS result (state, effects, fetches, return value), not the Python expectation: the wrapper runs on the real event loop, so a hop-count quirk of the Python event-loop model in a failure path must not decide it.
 # v1.6.0 · 2026-10-18 · failing /api/portfolio_day (1 in 7 URLs); refresh_live_data_filter_change (one call, filter changed while in flight); frame / baseline at the boundary for refresh_live_data; extras (data-layer flags + criteria sizes) compared against the original in wrapper mode.
 # v1.5.0 · 2026-10-18 · view calls record their arguments (vargs); in wrapper mode they are compared against the original page's (args-bearing views: setLiveBadge, cacheLiveChartResponse); engine-answer rounds 8 -> 30.
@@ -138,6 +140,8 @@ async function __page(fx, name, c, args){
       if (args[2] === 'change_filter') globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10;
       const b = refreshLiveData(args[1]);
       await a; await b;
+    } else if (name === '__twiceView') {
+      const a = refreshActivePortfolioView(); const b = refreshActivePortfolioView(); await a; await b;
     } else if (name === '__filterLive') {
       const a = refreshLiveData(args[0]); globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10; await a;
     } else if (name === '__twiceHistory') {
@@ -168,7 +172,7 @@ JS_NAME = {"move_portfolio": "movePortfolio", "unique_portfolio_name": "uniquePo
            "trigger_selected_time_refresh": "triggerSelectedTimeRefresh", "start_replay": "startReplay", "pause_replay": "pauseReplay",
            "switch_date": "switchDate", "set_ranking_criteria": "setRankingCriteria", "activate_portfolio": "activatePortfolio",
            "refresh_live_data": "refreshLiveData", "refresh_point_in_time_selection": "refreshPointInTimeSelection",
-           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_live_data_filter_change": "__filterLive", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
+           "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_live_data_filter_change": "__filterLive", "refresh_active_portfolio_view_twice": "__twiceView", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
            "refresh_point_in_time_history": "__realHistory", "assigned_portfolio_overlay_rule": "assignedPortfolioOverlayRule", "active_portfolio_overlay_rule": "activePortfolioOverlayRule"}
 
 
@@ -209,6 +213,9 @@ def mk(i, n=3, product="gbp", start=0):
             "series": [{"time": f"{h + start:02d}:00", "net": float(i * (h + 1)), "buy": float(i), "sell": float(h)} for h in range(n)]}
 
 
+FAIL_PORTFOLIO_DAY = True   # the page harness exercises failing portfolio loads; the models harness (which shares this server) switches it off
+
+
 def responder(url: str):
     """Deterministic fake server keyed by URL (the same body for the same URL on both sides)."""
     from urllib.parse import parse_qs, urlparse
@@ -221,7 +228,7 @@ def responder(url: str):
         scen = q.get("scenario", "top_net")
         return 200, {"products": ["gbp", "eur"], scen: [mk(1 + seed % 3), mk(5 + seed % 4)], "top_net": [mk(2)], "generated_at": "2026-10-14T12:00:00"}
     if u.path.endswith("/api/portfolio_day"):
-        if seed % 7 == 0:
+        if FAIL_PORTFOLIO_DAY and seed % 7 == 0:
             return 500, {"error": "db down"}   # some portfolio loads fail: the controllers' catch paths
         ids = [m for m in q.get("models", "").split(",") if m]
         return 200, {"models": [mk(int(hashlib.md5(m.encode()).hexdigest()[:4], 16) % 90 + 1, start=seed % 3 * 2) | {"model": m} for m in ids], "generated_at": "2026-10-14T12:00:00"}
@@ -344,6 +351,22 @@ def rand_case(rng: random.Random, method: str):
         args = [rng.sample(ports, rng.randint(0, len(ports))) + (["Ghost"] if rng.random() < 0.2 else [])]
     elif method == "add_catalogue_model":
         args = [pick(), rng.choice(["M1", "M5", "M9"])]
+        if len(ports) >= 1 and rng.random() < 0.4:   # the target portfolio at (or just under) the ten-strategy limit, without the model
+            target = rng.choice(ports)
+            table = {n: list(models) for n, models in snap["portfolios"]}
+            table[target] = [f"Z{i}" for i in range(rng.choice([9, 10]))]
+            snap["portfolios"] = [[n, table[n]] for n, _ in snap["portfolios"]]
+            st = PageState.from_snapshot(snap)
+            args = [target, rng.choice(["M1", "M5", "M9"])]
+    elif method == "refresh_active_portfolio_view_twice":
+        if ports:   # an active portfolio with members, viewed on the live date: otherwise the controller returns at once
+            table = {n: list(models) for n, models in snap["portfolios"]}
+            target = rng.choice(ports)
+            table[target] = table[target] or ["M1", "M2"]
+            snap["portfolios"] = [[n, table[n]] for n, _ in snap["portfolios"]]
+            snap["active_portfolio"], snap["current_date"] = target, snap["live_date"]
+            st = PageState.from_snapshot(snap)
+        args = []
     elif method == "move_model_between_portfolios":
         a, b = pick(), pick()
         if len(ports) >= 2 and rng.random() < 0.4:   # a real move into a destination at (or just under) the ten-strategy limit
@@ -472,6 +495,9 @@ def run_python(method, case, args):
             ret = run_twice_live(page, st, *pa)
         elif method == "refresh_live_data_filter_change":
             ret = run_filter_live(page, st, *pa)
+        elif method == "refresh_active_portfolio_view_twice":
+            page.refresh_active_portfolio_view()   # not a model of the overlap (one-go cannot overlap): only wrapper mode runs this case, against the original page's JS
+            ret = page.refresh_active_portfolio_view()
         elif method == "refresh_point_in_time_history_twice":
             ret = run_twice_history(page, st)
         else:
@@ -494,6 +520,8 @@ def run_python(method, case, args):
 # ---------------------------------------------------------------------------------------------------------------- main
 def main():
     methods = [m for m in ns.methods.split(",") if m] or list(JS_NAME)
+    if not os.environ.get("DIFF_WRAPPERS"):
+        methods = [m for m in methods if m != "refresh_active_portfolio_view_twice"]   # wrapper mode only
     rng = random.Random(11)
     cases, expected = [], {}
     for method in methods:
@@ -521,6 +549,7 @@ def main():
         if "refresh_live_data" in wrapped_methods:   # two overlapping calls: the page's event loop interleaves the engine stages
             wrapped_methods.add("refresh_live_data_twice")
             wrapped_methods.add("refresh_live_data_filter_change")
+        wrapped_methods.add("refresh_active_portfolio_view_twice")
         cases = [c for c in cases if c["method"] in wrapped_methods]
         expected = {cid: v for cid, v in expected.items() if v[0] in wrapped_methods}
     spec = {"page": str(PAGE), "inventory": str(INVENTORY), "functions": PAGE_FUNCS, "extra": extra, "cases": [{k: v for k, v in c.items() if k != "method"} for c in cases]}

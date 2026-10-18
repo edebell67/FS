@@ -16,6 +16,7 @@ ROOT = Path(__file__).resolve().parent.parent
 _argv, sys.argv = sys.argv, ["x"]
 sys.path.insert(0, str(ROOT / "tools"))
 import diff_page_js_vs_py as dp  # noqa: E402
+dp.FAIL_PORTFOLIO_DAY = False   # these cases were written against a fixture server whose portfolio loads always succeed
 sys.argv = _argv
 from engine import data_client as dc  # noqa: E402
 from engine import replay_models as rm  # noqa: E402

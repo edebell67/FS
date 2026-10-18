@@ -89,6 +89,8 @@ def run_one(m):
             return name, ("ALIVE" if r.returncode == 0 else ("KILLED" if re.search(r"\d+ failed", r.stdout) else "CRASH")), tail[0][:100]
         rows = re.findall(r"^(\w+)\s+cases=\s*\d+ pass=\s*\d+ fail=\s*(\d+) js_error=(\d+)", r.stdout, re.M)
         if not rows:
+            if runner in ("page", "wrap") and "NODE FAILED" in r.stdout:   # the harness's node worker died: the page code under test failed, the comparison cannot pass
+                return name, "KILLED", "node failed"
             return name, "CRASH", (r.stdout + r.stderr)[-300:]
         failing = [row[0] for row in rows if int(row[1]) or int(row[2])]
         return name, ("KILLED" if failing else "ALIVE"), ",".join(failing)
