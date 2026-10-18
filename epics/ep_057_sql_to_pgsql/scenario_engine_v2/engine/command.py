@@ -13,7 +13,7 @@
 from __future__ import annotations
 
 from .data_client import DataClient
-from .page import STAGES, Page
+from .page import STAGES, LivePortfolioRefused, Page
 from .page_state import PageState
 
 # controllers the browser copy may delegate (stage 1: none of them touches the network or starts a timer callback the engine would have to own)
@@ -65,11 +65,13 @@ def run(req: dict) -> dict:
             page.settle()
     except NeedsNetwork:
         wanted.append("raised")
+    except LivePortfolioRefused:   # the engine does not run live portfolios (orders): the page runs its own copy
+        wanted.append("live")
     if wanted:
         return {"needsNetwork": True}
     if pending_await is not None:
         nxt = pending_await.next if pending_await.next else int(req.get("stage") or 0) + 1
-        return {"await": {"fn": pending_await.fn, "args": pending_await.args, "catch": pending_await.catch, "fire": pending_await.fire, "sync": pending_await.sync}, "ctx": pending_await.ctx, "stage": nxt,
+        return {"await": {"fn": pending_await.fn, "args": pending_await.args, "catch": pending_await.catch, "fire": pending_await.fire, "sync": pending_await.sync, "handle": pending_await.handle, "attach": pending_await.attach}, "ctx": pending_await.ctx, "stage": nxt,
                 "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "calls": calls, "viewArgs": state.view_args}
     out = {"ret": ret, "state": state.snapshot(), "effects": state.effects, "timers": state.timer_ops, "viewArgs": state.view_args}
     if method in STAGES:

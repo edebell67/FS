@@ -2372,8 +2372,8 @@
     }
     globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) };
     const __awaitTargets = { loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, { skipPortfolioRefresh: !!skip }), switchDate: (...a) => switchDate(...a),
-      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a) };   // page async functions an engine stage may ask the page to await
-    const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
+      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) };   // page async functions an engine stage may ask the page to await
+    const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, similarStrategyModal: () => similarStrategyModal, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
     function __engineDom(effect) {
       const [, element, op, args] = effect;
       const target = __domTargets[element]();
@@ -2384,6 +2384,7 @@
       else if (op === 'classList.toggle') target.classList.toggle(...args);
       else if (op === 'setAttribute') target.setAttribute(...args);
       else if (op === 'removeAttribute') target.removeAttribute(...args);
+      else if (op === 'call') target[args[0]](...args.slice(1));
       else if (op === 'ensureOption') {
         const hasProduct = [...target.options].some(option => option.value === args[0]);
         if (!hasProduct && args[0] !== 'all') { const option = document.createElement('option'); option.value = args[0]; option.textContent = args[0].toUpperCase(); target.appendChild(option); }
@@ -3566,7 +3567,7 @@
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -3621,7 +3622,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -3682,7 +3683,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -3793,7 +3794,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -4073,7 +4074,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -4123,7 +4124,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -4141,7 +4142,7 @@ ${preview}`)) return;
       return __drive(res);
     }
 
-    async function activatePortfolio(name) {
+    async function __original_activatePortfolio(name) {
       if (activePortfolioName) persistPortfolioViewConfig(activePortfolioName);
       else persistPortfolioViewConfig(null);
       const savedPortfolioDate = portfolioViewConfigs[name]?.date;
@@ -4314,6 +4315,45 @@ ${preview}`)) return;
         syncAssignedOverlayRuleUI();
         drawChart();
       });
+    }
+    async function activatePortfolio(name) {
+      const __targets = { ...__awaitTargets, loadOverlayRuleLibrary: (...a) => loadOverlayRuleLibrary(...a), __attach: () => null, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('activate_portfolio', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for activate_portfolio needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('activate_portfolio continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('activate_portfolio', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for activate_portfolio needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('activate_portfolio', [name]);
+      if (res.needsNetwork) return __original_activatePortfolio.apply(this, arguments);
+      __apply(res);
+      return __drive(res);
     }
 
     // Keep already-open dashboard tabs in step with named portfolio edits made
@@ -4524,29 +4564,43 @@ ${preview}`)) return;
     }
 
     async function createSimilarPortfolio(dimension) {
-      const group = similarStrategyPayload?.groups?.[dimension] || [];
-      const reference = similarStrategyPayload?.reference;
-      if (!reference || !group.length) return;
-      const label = { family: 'Family', window: 'Window', tp: 'TP', sl: 'SL' }[dimension];
-      const windowLabel = reference.window === null || reference.window === undefined ? '' : ` W${reference.window}`;
-      const name = uniquePortfolioName(`${String(reference.product).toUpperCase()} ${label}${windowLabel} T${reference.tp} S${reference.sl}`);
-      portfolios[name] = group.map(item => item.model).slice(0, 10);
-      delete portfolioScenarioConfigs[name];
-      delete portfolioViewConfigs[name];
-      portfolioCriteria[name] = currentCriteria;
-      saveCriteriaWorkspaces();
-      savePortfolios();
-      // A direct model search narrows both the card list and replay timeline.
-      // Clear it before activating this multi-model comparison portfolio.
-      if (modelSearchInput) modelSearchInput.value = '';
-      if (modelSearchStatus) modelSearchStatus.textContent = '';
-      modelSearchLoadedModels = [];
-      pinnedComparisonModels.clear();
-      modelSearchRequestSequence++;
-      clearTimeout(modelSearchTimer);
-      portfolioViewConfigs[name] = currentPortfolioViewConfig();
-      similarStrategyModal.close();
-      await activatePortfolio(name);
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('create_similar_portfolio', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for create_similar_portfolio needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('create_similar_portfolio continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('create_similar_portfolio', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for create_similar_portfolio needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('create_similar_portfolio', [dimension]);
+      if (res.needsNetwork) throw new Error('engine stage for create_similar_portfolio needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     function renderSimilarStrategyOptions() {
@@ -4789,7 +4843,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -5139,7 +5193,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
@@ -6129,7 +6183,7 @@ ${preview}`)) return;
             out = null;
           } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
             const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) __handles[aw.handle] = p; else p.catch(e => console.warn('Date refresh failed:', e));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
             out = null;
           } else if (aw.sync) out = __targets[aw.fn](...aw.args);
           else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }

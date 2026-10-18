@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.8.1 · 2026-10-18 · stages hand applyPortfolioViewConfig to the page (it may want the network: the page runs its own fallback); create_similar_portfolio returns nothing, like the page.
+# v1.8.0 · 2026-10-18 · activate_portfolio and create_similar_portfolio in stages for the browser copy (Await.handle / Await.attach: a started page promise gets a continuation that runs later as its own stage); a live portfolio is refused so the page runs its own copy.
 # v1.7.0 · 2026-10-18 · set_ranking_criteria in stages (its one-go form is the stages driven in Python: fired refreshes, paintLiveChartCache, schedulePointInTimeSelection resolved by _resolve_await).
 # v1.6.0 · 2026-10-18 · staged remove_portfolios, switch_date, refresh_active_portfolio_view (Await.fire: start a page async function without waiting for it).
 # v1.5.1 · 2026-10-18 · FIX: a failing portfolio load inside refresh_live_data is caught (the page's try / catch wraps the await), it no longer escapes the controller; found by failing /api/portfolio_day fixtures.
@@ -51,9 +53,11 @@ def _truthy(v) -> bool:
 class Await:
     """A stage's request to the host: 'await this page async function, then resume me with its result'. `ctx` is what the stage wants back on resume (what the page's closure captured)."""
 
-    def __init__(self, fn: str, args=None, ctx=None, next=None, catch=False, fire=False, sync=False):
+    def __init__(self, fn: str, args=None, ctx=None, next=None, catch=False, fire=False, sync=False, handle=None, attach=None):
         self.fn, self.args, self.ctx = fn, list(args or []), ctx or {}
         self.fire = fire      # start the page function and carry on without waiting for it (the page logs a failure)
+        self.handle = handle  # with fire: keep the started promise under this name
+        self.attach = attach  # run stage `attach` when the promise kept under args[0] settles (a detached .then); the call itself does not wait
         self.sync = sync      # a synchronous page function: call it and resume in the same turn (an await would let other async work slip in between)
         self.next = next      # name of the stage method to resume with (default: the next entry of STAGES[name])
         self.catch = catch    # the page reports a failure of the awaited function as {"error": msg} instead of letting it propagate
@@ -66,8 +70,10 @@ STAGES = {
     "move_model_between_portfolios": ("_move_model_0", "_move_model_1"),
     "repopulate_active_portfolio_from_criteria": ("_repopulate_0", "_repopulate_1"),
     # refresh_live_data is staged only for the browser copy; its one-go form (begin_refresh_live_data / _apply_live) keeps the event-loop model the headless races use
+    "activate_portfolio": ("_act_0", "_act_1", "_act_1b", "_act_2", "_act_3", "_act_4", "_act_load_done", "_act_rules_done"),
+    "create_similar_portfolio": ("_similar_0", "_similar_1"),
     "set_ranking_criteria": ("_rank_0", "_rank_portfolio_1", "_rank_main_1", "_rank_main_2", "_rank_main_3", "_rank_done"),
-    "remove_portfolios": ("_remove_portfolios_0", "_remove_portfolios_1", "_remove_portfolios_2"),
+    "remove_portfolios": ("_remove_portfolios_0", "_remove_portfolios_0b", "_remove_portfolios_1", "_remove_portfolios_2"),
     "switch_date": ("_switch_0", "_switch_1", "_switch_2", "_switch_3", "_switch_4"),
     "refresh_active_portfolio_view": ("_refresh_view_0", "_refresh_view_1"),
     "refresh_live_data": ("_refresh_live_0", "_refresh_live_1", "_refresh_live_after_data", "_refresh_live_after_sync", "_refresh_live_after_load"),
@@ -198,6 +204,12 @@ class Page:
         if aw.fn == "refreshLiveData" and aw.fire:   # started, not waited for: the request goes out now, the answer is applied after the caller
             skip = bool(aw.args[1]) if len(aw.args) > 1 else False
             self._fire(self.begin_refresh_live_data(aw.args[0], skip))
+            return None
+        if aw.fn == "applyPortfolioViewConfig":
+            self.apply_portfolio_view_config(*aw.args)
+            return None
+        if aw.fn == "activatePortfolio":
+            self.activate_portfolio(*aw.args)
             return None
         if aw.fn == "paintLiveChartCache":   # a browser cache: nothing to paint headless (the page's stub says 'not painted')
             self.view("paintLiveChartCache")
@@ -1037,11 +1049,16 @@ class Page:
             s.active_portfolio = None
             self.view("syncLiveAltReporting")
             s.portfolio_models = []
-            self.apply_portfolio_view_config(s.main_view_config or {"criteria": s.main_criteria})
+            return Await("applyPortfolioViewConfig", [s.main_view_config or {"criteria": s.main_criteria}], {"was_active": True}, next="_remove_portfolios_0b", sync=True)
+        return self._remove_portfolios_0b({"was_active": False}, None)
+
+    def _remove_portfolios_0b(self, ctx, result):
+        s = self.s
+        if ctx["was_active"]:
             s.main_criteria = s.current_criteria
         self.fx("saveCriteriaWorkspaces")
         self.fx("savePortfolios")
-        if was_active:
+        if ctx["was_active"]:
             self.view("updateScenarioUI")
             return Await("refreshLiveData", [s.current_date], next="_remove_portfolios_1")
         self.fx("renderPortfolioList")
@@ -1088,6 +1105,9 @@ class Page:
             self._call("schedulePointInTimeSelection")
 
     def create_similar_portfolio(self, dimension):
+        return self.run_staged("create_similar_portfolio", dimension)
+
+    def _similar_0(self, dimension):
         s = self.s
         payload = s.similar_payload or {}
         group = (payload.get("groups") or {}).get(dimension) or []
@@ -1109,8 +1129,11 @@ class Page:
         s.search_sequence += 1
         self._clear_timer("modelSearchTimer")
         s.portfolio_view_configs[name] = self.current_portfolio_view_config()
-        self.activate_portfolio(name)
-        return name
+        self.dom("similarStrategyModal", "call", "close")
+        return Await("activatePortfolio", [name], {"name": name}, next="_similar_1")
+
+    def _similar_1(self, ctx, result):
+        return None
 
     def livePortfolioModelsForDate(self, *a, **k):  # pragma: no cover - alias kept for readability when comparing with the page
         return self.live_portfolio_models_for_date(*a, **k)
@@ -1311,6 +1334,129 @@ class Page:
         if s.active_portfolio == name:   # reached before the (un-awaited) load answers
             self.view("syncAssignedOverlayRuleUI", "drawChart")
         self.settle()
+
+    # ---- activatePortfolio in stages (browser copy), non-live portfolios. The page starts loadOverlayRuleLibrary and loadPortfolioData and keeps their promises; the continuations
+    # (.then) run later as their own stages. A live portfolio is refused: the page runs its own copy of the original.
+    def _act_0(self, name):
+        s = self.s
+        if str(name).upper() in LIVE_PORTFOLIOS:
+            raise LivePortfolioRefused(name)
+        self.persist_portfolio_view_config(s.active_portfolio if s.active_portfolio else None)
+        raw_saved = s.portfolio_view_configs.get(name)
+        saved = raw_saved or {}
+        saved_date = saved.get("date")
+        saved_replay = str(pu.js_str(stm.js_or(saved.get("replayHeadTime"), "")))
+        saved_selection = str(pu.js_str(stm.js_or(saved.get("selectedAtTime"), "")))
+        if any(d.get("id") == saved_date for d in s.available_dates):
+            s.current_date = saved_date
+            self.view("setupDateTabs")
+            if DATE_RE.fullmatch(s.current_date or ""):
+                self._call("__switchDateUrl", s.current_date)
+        ctx = {"name": name, "saved_replay": saved_replay, "saved_selection": saved_selection}
+        return Await("loadOverlayRuleLibrary", [], ctx, next="_act_1", fire=True, handle="rules")
+
+    def _act_1(self, ctx, result):
+        s = self.s
+        name = ctx["name"]
+        raw_saved = s.portfolio_view_configs.get(name)
+        saved = raw_saved or {}
+        dynamic = s.portfolio_scenario_configs.get(name) or None
+        s.pit_mode = bool(dynamic and s.pit_selection_preference)
+        s.pit_models = [] if s.pit_mode else None
+        s.pit_requested_key = ""
+        s.pit_request_sequence += 1
+        s.pending_explicit_time = None
+        s.explicit_refresh = False
+        s.auto_request_at = None
+        s.auto_context = ""
+        self.pending_button(False)
+        s.deep_link_only = False
+        s.active_portfolio = name
+        self.view("syncLiveModeUI", "syncLiveAltReporting")
+        s.chart_lock_before_live = saved["chartLockBeforeLive"] if isinstance(saved.get("chartLockBeforeLive"), bool) else None
+        saved_view = raw_saved if raw_saved is not None else (dynamic if dynamic else {
+            "criteria": stm.js_or(s.portfolio_criteria.get(name), s.main_criteria), "returnType": "NET", "productType": "all", "product": "all",
+            "strategyFamily": "all", "limit": 10, "minWinRate": 0, "chartLocked": False})
+        config = {
+            **saved_view,
+            "splitMode": saved_view.get("splitMode") if saved_view.get("splitMode") in pu.SPLIT_MODES else "ALL_NET",
+            "chartLocked": saved["chartLocked"] if isinstance(saved.get("chartLocked"), bool) else False,
+            "useAssignedOverlayRule": saved["useAssignedOverlayRule"] if isinstance(saved.get("useAssignedOverlayRule"), bool)
+            else bool(self.assigned_portfolio_overlay_rule(name))}
+        return Await("applyPortfolioViewConfig", [config], ctx, next="_act_1b", sync=True)   # the page's own (delegated, with its own fallback) function
+
+    def _act_1b(self, ctx, result):
+        s = self.s
+        name = ctx["name"]
+        s.portfolio_view_configs[name] = self.current_portfolio_view_config()
+        self.fx("localStorage.setItem", "strategyDirectoryPortfolioViewV1")
+        self.view("updatePointInTimeToggleUI", "renderPortfolioTabs", "updateScenarioUI")
+        self.view_with("setLiveBadge", f"Loading portfolio {name}\u2026", "idle")
+        ctx2 = {**ctx, "activation_date": s.current_date, "activation_key": ",".join(s.portfolios.get(name) or [])}
+        return Await("loadPortfolioData", [{"preferCache": True}], ctx2, next="_act_2", fire=True, handle="load")
+
+    def _act_2(self, ctx, result):
+        self._act_render(ctx, False)   # the cached curves paint at once, before the load answers
+        return Await("__attach", ["load"], ctx, next="_act_3", attach="_act_load_done")
+
+    def _act_3(self, ctx, result):
+        return Await("__attach", ["rules"], ctx, next="_act_4", attach="_act_rules_done")
+
+    def _act_4(self, ctx, result):
+        return None
+
+    def _act_render(self, ctx, data_settled):
+        s = self.s
+        name = ctx["name"]
+        if s.active_portfolio != name or s.current_date != ctx["activation_date"]:
+            return
+        self.auto_pin_live_portfolio_strategies()
+        s.visible = {m.get("model") for m in s.portfolio_models}
+        s.selected_model_index = 0
+        timeline = None
+        for m in s.portfolio_models:
+            if len(m.get("series") or []) > len((timeline or {}).get("series") or []):
+                timeline = m
+        saved_minute = time_of_day_minutes(ctx["saved_replay"])
+        if timeline and timeline.get("series") and saved_minute is not None:
+            idx = -1
+            for i, pt in enumerate(timeline["series"]):
+                mn = time_of_day_minutes(pt.get("time"))
+                if mn is not None and mn <= saved_minute:
+                    idx = i
+            s.frame = idx if idx >= 0 else 0
+        else:
+            s.frame = max(0, self.max_frames() - 1)
+        self.view("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart", "updateScrubberUI")
+        if re.fullmatch(r"[0-9]{2}:[0-9]{2}", ctx["saved_selection"]):
+            s.selected_time_input = ctx["saved_selection"]
+        self.persist_portfolio_view_config(name)
+        self.view("renderLivePortfolioTransition", "syncLiveModeUI")
+        if s.portfolio_models or data_settled:
+            self.view_with("setLiveBadge", f"Portfolio \u00b7 {name}", "ok")
+        if s.pit_mode:
+            self._call("schedulePointInTimeSelection")
+
+    def _act_load_done(self, ctx, result):
+        s = self.s
+        name = ctx["name"]
+        if (result or {}).get("error"):   # 'Portfolio: unavailable'
+            if s.active_portfolio == name and s.current_date == ctx["activation_date"]:
+                self.view_with("setLiveBadge", "Portfolio: unavailable", "err")
+            return None
+        if not (result or {}).get("ok"):   # the load did not fetch: nothing new to paint
+            return None
+        if s.active_portfolio != name or s.current_date != ctx["activation_date"] or ",".join(s.portfolios.get(name) or []) != ctx["activation_key"]:
+            return None
+        self._act_render(ctx, True)
+        return None
+
+    def _act_rules_done(self, ctx, result):
+        s = self.s
+        if (result or {}).get("error") or s.active_portfolio != ctx["name"]:
+            return None
+        self.view("syncAssignedOverlayRuleUI", "drawChart")
+        return None
 
     def switch_date(self, date_key, skip_portfolio_load=False, refresh_data=False):
         s = self.s

@@ -125,3 +125,118 @@ def test_the_command_layer_carries_an_await_its_stage_and_the_view_arguments():
     assert r["await"]["fn"] == "fetchLiveDay" and r["await"]["catch"] is True and r["stage"] == "_refresh_live_1"
     r2 = command.run({"method": "refresh_live_data", "stage": r["stage"], "ctx": r["ctx"], "result": {"error": "down"}, "state": r["state"]})
     assert r2["viewArgs"] and list(r2["viewArgs"].values())[0] == ["Live: offline", "err"] and "await" not in r2
+
+
+def _chain(method, args, state, results):
+    """Drive a staged controller through the command layer the way the page does; `results` maps an awaited function name to the result the page reports."""
+    r = command.run({"method": method, "args": args, "state": state})
+    seen = []
+    while "await" in r:
+        aw = r["await"]
+        seen.append((aw["fn"], bool(aw.get("fire")), bool(aw.get("sync")), aw.get("handle"), aw.get("attach")))
+        r = command.run({"method": method, "stage": r["stage"], "ctx": r["ctx"], "result": results.get(aw["fn"]), "state": r["state"]})
+    return seen, r
+
+
+def test_a_live_portfolio_is_refused_so_the_page_runs_its_own_copy():
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.portfolios = {"LIVE": ["M1"], "LIVE_ALT": ["M1"]}
+    for name in ("LIVE", "live", "LIVE_ALT"):
+        assert command.run({"method": "activate_portfolio", "args": [name], "state": st.snapshot()}) == {"needsNetwork": True}
+
+
+def test_activating_a_portfolio_starts_two_page_requests_and_attaches_a_continuation_to_each():
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.portfolios = {"P": ["M1"]}
+    seen, last = _chain("activate_portfolio", ["P"], st.snapshot(), {})
+    assert seen == [("loadOverlayRuleLibrary", True, False, "rules", None), ("applyPortfolioViewConfig", False, True, None, None),
+                    ("loadPortfolioData", True, False, "load", None), ("__attach", False, False, None, "_act_load_done"), ("__attach", False, False, None, "_act_rules_done")]
+    assert last["state"]["active_portfolio"] == "P"
+
+
+def test_the_load_continuation_branches():
+    st, pg = page(active_portfolio="P", portfolios={"P": ["M1"]}, portfolio_models=[model(1)])
+    ctx = {"name": "P", "saved_replay": "", "saved_selection": "", "activation_date": "2026-10-14", "activation_key": "M1"}
+    pg._act_load_done(ctx, {"error": "db down"})
+    assert st.effects[-1] == ["view", "setLiveBadge"] and st.view_args[len(st.effects) - 1] == ["Portfolio: unavailable", "err"]
+    n = len(st.effects)
+    pg._act_load_done({**ctx, "activation_date": "2026-10-13"}, {"error": "db down"})   # the date moved on: no badge
+    assert len(st.effects) == n
+    pg._act_load_done(ctx, {"ok": None})   # the load did not fetch: nothing to paint
+    assert len(st.effects) == n
+    pg._act_load_done({**ctx, "activation_key": "M9"}, {"ok": True})   # the portfolio's members changed meanwhile
+    assert len(st.effects) == n
+    pg._act_load_done(ctx, {"ok": True})   # a real final paint
+    assert ["view", "renderCards"] in st.effects and st.view_args[max(i for i, e in enumerate(st.effects) if e == ["view", "setLiveBadge"])] == ["Portfolio · P", "ok"]
+
+
+def test_the_rules_continuation_branches():
+    st, pg = page(active_portfolio="P")
+    pg._act_rules_done({"name": "P"}, {"error": "x"})
+    assert st.effects == []
+    pg._act_rules_done({"name": "Other"}, {"ok": None})
+    assert st.effects == []
+    pg._act_rules_done({"name": "P"}, {"ok": None})
+    assert st.effects == [["view", "syncAssignedOverlayRuleUI"], ["view", "drawChart"]]
+
+
+def test_create_similar_portfolio_closes_the_modal_and_awaits_the_page_activation():
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.similar_payload = {"groups": {"family": [{"model": "M1"}, {"model": "M2"}]}, "reference": {"product": "gbp", "window": 5, "tp": 3, "sl": 5}}
+    r = command.run({"method": "create_similar_portfolio", "args": ["family"], "state": st.snapshot()})
+    assert r["await"]["fn"] == "activatePortfolio" and r["await"]["args"] == ["GBP Family W5 T3 S5"] and r["stage"] == "_similar_1"
+    assert ["dom", "similarStrategyModal", "call", ["close"]] in r["effects"]
+    done = command.run({"method": "create_similar_portfolio", "stage": r["stage"], "ctx": r["ctx"], "result": None, "state": r["state"]})
+    assert done["ret"] is None and "await" not in done
+
+
+def test_remove_portfolios_hands_the_view_config_to_the_page():
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.portfolios = {"P": ["M1"]}
+    st.active_portfolio = "P"
+    seen, last = _chain("remove_portfolios", [["P"]], st.snapshot(), {})
+    assert [x[0] for x in seen] == ["applyPortfolioViewConfig", "refreshLiveData", "switchDate"]
+    assert last["state"]["active_portfolio"] is None and last["state"]["portfolios"] == []
+
+
+def test_activation_first_stage_state_pit_preference_and_chart_lock_before_live():
+    base = {"portfolios": {"P": ["M1"]}, "portfolio_scenario_configs": {"P": {"criteria": "top_net"}}, "portfolio_view_configs": {"P": {"chartLockBeforeLive": True}}}
+    st, pg = page(**base, pit_selection_preference=True, auto_context="stale", auto_request_at="10:05", pending_explicit_time="10:00", explicit_refresh=True)
+    ctx = pg._act_0("P").ctx
+    pg._act_1(ctx, None)
+    assert st.pit_mode is True and st.pit_models == [] and st.chart_lock_before_live is True and st.active_portfolio == "P"
+    assert (st.auto_context, st.auto_request_at, st.pending_explicit_time, st.explicit_refresh) == ("", None, None, False)   # a new portfolio starts with no auto-add / selected-time request pending
+    st, pg = page(**base, pit_selection_preference=False)
+    pg._act_1(pg._act_0("P").ctx, None)
+    assert st.pit_mode is False and st.pit_models is None
+    st, pg = page(portfolios={"P": ["M1"]})   # no saved view: no 'chart lock before live', no dynamic scenario
+    pg._act_1(pg._act_0("P").ctx, None)
+    assert st.chart_lock_before_live is None and st.pit_mode is False
+
+
+def test_activation_render_guard_and_saved_selection_time():
+    st, pg = page(active_portfolio="P", portfolios={"P": ["M1"]}, portfolio_models=[model(1)])
+    ctx = {"name": "P", "saved_replay": "", "saved_selection": "10:15", "activation_date": "2026-10-14", "activation_key": "M1"}
+    pg._act_render({**ctx, "activation_date": "2026-10-13"}, True)   # the date moved on: nothing is painted
+    assert st.effects == []
+    pg._act_render({**ctx, "name": "Other"}, True)                   # another tab is active: nothing is painted
+    assert st.effects == []
+    pg._act_render(ctx, True)
+    assert st.selected_time_input == "10:15" and ["view", "drawChart"] in st.effects
+    st2, pg2 = page(active_portfolio="P", portfolios={"P": ["M1"]}, portfolio_models=[model(1)])
+    pg2._act_render({**ctx, "saved_selection": "bad"}, True)         # only HH:MM is a saved selection time
+    assert st2.selected_time_input != "bad" and st2.selected_time_input != "10:15"
+
+
+def test_ranking_loading_badge_uses_the_scenario_name_when_the_page_knows_one():
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    r = command.run({"method": "set_ranking_criteria", "args": ["top_win"], "state": st.snapshot(), "scenarioNames": {"top_win": "Best win rate"}})
+    badge = [v for k, v in r["viewArgs"].items() if v and v[0].startswith("Loading")]
+    assert badge == [["Loading Best win rate · keeping current chart visible", "idle"]]
+    r = command.run({"method": "set_ranking_criteria", "args": ["top_win"], "state": st.snapshot(), "scenarioNames": {}})
+    assert [v for v in r["viewArgs"].values() if v[0].startswith("Loading")] == [["Loading top_win · keeping current chart visible", "idle"]]
