@@ -25,15 +25,11 @@ CONTROLLERS = {
     "markPortfolioFixed": ("mark_portfolio_fixed", "name", "[name]", None, {}),
     "capturePortfolioScenario": ("capture_portfolio_scenario", "name, criteria = currentCriteria", "[name, criteria]", None, {}),
     "persistPortfolioViewConfig": ("persist_portfolio_view_config", "name = activePortfolioName", "arguments.length === 0 || arguments[0] === undefined ? [] : [name]", None, {}),
-    "startReplay": ("start_replay", "", "[]", r"^\s*(playIcon|playBtnText|playBtn)\b", {"startPlaybackLoop": "startPlaybackLoop();"}),
-    "pauseReplay": ("pause_replay", "", "[]", r"^\s*(playIcon|playBtnText|playBtn)\b",
-                    {"clearInterval": "if (replayInterval) { clearInterval(replayInterval); replayInterval = null; }"}),
-    "syncPortfolioViewRefresh": ("sync_portfolio_view_refresh", "", "[]", None,
-                                 {"clearInterval": "if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; }",
-                                  "setInterval": "if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]);"}),
+    "startReplay": ("start_replay", "", "[]", None, {"startPlaybackLoop": "startPlaybackLoop();"}),
+    "pauseReplay": ("pause_replay", "", "[]", None, {}),
+    "syncPortfolioViewRefresh": ("sync_portfolio_view_refresh", "", "[]", None, {}),
     "updateAutoRefreshTop1Status": ("update_auto_refresh_status", "message = ''", "[message]", None, {}),
-    "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None,
-                       {"clearInterval": "if (replayInterval) { clearInterval(replayInterval); replayInterval = null; }"}),
+    "applyChartLock": ("apply_chart_lock", "locked, persist = true", "[locked, persist]", None, {}),
     "resetAutomaticRankSchedule": ("reset_automatic_rank_schedule", "", "[]", None, {}),
     "uniquePortfolioName": ("unique_portfolio_name", "baseName", "[baseName]", None, {}),
     "currentPortfolioViewConfig": ("current_portfolio_view_config", "", "[]", None, {}),
@@ -54,9 +50,8 @@ EXTRAS = {
     "triggerSelectedTimeRefresh": {"fallback": True},
     "autoPinLivePortfolioStrategies": {"fallback": True},
     "applyPortfolioViewConfig": {"fallback": True},
-    "resetAutomaticRankSchedule": {"fallback": True, "flag": "autoRefreshTop1RequestAt !== null", "flag_shell": r"^\s*applySelectedTimeBtn\?\."},
-    "applyChartLock": {"fallback": True, "prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;", "range": (r"^\s*chartLockBtn\.setAttribute", r"^\s*scrubberTrack\.title"), "skip": r"^\s*updateChartLockControlState\(\);",
-                       "pause_if": "chartLocked"},
+    "resetAutomaticRankSchedule": {"fallback": True},
+    "applyChartLock": {"fallback": True, "prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;"},
 }
 
 COMMON_EFFECTS = {
@@ -102,10 +97,20 @@ def declarations(page_text: str, state_decls: dict) -> dict:
     return out
 
 
+def dom_elements() -> list:
+    """Every element the engine writes to (engine/page.py: self.dom(\"name\", ...) calls and the lock-control loop)."""
+    src = (Path(__file__).resolve().parent.parent / "engine" / "page.py").read_text(encoding="utf-8")
+    names = set(re.findall(r'self.dom\("(\w+)"', src)) | set(re.findall(r'b = "(\w+)"', src))
+    for tup in re.findall(r'for control in \(([^)]*)\)', src):
+        names |= set(re.findall(r'"(\w+)"', tup))
+    return sorted(names)
+
+
 def helper_block(state_decls: dict) -> str:
     missing = [js for _py, js, _k, _d in FIELDS if js not in state_decls and js not in DERIVED]
     if missing:
         raise SystemExit(f"BUILD REFUSED: page state fields not declared at top level in the page: {missing}")
+    dom_table = ", ".join(f"{n}: () => {n}" for n in dom_elements())
     snap = ", ".join(f"{py}: {DERIVED[js] if js in DERIVED else _snapshot_expr(js, kind)}" for py, js, kind, _d in FIELDS)
     apply = "\n      ".join(_apply_stmt(py, js, kind, state_decls[js]) for py, js, kind, _d in FIELDS if py not in TIMER_FIELDS and js not in DERIVED)
     return f"""    // ---- controllers run in the Python engine (engine/command.py): the page sends its state, applies the answer in place, then replays the effects in order ----
@@ -138,16 +143,36 @@ def helper_block(state_decls: dict) -> str:
     }}
     function __engineTimer(op) {{
       const timer = op.timer;
-      if (timer !== 'modelSearchTimer' && timer !== 'pointInTimeDebounceTimer') throw new Error('unknown engine timer: ' + timer);
-      if (op.op === 'clear') {{ clearTimeout(timer === 'modelSearchTimer' ? modelSearchTimer : pointInTimeDebounceTimer); return; }}
+      const get = () => ({{ modelSearchTimer, pointInTimeDebounceTimer, replayInterval, portfolioViewRefreshTimer }})[timer];
+      const put = v => {{ if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else throw new Error('unknown engine timer: ' + timer); }};
+      const interval = timer === 'replayInterval' || timer === 'portfolioViewRefreshTimer';
+      if (op.op === 'clear') {{ if (interval) {{ clearInterval(get()); put(null); }} else clearTimeout(get()); return; }}
+      if (interval) {{ if (timer === 'portfolioViewRefreshTimer' && location.protocol === 'file:') return; put(setInterval(globalThis.__engineTimerTargets[op.call], op.ms)); return; }}
       const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
-      if (timer === 'modelSearchTimer') modelSearchTimer = setTimeout(run, op.ms); else pointInTimeDebounceTimer = setTimeout(run, op.ms);
+      put(setTimeout(run, op.ms));
     }}
-    globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a) }};
+    globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) }};
+    const __domTargets = {{ {dom_table} }};
+    function __engineDom(effect) {{
+      const [, element, op, args] = effect;
+      const target = __domTargets[element]();
+      if (!target) return;
+      if (op === 'set') target[args[0]] = args[1];
+      else if (op === 'classList.add') target.classList.add(...args);
+      else if (op === 'classList.remove') target.classList.remove(...args);
+      else if (op === 'classList.toggle') target.classList.toggle(...args);
+      else if (op === 'setAttribute') target.setAttribute(...args);
+      else if (op === 'removeAttribute') target.removeAttribute(...args);
+      else if (op === 'ensureOption') {{
+        const hasProduct = [...target.options].some(option => option.value === args[0]);
+        if (!hasProduct && args[0] !== 'all') {{ const option = document.createElement('option'); option.value = args[0]; option.textContent = args[0].toUpperCase(); target.appendChild(option); }}
+      }} else throw new Error('unknown engine dom op: ' + op);
+    }}
     function __engineReplay(effects, handlers, timers) {{
       effects.forEach((effect, at) => {{
         const name = effect[0];
-        if (name === 'setTimeout' || name === 'clearTimeout') {{ (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }}   // named timers are re-created from `timers`
+        if (name === 'dom') {{ __engineDom(effect); return; }}
+        if (name === 'setTimeout' || name === 'clearTimeout' || name === 'setInterval' || name === 'clearInterval') {{ (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }}   // named timers are re-created from `timers`
         if (name === 'view') {{ if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }}
         if (name === 'localStorage.setItem') {{ const expr = {{{", ".join(f"'{k}': () => {v}" for k, v in STORAGE.items())}}}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }}
         if (handlers[name]) {{ handlers[name](effect); return; }}

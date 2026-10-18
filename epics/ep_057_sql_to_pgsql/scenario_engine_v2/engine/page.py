@@ -67,6 +67,21 @@ class Page:
     def fx(self, *a):
         self.s.effects.append(list(a))
 
+    def dom(self, element, op, *args):
+        """A write the page makes to one of its elements (the browser copy replays it): ['dom', element, op, args]; op is 'set' (args: property, value), 'classList.add' / 'classList.remove' /
+        'classList.toggle', 'setAttribute' or 'removeAttribute'. Fields the page mirrors from the DOM (selected time, search box, status texts) travel in the state snapshot instead."""
+        self.fx("dom", element, op, list(args))
+
+    def pending_button(self, on):
+        """applySelectedTimeBtn's busy look while a selected-time lookup is out."""
+        b = "applySelectedTimeBtn"
+        if on:
+            self.dom(b, "classList.add", "click-feedback-pending")
+            self.dom(b, "setAttribute", "aria-busy", "true")
+        else:
+            self.dom(b, "classList.remove", "click-feedback-pending")
+            self.dom(b, "removeAttribute", "aria-busy")
+
     def view(self, *names):
         """The page calls a view function here (recorded as ['view', name]; the browser copy replays it)."""
         for n in names:
@@ -115,6 +130,14 @@ class Page:
     def _clear_timer(self, name):
         self.fx("clearTimeout")
         self.s.timer_ops.append({"op": "clear", "timer": name, "at": len(self.s.effects) - 1})
+
+    def _timer_op(self, effect, op, name, **extra):
+        """An interval start / stop: the effect (what the original page calls) plus the named operation the browser copy replays on its own timer variable."""
+        if effect == "setInterval":
+            self.fx(effect, extra["ms"])
+        else:
+            self.fx(effect)
+        self.s.timer_ops.append({"op": op, "timer": name, "at": len(self.s.effects) - 1, **extra})
 
     def run_timers(self):
         """Run the timer callbacks recorded so far (the page's debounces); they may record more."""
@@ -200,7 +223,20 @@ class Page:
         s.chart_locked = bool(locked)
         if persist:
             self.persist_portfolio_view_config()
+        on = s.chart_locked
+        self.dom("chartLockBtn", "setAttribute", "aria-pressed", "true" if on else "false")
+        self.dom("chartLockIcon", "set", "textContent", "🔒" if on else "🔓")
+        self.dom("chartLockLabel", "set", "textContent", "Chart locked" if on else "Chart unlocked")
         self.view("updateChartLockControlState")
+        self.dom("chartLockBtn", "set", "className", "px-2.5 py-1 rounded-lg border border-lime-400/60 bg-lime-500 text-slate-950 text-xs font-black transition shadow shadow-lime-500/20"
+                 if on else "px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white text-xs font-bold transition")
+        for control in ("playBtn", "stepBackBtn", "stepFwdBtn", "restartBtn", "setBaseAtHeadBtn", "resetBaselineBtn"):
+            self.dom(control, "set", "disabled", on)
+            self.dom(control, "classList.toggle", "opacity-40", on)
+            self.dom(control, "classList.toggle", "cursor-not-allowed", on)
+        self.dom("scrubberTrack", "setAttribute", "aria-disabled", "true" if on else "false")
+        self.dom("scrubberTrack", "classList.toggle", "cursor-not-allowed", on)
+        self.dom("scrubberTrack", "set", "title", "Chart locked — unlock to scrub or reposition the baseline" if on else "Scrub replay head")
         if s.chart_locked:
             self.pause_replay()
             s.frame = max(0, self.max_frames() - 1)
@@ -221,6 +257,7 @@ class Page:
         s.rank_select_value = pu.js_str(top)
         at = str(pu.js_str(stm.js_or(config.get("selectedAtTime"), "")))
         s.selected_time_input = at if re.fullmatch(r"[0-9]{2}:[0-9]{2}", at) else ""
+        self.dom("applySelectedTimeBtn", "set", "textContent", "Refresh & Add #1" + (f"–#{pu.js_str(top)}" if top > 1 else ""))
         s.min_win_rate = _clamp_num(config.get("minWinRate"), 0, 100, 0)
         if config.get("splitMode") in pu.SPLIT_MODES:
             s.split_mode = config["splitMode"]
@@ -237,12 +274,28 @@ class Page:
         s.auto_minutes = int(m) if m in (1, 5, 15, 30, 60, 120) else 15
         s.auto_direction_select = s.auto_direction
         s.auto_rank_select = pu.js_str(s.auto_rank)
+        self.dom("autoRefreshTop1Toggle", "set", "checked", s.auto_enabled)
+        self.dom("autoRefreshTop1Interval", "set", "value", pu.js_str(s.auto_minutes))
         self.update_auto_refresh_status()
         self.reset_automatic_rank_schedule()
         s.chart_lock_before_live = config["chartLockBeforeLive"] if isinstance(config.get("chartLockBeforeLive"), bool) else None
         if isinstance(config.get("chartLocked"), bool):
             self.apply_chart_lock(config["chartLocked"], False)
-        self.view("syncAssignedOverlayRuleUI", "updateStrategyFamilyOptions", "syncSplitModeControls", "updateScenarioUI")
+        self.view("syncAssignedOverlayRuleUI")
+        net = s.return_type == "NET"
+        self.dom("returnTypeNetBtn", "set", "className", "px-2.5 py-1 font-bold rounded bg-indigo-600 text-white transition flex items-center gap-1 shadow" if net
+                 else "px-2.5 py-1 font-bold rounded text-slate-400 hover:text-white transition flex items-center gap-1")
+        self.dom("returnTypeAltBtn", "set", "className", "px-2.5 py-1 font-bold rounded bg-amber-600 text-white transition flex items-center gap-1 shadow" if not net
+                 else "px-2.5 py-1 font-bold rounded text-slate-400 hover:text-white transition flex items-center gap-1")
+        self.dom("productTypeFilter", "set", "value", s.product_type)
+        self.dom("modelLimitFilter", "set", "value", pu.js_str(s.model_limit))
+        self.dom("winRateSlider", "set", "value", pu.js_str(s.min_win_rate))
+        self.dom("winRateValBadge", "set", "textContent", f"≥ {pu.js_str(s.min_win_rate)}%")
+        self.dom("winRateDisplayBadge", "set", "textContent", "All Win Rates (≥0%)" if s.min_win_rate == 0 else f"Win Rate ≥ {pu.js_str(s.min_win_rate)}%")
+        self.view("updateStrategyFamilyOptions")
+        self.dom("productFilter", "ensureOption", s.product)
+        self.dom("productFilter", "set", "value", s.product)
+        self.view("syncSplitModeControls", "updateScenarioUI")
 
     # ------------------------------------------------------------------ replay
     def start_replay(self):
@@ -251,14 +304,22 @@ class Page:
         if s.frame >= max_f - 1 or s.frame < s.baseline:
             s.frame = s.baseline
         s.is_playing = True
+        self.dom("playIcon", "set", "textContent", "⏸")
+        self.dom("playBtnText", "set", "textContent", "Pause")
+        self.dom("playBtn", "classList.remove", "bg-sky-600", "hover:bg-sky-500")
+        self.dom("playBtn", "classList.add", "bg-amber-600", "hover:bg-amber-500")
         s.replay_interval = 1  # startPlaybackLoop() installs the playback timer
         self.fx("startPlaybackLoop")
 
     def pause_replay(self):
         s = self.s
         s.is_playing = False
+        self.dom("playIcon", "set", "textContent", "▶")
+        self.dom("playBtnText", "set", "textContent", "Play from Base" if s.baseline > 0 else "Play")
+        self.dom("playBtn", "classList.add", "bg-sky-600", "hover:bg-sky-500")
+        self.dom("playBtn", "classList.remove", "bg-amber-600", "hover:bg-amber-500")
         if s.replay_interval:
-            self.fx("clearInterval")
+            self._timer_op("clearInterval", "clear", "replayInterval")
             s.replay_interval = None
 
     # ------------------------------------------------------------------ auto-add scheduling
@@ -272,6 +333,7 @@ class Page:
             s.explicit_refresh = False
             s.pit_request_sequence += 1
             s.pit_requested_key = ""
+            self.pending_button(False)
         s.auto_context = pu.point_in_time_context_key(self._opt_state())
         head = self._head_time()
         head_minute = pu.clock_minutes(head) if head else None
@@ -298,6 +360,7 @@ class Page:
                 s.explicit_refresh = False
                 s.pit_request_sequence += 1
                 s.pit_requested_key = ""
+                self.pending_button(False)
             s.auto_context = context
             s.auto_last_minute = minute
             s.auto_next_minute = pu.next_automatic_top1_minute(minute, s.auto_minutes, True)
@@ -318,6 +381,7 @@ class Page:
         s.explicit_refresh = True
         s.pit_requested_key = ""
         self._clear_timer("pointInTimeDebounceTimer")
+        self.pending_button(True)
         self.update_auto_refresh_status(f"Checking {s.auto_direction} #{pu.js_str(s.auto_rank)} at {scheduled}…")
         self._fire(self.begin_refresh_point_in_time_selection(scheduled))
 
@@ -336,6 +400,7 @@ class Page:
             if not s.explicit_refresh and s.pit_requested_key and s.pit_requested_key != next_key:
                 s.pit_request_sequence += 1
                 s.pit_requested_key = ""
+                self.pending_button(False)
         if not s.explicit_refresh and s.is_playing and at and not re.search(r":00$", at):
             self._clear_timer("pointInTimeDebounceTimer")
             return
@@ -352,6 +417,7 @@ class Page:
             self.view("updatePointInTimeToggleUI")
         requested_at = s.selected_time_input
         if pu.clock_minutes(requested_at) is None:
+            self.pending_button(False)
             s.pit_status = ["Choose a valid time in HH:MM format", "text-[10px] font-bold text-rose-300"]
             return
         self.pause_replay()
@@ -373,6 +439,8 @@ class Page:
         if s.deep_link_only:
             s.deep_link_only = False
             self.view("updateScenarioUI")
+        self.dom("applySelectedTimeBtn", "classList.add", "click-feedback-selected", "click-feedback-pending")
+        self.dom("applySelectedTimeBtn", "setAttribute", "aria-busy", "true")
         self.apply_selected_time()
         self.settle()
 
@@ -508,6 +576,13 @@ class Page:
         pending = self.client.begin_refresh_live_data(target_date, product_type=s.product_type, product=s.product,
                                                       strategy_family=s.strategy_family, limit=s.model_limit,
                                                       criteria=s.current_criteria, return_type=s.return_type)
+        ctx = {"seq": seq, "req": list(req), "target_date": target_date, "skip": bool(skip_portfolio_refresh)}
+        return Pending(lambda: self._apply_live(ctx, pending), issued=pending.issued)
+
+    def _apply_live(self, ctx, pending):
+        """The half of refreshLiveData that runs once the answer is in. `ctx` is what the page's closure captured when the request went out
+        (so a browser copy can carry it across the fetch: see command.py begin / finish)."""
+        seq, req, target_date, skip_portfolio_refresh = ctx["seq"], tuple(ctx["req"]), ctx["target_date"], ctx["skip"]
 
         def apply():
             s = self.s
@@ -563,7 +638,7 @@ class Page:
             self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
             self.schedule_point_in_time_selection()
             return res
-        return Pending(apply, issued=pending.issued)
+        return apply()
 
     def refresh_live_data(self, target_date=None, skip_portfolio_refresh=False):
         r = self._await(self.begin_refresh_live_data(target_date, skip_portfolio_refresh))
@@ -852,11 +927,12 @@ class Page:
     def sync_portfolio_view_refresh(self):
         s = self.s
         if s.portfolio_refresh_timer is not None:
-            self.fx("clearInterval")
+            self._timer_op("clearInterval", "clear", "portfolioViewRefreshTimer")
             s.portfolio_refresh_timer = None
         if not s.active_portfolio or s.current_date != s.live_date:
             return
-        self.fx("setInterval", pu.PORTFOLIO_VIEW_REFRESH_MS if hasattr(pu, "PORTFOLIO_VIEW_REFRESH_MS") else 300000)
+        ms = pu.PORTFOLIO_VIEW_REFRESH_MS if hasattr(pu, "PORTFOLIO_VIEW_REFRESH_MS") else 300000
+        self._timer_op("setInterval", "set", "portfolioViewRefreshTimer", ms=ms, call="refreshActivePortfolioView")
         s.portfolio_refresh_timer = 1
 
     def refresh_active_portfolio_view(self):

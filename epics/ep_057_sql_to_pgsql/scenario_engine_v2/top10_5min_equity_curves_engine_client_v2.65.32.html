@@ -1943,7 +1943,7 @@
       const count = Number(selectedTimeRankSelect.value) || 1;
       applySelectedTimeBtn.textContent = `Refresh & Add #1${count > 1 ? `–#${count}` : ''}`;
     }
-    function triggerSelectedTimeRefresh() {
+    function __original_triggerSelectedTimeRefresh() {
       if (deepLinkModelsOnly) {
         deepLinkModelsOnly = false;
         updateScenarioUI();
@@ -1951,6 +1951,12 @@
       applySelectedTimeBtn.classList.add('click-feedback-selected', 'click-feedback-pending');
       applySelectedTimeBtn.setAttribute('aria-busy', 'true');
       applySelectedTime();
+    }
+    function triggerSelectedTimeRefresh() {
+      const res = __engineCommand('trigger_selected_time_refresh', []);
+      if (res.needsNetwork) return __original_triggerSelectedTimeRefresh.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
     if (applySelectedTimeBtn) applySelectedTimeBtn.addEventListener('click', event => {
       event.preventDefault();
@@ -2042,13 +2048,8 @@
       if (autoRefreshTop1Enabled && headTime) scheduleAutomaticTop1Refresh(headTime);
     }
     function resetAutomaticRankSchedule() {
-      const __was = autoRefreshTop1RequestAt !== null;
       const res = __engineCommand('reset_automatic_rank_schedule', []);
       if (res.needsNetwork) return __original_resetAutomaticRankSchedule.apply(this, arguments);
-      if (__was) {
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-      }
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -2361,16 +2362,36 @@
     }
     function __engineTimer(op) {
       const timer = op.timer;
-      if (timer !== 'modelSearchTimer' && timer !== 'pointInTimeDebounceTimer') throw new Error('unknown engine timer: ' + timer);
-      if (op.op === 'clear') { clearTimeout(timer === 'modelSearchTimer' ? modelSearchTimer : pointInTimeDebounceTimer); return; }
+      const get = () => ({ modelSearchTimer, pointInTimeDebounceTimer, replayInterval, portfolioViewRefreshTimer })[timer];
+      const put = v => { if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else throw new Error('unknown engine timer: ' + timer); };
+      const interval = timer === 'replayInterval' || timer === 'portfolioViewRefreshTimer';
+      if (op.op === 'clear') { if (interval) { clearInterval(get()); put(null); } else clearTimeout(get()); return; }
+      if (interval) { if (timer === 'portfolioViewRefreshTimer' && location.protocol === 'file:') return; put(setInterval(globalThis.__engineTimerTargets[op.call], op.ms)); return; }
       const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
-      if (timer === 'modelSearchTimer') modelSearchTimer = setTimeout(run, op.ms); else pointInTimeDebounceTimer = setTimeout(run, op.ms);
+      put(setTimeout(run, op.ms));
     }
-    globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a) };
+    globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) };
+    const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
+    function __engineDom(effect) {
+      const [, element, op, args] = effect;
+      const target = __domTargets[element]();
+      if (!target) return;
+      if (op === 'set') target[args[0]] = args[1];
+      else if (op === 'classList.add') target.classList.add(...args);
+      else if (op === 'classList.remove') target.classList.remove(...args);
+      else if (op === 'classList.toggle') target.classList.toggle(...args);
+      else if (op === 'setAttribute') target.setAttribute(...args);
+      else if (op === 'removeAttribute') target.removeAttribute(...args);
+      else if (op === 'ensureOption') {
+        const hasProduct = [...target.options].some(option => option.value === args[0]);
+        if (!hasProduct && args[0] !== 'all') { const option = document.createElement('option'); option.value = args[0]; option.textContent = args[0].toUpperCase(); target.appendChild(option); }
+      } else throw new Error('unknown engine dom op: ' + op);
+    }
     function __engineReplay(effects, handlers, timers) {
       effects.forEach((effect, at) => {
         const name = effect[0];
-        if (name === 'setTimeout' || name === 'clearTimeout') { (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }   // named timers are re-created from `timers`
+        if (name === 'dom') { __engineDom(effect); return; }
+        if (name === 'setTimeout' || name === 'clearTimeout' || name === 'setInterval' || name === 'clearInterval') { (timers || []).filter(op => op.at === at).forEach(__engineTimer); return; }   // named timers are re-created from `timers`
         if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](); return; }
         if (name === 'localStorage.setItem') { const expr = {'strategyDirectoryPortfolioViewV1': () => JSON.stringify(portfolioViewConfigs), 'strategyDirectoryMainViewV1': () => JSON.stringify(mainScenarioViewConfig)}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }
         if (handlers[name]) { handlers[name](effect); return; }
@@ -2456,27 +2477,9 @@
     }
 
     function currentPortfolioViewConfig() {
-      return {
-        date: currentDate,
-        selectedTopCount: Math.max(1, Math.min(10, Number(selectedTimeRankSelect?.value) || 1)),
-        selectedAtTime: String(selectedTimeInput?.value || '').trim(),
-        replayHeadTime: pointInTimeAtReplayHead() || '',
-        criteria: currentCriteria,
-        returnType: currentReturnType,
-        productType: currentProductType,
-        product: currentProduct,
-        strategyFamily: currentStrategyFamily,
-        limit: modelLimit,
-        minWinRate,
-        splitMode,
-        chartLocked,
-        chartLockBeforeLive: liveModePriorChartLock,
-        useAssignedOverlayRule,
-        autoAddEnabled: autoRefreshTop1Enabled,
-        autoAddDirection: autoRefreshTop1Direction,
-        autoAddRank: autoRefreshTop1Rank,
-        autoAddMinutes: autoRefreshTop1Minutes,
-      };
+      const res = __engineCommand('current_portfolio_view_config', []);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     function persistPortfolioViewConfig(name = activePortfolioName) {
@@ -2485,7 +2488,7 @@
       return res.ret;
     }
 
-    function applyPortfolioViewConfig(config) {
+    function __original_applyPortfolioViewConfig(config) {
       if (!config) return;
       currentReturnType = config.returnType === 'ALT' ? 'ALT' : 'NET';
       currentProductType = ['all', 'forex', 'crypto'].includes(config.productType) ? config.productType : 'all';
@@ -2545,6 +2548,12 @@
       syncSplitModeControls();
       updateScenarioUI();
     }
+    function applyPortfolioViewConfig(config) {
+      const res = __engineCommand('apply_portfolio_view_config', [config]);
+      if (res.needsNetwork) return __original_applyPortfolioViewConfig.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
+    }
 
     async function loadLivePortfolioStore() {
       try {
@@ -2589,7 +2598,7 @@
       return models;
     }
 
-    function autoPinLivePortfolioStrategies() {
+    function __original_autoPinLivePortfolioStrategies() {
       if (currentDate !== LIVE_DATE || !['LIVE', 'LIVE_ALT'].includes(String(activePortfolioName || '').toUpperCase())) return;
       for (const model of portfolioModels) {
         const modelId = String(model?.model || '').trim();
@@ -2597,6 +2606,12 @@
         pinnedComparisonModels.set(modelId, { ...model, comparisonRole: 'live trade strategy' });
       }
       visibleModels = new Set(getEligibleModels().map(model => model.model));
+    }
+    function autoPinLivePortfolioStrategies() {
+      const res = __engineCommand('auto_pin_live_portfolio_strategies', []);
+      if (res.needsNetwork) return __original_autoPinLivePortfolioStrategies.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     async function loadOverlayRuleLibrary() {
@@ -3721,13 +3736,9 @@ ${preview}`)) return;
     }
 
     function getMergedPortfolioModels() {
-      const unique = [];
-      portfolioMergeSelection.forEach(name => {
-        (portfolios[name] || []).forEach(model => {
-          if (!unique.includes(model)) unique.push(model);
-        });
-      });
-      return unique;
+      const res = __engineCommand('get_merged_portfolio_models', []);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     function updatePortfolioMergeUI() {
@@ -3985,7 +3996,7 @@ ${preview}`)) return;
 
     function syncPortfolioViewRefresh() {
       const res = __engineCommand('sync_portfolio_view_refresh', []);
-      __engineReplay(res.effects, { 'clearInterval': effect => { if (portfolioViewRefreshTimer !== null) { clearInterval(portfolioViewRefreshTimer); portfolioViewRefreshTimer = null; } }, 'setInterval': effect => { if (location.protocol !== 'file:') portfolioViewRefreshTimer = setInterval(refreshActivePortfolioView, effect[1]); } }, res.timers);
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
@@ -4385,11 +4396,9 @@ ${preview}`)) return;
     }
 
     function uniquePortfolioName(baseName) {
-      const compact = baseName.slice(0, 32);
-      if (!portfolios[compact]) return compact;
-      let suffix = 2;
-      while (portfolios[`${compact.slice(0, 28)} ${suffix}`]) suffix++;
-      return `${compact.slice(0, 28)} ${suffix}`;
+      const res = __engineCommand('unique_portfolio_name', [baseName]);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     async function createSimilarPortfolio(dimension) {
@@ -5612,7 +5621,7 @@ ${preview}`)) return;
       }
     }
 
-    function applySelectedTime() {
+    function __original_applySelectedTime() {
       if (!selectedTimeInput) return;
       const chartModelsBeforeRefresh = pointInTimeMode
         ? [...(Array.isArray(pointInTimeModels) ? pointInTimeModels : [])]
@@ -5665,6 +5674,12 @@ ${preview}`)) return;
       pointInTimeRequestSequence++;
       refreshPointInTimeSelection(requestedAt);
     }
+    function applySelectedTime() {
+      const res = __engineCommand('apply_selected_time', []);
+      if (res.needsNetwork) return __original_applySelectedTime.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
+    }
 
     function pointInTimeRequestOptions() {
       const source = portfolioScenarioConfig();
@@ -5691,7 +5706,7 @@ ${preview}`)) return;
         autoRefreshTop1Enabled ? autoRefreshTop1Rank : ''].join('|');
     }
 
-    function scheduleAutomaticTop1Refresh(at) {
+    function __original_scheduleAutomaticTop1Refresh(at) {
       if (!autoRefreshTop1Enabled) return;
       const minute = clockMinutes(at);
       if (minute === null) return;
@@ -5737,6 +5752,12 @@ ${preview}`)) return;
       applySelectedTimeBtn?.setAttribute('aria-busy', 'true');
       updateAutoRefreshTop1Status(`Checking ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} at ${scheduledAt}…`);
       void refreshPointInTimeSelection(scheduledAt);
+    }
+    function scheduleAutomaticTop1Refresh(at) {
+      const res = __engineCommand('schedule_automatic_top1_refresh', [at]);
+      if (res.needsNetwork) return __original_scheduleAutomaticTop1Refresh.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     function renderPointInTimeHistory() {
@@ -6012,7 +6033,7 @@ ${preview}`)) return;
         updateDateLabelAndTitle(); updateRibbon(); renderCards(); drawChart();
       }
     }
-    function schedulePointInTimeSelection() {
+    function __original_schedulePointInTimeSelection() {
       const at = pointInTimeAtReplayHead();
       if (at) scheduleAutomaticTop1Refresh(at);
       if (!pointInTimeMode) return;
@@ -6037,6 +6058,12 @@ ${preview}`)) return;
       }
       clearTimeout(pointInTimeDebounceTimer);
       if (!selectedTimeExplicitRefresh) pointInTimeDebounceTimer = setTimeout(() => refreshPointInTimeSelection(at), 180);
+    }
+    function schedulePointInTimeSelection() {
+      const res = __engineCommand('schedule_point_in_time_selection', []);
+      if (res.needsNetwork) return __original_schedulePointInTimeSelection.apply(this, arguments);
+      __engineReplay(res.effects, {  }, res.timers);
+      return res.ret;
     }
 
     function updatePointInTimeToggleUI() {
@@ -6244,21 +6271,13 @@ ${preview}`)) return;
 
     function startReplay() {
       const res = __engineCommand('start_replay', []);
-      playIcon.textContent = '⏸';
-      playBtnText.textContent = 'Pause';
-      playBtn.classList.remove('bg-sky-600', 'hover:bg-sky-500');
-      playBtn.classList.add('bg-amber-600', 'hover:bg-amber-500');
       __engineReplay(res.effects, { 'startPlaybackLoop': effect => { startPlaybackLoop(); } }, res.timers);
       return res.ret;
     }
 
     function pauseReplay() {
       const res = __engineCommand('pause_replay', []);
-      playIcon.textContent = '▶';
-      playBtnText.textContent = baselineFrameIndex > 0 ? 'Play from Base' : 'Play';
-      playBtn.classList.add('bg-sky-600', 'hover:bg-sky-500');
-      playBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } }, res.timers);
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 
@@ -6587,27 +6606,7 @@ ${preview}`)) return;
       if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;
       const res = __engineCommand('apply_chart_lock', [locked, persist]);
       if (res.needsNetwork) return __original_applyChartLock.apply(this, arguments);
-      chartLockBtn.setAttribute('aria-pressed', String(chartLocked));
-      chartLockIcon.textContent = chartLocked ? '🔒' : '🔓';
-      chartLockLabel.textContent = chartLocked ? 'Chart locked' : 'Chart unlocked';
-      chartLockBtn.className = chartLocked
-      ? 'px-2.5 py-1 rounded-lg border border-lime-400/60 bg-lime-500 text-slate-950 text-xs font-black transition shadow shadow-lime-500/20'
-      : 'px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white text-xs font-bold transition';
-      [playBtn, stepBackBtn, stepFwdBtn, restartBtn, setBaseAtHeadBtn, resetBaselineBtn].forEach(control => {
-      control.disabled = chartLocked;
-      control.classList.toggle('opacity-40', chartLocked);
-      control.classList.toggle('cursor-not-allowed', chartLocked);
-      });
-      scrubberTrack.setAttribute('aria-disabled', String(chartLocked));
-      scrubberTrack.classList.toggle('cursor-not-allowed', chartLocked);
-      scrubberTrack.title = chartLocked ? 'Chart locked — unlock to scrub or reposition the baseline' : 'Scrub replay head';
-      if (chartLocked) {
-        playIcon.textContent = '▶';
-        playBtnText.textContent = baselineFrameIndex > 0 ? 'Play from Base' : 'Play';
-        playBtn.classList.add('bg-sky-600', 'hover:bg-sky-500');
-        playBtn.classList.remove('bg-amber-600', 'hover:bg-amber-500');
-      }
-      __engineReplay(res.effects, { 'clearInterval': effect => { if (replayInterval) { clearInterval(replayInterval); replayInterval = null; } } }, res.timers);
+      __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
 

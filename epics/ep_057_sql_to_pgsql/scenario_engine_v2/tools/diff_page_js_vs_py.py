@@ -2,6 +2,7 @@
 #
 # VERSION HISTORY
 # v1.3.0 · 2026-10-17 · refreshPointInTimeHistory direct group (hourly cohorts) with a response matrix; history state fields.
+# v1.4.1 · 2026-10-18 · the Python expectation leaves out 'dom' effects (engine-emitted DOM writes; the JS stubs do not record DOM writes).
 # v1.4.0 · 2026-10-17 · DIFF_WRAPPERS=1: run the engine-delegating controller wrappers (tools/controller_wrappers.py) instead of the originals; two passes (collect the requests, answer them with engine.rpc), compared with the Python expectation.
 # v1.3.1 · 2026-10-17 · refresh_point_in_time_history_twice (overlapping hourly-cohort refreshes).
 # v1.2.0 · 2026-10-17 · assignedPortfolioOverlayRule / activePortfolioOverlayRule direct groups; richer state (long names, 10+ members, live events, pinned / history maps, crypto, auto rank / minutes); refreshLiveData twice (stale response).
@@ -446,7 +447,7 @@ def run_python(method, case, args):
         dbg = f"{type(e).__name__}: {e}"
     if method not in RET_KEEP and not (isinstance(ret, dict) and ret.get("error") is True):
         ret = None
-    out = {"state": st.snapshot(), "effects": st.effects, "calls": tr.calls, "ret": ret if ret is not None else None,
+    out = {"state": st.snapshot(), "effects": [e for e in st.effects if e[0] != "dom"], "calls": tr.calls, "ret": ret if ret is not None else None,
            "criteriaKeys": sorted(cl.criteria_data), "library": cl.overlay_rule_library, "_dbg": dbg, "_vlog": None,
            "viewCache": [[k, {"models": v["models"], "cachedAt": "NOW" if abs(v["cachedAt"] - 1792233508000.0) < 0 else v["cachedAt"]}]
                          for k, v in cl.portfolio_view_cache.items()]}

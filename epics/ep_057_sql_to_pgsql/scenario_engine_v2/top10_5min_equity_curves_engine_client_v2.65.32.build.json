@@ -35,11 +35,20 @@
   "syncPortfolioViewRefresh",
   "updateAutoRefreshTop1Status",
   "applyChartLock",
-  "resetAutomaticRankSchedule"
+  "resetAutomaticRankSchedule",
+  "uniquePortfolioName",
+  "currentPortfolioViewConfig",
+  "applyPortfolioViewConfig",
+  "getMergedPortfolioModels",
+  "autoPinLivePortfolioStrategies",
+  "schedulePointInTimeSelection",
+  "scheduleAutomaticTop1Refresh",
+  "applySelectedTime",
+  "triggerSelectedTimeRefresh"
  ],
  "lines_before": [
   1432,
   9054
  ],
- "bytes": 544218
+ "bytes": 545190
 }
