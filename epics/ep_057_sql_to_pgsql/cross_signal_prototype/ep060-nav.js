@@ -2,6 +2,7 @@
  * ep060-nav.js - shared EP060 side menu. One file, injected into every EP060 page so the menu stays
  * visible, in the same format, whichever page is open.
  *
+ * v1.7.0 (2026-10-18): added Scenario Engine (Thin) (8766, the engine-client page of the virtual race runner) after Scenario Engine.
  * v1.6.0 (2026-10-05): added Trading Log (8765, /trading_log.html) after Equity Curves.
  * v1.5.0 (2026-10-05): added Strategy Curves (8095, /strategy-curves.html) after Strategy Directory.
  * v1.4.1 (2026-10-03): Strategy Directory moved from 8094 to 8095.
@@ -26,7 +27,8 @@
   var PAGES = [
     { key: 'workflow',    port: '8061', path: '/',                                     icon: '◎', label: 'Trading Workflow' },
     { key: 'arena',       port: '8056', path: '/arena',                                icon: '◈', label: 'Agentic Arena' },
-    { key: 'equity',      port: '8765', path: '/top10_5min_equity_curves.html',        icon: '▥', label: 'Equity Curves' },
+    { key: 'equity',      port: '8765', path: '/top10_5min_equity_curves.html',        icon: '▥', label: 'Scenario Engine' },
+    { key: 'thin',        port: '8766', path: '/top10_5min_equity_curves_engine_client.html', icon: '▤', label: 'Scenario Engine (Thin)' },
     { key: 'tradelog',    port: '8765', path: '/trading_log.html',                     icon: '≣', label: 'Trading Log' },
     { key: 'divergence',  port: '5051', path: '/ep060_divergence_monitor.html',        icon: '↔', label: 'Count Divergence' },
     { key: 'cross',       port: '8110', path: '/cross_signal.html',                    icon: '⨯', label: 'Cross Signal' },
