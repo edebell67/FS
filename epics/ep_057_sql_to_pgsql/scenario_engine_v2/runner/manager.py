@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/manager.py — runs many virtual races in parallel (default 5 at once, configurable at any time), queues the rest, keeps a registry.
 #
 # VERSION HISTORY
+# v1.1.0 · 2026-10-18 · remove(race_id) and clear_finished(): delete finished races from memory.
 # v1.0.0 · 2026-10-17 · Initial version: RaceManager(max_concurrent) with submit / get / list / cancel / set_max_concurrent / wait; one thread per running race, each on its own Engine and data client.
 """The cap is the number of races RUNNING at once. More submissions wait in a queue (first in, first out) and start as slots free up. The cap can be raised or lowered while races
 are running; lowering it never interrupts a race, it only stops new ones from starting. The default comes from EP057_MAX_RACES (else 5)."""
@@ -87,6 +88,22 @@ class RaceManager:
                 self._queue.remove(race)
                 race.progress.state, race.progress.finished_at = "cancelled", time.time()
             return True
+
+    def remove(self, race_id: str) -> bool:
+        """Delete a finished race (completed / failed / cancelled). Running or queued races are refused: cancel them first."""
+        with self._lock:
+            race = self._races.get(race_id)
+            if race is None or race.progress.state not in ("completed", "failed", "cancelled"):
+                return False
+            del self._races[race_id]
+            return True
+
+    def clear_finished(self) -> int:
+        with self._lock:
+            ids = [rid for rid, r in self._races.items() if r.progress.state in ("completed", "failed", "cancelled")]
+            for rid in ids:
+                del self._races[rid]
+            return len(ids)
 
     def wait(self, timeout: float = 60.0) -> bool:
         """Block until nothing is queued or running (used by tests and scripts)."""

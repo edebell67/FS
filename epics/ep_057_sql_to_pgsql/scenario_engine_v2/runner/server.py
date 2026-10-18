@@ -1,6 +1,9 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-10-18 · GET /api/races/{id}/board: every frame's leaderboard so far (live while running, complete after) for the dashboard's race viewer.
+# v1.6.0 · 2026-10-18 · DELETE /api/races/{id} removes a finished race (still cancels an active one); DELETE /api/races clears all finished races.
+# v1.5.0 · 2026-10-18 · The engine-client page is served with a green tint (injected at serve time) so it is told apart from the original page on :8765.
 # v1.4.0 · 2026-10-17 · POST /v1/queries: the EP052 arena's external intelligence provider contract.
 # v1.3.0 · 2026-10-17 · /api/intelligence/report, watches and events (proactive intelligence for agents).
 # v1.2.0 · 2026-10-17 · add_scenario_top.
@@ -33,6 +36,14 @@ from .race import RaceConfig
 HERE = Path(__file__).resolve().parent
 ENGINE_ROOT = HERE.parent
 DATA_API = os.environ.get("EP057_DATA_API", "http://127.0.0.1:8765")
+ENGINE_PAGE_TINT = ("<style>"
+                    "body{background-color:#04170c !important;border-top:4px solid #22c55e}"
+                    "body:not([data-theme=\"light\"]) [class*=\"bg-slate-950\"]{background-color:#05200f !important}"
+                    "body:not([data-theme=\"light\"]) [class*=\"bg-slate-900\"]{background-color:#0a2c16 !important}"
+                    "body:not([data-theme=\"light\"]) [class*=\"bg-slate-800\"]{background-color:#10401f !important}"
+                    "body:not([data-theme=\"light\"]) [class*=\"border-slate-\"]{border-color:#1f6b36 !important}"
+                    "body[data-theme=\"light\"]{background-color:#dcfce7 !important}"
+                    "</style>")
 PAGE_ORIGINS = ["http://127.0.0.1:8765", "http://localhost:8765"]
 
 
@@ -192,7 +203,17 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
             out["standings"] = race.result["final"]["standings"]
             out["lead_changes"] = race.result["final"]["lead_changes"]
             out["rotation_net"] = race.result["final"]["rotation_net"]
+            out["raw_lead_changes"] = race.result["final"].get("raw_lead_changes")
+            out["skipped_duplicates"] = race.result.get("skipped_duplicates", [])
         return out
+
+    @app.get("/api/races/{race_id}/board")
+    def get_board(race_id: str, since: int = 0):
+        race = mgr.get(race_id)
+        if race is None:
+            raise HTTPException(404, "race not found")
+        board = list(getattr(race, "board", []))
+        return {"race_id": race_id, "state": race.progress.state, "frames": race.progress.frames, "since": since, "board": board[max(0, since):]}
 
     @app.get("/api/races/{race_id}/result")
     def get_result(race_id: str):
@@ -207,7 +228,13 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
     def cancel_race(race_id: str):
         if mgr.get(race_id) is None:
             raise HTTPException(404, "race not found")
+        if mgr.remove(race_id):
+            return {"removed": True}
         return {"cancelled": mgr.cancel(race_id)}
+
+    @app.delete("/api/races")
+    def clear_finished_races():
+        return {"removed": mgr.clear_finished()}
 
     @app.get("/")
     @app.get("/dashboard")
@@ -238,7 +265,8 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
         path = thin_page_path()
         if path is None:
             raise HTTPException(404, "no engine-client page has been built (python tools/build_thin_page.py)")
-        return FileResponse(path, media_type="text/html", headers={"Cache-Control": "no-store"})
+        html = Path(path).read_text(encoding="utf-8").replace("</head>", ENGINE_PAGE_TINT + "</head>", 1)
+        return Response(content=html, media_type="text/html", headers={"Cache-Control": "no-store"})
 
     # ---- same-origin access to the data service (it only allows the 'null' origin for CORS) ----
     async def forward(request: Request, path: str) -> Response:

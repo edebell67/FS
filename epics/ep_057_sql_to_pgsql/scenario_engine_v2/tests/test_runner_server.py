@@ -186,3 +186,34 @@ def test_limit_validation_matches_the_data_service(api):
     assert c.post("/api/races", json={**BODY, "limit": 15}).status_code == 422
     assert c.post("/api/races", json={**BODY, "limit": 20}).status_code == 201
     assert c.post("/api/intelligence/report", json={"date": "2026-10-14", "limit": 50}).status_code == 422
+
+
+def test_delete_finished_race_and_clear_finished(api):
+    import threading
+    gate = threading.Event()
+    mgr = RaceManager(max_concurrent=1, client_factory=lambda c: FakeClient(gate))
+    c = TestClient(create_app(mgr))
+    a = c.post("/api/races", json=BODY).json()["race_id"]
+    time.sleep(0.2)
+    assert c.delete(f"/api/races/{a}").json() == {"cancelled": True}  # active: cancel, not remove
+    gate.set()
+    assert mgr.wait(30)
+    assert c.delete(f"/api/races/{a}").json() == {"removed": True}  # finished: removed
+    assert c.get(f"/api/races/{a}").status_code == 404
+    ids = [c.post("/api/races", json=BODY).json()["race_id"] for _ in range(2)]
+    assert mgr.wait(30)
+    assert c.delete("/api/races").json() == {"removed": 2}
+    assert c.get("/api/races").json()["races"] == [] and all(c.get(f"/api/races/{i}").status_code == 404 for i in ids)
+
+
+def test_board_endpoint_serves_every_frame(api):
+    mgr = RaceManager(max_concurrent=1, client_factory=lambda c: FakeClient())
+    c = TestClient(create_app(mgr))
+    rid = c.post("/api/races", json=BODY).json()["race_id"]
+    assert mgr.wait(30)
+    full = c.get(f"/api/races/{rid}/board").json()
+    assert full["state"] == "completed" and len(full["board"]) == full["frames"] > 1
+    assert full["board"][0]["frame"] == 0 and full["board"][0]["leaders"]
+    tail = c.get(f"/api/races/{rid}/board", params={"since": 2}).json()["board"]
+    assert tail == full["board"][2:]
+    assert c.get("/api/races/nope/board").status_code == 404

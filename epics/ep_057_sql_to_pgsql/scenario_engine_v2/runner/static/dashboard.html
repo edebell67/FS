@@ -40,7 +40,10 @@
   button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
   button.ghost { background: transparent; }
   button:disabled { opacity: .5; cursor: default; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px 10px; align-items: start; }
+  .grid label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .grid input, .grid select { width: 100%; box-sizing: border-box; height: 36px; }
+  .grid .hint { color: var(--muted); font-size: 11px; line-height: 1.35; margin-top: 4px; }
   details.panel { margin-bottom: 12px; } summary { cursor: pointer; font-weight: 600; }
   .races { display: grid; gap: 10px; }
   .race { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
@@ -56,6 +59,14 @@
   .stand .track { height: 6px; background: var(--track); border-radius: 99px; position: relative; }
   .stand .track i { position: absolute; top: 0; bottom: 0; left: 50%; border-radius: 99px; background: var(--ok); }
   .stand .track i.neg { background: var(--bad); }
+  .viewer { margin-top: 8px; }
+  .viewer .vbar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .viewer .vbar input[type=range] { flex: 1 1 160px; min-width: 120px; min-height: 0; padding: 0; }
+  .viewer .vbar select { min-height: 32px; padding: 3px 6px; }
+  .viewer .vlabel { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; min-width: 150px; flex: 1 1 100%; }
+  .viewer svg { width: 100%; height: 170px; display: block; margin-top: 8px; }
+  .viewer .vkey { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .viewer .vkey i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; vertical-align: -1px; }
   .stand .val { text-align: right; font-variant-numeric: tabular-nums; }
   .empty { color: var(--muted); text-align: center; padding: 28px 8px; }
   .err { color: var(--bad); font-size: 12px; margin-top: 6px; word-break: break-word; }
@@ -76,6 +87,7 @@
     <div class="kpi"><b id="k-queued">0</b><span>Queued</span></div>
     <div class="kpi"><b id="k-completed">0</b><span>Completed</span></div>
     <div class="kpi"><b id="k-failed">0</b><span>Failed / cancelled</span></div>
+    <div class="kpi"><span>Finished races</span><div class="row" style="margin-top:4px"><button id="clear-finished" class="ghost" type="button">Clear finished</button></div></div>
     <div class="kpi">
       <span>Parallel cap</span>
       <div class="row" style="margin-top:4px">
@@ -85,19 +97,8 @@
     </div>
   </section>
 
-  <details class="panel" id="launch">
-    <summary>Launch a virtual race</summary>
-    <form id="form" class="grid" style="margin-top:10px">
-      <div><label for="f-start">Start strategy</label><input id="f-start" placeholder="DNA_201700" autocomplete="off"></div>
-      <div><label for="f-add">Competitors (comma separated)</label><input id="f-add" placeholder="DNA_201701, DNA_201702" autocomplete="off"></div>
-      <div><label for="f-date">Date</label><input id="f-date" type="date" required></div>
-      <div><label for="f-scenario">Scenario (when no strategies named)</label><input id="f-scenario" value="top_net"></div>
-      <div><label for="f-return">Return type</label><select id="f-return"><option>NET</option><option>ALT</option></select></div>
-      <div><label for="f-rule">Overlay rule id (optional)</label><input id="f-rule" autocomplete="off"></div>
-      <div style="align-self:end"><button class="primary" type="submit" id="f-go">Launch race</button></div>
-    </form>
-    <div class="sub" style="margin-top:8px">Races are virtual: they replay recorded curves and never place orders or change shared data.</div>
-  </details>
+  <div class="panel sub" id="launch" style="margin-bottom:12px">Races are launched from the scenario page: open it and press <b>Virtual race</b> (bottom right). It uses the strategies, date and settings you have selected there, and the new race appears here with its standings open. Races are virtual: they replay recorded curves and never place orders or change shared data.
+    <a id="scenario-link" href="/top10_5min_equity_curves_engine_client.html" target="_blank" rel="noopener">Open the scenario page</a></div>
 
   <section id="races" class="races" aria-live="polite"></section>
 </div>
@@ -108,7 +109,9 @@
   'use strict';
   var BASE = location.origin.indexOf(':8766') > -1 ? '' : 'http://127.0.0.1:8766';
   var $ = function (id) { return document.getElementById(id); };
-  var timer = null, lastOk = 0, expanded = {};
+  var timer = null, lastOk = 0, expanded = {}, newestId = null;
+  // A race's standings are shown by default for the newest race (the one just launched); the user's Show/Hide choice wins.
+  function isOpen(r) { return expanded[r.race_id] === undefined ? r.race_id === newestId : expanded[r.race_id]; }
 
   function toast(msg, bad) {
     var t = $('toast'); t.textContent = msg; t.className = 'toast' + (bad ? ' bad' : ''); t.style.display = 'block';
@@ -141,6 +144,115 @@
     return box;
   }
 
+  // ---- race viewer: replays a race frame by frame from its inception (live while it runs) ----
+  var boards = {}, vstate = {}, PALETTE = ['#38bdf8', '#f59e0b', '#a78bfa', '#34d399', '#f472b6', '#fb923c', '#22d3ee', '#facc15', '#c084fc', '#4ade80', '#f87171', '#60a5fa', '#e879f9', '#2dd4bf', '#fbbf24', '#818cf8', '#a3e635', '#fb7185', '#93c5fd', '#fde047'];
+  function colorOf(b, model) {
+    var i = b.models.indexOf(model); return PALETTE[(i < 0 ? 0 : i) % PALETTE.length];
+  }
+  function ingest(id, resp) {
+    var b = boards[id] || (boards[id] = { frames: [], total: 0, state: '', models: [], final: false });
+    resp.board.forEach(function (f) { b.frames.push(f); f.leaders.forEach(function (x) { if (b.models.indexOf(x.model) < 0) b.models.push(x.model); }); });
+    b.total = resp.frames; b.state = resp.state;
+  }
+  // the held leader (the page's Top X rotation) is only known once the race has finished: reload the whole board then, so every frame carries it
+  function loadBoard(id) {
+    var b = boards[id];
+    return api('GET', '/api/races/' + id + '/board?since=' + (b ? b.frames.length : 0)).then(function (resp) {
+      ingest(id, resp);
+      var nb = boards[id];
+      if (resp.state === 'completed' && !nb.final) {
+        nb.final = true;
+        if (resp.since > 0) { nb.frames = []; nb.models = []; return api('GET', '/api/races/' + id + '/board?since=0').then(function (full) { ingest(id, full); }); }
+      }
+    });
+  }
+  function vst(id) { return vstate[id] || (vstate[id] = { pos: 0, acc: 0, playing: true, speed: 1 }); }
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  function svgEl(tag, attrs) { var e = document.createElementNS(SVGNS, tag); Object.keys(attrs).forEach(function (k) { e.setAttribute(k, attrs[k]); }); return e; }
+
+  function leaderRow(f) {
+    var hl = f.held; if (hl) { var r = f.leaders.filter(function (x) { return x.model === hl; })[0]; if (r) return r; }
+    return f.leaders[0];
+  }
+  function drawViewer(id) {
+    var root = $('v-' + id), b = boards[id]; if (!root || !b || !b.frames.length) return;
+    var st = vst(id), n = b.frames.length, pos = Math.min(Math.floor(st.pos), n - 1), f = b.frames[pos];
+    root.querySelector('.vlabel').textContent = 'Frame ' + (pos + 1) + ' of ' + (b.total || n) + (f.time ? ' · ' + f.time : '') + (leaderRow(f) ? ' · ahead: ' + leaderRow(f).model + ' ' + money(leaderRow(f).net) + (f.held && f.held_rank > 1 ? ' (now #' + f.held_rank + ')' : '') : '');
+    var sl = root.querySelector('input[type=range]'); sl.max = Math.max(0, n - 1); if (document.activeElement !== sl) sl.value = pos;
+    root.querySelector('.vplay').textContent = st.playing ? 'Pause' : (pos >= n - 1 && b.state === 'completed' ? 'Replay' : 'Play');
+    // chart: every strategy's net over the day so far, cursor at the current frame
+    var W = 600, H = 170, padL = 4, padR = 4, padT = 16, padB = 14, lo = 0, hi = 0;
+    b.frames.forEach(function (fr) { fr.leaders.forEach(function (x) { if (x.net < lo) lo = x.net; if (x.net > hi) hi = x.net; }); });
+    if (hi === lo) hi = lo + 1;
+    var total = Math.max(b.total || n, 2), X = function (i) { return padL + (W - padL - padR) * i / (total - 1); }, Y = function (v) { return padT + (H - padT - padB) * (hi - v) / (hi - lo); };
+    var svg = svgEl('svg', { viewBox: '0 0 ' + W + ' ' + H, preserveAspectRatio: 'none', role: 'img', 'aria-label': 'Net of every strategy over the race' });
+    svg.appendChild(svgEl('line', { x1: padL, x2: W - padR, y1: Y(0), y2: Y(0), stroke: 'currentColor', 'stroke-opacity': '.25', 'stroke-dasharray': '3 3' }));
+    var leader = f.held || (f.leaders[0] && f.leaders[0].model);
+    b.models.forEach(function (m) {
+      var d = '';
+      b.frames.forEach(function (fr, i) { var row = fr.leaders.filter(function (x) { return x.model === m; })[0]; if (row) d += (d ? 'L' : 'M') + X(i).toFixed(1) + ' ' + Y(row.net).toFixed(1); });
+      svg.appendChild(svgEl('path', { d: d, fill: 'none', stroke: colorOf(b, m), 'stroke-width': m === leader ? '2.6' : '1.4', 'stroke-opacity': m === leader ? '1' : '.7', 'vector-effect': 'non-scaling-stroke' }));
+    });
+    // who was ahead at each frame: a colour band along the top, one cell per frame
+    var cw = (W - padL - padR) / (total - 1);
+    b.frames.forEach(function (fr, i) { var hl = fr.held || (fr.leaders[0] && fr.leaders[0].model); if (hl) svg.appendChild(svgEl('rect', { x: (X(i) - cw / 2).toFixed(1), y: 2, width: (cw + 0.6).toFixed(1), height: 7, fill: colorOf(b, hl) })); });
+    // the moving line, with a dot on every strategy at that moment
+    svg.appendChild(svgEl('line', { x1: X(pos), x2: X(pos), y1: 2, y2: H - padB, stroke: 'currentColor', 'stroke-width': '2', 'stroke-opacity': '.85', 'vector-effect': 'non-scaling-stroke' }));
+    f.leaders.forEach(function (x) { svg.appendChild(svgEl('circle', { cx: X(pos), cy: Y(x.net), r: x.model === leader ? 4 : 2.6, fill: colorOf(b, x.model), stroke: 'currentColor', 'stroke-width': x.model === leader ? '1.5' : '0.6' })); });
+    svg.style.cursor = 'pointer';
+    svg.onclick = function (ev) {
+      var rc = svg.getBoundingClientRect(), frac = Math.max(0, Math.min(1, (ev.clientX - rc.left) / rc.width));
+      st.pos = Math.min(n - 1, Math.round(frac * (total - 1))); st.acc = 0; st.playing = false; drawViewer(id);
+    };
+    var first = b.frames[0].time, last = b.frames[n - 1].time;
+    [[padL, first, 'start'], [W - padR, last, 'end']].forEach(function (a) { if (a[1]) { var t = svgEl('text', { x: a[0], y: H - 2, 'text-anchor': a[2], 'font-size': '10', fill: 'currentColor', 'fill-opacity': '.6' }); t.textContent = a[1]; svg.appendChild(t); } });
+    root.querySelector('.vchart').replaceChildren(svg);
+    var key = root.querySelector('.vkey'); key.replaceChildren();
+    f.leaders.forEach(function (x) { var k = el('span'); var sw = el('i'); sw.style.background = colorOf(b, x.model); k.appendChild(sw); k.appendChild(document.createTextNode(x.model)); key.appendChild(k); });
+    var stand = root.querySelector('.stand'), fresh = standings(null, { standings: f.leaders });
+    stand.replaceChildren.apply(stand, Array.prototype.slice.call(fresh.childNodes));
+  }
+
+  function viewerEl(r) {
+    var id = r.race_id, st = vst(id), box = el('div', 'viewer'); box.id = 'v-' + id;
+    var bar = el('div', 'vbar'), play = el('button', 'ghost vplay', 'Pause'); play.type = 'button';
+    play.onclick = function () {
+      var b = boards[id], n = b ? b.frames.length : 0;
+      if (!st.playing && b && st.pos >= n - 1 && b.state === 'completed') st.pos = 0;   // Replay from the start
+      st.playing = !st.playing; drawViewer(id);
+    };
+    var sl = el('input'); sl.type = 'range'; sl.min = 0; sl.max = 0; sl.value = 0; sl.setAttribute('aria-label', 'Race position');
+    sl.oninput = function () { st.pos = Number(sl.value); st.acc = 0; st.playing = false; drawViewer(id); };
+    var SPEEDS = [0.25, 0.5, 1, 2, 5, 10, 20];
+    var sp = el('select'); sp.setAttribute('aria-label', 'Playback speed');
+    SPEEDS.forEach(function (v) { var op = el('option', '', v + '×'); op.value = v; if (v === st.speed) op.selected = true; sp.appendChild(op); });
+    function setSpeed(v) { st.speed = v; sp.value = String(v); }
+    sp.onchange = function () { st.speed = Number(sp.value); };
+    function mk(label, title, fn) { var bt = el('button', 'ghost', label); bt.type = 'button'; bt.title = title; bt.setAttribute('aria-label', title); bt.onclick = fn; return bt; }
+    function step(d) { var b = boards[id], n = b ? b.frames.length : 0; if (!n) return; st.pos = Math.max(0, Math.min(n - 1, Math.floor(st.pos) + d)); st.acc = 0; st.playing = false; drawViewer(id); }
+    function shift(d) { var i = SPEEDS.indexOf(st.speed); if (i < 0) i = 2; setSpeed(SPEEDS[Math.max(0, Math.min(SPEEDS.length - 1, i + d))]); }
+    bar.appendChild(mk('◀', 'Back one frame', function () { step(-1); }));
+    bar.appendChild(play);
+    bar.appendChild(mk('▶', 'Forward one frame', function () { step(1); }));
+    bar.appendChild(mk('Slower', 'Slower', function () { shift(-1); }));
+    bar.appendChild(sp);
+    bar.appendChild(mk('Faster', 'Faster', function () { shift(1); }));
+    bar.appendChild(sl); bar.appendChild(el('span', 'vlabel', 'Loading frames…'));
+    box.appendChild(bar); box.appendChild(el('div', 'vchart')); box.appendChild(el('div', 'vkey')); box.appendChild(el('div', 'stand'));
+    return box;
+  }
+
+  // playback clock: 1x = 6 frames per second; never runs ahead of the frames the runner has produced
+  setInterval(function () {
+    Object.keys(vstate).forEach(function (id) {
+      var st = vstate[id], b = boards[id]; if (!st.playing || !b || !b.frames.length) return;
+      st.acc += st.speed * 0.6; var step = Math.floor(st.acc); if (step < 1) return; st.acc -= step;
+      var maxPos = b.frames.length - 1; st.pos = Math.min(maxPos, Math.floor(st.pos) + step);
+      if (st.pos >= maxPos && b.state !== 'running' && b.state !== 'queued') st.playing = false;
+      drawViewer(id);
+    });
+  }, 100);
+
   function card(r, detail) {
     var c = el('article', 'race');
     var h = el('h3'); h.appendChild(document.createTextNode(r.name || r.race_id));
@@ -155,13 +267,17 @@
     var bar = el('div', 'bar'), fill = el('i'); fill.style.width = (r.pct || 0) + '%'; bar.appendChild(fill); c.appendChild(bar);
     c.appendChild(el('div', 'sub', 'frame ' + r.frame + ' of ' + (r.frames || '?') + ' · ' + (r.pct || 0) + '%'));
     if (r.error) c.appendChild(el('div', 'err', r.error));
+    if ((r.state === 'running' || r.state === 'completed') && isOpen(r)) c.appendChild(viewerEl(r));
     if (detail) {
-      c.appendChild(standings(r, detail));
       var info = el('div', 'meta'); info.style.marginTop = '8px';
-      [['Lead changes', detail.lead_changes], ['Rotation net', detail.rotation_net === null || detail.rotation_net === undefined ? '—' : money(detail.rotation_net)]].forEach(function (p) {
+      [['Lead changes', detail.lead_changes + (detail.raw_lead_changes !== undefined && detail.raw_lead_changes !== null ? ' (every #1 flip: ' + detail.raw_lead_changes + ')' : '')], ['Rotation net', detail.rotation_net === null || detail.rotation_net === undefined ? '—' : money(detail.rotation_net)]].forEach(function (p) {
         var s = el('span'); s.appendChild(document.createTextNode(p[0] + ' ')); s.appendChild(el('b', '', String(p[1]))); info.appendChild(s);
       });
       c.appendChild(info);
+      if (detail.skipped_duplicates && detail.skipped_duplicates.length) {
+        var sk = el('div', 'sub', 'Skipped (same net as a strategy already in the race): ' + detail.skipped_duplicates.map(function (d) { return d.model + ' (' + money(d.net) + ')'; }).join(', '));
+        sk.style.marginTop = '4px'; c.appendChild(sk);
+      }
     }
     var actions = el('div', 'row'); actions.style.marginTop = '10px';
     if (r.state === 'running' || r.state === 'queued') {
@@ -169,10 +285,15 @@
       cb.onclick = function () { api('DELETE', '/api/races/' + r.race_id).then(refresh).catch(function (e) { toast(e.message, true); }); };
       actions.appendChild(cb);
     }
-    if (r.state === 'completed') {
-      var tb = el('button', 'ghost', expanded[r.race_id] ? 'Hide standings' : 'Show standings'); tb.type = 'button';
-      tb.onclick = function () { expanded[r.race_id] = !expanded[r.race_id]; refresh(); };
+    if (r.state === 'completed' || r.state === 'running') {
+      var tb = el('button', 'ghost', isOpen(r) ? 'Hide race' : 'Watch race'); tb.type = 'button';
+      tb.onclick = function () { expanded[r.race_id] = !isOpen(r); refresh(); };
       actions.appendChild(tb);
+    }
+    if (r.state === 'completed' || r.state === 'failed' || r.state === 'cancelled') {
+      var db = el('button', 'ghost', 'Delete'); db.type = 'button';
+      db.onclick = function () { api('DELETE', '/api/races/' + r.race_id).then(refresh).catch(function (e) { toast(e.message, true); }); };
+      actions.appendChild(db);
     }
     c.appendChild(actions);
     return c;
@@ -190,26 +311,28 @@
 
   function refresh() {
     return api('GET', '/api/races').then(function (data) {
-      var want = data.races.filter(function (r) { return r.state === 'completed' && expanded[r.race_id]; });
-      return Promise.all(want.map(function (r) { return api('GET', '/api/races/' + r.race_id).then(function (d) { return [r.race_id, d]; }); })).then(function (pairs) {
+      newestId = data.races.length ? data.races[0].race_id : null;  // the API lists newest first
+      var open = data.races.filter(function (r) { return (r.state === 'running' || r.state === 'completed') && isOpen(r); });
+      var boardJobs = open.filter(function (r) { var b = boards[r.race_id]; return !b || !b.final || b.frames.length < (b.total || 1); })
+        .map(function (r) { return loadBoard(r.race_id); });
+      var want = data.races.filter(function (r) { return r.state === 'completed' && isOpen(r); });
+      return Promise.all(boardJobs).then(function () { return Promise.all(want.map(function (r) { return api('GET', '/api/races/' + r.race_id).then(function (d) { return [r.race_id, d]; }); })).then(function (pairs) {
         var details = {}; pairs.forEach(function (p) { details[p[0]] = p[1]; });
-        render(data, details); lastOk = Date.now(); $('conn').textContent = 'live · updated ' + new Date().toLocaleTimeString();
-      });
+        var a = document.activeElement;
+        if (!(a && a.type === 'range' && $('races').contains(a))) render(data, details);   // do not rebuild under a slider drag
+        Object.keys(boards).forEach(drawViewer);
+        lastOk = Date.now(); $('conn').textContent = 'live · updated ' + new Date().toLocaleTimeString();
+      }); });
     }).catch(function (e) { $('conn').textContent = 'offline — ' + e.message; });
   }
   function loop() { clearTimeout(timer); if (!document.hidden) refresh(); timer = setTimeout(loop, 2000); }
 
+  $('clear-finished').onclick = function () {
+    if (!confirm('Delete all completed, failed and cancelled races?')) return;
+    api('DELETE', '/api/races').then(refresh).catch(function (e) { toast(e.message, true); });
+  };
   $('cap-apply').onclick = function () {
     api('PUT', '/api/config', { max_concurrent: parseInt($('cap').value, 10) }).then(function (j) { toast('Parallel cap set to ' + j.max_concurrent); refresh(); }).catch(function (e) { toast(e.message, true); });
-  };
-  $('f-date').value = new Date().toISOString().slice(0, 10);
-  $('form').onsubmit = function (ev) {
-    ev.preventDefault();
-    var add = $('f-add').value.split(',').map(function (s) { return s.trim(); }).filter(Boolean), start = $('f-start').value.trim() || null;
-    var body = { name: (start || $('f-scenario').value) + ' race', start_model: start, add_models: add, date: $('f-date').value, scenario: $('f-scenario').value.trim() || 'top_net', return_type: $('f-return').value };
-    if ($('f-rule').value.trim()) body.overlay_rule_id = $('f-rule').value.trim();
-    $('f-go').disabled = true;
-    api('POST', '/api/races', body).then(function (r) { toast('Launched ' + r.name + ' (' + r.race_id + ')'); refresh(); }).catch(function (e) { toast(e.message, true); }).then(function () { $('f-go').disabled = false; });
   };
   api('GET', '/healthz').then(function (h) { $('build').textContent = 'build ' + h.build_sha + ' · virtual only'; }).catch(function () {});
   document.addEventListener('visibilitychange', function () { if (!document.hidden) loop(); });

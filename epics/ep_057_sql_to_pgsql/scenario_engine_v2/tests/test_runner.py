@@ -146,7 +146,8 @@ def test_race_content():
     assert res["board"][1]["leaders"][0]["model"] == "DNA_3"            # frame 1: 10 / -5 / 15
     assert res["final"]["leader"] == "DNA_2" and res["final"]["standings"][0]["net"] == 60.0
     assert [x["model"] for x in res["final"]["standings"]] == ["DNA_2", "DNA_1", "DNA_3"]
-    assert res["final"]["lead_changes"] == 3                            # leaders by frame: DNA_1, DNA_3, DNA_1, DNA_1, DNA_2
+    assert res["final"]["raw_lead_changes"] == 3                        # net #1 by frame: DNA_1, DNA_3, DNA_1, DNA_1, DNA_2
+    assert res["final"]["lead_changes"] == len(res["outputs"]["rotation"]["leader"]["trades"]) - 1   # the page's rotation switches, not every #1 flip
     assert [b["leaders"][0]["model"] for b in res["board"]] == ["DNA_1", "DNA_3", "DNA_1", "DNA_1", "DNA_2"]
     assert r.progress.frame == r.progress.frames == 5
 
@@ -268,3 +269,41 @@ def test_limit_must_be_a_value_the_data_service_serves():
             mgr.submit(cfg("bad", limit=bad))
     mgr.submit(cfg("ok", limit=20))
     assert mgr.wait(30)
+
+
+class _DupLeaders(FakeClient):
+    """Leaders in server order: DNA_3 (30), DNA_5 (30, same net as DNA_3), DNA_4 (4), DNA_2 (60)."""
+    def refresh_live_data(self, target_date, **kw):
+        self.calls.append("refresh_live_data")
+        self.criteria_data["top_net"] = {target_date: [toy(m, CURVES[m]) for m in ("DNA_3", "DNA_5", "DNA_4", "DNA_2")]}
+        return {"ok": True, "scenario": "top_net", "url": "fake://live_day"}
+
+    def fetch_portfolio_data(self, cache_key, date, key, background=False, portfolio_name=None):
+        self.portfolio_models = [toy(m, CURVES[m]) for m in key.split(",") if m in CURVES]
+        return {"models": self.portfolio_models}
+
+
+def test_top_n_leaders_have_distinct_net():
+    CURVES["DNA_5"] = [0, 5, 9, 20, 30]  # ends at the same net as DNA_3
+    try:
+        mgr = RaceManager(client_factory=lambda c: _DupLeaders())
+        r = mgr.submit(cfg("distinct", ("DNA_1",), add_scenario_top=3))
+        assert mgr.wait(30) and r.progress.state == "completed", r.progress.error
+        # top 3 distinct nets: DNA_3 (30), DNA_4 (4), DNA_2 (60); DNA_5 (also 30) is skipped and reported
+        assert list(r.result["outputs"]["spec"]["models"]) == ["DNA_1", "DNA_3", "DNA_4", "DNA_2"]
+        assert r.result["skipped_duplicates"] == [{"model": "DNA_5", "net": 30.0}]
+    finally:
+        CURVES.pop("DNA_5", None)
+
+
+def test_held_leader_follows_the_engine_rotation():
+    """The held leader is the one the page's rotation logic holds (hold rank = Top X): it is marked on every frame after the first entry and lead_changes counts its switches."""
+    mgr = RaceManager(client_factory=lambda c: FakeClient())
+    r = mgr.submit(cfg("held", ("DNA_1", "DNA_2", "DNA_3", "DNA_4"), hold_rank=2))
+    assert mgr.wait(30) and r.progress.state == "completed", r.progress.error
+    trades = r.result["outputs"]["rotation"]["leader"]["trades"]
+    assert r.result["final"]["lead_changes"] == max(0, len(trades) - 1)
+    held = [fr["held"] for fr in r.result["board"]]
+    assert held[0] is None and held[1:] == ["DNA_3", "DNA_3", "DNA_1", "DNA_1"]   # enters DNA_3 at frame 1, rotates to DNA_1 at frame 3
+    assert all(fr["held_rank"] is not None for fr in r.result["board"] if fr["held"])
+    assert r.result["final"]["lead_changes"] <= r.result["final"]["raw_lead_changes"] + 1

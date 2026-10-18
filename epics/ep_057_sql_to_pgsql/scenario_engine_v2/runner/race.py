@@ -1,6 +1,9 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/race.py — one virtual strategy race: start from a strategy, add competitors, replay the day frame by frame on its own isolated Engine.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-18 · the held leader comes from the engine's own leader rotation (the page's Top X hold rank + exit threshold): lead_changes counts its switches, raw_lead_changes keeps the every-#1-flip count, and each board frame carries held / held_rank once the race has finished.
+# v1.3.0 · 2026-10-18 · self.board: every frame's leaderboard is published as it is computed, so a race can be watched live and replayed from frame 0.
+# v1.2.0 · 2026-10-18 · add_scenario_top picks the top N leaders with DISTINCT final net (a leader whose net equals one already in the field is skipped and the next one is used); skipped ids are reported.
 # v1.1.0 · 2026-10-17 · add_scenario_top: the competition can be built from configuration (named strategies + the top N leaders of a scenario).
 # v1.0.1 · 2026-10-17 · the race's data client uses the race date as its live date (the scenario-leaders path needs one).
 # v1.0.0 · 2026-10-17 · Initial version: RaceConfig, Race.run (load via the data client, replay every frame, per-frame leaderboard, final engine outputs), cancel + progress hooks; virtual only.
@@ -109,16 +112,32 @@ class Race:
 
     # ---- the race itself ----
     def _competitors(self, client) -> tuple:
-        """The named strategies, then the scenario's top N leaders (server order) added as competitors, de-duplicated and capped at 20."""
+        """The named strategies, then the scenario's top N leaders (server order) with DISTINCT final net, de-duplicated by id and capped at 20.
+        A leader whose final net equals one already in the field is a duplicate outcome: it is skipped (and listed in self.skipped_duplicates) and the next leader takes its place.
+        The start strategy counts as one of the N when it is itself a leader."""
         c = self.config
         ids = list(c.models())
+        self.skipped_duplicates = []
         if c.add_scenario_top:
-            res = client.refresh_live_data(c.date, product_type=c.product_type, product=c.product, strategy_family=c.strategy_family, limit=max(c.limit, c.add_scenario_top),
+            res = client.refresh_live_data(c.date, product_type=c.product_type, product=c.product, strategy_family=c.strategy_family, limit=30,
                                            criteria=c.scenario, return_type=c.return_type)
             if not res.get("ok"):
                 raise RuntimeError(f"scenario leaders unavailable: {res.get('url')}")
-            leaders = [m["model"] for m in client.criteria_data.get(res["scenario"], {}).get(c.date, [])]
-            ids += leaders[:c.add_scenario_top]
+            leaders = client.criteria_data.get(res["scenario"], {}).get(c.date, [])
+            net_key = core.metric_keys(c.return_type)["netKey"]
+            seen, taken = set(), 0
+            for m in leaders:
+                if taken >= c.add_scenario_top:
+                    break
+                series = m.get("series") or []
+                last = series[-1] if series else {}
+                net = round(_num(last.get(net_key, last.get("net"))), 2)
+                if net in seen:
+                    self.skipped_duplicates.append({"model": m["model"], "net": net})
+                    continue
+                seen.add(net)
+                taken += 1
+                ids.append(m["model"])
         return tuple(dict.fromkeys(ids))[:20]
 
     def _run(self, client_factory) -> dict:
@@ -138,7 +157,7 @@ class Race:
         total = engine.max_frames()
         frames = total if c.max_frames is None else max(1, min(total, int(c.max_frames)))
         self.progress.frames = frames
-        board = []
+        board = self.board = []   # published frame by frame: the board endpoint serves it while the race runs
         keys = core.metric_keys(c.return_type)
         models = engine.eligible()
         longest = max(models, key=lambda m: len(m.get("series") or []), default={"series": []})["series"] if models else []
@@ -155,11 +174,25 @@ class Race:
             self.progress.frame = frame + 1
         engine.configure(frame_index=frames - 1 if c.max_frames is not None else -1)
         outputs = engine.outputs()
+        lead_changes = _apply_held_leader(board, outputs)
         final = board[-1]["leaders"] if board else []
-        lead_changes = sum(1 for a, b in zip(board, board[1:]) if a["leaders"] and b["leaders"] and a["leaders"][0]["model"] != b["leaders"][0]["model"])
+        raw_lead_changes = sum(1 for a, b in zip(board, board[1:]) if a["leaders"] and b["leaders"] and a["leaders"][0]["model"] != b["leaders"][0]["model"])
         return {"race_id": self.race_id, "frames": frames, "board": board, "outputs": outputs,
-                "final": {"leader": final[0]["model"] if final else None, "standings": final, "lead_changes": lead_changes,
+                "skipped_duplicates": list(getattr(self, "skipped_duplicates", [])),
+                "final": {"leader": final[0]["model"] if final else None, "standings": final, "lead_changes": lead_changes, "raw_lead_changes": raw_lead_changes,
                           "rotation_net": _rotation_net(outputs)}}
+
+
+def _apply_held_leader(board: list, outputs: dict) -> int:
+    """Mark every frame with the leader the page's own rotation logic is holding (held while within the hold rank, replaced by the net #1 once it drops out), and
+    return the number of switches. Frames before the rotation's first entry have no held leader; the board frames are mutated in place."""
+    trades = (outputs.get("rotation", {}).get("leader") or {}).get("trades") or []
+    for fr in board:
+        t = next((t for t in trades if t["entryIdx"] <= fr["frame"] and (t.get("isOpen") or fr["frame"] < t["exitIdx"])), None)
+        held = t["model"] if t else None
+        fr["held"] = held
+        fr["held_rank"] = next((i + 1 for i, r in enumerate(fr["leaders"]) if r["model"] == held), None) if held else None
+    return max(0, len(trades) - 1)
 
 
 def _num(v) -> float:
