@@ -59,3 +59,11 @@ def test_engine_names_the_timers_it_starts_and_clears():
     ops = r["timers"]
     assert ops[-1] == {"op": "set", "timer": "pointInTimeDebounceTimer", "ms": 180, "call": "refreshPointInTimeSelection", "args": ["10:00"], "at": ops[-1]["at"]}
     assert r["effects"][ops[-1]["at"]] == ["setTimeout", 180] and r["effects"][ops[0]["at"]] == ["clearTimeout"]
+
+
+def test_the_point_in_time_fetch_targets_report_the_real_http_status():
+    """The engine decides from the status and payload: a target that always said 200 would hide every HTTP failure of a lookup."""
+    h = cw.helper_block({js: "let" for _py, js, _k, _d in cw.FIELDS if js not in cw.DERIVED})
+    for name in ("fetchPointInTime", "fetchPointInTimeHours"):
+        line = next(l for l in h.split("\n") if l.strip().startswith(name + ":") or (name + ": async") in l)
+        assert "status: response.status" in line and "cache: 'no-store'" in line and "await response.json()" in line

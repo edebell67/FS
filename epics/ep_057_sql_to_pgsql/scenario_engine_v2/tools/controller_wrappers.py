@@ -50,6 +50,8 @@ CONTROLLERS = {
     "removePortfolios": ("remove_portfolios", "names", "[names]", None, {}),
     "switchDate": ("switch_date", "dateKey, { skipPortfolioLoad = false, refreshData = false } = {}", "[dateKey, skipPortfolioLoad, refreshData]", None, {}),
     "refreshActivePortfolioView": ("refresh_active_portfolio_view", "", "[]", None, {}),
+    "refreshPointInTimeSelection": ("refresh_point_in_time_selection", "atOverride = null", "[atOverride]", None, {}),
+    "refreshPointInTimeHistory": ("refresh_point_in_time_history", "", "[]", None, {}),
     "activatePortfolio": ("activate_portfolio", "name", "[name]", None, {}),
     "createSimilarPortfolio": ("create_similar_portfolio", "dimension", "[dimension]", None, {}),
     "setRankingCriteria": ("set_ranking_criteria", "criteria", "[criteria]", None, {}),
@@ -78,6 +80,8 @@ SWITCH_PRE = """    // page-only code of switchDate (the URL and the date pills)
 """
 LIVE_TARGETS = '\n      fetchLiveDay: async (path) => {\n        const requestUrl = `${API_BASE}${path}`;\n        let res, payload;\n        const early = window.__ep057EarlyChartRequest;\n        if (early && !early.used && early.url === requestUrl) {\n          early.used = true;\n          const outcome = await early.request;\n          if (!outcome.error) {\n            res = outcome.response;\n            payload = outcome.payload;\n          }\n        }\n        if (!res) {\n          res = await fetch(requestUrl, { cache: \'no-store\' });\n          payload = await res.json();\n        }\n        if (!res.ok) throw new Error(payload.error || res.status);\n        __box.payload = payload;\n        return true;\n      },\n      applyLivePayload: (targetDate, requestedScenario, requestedProductType, requestedProduct, requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType) => {\n        const payload = __box.payload;\n        liveChartDataLoadedKeys.add(liveChartCacheKey(targetDate));\n        cacheLiveChartResponse(payload, targetDate, requestedScenario, requestedProductType, requestedProduct,\n          requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType);\n        if (productFilter) {\n          const products = Array.isArray(payload.products) ? payload.products : [];\n          productFilter.innerHTML = \'<option value="all">All</option>\' + products.map(product =>\n            `<option value="${product}">${product.toUpperCase()}</option>`\n          ).join(\'\');\n          if (!products.includes(currentProduct)) currentProduct = \'all\';\n          productFilter.value = currentProduct;\n        }\n        syncTpSlScenarios(Array.isArray(payload.tp_sl_scenarios) ? payload.tp_sl_scenarios : []);\n        Object.keys(payload).forEach(sc => {\n          if (!Array.isArray(payload[sc])) return;\n          ALL_CRITERIA_DATA[sc] ||= {};\n          ALL_CRITERIA_DATA[sc][targetDate] = payload[sc];\n        });\n        pendingFilterDataRefresh = false;\n        if (targetDate === LIVE_DATE) initialLiveDataAvailable = true;\n        updateStrategyFamilyOptions();\n        const t = new Date().toLocaleTimeString([], { hour: \'2-digit\', minute: \'2-digit\' });\n        setLiveBadge(targetDate === LIVE_DATE ? `Live · updated ${t}` : `${targetDate} · ${modelLimit} models`, \'ok\');\n      },\n      syncLivePortfolioScreenState: (targetDate) => syncLivePortfolioScreenState(targetDate),'
 EXTRAS = {
+    "refreshPointInTimeSelection": {"staged": True},
+    "refreshPointInTimeHistory": {"staged": True},
     "activatePortfolio": {"staged": True, "fallback": True, "targets": " loadOverlayRuleLibrary: (...a) => loadOverlayRuleLibrary(...a), __attach: () => null,"},
     "createSimilarPortfolio": {"staged": True},
     "setRankingCriteria": {"staged": True},
@@ -101,7 +105,7 @@ EXTRAS = {
 
 COMMON_EFFECTS = {
     "savePortfolios": "savePortfolios();", "saveCriteriaWorkspaces": "saveCriteriaWorkspaces();", "renderPortfolioList": "renderPortfolioList();",
-    "refreshPointInTimeHistory": "refreshPointInTimeHistory();",
+    "refreshPointInTimeHistory": "refreshPointInTimeHistory();", "renderPointInTimeHistory": "renderPointInTimeHistory();",
 }
 STORAGE = {"strategyDirectoryPortfolioViewV1": "JSON.stringify(portfolioViewConfigs)", "strategyDirectoryMainViewV1": "JSON.stringify(mainScenarioViewConfig)"}
 
@@ -189,16 +193,18 @@ def helper_block(state_decls: dict) -> str:
     function __engineTimer(op) {{
       const timer = op.timer;
       const get = () => ({{ modelSearchTimer, pointInTimeDebounceTimer, replayInterval, portfolioViewRefreshTimer }})[timer];
-      const put = v => {{ if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else throw new Error('unknown engine timer: ' + timer); }};
+      const put = v => {{ if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else if (timer !== 'anonymousTimer') throw new Error('unknown engine timer: ' + timer); }};   // 'anonymousTimer': a one-shot the page never clears
       const interval = timer === 'replayInterval' || timer === 'portfolioViewRefreshTimer';
       if (op.op === 'clear') {{ if (interval) {{ clearInterval(get()); put(null); }} else clearTimeout(get()); return; }}
       if (interval) {{ if (timer === 'portfolioViewRefreshTimer' && location.protocol === 'file:') return; put(setInterval(globalThis.__engineTimerTargets[op.call], op.ms)); return; }}
       const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
       put(setTimeout(run, op.ms));
     }}
-    globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) }};
+    globalThis.__engineTimerTargets = {{ loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a), scheduleAutomaticTop1Refresh: (...a) => scheduleAutomaticTop1Refresh(...a) }};
     const __awaitTargets = {{ loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, {{ skipPortfolioRefresh: !!skip }}), switchDate: (...a) => switchDate(...a),
-      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) }};   // page async functions an engine stage may ask the page to await
+      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), fetchPointInTime: async path => {{ const response = await fetch(`${{API_BASE}}${{path}}`, {{ cache: 'no-store' }}); const payload = await response.json(); return {{ status: response.status, payload }}; }},
+      fetchPointInTimeHours: async path => {{ const response = await fetch(`${{API_BASE}}${{path}}`, {{ cache: 'no-store' }}); const payload = await response.json(); return {{ status: response.status, payload }}; }},
+      activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) }};   // page async functions an engine stage may ask the page to await
     const __domTargets = {{ {dom_table} }};
     function __engineDom(effect) {{
       const [, element, op, args] = effect;

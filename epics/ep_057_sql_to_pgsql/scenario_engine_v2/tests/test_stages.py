@@ -240,3 +240,95 @@ def test_ranking_loading_badge_uses_the_scenario_name_when_the_page_knows_one():
     assert badge == [["Loading Best win rate · keeping current chart visible", "idle"]]
     r = command.run({"method": "set_ranking_criteria", "args": ["top_win"], "state": st.snapshot(), "scenarioNames": {}})
     assert [v for v in r["viewArgs"].values() if v[0].startswith("Loading")] == [["Loading top_win · keeping current chart visible", "idle"]]
+
+
+def _pit_state(**kw):
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.pit_mode = True
+    for k, v in kw.items():
+        setattr(st, k, v)
+    return st
+
+
+def _pit_run(method, st, stage=None, ctx=None, result=None, args=None):
+    req = {"method": method, "args": args or [], "state": st.snapshot(), "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [model(1)], "candidates": [model(1)]}}
+    if stage:
+        req.update({"stage": stage, "ctx": ctx, "result": result})
+    return command.run(req)
+
+
+def test_the_selection_lookup_plans_then_merges_on_the_pages_current_state():
+    st = _pit_state()
+    r = _pit_run("refresh_point_in_time_selection", st)
+    assert r["await"]["fn"] == "fetchPointInTime" and r["await"]["catch"] and r["await"]["args"][0].startswith("/api/point_in_time_scenario?date=2026-10-14&at=10%3A00")
+    assert r["state"]["pit_status"][0] == "Loading as of 10:00…" and r["state"]["pit_request_sequence"] == 1 and r["state"]["pit_requested_key"]
+    ok = {"ok": {"status": 200, "payload": {"models": [model(1), model(2)], "at_time": "10:00"}}}
+    done = _pit_run("refresh_point_in_time_selection", None, r["stage"], r["ctx"], ok) if False else command.run({"method": "refresh_point_in_time_selection", "stage": r["stage"], "ctx": r["ctx"], "result": ok, "state": r["state"],
+                                                                                                         "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [model(1)], "candidates": []}})
+    assert done["state"]["pit_status"][0] == "10:00 · 1 selected" and "await" not in done
+    assert ["dom", "applySelectedTimeBtn", "classList.remove", ["click-feedback-pending"]] in done["effects"]   # a current answer clears the button's busy look
+    err = command.run({"method": "refresh_point_in_time_selection", "stage": r["stage"], "ctx": r["ctx"], "result": {"error": "boom"}, "state": r["state"],
+                       "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [], "candidates": []}})
+    assert err["state"]["pit_status"][0] == "Lookup failed for 10:00: boom" and err["state"]["pit_requested_key"] == ""
+    http = command.run({"method": "refresh_point_in_time_selection", "stage": r["stage"], "ctx": r["ctx"], "result": {"ok": {"status": 500, "payload": {"error": "db"}}}, "state": r["state"],
+                        "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [], "candidates": []}})
+    assert http["state"]["pit_status"][0] == "Lookup failed for 10:00: db"
+    stale_state = {**r["state"], "pit_request_sequence": 7}   # another lookup started while this one was out
+    stale = command.run({"method": "refresh_point_in_time_selection", "stage": r["stage"], "ctx": r["ctx"], "result": ok, "state": stale_state,
+                         "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [model(1)], "candidates": []}})
+    assert "selected" not in stale["state"]["pit_status"][0] and ["dom", "applySelectedTimeBtn", "classList.remove", ["click-feedback-pending"]] not in stale["effects"]
+
+
+def test_the_selection_lookup_does_nothing_when_it_is_not_needed():
+    r = _pit_run("refresh_point_in_time_selection", _pit_state(pit_mode=False))
+    assert "await" not in r
+    st = _pit_state()
+    r1 = _pit_run("refresh_point_in_time_selection", st)
+    r2 = _pit_run("refresh_point_in_time_selection", PageState.from_snapshot(r1["state"]))   # same request key again
+    assert "await" not in r2
+
+
+def test_the_hourly_cohort_lookup_branches():
+    st = _pit_state(pit_history_near_viewport=True, pit_history_panel_hidden=False)
+    r = _pit_run("refresh_point_in_time_history", st)
+    assert r["await"]["fn"] == "fetchPointInTimeHours" and r["await"]["catch"] and r["state"]["pit_history_status_text"] == "Building hourly cohorts…"
+    hours = {"ok": {"status": 200, "payload": {"hours": [{"hour": "09:00"}, {"hour": "10:00"}]}}}
+    ok = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": hours, "state": r["state"]})
+    assert ok["state"]["pit_history_status_text"] == "2 hourly cohorts · select an hour to inspect its strategies" and ["renderPointInTimeHistory"] in ok["effects"]
+    bad = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": {"error": "x"}, "state": r["state"]})
+    assert bad["state"]["pit_history_status_text"] == "Hourly cohorts unavailable: x" and bad["state"]["pit_history_key"] == ""
+    stale = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": hours, "state": {**r["state"], "pit_history_sequence": 9}})
+    assert stale["state"]["pit_history_status_text"] == "Building hourly cohorts…" and ["renderPointInTimeHistory"] not in stale["effects"]
+    gone = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": {"error": "x"}, "state": {**r["state"], "pit_history_sequence": 9}})
+    assert gone["state"]["pit_history_status_text"] == "Building hourly cohorts…"   # a newer request owns the status line
+    assert "await" not in _pit_run("refresh_point_in_time_history", _pit_state(pit_history_near_viewport=False))   # panel not near the viewport: nothing to build
+    assert "await" not in _pit_run("refresh_point_in_time_history", _pit_state(pit_history_panel_hidden=True))
+    assert "await" not in _pit_run("refresh_point_in_time_history", _pit_state(pit_mode=False))
+
+
+def test_an_automatic_top_one_lookup_reports_its_status_and_schedules_the_next_check_through_the_page():
+    st = _pit_state(auto_enabled=True, auto_minutes=15, auto_request_at="10:00")
+    r = _pit_run("refresh_point_in_time_selection", st)
+    assert r["await"]["fn"] == "fetchPointInTime" and "rank_direction=top" in r["await"]["args"][0] and "rank_position=1" in r["await"]["args"][0]
+    ok = {"ok": {"status": 200, "payload": {"models": [model(1)], "at_time": "10:00"}}}
+    done = command.run({"method": "refresh_point_in_time_selection", "stage": r["stage"], "ctx": r["ctx"], "result": ok, "state": r["state"],
+                        "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [model(1)], "candidates": []}})
+    assert "checked 10:00" in done["state"]["auto_status_text"] and ["setTimeout", 0] in done["effects"]
+    # an automatic add keeps the chart that is already there (the plan's context carries the retained curves across the page's fetch)
+    st2 = _pit_state(auto_enabled=True, auto_minutes=15, auto_request_at="10:00", pit_models=[model(5)])
+    r2 = _pit_run("refresh_point_in_time_selection", st2)
+    done2 = command.run({"method": "refresh_point_in_time_selection", "stage": r2["stage"], "ctx": r2["ctx"], "result": ok, "state": r2["state"],
+                         "hooks": {"maxFrames": 5, "head": "10:00", "eligible": [model(1)], "candidates": []}})
+    roles = {m["model"]: m["comparisonRole"] for m in done2["state"]["pit_models"]}
+    assert roles.get("M1", "").startswith("selected-time #1") and roles.get("M5") == "retained chart"
+    timer = [t for t in done["timers"] if t["op"] == "set"][0]
+    assert timer["call"] == "scheduleAutomaticTop1Refresh" and timer["timer"] == "anonymousTimer" and timer["ms"] == 0 and len(timer["args"]) == 1
+
+
+def test_a_hourly_cohort_answer_for_an_older_context_key_is_ignored():
+    st = _pit_state(pit_history_near_viewport=True, pit_history_panel_hidden=False)
+    r = _pit_run("refresh_point_in_time_history", st)
+    hours = {"ok": {"status": 200, "payload": {"hours": [{"hour": "09:00"}]}}}
+    changed = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": hours, "state": {**r["state"], "pit_history_key": "another|context"}})
+    assert changed["state"]["pit_history_status_text"] == "Building hourly cohorts…" and ["renderPointInTimeHistory"] not in changed["effects"]

@@ -52,6 +52,8 @@
   "removePortfolios",
   "switchDate",
   "refreshActivePortfolioView",
+  "refreshPointInTimeSelection",
+  "refreshPointInTimeHistory",
   "activatePortfolio",
   "createSimilarPortfolio",
   "setRankingCriteria",
@@ -61,5 +63,5 @@
   1432,
   9054
  ],
- "bytes": 552793
+ "bytes": 541613
 }

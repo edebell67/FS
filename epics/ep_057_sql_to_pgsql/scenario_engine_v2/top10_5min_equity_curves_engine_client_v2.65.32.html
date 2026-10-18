@@ -2363,16 +2363,18 @@
     function __engineTimer(op) {
       const timer = op.timer;
       const get = () => ({ modelSearchTimer, pointInTimeDebounceTimer, replayInterval, portfolioViewRefreshTimer })[timer];
-      const put = v => { if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else throw new Error('unknown engine timer: ' + timer); };
+      const put = v => { if (timer === 'modelSearchTimer') modelSearchTimer = v; else if (timer === 'pointInTimeDebounceTimer') pointInTimeDebounceTimer = v; else if (timer === 'replayInterval') replayInterval = v; else if (timer === 'portfolioViewRefreshTimer') portfolioViewRefreshTimer = v; else if (timer !== 'anonymousTimer') throw new Error('unknown engine timer: ' + timer); };   // 'anonymousTimer': a one-shot the page never clears
       const interval = timer === 'replayInterval' || timer === 'portfolioViewRefreshTimer';
       if (op.op === 'clear') { if (interval) { clearInterval(get()); put(null); } else clearTimeout(get()); return; }
       if (interval) { if (timer === 'portfolioViewRefreshTimer' && location.protocol === 'file:') return; put(setInterval(globalThis.__engineTimerTargets[op.call], op.ms)); return; }
       const run = () => globalThis.__engineTimerTargets[op.call](...op.args);
       put(setTimeout(run, op.ms));
     }
-    globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a) };
+    globalThis.__engineTimerTargets = { loadModelSearchFromDatabase: (...a) => loadModelSearchFromDatabase(...a), refreshPointInTimeSelection: (...a) => refreshPointInTimeSelection(...a), refreshActivePortfolioView: (...a) => refreshActivePortfolioView(...a), scheduleAutomaticTop1Refresh: (...a) => scheduleAutomaticTop1Refresh(...a) };
     const __awaitTargets = { loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, { skipPortfolioRefresh: !!skip }), switchDate: (...a) => switchDate(...a),
-      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) };   // page async functions an engine stage may ask the page to await
+      ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), fetchPointInTime: async path => { const response = await fetch(`${API_BASE}${path}`, { cache: 'no-store' }); const payload = await response.json(); return { status: response.status, payload }; },
+      fetchPointInTimeHours: async path => { const response = await fetch(`${API_BASE}${path}`, { cache: 'no-store' }); const payload = await response.json(); return { status: response.status, payload }; },
+      activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) };   // page async functions an engine stage may ask the page to await
     const __domTargets = { applySelectedTimeBtn: () => applySelectedTimeBtn, autoRefreshTop1Interval: () => autoRefreshTop1Interval, autoRefreshTop1Toggle: () => autoRefreshTop1Toggle, chartLockBtn: () => chartLockBtn, chartLockIcon: () => chartLockIcon, chartLockLabel: () => chartLockLabel, modelLimitFilter: () => modelLimitFilter, playBtn: () => playBtn, playBtnText: () => playBtnText, playIcon: () => playIcon, productFilter: () => productFilter, productTypeFilter: () => productTypeFilter, resetBaselineBtn: () => resetBaselineBtn, restartBtn: () => restartBtn, returnTypeAltBtn: () => returnTypeAltBtn, returnTypeNetBtn: () => returnTypeNetBtn, scrubberTrack: () => scrubberTrack, setBaseAtHeadBtn: () => setBaseAtHeadBtn, similarStrategyModal: () => similarStrategyModal, stepBackBtn: () => stepBackBtn, stepFwdBtn: () => stepFwdBtn, winRateDisplayBadge: () => winRateDisplayBadge, winRateSlider: () => winRateSlider, winRateValBadge: () => winRateValBadge };
     function __engineDom(effect) {
       const [, element, op, args] = effect;
@@ -2398,7 +2400,7 @@
         if (name === 'view') { if (typeof globalThis[effect[1]] === 'function') globalThis[effect[1]](...((viewArgs && viewArgs[at]) || [])); return; }
         if (name === 'localStorage.setItem') { const expr = {'strategyDirectoryPortfolioViewV1': () => JSON.stringify(portfolioViewConfigs), 'strategyDirectoryMainViewV1': () => JSON.stringify(mainScenarioViewConfig)}[effect[1]]; if (expr) localStorage.setItem(effect[1], expr()); return; }
         if (handlers[name]) { handlers[name](effect); return; }
-        const common = {'savePortfolios': () => { savePortfolios(); }, 'saveCriteriaWorkspaces': () => { saveCriteriaWorkspaces(); }, 'renderPortfolioList': () => { renderPortfolioList(); }, 'refreshPointInTimeHistory': () => { refreshPointInTimeHistory(); }}[name];
+        const common = {'savePortfolios': () => { savePortfolios(); }, 'saveCriteriaWorkspaces': () => { saveCriteriaWorkspaces(); }, 'renderPortfolioList': () => { renderPortfolioList(); }, 'refreshPointInTimeHistory': () => { refreshPointInTimeHistory(); }, 'renderPointInTimeHistory': () => { renderPointInTimeHistory(); }}[name];
         if (common) common(); else throw new Error('engine effect not handled by the page: ' + name);
       });
     }
@@ -5836,242 +5838,83 @@ ${preview}`)) return;
     }
 
     async function refreshPointInTimeHistory() {
-      if (currentCriteria === 'top1_at_time' || !pointInTimeMode || !pointInTimeHistoryNearViewport ||
-          pointInTimeHistoryPanel?.classList.contains('hidden') || !/^\d{4}-\d{2}-\d{2}$/.test(currentDate)) return;
-      const key = pointInTimeContextKey();
-      if (key === pointInTimeHistoryKey) return;
-      pointInTimeHistoryKey = key;
-      pointInTimeHistoryAt = '';
-      const sequence = ++pointInTimeHistorySequence;
-      pointInTimeHistoryStatus.textContent = 'Building hourly cohorts…';
-      const query = new URLSearchParams({ date: currentDate, ...Object.fromEntries(
-        Object.entries(pointInTimeRequestOptions()).map(([name, value]) => [name, String(value)])
-      ) });
-      try {
-        const response = await fetch(`${API_BASE}/api/point_in_time_scenario_hours?${query}`, { cache: 'no-store' });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || response.status);
-        if (sequence !== pointInTimeHistorySequence || key !== pointInTimeHistoryKey) return;
-        pointInTimeHours = Array.isArray(payload.hours) ? payload.hours : [];
-        pointInTimeHistoryStatus.textContent = `${pointInTimeHours.length} hourly cohorts · select an hour to inspect its strategies`;
-        renderPointInTimeHistory();
-      } catch (error) {
-        if (sequence !== pointInTimeHistorySequence) return;
-        pointInTimeHistoryStatus.textContent = `Hourly cohorts unavailable: ${error.message}`;
-        pointInTimeHistoryKey = '';
-      }
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('refresh_point_in_time_history', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('refresh_point_in_time_history continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('refresh_point_in_time_history', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
+          __apply(res);
+        }
+        return res.ret;
+      };
+      let res = __engineCommand('refresh_point_in_time_history', []);
+      if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
+      __apply(res);
+      return __drive(res);
     }
 
     async function refreshPointInTimeSelection(atOverride = null) {
-      if (!pointInTimeMode || !/^\d{4}-\d{2}-\d{2}$/.test(currentDate)) return;
-      const wasAtLatestFrame = currentFrameIndex < 0 || currentFrameIndex >= getMaxFrames() - 1;
-      const at = atOverride || pointInTimeAtReplayHead();
-      if (!at) return;
-      const automaticTop1Add = autoRefreshTop1RequestAt === at;
-      const pointInTimeExplicitAdd = Boolean(!automaticTop1Add && selectedTimeExplicitRefresh && pendingExplicitTop1Time === at);
-      const retainChartSelection = pointInTimeExplicitAdd || automaticTop1Add;
-      const retainedChartModels = retainChartSelection
-        ? [...(Array.isArray(pointInTimeModels) ? pointInTimeModels : [])]
-        : [];
-      const { scenario: criteria, return_type: returnType, product_type: productType,
-        product, strategy_family: strategyFamily, limit, min_win_rate: winRate } = pointInTimeRequestOptions();
-      const dateForRequest = currentDate;
-      const criteriaForRequest = currentCriteria;
-      const portfolioForRequest = activePortfolioName;
-      const atForRequest = at;
-      const requestedAutoDirection = autoRefreshTop1DirectionSelect?.value === 'bottom' ? 'bottom' : 'top';
-      const requestedAutoRank = Math.max(1, Math.min(5, Number(autoRefreshTop1RankSelect?.value) || 1));
-      const requestKey = [currentDate, at, criteria, returnType, productType,
-        product, strategyFamily, limit, winRate, activePortfolioName || 'scenario',
-        automaticTop1Add ? requestedAutoDirection : '', automaticTop1Add ? requestedAutoRank : ''].join('|');
-      if (requestKey === pointInTimeRequestedKey) return;
-      const requestedRankCount = automaticTop1Add ? requestedAutoRank : selectedTimeRankCount();
-      pointInTimeRequestedKey = requestKey;
-      if (automaticTop1Add) {
-        pointInTimeStatus.textContent = `Auto-add ${requestedAutoDirection} #${requestedAutoRank} at ${at}…`;
-        pointInTimeStatus.className = 'text-[10px] font-bold text-amber-300';
-      } else if (pointInTimeExplicitAdd) {
-        pointInTimeStatus.textContent = `Finding top ${selectedTimeRankCount()} as of ${at}…`;
-        pointInTimeStatus.className = 'text-[10px] font-bold text-amber-300';
-        renderCards(); drawChart();
-      } else {
-        pointInTimeStatus.textContent = `Loading as of ${at}…`;
-        pointInTimeStatus.className = 'text-[10px] font-bold text-amber-300';
-      }
-      const requestSequence = ++pointInTimeRequestSequence;
-      const query = new URLSearchParams({
-        date: dateForRequest, at: atForRequest, scenario: criteria, return_type: returnType,
-        product_type: productType, product, strategy_family: strategyFamily,
-        limit: String(limit), min_win_rate: String(winRate),
-        rank_direction: automaticTop1Add ? requestedAutoDirection : 'top',
-        ...(automaticTop1Add ? { rank_position: String(requestedAutoRank) } : {})
-      });
-      try {
-        const response = await fetch(`${API_BASE}/api/point_in_time_scenario?${query}`, { cache: 'no-store' });
-        const payload = await response.json();
-        if (!response.ok) throw new Error(payload.error || response.status);
-        if (requestSequence !== pointInTimeRequestSequence || requestKey !== pointInTimeRequestedKey ||
-            currentDate !== dateForRequest || currentCriteria !== criteriaForRequest ||
-            activePortfolioName !== portfolioForRequest) {
-          finishAutomaticTop1Refresh(at, `On · context changed at ${at}`);
-          return;
+      const __targets = { ...__awaitTargets, };
+      const __handles = {};
+      const __apply = r => {
+        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      };
+      const __resume = (stage, ctx, result) => {
+        const r2 = __engineCommand('refresh_point_in_time_selection', null, { stage, ctx, result });
+        if (r2.needsNetwork) throw new Error('engine stage for refresh_point_in_time_selection needs the network');
+        __apply(r2);
+        return __drive(r2);
+      };
+      const __drive = async res => {
+        while (res.await) {
+          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
+          let out;
+          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
+            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('refresh_point_in_time_selection continuation failed:', e));
+            out = null;
+          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
+            const p = Promise.resolve(__targets[aw.fn](...aw.args));
+            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
+            out = null;
+          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
+          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
+          else out = await __targets[aw.fn](...aw.args);
+          if (stageNow === 'done') break;
+          res = __engineCommand('refresh_point_in_time_selection', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
+          if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_selection needs the network');
+          __apply(res);
         }
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-        finishAutomaticTop1Refresh(at);
-        const rankedModels = Array.isArray(payload.models) ? payload.models : [];
-        // Automatic add requests one exact ranked model. Manual refresh keeps
-        // its existing top-X selection behavior.
-        const leaders = automaticTop1Add
-          ? (rankedModels[requestedAutoRank - 1]
-            ? [{ ...rankedModels[requestedAutoRank - 1], selectedRank: requestedAutoRank }]
-            : [])
-          : rankedModels.slice(0, requestedRankCount);
-        const comparisonModels = [...leaders];
-        const historyContext = `${currentDate}|${criteriaForRequest}|${productType}|${product}|${strategyFamily}|${returnType}`;
-        let previouslySelectedLeaderIds = new Set();
-        if (retainChartSelection) {
-          if (selectedTimeLeaderHistoryContext !== historyContext) {
-            selectedTimeLeaderHistory.clear();
-            selectedTimeLeaderHistoryContext = historyContext;
-          }
-          previouslySelectedLeaderIds = new Set([...selectedTimeLeaderHistory.keys()]
-            .filter(id => !scenarioRemovedModels.has(String(id))));
-          const selectedAt = payload.at_time || at;
-          retainSelectedTimeLeaders(leaders, selectedAt);
-          if (pointInTimeExplicitAdd) {
-            pendingExplicitTop1Time = null;
-            selectedTimeExplicitRefresh = false;
-          }
-        }
-        if (selectedTimeLeaderHistoryContext === historyContext) {
-          for (const historicalLeader of selectedTimeLeaderHistory.values()) {
-            if (scenarioRemovedModels.has(String(historicalLeader.model))) continue;
-            if (!comparisonModels.some(model => String(model.model) === String(historicalLeader.model))) {
-              comparisonModels.push({ ...historicalLeader, comparisonRole: `selected-time #${historicalLeader.selectedRank || 1} history` });
-            }
-          }
-        }
-        for (const [pinnedId, pinnedModel] of pinnedComparisonModels) {
-          if (!comparisonModels.some(model => String(model.model) === pinnedId)) comparisonModels.push(pinnedModel);
-        }
-        for (const searchedModel of modelSearchLoadedModels) {
-          if (!comparisonModels.some(model => String(model.model) === String(searchedModel.model))) comparisonModels.push(searchedModel);
-        }
-        if (retainChartSelection) {
-          for (const retainedModel of retainedChartModels) {
-            if (!comparisonModels.some(model => String(model.model) === String(retainedModel.model))) {
-              comparisonModels.push({ ...retainedModel, comparisonRole: retainedModel.comparisonRole || 'retained chart' });
-            }
-          }
-        }
-        const leaderIds = new Set(leaders.map(model => String(model.model)));
-        const otherComparisonIds = new Set([
-          ...pinnedComparisonModels.keys(),
-          ...modelSearchLoadedModels.map(model => String(model.model))
-        ]);
-        const pinnedColors = new Set([...pinnedComparisonModels.values(), ...modelSearchLoadedModels].map(model => String(model.color || '').toLowerCase()));
-        const palette = ['#f59e0b', '#a78bfa', '#34d399', '#fb7185', '#f97316', '#38bdf8', '#e879f9'];
-        const assignedLeaderColors = new Set(pinnedColors);
-        // Clearing a Scenario tab marks its current models as removed. A later
-        // explicit Refresh & Add is a new selection and must be allowed to add
-        // those leaders back; otherwise the lookup succeeds but the chart still
-        // says "No Models Matching Filter" because this set filters them out.
-        leaders.forEach(model => scenarioRemovedModels.delete(String(model.model)));
-        pointInTimeModels = comparisonModels.map((model, index) => {
-          const modelId = String(model.model);
-          const isLeader = leaderIds.has(modelId);
-          const currentLeaderRank = leaders.findIndex(leader => String(leader.model) === modelId) + 1;
-          const historicalLeader = selectedTimeLeaderHistory.get(modelId);
-          const isPinned = pinnedComparisonModels.has(modelId);
-          const isSearched = modelSearchLoadedModels.some(item => String(item.model) === modelId);
-          const isRetainedChart = retainChartSelection && retainedChartModels.some(item => String(item.model) === modelId);
-          let color = historicalLeader?.color || model.color;
-          if (isLeader && !historicalLeader && [...otherComparisonIds].some(id => id !== modelId)) {
-            color = palette.find(candidate => candidate.toLowerCase() !== String(model.color || '').toLowerCase() && !assignedLeaderColors.has(candidate.toLowerCase())) || model.color;
-          }
-          if (isLeader) assignedLeaderColors.add(String(color || '').toLowerCase());
-          if (!isLeader && isSearched && !isPinned) color = '#e879f9';
-        const selectedRank = (isLeader && automaticTop1Add ? (Number(model.selectedRank) || requestedAutoRank) : currentLeaderRank) || historicalLeader?.selectedRank || model.selectedRank || 1;
-          const isExplicitTimeLeader = retainChartSelection || criteriaForRequest === 'top1_at_time';
-          return { ...model, color, rank: index + 1,
-            comparisonRole: isLeader ? `${isExplicitTimeLeader ? 'selected-time' : 'as-of'} #${selectedRank}` : (historicalLeader ? `selected-time #${selectedRank} history` : (isPinned ? 'pinned comparison' : (isSearched ? 'searched model' : (isRetainedChart ? 'retained chart' : 'comparison')))),
-            joined_at: historicalLeader?.joined_at || model.joined_at || (isLeader ? (payload.at_time || at) : null),
-            selectedAt: isLeader ? (payload.at_time || at) : (historicalLeader?.selectedAt || model.selectedAt || (retainChartSelection && isRetainedChart ? null : (payload.at_time || at))),
-            selectedRank,
-            selectedAtTimes: historicalLeader?.selectedAtTimes || model.selectedAtTimes || (isLeader ? [payload.at_time || at] : []),
-            selectedAtEntries: historicalLeader?.selectedAtEntries || model.selectedAtEntries || (isLeader ? [{ time: payload.at_time || at, rank: selectedRank }] : []) };
-        });
-        if (pointInTimeModels.some(model => model.series?.length)) {
-          pointInTimeTimelineModels = pointInTimeModels.filter(model => model.series?.length);
-        }
-        if (retainChartSelection) {
-          selectedModelIndex = 0;
-          visibleModels = new Set(pointInTimeModels.map(model => model.model));
-          updatePointInTimeToggleUI();
-        }
-        visibleModels = new Set(getEligibleModels().map(model => model.model));
-        pointInTimeStatus.className = 'text-[10px] text-cyan-300';
-        if (retainChartSelection) {
-          if (!leaders.length) pointInTimeStatus.textContent = retainedChartModels.length
-            ? `No new strategies available at ${payload.at_time || at}; existing chart and overlay history retained (${retainedChartModels.length} strategies)`
-            : `No strategies available at or before ${payload.at_time || at}`;
-          else {
-            const pinNote = leaders.every(leader => pinnedComparisonModels.has(String(leader.model)))
-              ? ' · all already pinned'
-              : pinnedComparisonModels.size ? ` · plus ${pinnedComparisonModels.size} pinned` : '';
-            const retainedTimes = new Set([...selectedTimeLeaderHistory.values()].flatMap(model => model.selectedAtTimes || []));
-            const scenarioName = activePortfolioName || SCENARIOS_CATALOGUE.find(item => item.id === criteriaForRequest)?.name || criteriaForRequest;
-            const newLeaders = leaders.filter(leader => !previouslySelectedLeaderIds.has(String(leader.model)));
-            const retainedCount = selectedTimeLeaderHistory.size - newLeaders.length;
-            if (!newLeaders.length) {
-              const alreadySelectedAt = leaders.map(leader => {
-                const existing = selectedTimeLeaderHistory.get(String(leader.model));
-                const times = (existing?.selectedAtTimes || []).join(', ');
-                return `${leader.model}${times ? ` (already added at ${times})` : ''}`;
-              }).join(', ');
-            pointInTimeStatus.textContent = `${payload.at_time || at} · ${automaticTop1Add ? `Auto-add ${requestedAutoDirection} #${requestedAutoRank}` : `Top ${leaders.length}`} from ${scenarioName} already on chart: ${alreadySelectedAt}; no duplicate curve added; overlay history retained${pinNote}`;
-            } else {
-              const addedNames = newLeaders.map(leader => leader.model).join(', ');
-              const retainedNote = retainedCount ? `; retaining ${retainedCount} earlier strategies` : '';
-              pointInTimeStatus.textContent = `${payload.at_time || at} · ${automaticTop1Add ? `Auto-added ${requestedAutoDirection} #${requestedAutoRank}` : `Added new top ${leaders.length}`} from ${scenarioName}: ${addedNames}${retainedNote}; existing chart and overlay history retained; ${selectedTimeLeaderHistory.size} distinct strategies across ${retainedTimes.size} selected times${pinNote}`;
-            }
-            pointInTimeStatus.className = 'text-[10px] font-bold text-emerald-300';
-          }
-        } else pointInTimeStatus.textContent = `${payload.at_time || at} · ${leaders.length} selected`;
-        if (pointInTimeExplicitAdd && pendingExplicitTop1Time === at) {
-          pendingExplicitTop1Time = null;
-          selectedTimeExplicitRefresh = false;
-        }
-        pointInTimeHistoryAt = `${String(payload.at_time || at).slice(0, 2)}:00`;
-        renderPointInTimeHistory();
-        if (wasAtLatestFrame) currentFrameIndex = Math.max(0, getMaxFrames() - 1);
-        updateDateLabelAndTitle(); updateScrubberUI(); updateRibbon(); renderCards(); drawChart();
-        if (pointInTimeExplicitAdd && selectedTimeInput) selectedTimeInput.value = at;
-      } catch (error) {
-        if (requestSequence !== pointInTimeRequestSequence) {
-          finishAutomaticTop1Refresh(at, `On · lookup canceled at ${at}`);
-          return;
-        }
-        finishAutomaticTop1Refresh(at, `On · lookup failed at ${at}`);
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-        console.warn('Point-in-time scenario lookup failed:', error);
-        const retainedModels = [...(Array.isArray(pointInTimeModels) ? pointInTimeModels : [])];
-        for (const pinnedModel of pinnedComparisonModels.values()) {
-          if (!retainedModels.some(model => String(model.model) === String(pinnedModel.model))) retainedModels.push(pinnedModel);
-        }
-        for (const searchedModel of modelSearchLoadedModels) {
-          if (!retainedModels.some(model => String(model.model) === String(searchedModel.model))) retainedModels.push(searchedModel);
-        }
-        pointInTimeModels = retainedModels;
-        if (pendingExplicitTop1Time === at) pendingExplicitTop1Time = null;
-        selectedTimeExplicitRefresh = false;
-        pointInTimeRequestedKey = '';
-        pointInTimeStatus.textContent = `Lookup failed for ${at}: ${error.message}`;
-        pointInTimeStatus.className = 'text-[10px] font-bold text-rose-300';
-        updateDateLabelAndTitle(); updateRibbon(); renderCards(); drawChart();
-      }
+        return res.ret;
+      };
+      let res = __engineCommand('refresh_point_in_time_selection', [atOverride]);
+      if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_selection needs the network');
+      __apply(res);
+      return __drive(res);
     }
     function __original_schedulePointInTimeSelection() {
       const at = pointInTimeAtReplayHead();

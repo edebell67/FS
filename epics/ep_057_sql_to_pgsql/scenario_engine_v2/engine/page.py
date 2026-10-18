@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.9.0 · 2026-10-18 · refresh_point_in_time_selection and refresh_point_in_time_history in stages for the browser copy (the page fetches; the engine plans before and merges after, on the page's current state).
 # v1.8.1 · 2026-10-18 · stages hand applyPortfolioViewConfig to the page (it may want the network: the page runs its own fallback); create_similar_portfolio returns nothing, like the page.
 # v1.8.0 · 2026-10-18 · activate_portfolio and create_similar_portfolio in stages for the browser copy (Await.handle / Await.attach: a started page promise gets a continuation that runs later as its own stage); a live portfolio is refused so the page runs its own copy.
 # v1.7.0 · 2026-10-18 · set_ranking_criteria in stages (its one-go form is the stages driven in Python: fired refreshes, paintLiveChartCache, schedulePointInTimeSelection resolved by _resolve_await).
@@ -70,6 +71,8 @@ STAGES = {
     "move_model_between_portfolios": ("_move_model_0", "_move_model_1"),
     "repopulate_active_portfolio_from_criteria": ("_repopulate_0", "_repopulate_1"),
     # refresh_live_data is staged only for the browser copy; its one-go form (begin_refresh_live_data / _apply_live) keeps the event-loop model the headless races use
+    "refresh_point_in_time_selection": ("_pit_sel_0", "_pit_sel_1"),
+    "refresh_point_in_time_history": ("_pit_hist_0", "_pit_hist_1"),
     "activate_portfolio": ("_act_0", "_act_1", "_act_1b", "_act_2", "_act_3", "_act_4", "_act_load_done", "_act_rules_done"),
     "create_similar_portfolio": ("_similar_0", "_similar_1"),
     "set_ranking_criteria": ("_rank_0", "_rank_portfolio_1", "_rank_main_1", "_rank_main_2", "_rank_main_3", "_rank_done"),
@@ -581,7 +584,10 @@ class Page:
         s.pit_request_sequence = st.request_sequence
         s.pit_history_at = st.history_at
         for kind, name in st.events:
-            (self.fx if kind == "fx" else self.view)(name)
+            if kind == "pending_off":
+                self.pending_button(False)
+            else:
+                (self.fx if kind == "fx" else self.view)(name)
         st.events = []
         if st.selected_time_input is not None:
             s.selected_time_input = st.selected_time_input
@@ -660,6 +666,70 @@ class Page:
                 s.pit_history_key = ""
             return None
         return Pending(apply, issued=True)
+
+    # ---- the two point-in-time lookups in stages (browser copy): the page fetches, the engine plans before and merges after
+    def _pit_sel_0(self, at_override=None):
+        st = self._pit_state()
+        result, ctx = stm.plan_point_in_time_selection(st, self.client, self._opt_state(), head_time=self._head_time(), max_frames=self.max_frames(),
+                                                       eligible_models=self._eligible(), at_override=at_override)
+        self._pit_commit(st)   # the part before the request (flags, the "Loading…" label, the request counter) is visible at once
+        if ctx is None:
+            return None
+        return Await("fetchPointInTime", [ctx["url"]], ctx, next="_pit_sel_1", catch=True)
+
+    def _pit_sel_1(self, ctx, result):
+        st = self._pit_state()   # the page may have changed while the lookup was out: merge into its CURRENT state
+        if "error" in (result or {}):
+            resp, err = None, FetchError(result["error"])
+        else:
+            got = (result or {}).get("ok") or {}
+            resp, err = (got.get("status"), got.get("payload")), None
+        stm.apply_point_in_time_selection(st, ctx, resp, err, self._eligible())
+        if st.auto_status is not None:
+            self.update_auto_refresh_status(st.auto_status)
+        if st.sched is not None:
+            head = st.sched
+            self._timeout(lambda: None, 0, "anonymousTimer", "scheduleAutomaticTop1Refresh", [head])
+        self._pit_commit(st)
+        return None
+
+    def _pit_hist_0(self):
+        s = self.s
+        if (s.current_criteria == "top1_at_time" or not s.pit_mode or not s.pit_history_near_viewport or s.pit_history_panel_hidden
+                or not DATE_RE.fullmatch(s.current_date or "")):
+            return None
+        key = pu.point_in_time_context_key(self._opt_state())
+        if key == s.pit_history_key:
+            return None
+        s.pit_history_key = key
+        s.pit_history_at = ""
+        s.pit_history_sequence += 1
+        s.pit_history_status_text = "Building hourly cohorts\u2026"
+        url = self.client.point_in_time_hours_url(s.current_date, pu.point_in_time_request_options(self._opt_state()))
+        return Await("fetchPointInTimeHours", [url], {"seq": s.pit_history_sequence, "key": key}, next="_pit_hist_1", catch=True)
+
+    def _pit_hist_1(self, ctx, result):
+        s = self.s
+        seq, key = ctx["seq"], ctx["key"]
+        try:
+            if "error" in (result or {}):
+                raise FetchError(result["error"])
+            got = (result or {}).get("ok") or {}
+            status, payload = got.get("status"), got.get("payload")
+            if not (200 <= int(status) < 300):
+                raise FetchError(pu.js_str(stm.js_or(payload.get("error") if isinstance(payload, dict) else None, status)))
+            if seq != s.pit_history_sequence or key != s.pit_history_key:
+                return None
+            hours = payload.get("hours") if isinstance(payload, dict) else None
+            s.pit_hours = hours if isinstance(hours, list) else []
+            s.pit_history_status_text = f"{len(s.pit_hours)} hourly cohorts \u00b7 select an hour to inspect its strategies"
+            self.fx("renderPointInTimeHistory")
+        except Exception as error:  # noqa: BLE001
+            if seq != s.pit_history_sequence:
+                return None
+            s.pit_history_status_text = f"Hourly cohorts unavailable: {error}"
+            s.pit_history_key = ""
+        return None
 
     def refresh_point_in_time_history(self):
         self._await(self.begin_refresh_point_in_time_history())
