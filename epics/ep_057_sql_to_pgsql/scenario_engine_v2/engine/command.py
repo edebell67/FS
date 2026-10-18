@@ -41,6 +41,9 @@ def _no_network_for(wanted: list):
     return transport
 
 
+_CRITERIA_CACHE: dict = {}   # criteriaHash -> criteriaData (the engine never mutates it)
+
+
 def run(req: dict) -> dict:
     method = req.get("method")
     if method not in STAGE1:
@@ -48,7 +51,18 @@ def run(req: dict) -> dict:
     state = PageState.from_snapshot(req["state"])
     wanted: list = []
     client = DataClient(_no_network_for(wanted), "", live_date=state.live_date)
-    client.criteria_data = req.get("criteriaData") or {}
+    criteria = req.get("criteriaData")
+    chash = req.get("criteriaHash")
+    if chash is not None:   # the page sends the (large) scenario data once per content hash, then only the hash
+        if criteria is None:
+            criteria = _CRITERIA_CACHE.get(chash)
+            if criteria is None:
+                return {"needCriteria": True}
+        else:
+            _CRITERIA_CACHE[chash] = criteria
+            while len(_CRITERIA_CACHE) > 4:
+                _CRITERIA_CACHE.pop(next(iter(_CRITERIA_CACHE)))
+    client.criteria_data = {k: dict(v) for k, v in (criteria or {}).items()}   # outer two levels copied: the client files results into them
     client.overlay_rule_library = req.get("library") or {"rules": [], "assignments": {}}
     hooks = req.get("hooks")   # test seam only (the differential tests pin the replay head / frame count); the page never sends it
     extra = {}

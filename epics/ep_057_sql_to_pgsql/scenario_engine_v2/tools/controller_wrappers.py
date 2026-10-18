@@ -179,8 +179,16 @@ def helper_block(state_decls: dict) -> str:
     }}
     function __engineCommand(method, args, extra) {{
       const sent = __engineSnapshot();
-      const res = __engine.call({{ fn: 'command', method, args, ...(extra || {{}}), state: sent, flags: {{ liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }}, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
-        scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }});
+      const crit = __engineCriteria();
+      const body = {{ fn: 'command', method, args, ...(extra || {{}}), state: sent, flags: {{ liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }}, library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
+        scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }};
+      // the scenario data is large: send it once per content hash, then only the hash (the engine asks again if it no longer has it)
+      const text = JSON.stringify(crit);
+      let h1 = 0xdeadbeef ^ text.length, h2 = 0x41c6ce57;
+      for (let i = 0; i < text.length; i++) {{ const c = text.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }}
+      body.criteriaHash = (h1 >>> 0).toString(16) + (h2 >>> 0).toString(16) + text.length;
+      let res = __engine.call(body);
+      if (res && res.needCriteria) res = __engine.call({{ ...body, criteriaData: crit }});
       if (!res.needsNetwork) {{ __engineApplyState(res.state, sent); (res.spawns || []).forEach(__engineSpawn); }}
       return res;
     }}
