@@ -7,7 +7,7 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 |---|------|--------|-------------------------|
 | 1–13 | Engine core (Page controller, tests, mutation tests, map/drift, version blocks, task files) | Done | Differential tests page JS (Node) vs Python on real :8765 data + synthetic; ~190 mutants killed (documented equivalents in `tools/mutants_page.py`); `check_drift.py` clean |
 | 14 | Parallel headless instances (max 5, configurable) | Done | `runner/manager.py`, `tests/test_runner*.py` |
-| 15 | Thin browser copy without embedded engine | Closed as-is | Closed as-is by your decision (2026-10-18 'leave as is'): the engine runs the rule logic and 10 controllers; the ~31 fetching controllers stay in the page as a documented boundary. Plan to move them later: DESIGN_stage2_session_and_timers.md (begin/finish protocol; engine side for refreshLiveData built in engine/twophase.py, uncommitted) |
+| 15 | Thin browser copy without embedded engine | Closed as-is | Closed as-is by your decision (2026-10-18 'leave as is'): the engine runs the rule logic and 10 controllers; the ~31 fetching controllers stay in the page as a documented boundary. Plan to move them later: DESIGN_stage2_session_and_timers.md (begin/finish protocol; engine side for refreshLiveData built in engine/twophase.py, committed in 7670579d) |
 | 16 | Browser parity verification | Closed as-is | Closed as-is by your decision (2026-10-18): parity proven for everything delegated (80/80 per controller, mutants, browser run); not claimed for the controllers that stay in the page |
 | 17 | Launch headless races from the browser | Done | `runner/static/launch_panel.js`, tests |
 | 18 | Reporting dashboard | Done | `/dashboard` on :8766 |
