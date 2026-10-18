@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.10.0 · 2026-10-18 · _fire_pit: an un-awaited refreshPointInTimeSelection. One-go it is begin_ + _fire; for the browser copy (spawn_mode) the engine does the part before the request in place and hands the page a spawn (fetch + the resume stage), so no controller needs the network any more.
 # v1.9.0 · 2026-10-18 · refresh_point_in_time_selection and refresh_point_in_time_history in stages for the browser copy (the page fetches; the engine plans before and merges after, on the page's current state).
 # v1.8.1 · 2026-10-18 · stages hand applyPortfolioViewConfig to the page (it may want the network: the page runs its own fallback); create_similar_portfolio returns nothing, like the page.
 # v1.8.0 · 2026-10-18 · activate_portfolio and create_similar_portfolio in stages for the browser copy (Await.handle / Await.attach: a started page promise gets a continuation that runs later as its own stage); a live portfolio is refused so the page runs its own copy.
@@ -98,6 +99,8 @@ class Page:
         self._timers: list = []
         self._outstanding: list = []   # fire-and-forget Pendings, applied in issue order
         self._calls: list = []         # page functions a stage asks the host to call once it returns (staged controllers)
+        self._spawns: list = []        # un-awaited page work a command asks the host to start (fetch + the stage to resume with its answer)
+        self.spawn_mode = False        # the browser copy: un-awaited lookups are handed to the page instead of run here
         client.on_effect = self.fx  # persistence the client does on the page's behalf (rememberPortfolioView)
         client.on_timeout = lambda fn, delay: self._timeout(fn, delay)
         client.fetch_guard = lambda name, date, key: (self.s.active_portfolio == name and self.s.current_date == date
@@ -493,7 +496,7 @@ class Page:
         self._clear_timer("pointInTimeDebounceTimer")
         self.pending_button(True)
         self.update_auto_refresh_status(f"Checking {s.auto_direction} #{pu.js_str(s.auto_rank)} at {scheduled}…")
-        self._fire(self.begin_refresh_point_in_time_selection(scheduled))
+        self._fire_pit(scheduled)
 
     def schedule_point_in_time_selection(self):
         s = self.s
@@ -542,7 +545,7 @@ class Page:
         s.explicit_refresh = True
         s.pit_requested_key = ""
         s.pit_request_sequence += 1
-        self._fire(self.begin_refresh_point_in_time_selection(requested_at))
+        self._fire_pit(requested_at)
 
     def trigger_selected_time_refresh(self):
         s = self.s
@@ -668,11 +671,26 @@ class Page:
         return Pending(apply, issued=True)
 
     # ---- the two point-in-time lookups in stages (browser copy): the page fetches, the engine plans before and merges after
-    def _pit_sel_0(self, at_override=None):
+    def _pit_plan(self, at_override=None):
+        """The part of refreshPointInTimeSelection before the request, in place: returns the context the merge needs, or None when nothing is requested."""
         st = self._pit_state()
         result, ctx = stm.plan_point_in_time_selection(st, self.client, self._opt_state(), head_time=self._head_time(), max_frames=self.max_frames(),
                                                        eligible_models=self._eligible(), at_override=at_override)
         self._pit_commit(st)   # the part before the request (flags, the "Loading…" label, the request counter) is visible at once
+        return ctx
+
+    def _fire_pit(self, at):
+        """An un-awaited refreshPointInTimeSelection(at). One-go: the request goes out now and the merge runs when it is answered. Browser copy: the part before the request
+        runs here, in its place in the controller, and the page is handed a spawn (the fetch, and the stage that merges the answer into the page's current state)."""
+        if not self.spawn_mode:
+            self._fire(self.begin_refresh_point_in_time_selection(at))
+            return
+        ctx = self._pit_plan(at)
+        if ctx is not None:
+            self._spawns.append({"method": "refresh_point_in_time_selection", "fn": "fetchPointInTime", "args": [ctx["url"]], "ctx": ctx, "stage": "_pit_sel_1"})
+
+    def _pit_sel_0(self, at_override=None):
+        ctx = self._pit_plan(at_override)
         if ctx is None:
             return None
         return Await("fetchPointInTime", [ctx["url"]], ctx, next="_pit_sel_1", catch=True)

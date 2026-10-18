@@ -1943,18 +1943,8 @@
       const count = Number(selectedTimeRankSelect.value) || 1;
       applySelectedTimeBtn.textContent = `Refresh & Add #1${count > 1 ? `–#${count}` : ''}`;
     }
-    function __original_triggerSelectedTimeRefresh() {
-      if (deepLinkModelsOnly) {
-        deepLinkModelsOnly = false;
-        updateScenarioUI();
-      }
-      applySelectedTimeBtn.classList.add('click-feedback-selected', 'click-feedback-pending');
-      applySelectedTimeBtn.setAttribute('aria-busy', 'true');
-      applySelectedTime();
-    }
     function triggerSelectedTimeRefresh() {
       const res = __engineCommand('trigger_selected_time_refresh', []);
-      if (res.needsNetwork) return __original_triggerSelectedTimeRefresh.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -2025,31 +2015,8 @@
       persistPortfolioViewConfig();
       if (autoRefreshTop1Enabled && headTime) scheduleAutomaticTop1Refresh(headTime);
     });
-    function __original_resetAutomaticRankSchedule() {
-      autoRefreshTop1Direction = autoRefreshTop1DirectionSelect?.value === 'bottom' ? 'bottom' : 'top';
-      autoRefreshTop1Rank = Math.max(1, Math.min(5, Number(autoRefreshTop1RankSelect?.value) || 1));
-      if (autoRefreshTop1RequestAt !== null) {
-        autoRefreshTop1RequestAt = null;
-        pendingExplicitTop1Time = null;
-        selectedTimeExplicitRefresh = false;
-        pointInTimeRequestSequence++;
-        pointInTimeRequestedKey = '';
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-      }
-      autoRefreshTop1Context = pointInTimeContextKey();
-      const headTime = pointInTimeAtReplayHead();
-      const headMinute = headTime ? clockMinutes(headTime) : null;
-      autoRefreshTop1LastMinute = headMinute;
-      autoRefreshTop1NextMinute = headMinute === null ? null : nextAutomaticTop1Minute(headMinute, autoRefreshTop1Minutes, true);
-      updateAutoRefreshTop1Status(autoRefreshTop1Enabled
-        ? `On · ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} · every ${autoRefreshTop1Minutes}m at clock times` : 'Off');
-      persistPortfolioViewConfig();
-      if (autoRefreshTop1Enabled && headTime) scheduleAutomaticTop1Refresh(headTime);
-    }
     function resetAutomaticRankSchedule() {
       const res = __engineCommand('reset_automatic_rank_schedule', []);
-      if (res.needsNetwork) return __original_resetAutomaticRankSchedule.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -2357,8 +2324,16 @@
       const sent = __engineSnapshot();
       const res = __engine.call({ fn: 'command', method, args, ...(extra || {}), state: sent, flags: { liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) });
-      if (!res.needsNetwork) __engineApplyState(res.state, sent);
+      if (!res.needsNetwork) { __engineApplyState(res.state, sent); (res.spawns || []).forEach(__engineSpawn); }
       return res;
+    }
+    // un-awaited page work an engine answer asked for: run the page's fetch, then resume the named engine stage on the page's current state
+    function __engineSpawn(sp) {
+      Promise.resolve(__awaitTargets[sp.fn](...sp.args)).then(v => ({ ok: v }), e => ({ error: String(e && e.message || e) })).then(out => {
+        const r = __engineCommand(sp.method, null, { stage: sp.stage, ctx: sp.ctx, result: out });
+        __engineReplay(r.effects, {}, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      }).catch(e => console.warn('engine continuation failed:', e));
     }
     function __engineTimer(op) {
       const timer = op.timer;
@@ -2493,69 +2468,8 @@
       return res.ret;
     }
 
-    function __original_applyPortfolioViewConfig(config) {
-      if (!config) return;
-      currentReturnType = config.returnType === 'ALT' ? 'ALT' : 'NET';
-      currentProductType = ['all', 'forex', 'crypto'].includes(config.productType) ? config.productType : 'all';
-      currentProduct = String(config.product || 'all').toLowerCase();
-      currentStrategyFamily = String(config.strategyFamily || 'all').toLowerCase();
-      modelLimit = [10, 20, 30].includes(Number(config.limit)) ? Number(config.limit) : 10;
-      const selectedTopCount = Math.max(1, Math.min(10, Number(config.selectedTopCount) || 1));
-      if (selectedTimeRankSelect) selectedTimeRankSelect.value = String(selectedTopCount);
-      if (selectedTimeInput) selectedTimeInput.value = /^\d{2}:\d{2}$/.test(String(config.selectedAtTime || ''))
-        ? String(config.selectedAtTime) : '';
-      if (applySelectedTimeBtn) applySelectedTimeBtn.textContent = `Refresh & Add #1${selectedTopCount > 1 ? `–#${selectedTopCount}` : ''}`;
-      minWinRate = Math.max(0, Math.min(100, Number(config.minWinRate) || 0));
-      if (['ALL_NET', 'BUY_NET', 'SELL_NET', 'TRI_SPLIT', 'MULTI_SPLIT'].includes(config.splitMode)) {
-        splitMode = config.splitMode;
-      }
-      if (config.criteria) currentCriteria = config.criteria;
-      useAssignedOverlayRule = typeof config.useAssignedOverlayRule === 'boolean'
-        ? config.useAssignedOverlayRule
-        : Boolean(activePortfolioName && assignedPortfolioOverlayRule());
-      autoRefreshTop1Enabled = Boolean(config.autoAddEnabled);
-      autoRefreshTop1Direction = config.autoAddDirection === 'bottom' ? 'bottom' : 'top';
-      autoRefreshTop1Rank = Math.max(1, Math.min(5, Number(config.autoAddRank) || 1));
-      autoRefreshTop1Minutes = [1, 5, 15, 30, 60, 120].includes(Number(config.autoAddMinutes))
-        ? Number(config.autoAddMinutes) : 15;
-      if (autoRefreshTop1Toggle) autoRefreshTop1Toggle.checked = autoRefreshTop1Enabled;
-      if (autoRefreshTop1DirectionSelect) autoRefreshTop1DirectionSelect.value = autoRefreshTop1Direction;
-      if (autoRefreshTop1RankSelect) autoRefreshTop1RankSelect.value = String(autoRefreshTop1Rank);
-      if (autoRefreshTop1Interval) autoRefreshTop1Interval.value = String(autoRefreshTop1Minutes);
-      updateAutoRefreshTop1Status();
-      resetAutomaticRankSchedule();
-      liveModePriorChartLock = typeof config.chartLockBeforeLive === 'boolean' ? config.chartLockBeforeLive : null;
-      if (typeof config.chartLocked === 'boolean') applyChartLock(config.chartLocked, false);
-      syncAssignedOverlayRuleUI();
-
-      returnTypeNetBtn.className = currentReturnType === 'NET'
-        ? 'px-2.5 py-1 font-bold rounded bg-indigo-600 text-white transition flex items-center gap-1 shadow'
-        : 'px-2.5 py-1 font-bold rounded text-slate-400 hover:text-white transition flex items-center gap-1';
-      returnTypeAltBtn.className = currentReturnType === 'ALT'
-        ? 'px-2.5 py-1 font-bold rounded bg-amber-600 text-white transition flex items-center gap-1 shadow'
-        : 'px-2.5 py-1 font-bold rounded text-slate-400 hover:text-white transition flex items-center gap-1';
-      if (productTypeFilter) productTypeFilter.value = currentProductType;
-      if (modelLimitFilter) modelLimitFilter.value = String(modelLimit);
-      if (winRateSlider) winRateSlider.value = String(minWinRate);
-      if (winRateValBadge) winRateValBadge.textContent = `≥ ${minWinRate}%`;
-      if (winRateDisplayBadge) winRateDisplayBadge.textContent = minWinRate === 0 ? 'All Win Rates (≥0%)' : `Win Rate ≥ ${minWinRate}%`;
-      updateStrategyFamilyOptions();
-      if (productFilter) {
-        const hasProduct = [...productFilter.options].some(option => option.value === currentProduct);
-        if (!hasProduct && currentProduct !== 'all') {
-          const option = document.createElement('option');
-          option.value = currentProduct;
-          option.textContent = currentProduct.toUpperCase();
-          productFilter.appendChild(option);
-        }
-        productFilter.value = currentProduct;
-      }
-      syncSplitModeControls();
-      updateScenarioUI();
-    }
     function applyPortfolioViewConfig(config) {
       const res = __engineCommand('apply_portfolio_view_config', [config]);
-      if (res.needsNetwork) return __original_applyPortfolioViewConfig.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -2603,18 +2517,8 @@
       return models;
     }
 
-    function __original_autoPinLivePortfolioStrategies() {
-      if (currentDate !== LIVE_DATE || !['LIVE', 'LIVE_ALT'].includes(String(activePortfolioName || '').toUpperCase())) return;
-      for (const model of portfolioModels) {
-        const modelId = String(model?.model || '').trim();
-        if (!modelId) continue;
-        pinnedComparisonModels.set(modelId, { ...model, comparisonRole: 'live trade strategy' });
-      }
-      visibleModels = new Set(getEligibleModels().map(model => model.model));
-    }
     function autoPinLivePortfolioStrategies() {
       const res = __engineCommand('auto_pin_live_portfolio_strategies', []);
-      if (res.needsNetwork) return __original_autoPinLivePortfolioStrategies.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -5663,62 +5567,8 @@ ${preview}`)) return;
       }
     }
 
-    function __original_applySelectedTime() {
-      if (!selectedTimeInput) return;
-      const chartModelsBeforeRefresh = pointInTimeMode
-        ? [...(Array.isArray(pointInTimeModels) ? pointInTimeModels : [])]
-        : [...getEligibleModels()];
-      // The selected-time scenario can be restored from local storage. Keep
-      // its point-in-time mode enabled even when the page starts without a
-      // deep-link (the normal scenario picker sets this on scenario changes).
-      if (!pointInTimeMode) {
-        pointInTimeMode = true;
-        // Refresh & Add extends the current chart. Keep its existing curves
-        // while the selected-time lookup is in flight (and if it finds none).
-        pointInTimeModels = chartModelsBeforeRefresh;
-        updatePointInTimeToggleUI();
-      }
-      const requestedAt = selectedTimeInput.value;
-      const requestedMinutes = clockMinutes(requestedAt);
-      if (requestedMinutes === null) {
-        applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-        applySelectedTimeBtn?.removeAttribute('aria-busy');
-        pointInTimeStatus.textContent = 'Choose a valid time in HH:MM format';
-        pointInTimeStatus.className = 'text-[10px] font-bold text-rose-300';
-        return;
-      }
-
-      // Preserve only leaders explicitly added by a previous Refresh & Add.
-      // The current chart can also contain an automatic preview of the leader
-      // at the moving replay head; treating that preview as a saved selection
-      // would add an unrequested strategy from the previous head/time.
-
-      pauseReplay();
-      clearTimeout(pointInTimeDebounceTimer);
-      // Remove an ad-hoc search from an earlier cohort; selected-time leaders and
-      // pinned comparisons are retained as intentional chart comparisons.
-      modelSearchRequestSequence++;
-      clearTimeout(modelSearchTimer);
-      modelSearchLoadedModels = [];
-      if (modelSearchInput) modelSearchInput.value = '';
-      if (modelSearchStatus) modelSearchStatus.textContent = '';
-      // The typed time is a ranking cutoff for this lookup, not a replay seek.
-      // Keep the current replay head so existing curves and overlay trades stay
-      // visible while candidates are fetched and after they are added.
-      updateScrubberUI();
-      updateRibbon();
-      renderCards();
-      drawChart();
-      selectedTimeInput.value = requestedAt;
-      pendingExplicitTop1Time = requestedAt;
-      selectedTimeExplicitRefresh = true;
-      pointInTimeRequestedKey = '';
-      pointInTimeRequestSequence++;
-      refreshPointInTimeSelection(requestedAt);
-    }
     function applySelectedTime() {
       const res = __engineCommand('apply_selected_time', []);
-      if (res.needsNetwork) return __original_applySelectedTime.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -5748,56 +5598,8 @@ ${preview}`)) return;
         autoRefreshTop1Enabled ? autoRefreshTop1Rank : ''].join('|');
     }
 
-    function __original_scheduleAutomaticTop1Refresh(at) {
-      if (!autoRefreshTop1Enabled) return;
-      const minute = clockMinutes(at);
-      if (minute === null) return;
-      const context = pointInTimeContextKey();
-      if (autoRefreshTop1Context !== context) {
-        // A pending result belongs to the previous scenario/filter/date. Drop it
-        // before starting a fresh interval for the newly selected context.
-        if (autoRefreshTop1RequestAt !== null) {
-          autoRefreshTop1RequestAt = null;
-          pendingExplicitTop1Time = null;
-          selectedTimeExplicitRefresh = false;
-          pointInTimeRequestSequence++;
-          pointInTimeRequestedKey = '';
-          applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-          applySelectedTimeBtn?.removeAttribute('aria-busy');
-        }
-        autoRefreshTop1Context = context;
-        autoRefreshTop1LastMinute = minute;
-        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
-        updateAutoRefreshTop1Status(`On · next at ${replayClockTime(autoRefreshTop1NextMinute)}`);
-      }
-      if (autoRefreshTop1LastMinute === null || autoRefreshTop1NextMinute === null) {
-        autoRefreshTop1LastMinute = minute;
-        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
-      }
-      // Compare actual HH:MM replay timestamps, independent of how many ticks
-      // playback needed to reach the interval. Rewind starts a fresh interval.
-      if (minute < autoRefreshTop1LastMinute) {
-        autoRefreshTop1LastMinute = minute;
-        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
-        updateAutoRefreshTop1Status(`On · replay rewound · next at ${replayClockTime(autoRefreshTop1NextMinute)}`);
-      }
-      autoRefreshTop1LastMinute = minute;
-      if (minute < autoRefreshTop1NextMinute || autoRefreshTop1RequestAt !== null || selectedTimeExplicitRefresh) return;
-
-      const scheduledAt = replayClockTime(autoRefreshTop1NextMinute);
-      autoRefreshTop1RequestAt = scheduledAt;
-      pendingExplicitTop1Time = scheduledAt;
-      selectedTimeExplicitRefresh = true;
-      pointInTimeRequestedKey = '';
-      clearTimeout(pointInTimeDebounceTimer);
-      applySelectedTimeBtn?.classList.add('click-feedback-pending');
-      applySelectedTimeBtn?.setAttribute('aria-busy', 'true');
-      updateAutoRefreshTop1Status(`Checking ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} at ${scheduledAt}…`);
-      void refreshPointInTimeSelection(scheduledAt);
-    }
     function scheduleAutomaticTop1Refresh(at) {
       const res = __engineCommand('schedule_automatic_top1_refresh', [at]);
-      if (res.needsNetwork) return __original_scheduleAutomaticTop1Refresh.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -5916,35 +5718,8 @@ ${preview}`)) return;
       __apply(res);
       return __drive(res);
     }
-    function __original_schedulePointInTimeSelection() {
-      const at = pointInTimeAtReplayHead();
-      if (at) scheduleAutomaticTop1Refresh(at);
-      if (!pointInTimeMode) return;
-      refreshPointInTimeHistory();
-      if (at) {
-        const { scenario, return_type: returnType, product_type: productType,
-          product, strategy_family: strategyFamily, limit, min_win_rate: winRate } = pointInTimeRequestOptions();
-        const nextKey = [currentDate, at, scenario, returnType, productType,
-          product, strategyFamily, limit, winRate, activePortfolioName || 'scenario'].join('|');
-        // Invalidate the previous lookup as soon as its selected date/time changes,
-        // before the debounce starts the replacement request.
-        if (!selectedTimeExplicitRefresh && pointInTimeRequestedKey && pointInTimeRequestedKey !== nextKey) {
-          pointInTimeRequestSequence++;
-          pointInTimeRequestedKey = '';
-          applySelectedTimeBtn?.classList.remove('click-feedback-pending');
-          applySelectedTimeBtn?.removeAttribute('aria-busy');
-        }
-      }
-      if (!selectedTimeExplicitRefresh && isPlaying && at && !/:00$/.test(at)) {
-        clearTimeout(pointInTimeDebounceTimer);
-        return;
-      }
-      clearTimeout(pointInTimeDebounceTimer);
-      if (!selectedTimeExplicitRefresh) pointInTimeDebounceTimer = setTimeout(() => refreshPointInTimeSelection(at), 180);
-    }
     function schedulePointInTimeSelection() {
       const res = __engineCommand('schedule_point_in_time_selection', []);
-      if (res.needsNetwork) return __original_schedulePointInTimeSelection.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }
@@ -6424,39 +6199,9 @@ ${preview}`)) return;
           : 'Lock the baseline and keep the chart at the latest point';
     }
 
-    function __original_applyChartLock(locked, persist = true) {
-      if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;
-      chartLocked = !!locked;
-      if (persist) persistPortfolioViewConfig();
-      chartLockBtn.setAttribute('aria-pressed', String(chartLocked));
-      chartLockIcon.textContent = chartLocked ? '🔒' : '🔓';
-      chartLockLabel.textContent = chartLocked ? 'Chart locked' : 'Chart unlocked';
-      updateChartLockControlState();
-      chartLockBtn.className = chartLocked
-        ? 'px-2.5 py-1 rounded-lg border border-lime-400/60 bg-lime-500 text-slate-950 text-xs font-black transition shadow shadow-lime-500/20'
-        : 'px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-900 text-slate-300 hover:text-white text-xs font-bold transition';
-      [playBtn, stepBackBtn, stepFwdBtn, restartBtn, setBaseAtHeadBtn, resetBaselineBtn].forEach(control => {
-        control.disabled = chartLocked;
-        control.classList.toggle('opacity-40', chartLocked);
-        control.classList.toggle('cursor-not-allowed', chartLocked);
-      });
-      scrubberTrack.setAttribute('aria-disabled', String(chartLocked));
-      scrubberTrack.classList.toggle('cursor-not-allowed', chartLocked);
-      scrubberTrack.title = chartLocked ? 'Chart locked — unlock to scrub or reposition the baseline' : 'Scrub replay head';
-      if (chartLocked) {
-        pauseReplay();
-        currentFrameIndex = Math.max(0, getMaxFrames() - 1);
-        updateScrubberUI();
-        updateRibbon();
-        renderCards();
-        drawChart();
-        schedulePointInTimeSelection();
-      }
-    }
     function applyChartLock(locked, persist = true) {
       if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;
       const res = __engineCommand('apply_chart_lock', [locked, persist]);
-      if (res.needsNetwork) return __original_applyChartLock.apply(this, arguments);
       __engineReplay(res.effects, {  }, res.timers);
       return res.ret;
     }

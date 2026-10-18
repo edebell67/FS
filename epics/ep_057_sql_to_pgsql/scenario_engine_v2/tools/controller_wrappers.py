@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.5.0 · 2026-10-18 · __engineSpawn: the page runs a spawn (fetch + resume stage) an engine answer asked for; the original-function fallbacks are gone except for live portfolios (activatePortfolio).
 # v1.4.0 · 2026-10-18 · the staged shell is a reusable driver (__drive / __apply / __resume): started page promises keep a handle, a continuation can be attached to a handle and runs later as its own engine stage; fallback to the original function for what the engine refuses (live portfolios).
 # v1.3.0 · 2026-10-18 · staged shells: Await.catch, args-bearing views (viewArgs), page flags, per-controller extra await targets (refreshLiveData's data layer).
 # v1.1.0 · 2026-10-17 · stage 2 (no-fetch): applyChartLock, resetAutomaticRankSchedule; EXTRAS (prelude / range shell / conditional pause shell).
@@ -93,14 +94,7 @@ EXTRAS = {
     "addCatalogueModel": {"staged": True, "prelude": "const name = catalogPortfolioFilter.value; if (name && portfolios[name] && !portfolios[name].includes(model) && portfolios[name].length >= 10) alert(`${name} already contains the maximum of 10 strategies.`);"},
     "moveModelBetweenPortfolios": {"staged": True, "prelude": "if (sourceName && destinationName && sourceName !== destinationName && portfolios[sourceName]?.includes(model) && portfolios[destinationName] && !portfolios[destinationName].includes(model) && portfolios[destinationName].length >= 10) alert(`${destinationName} already contains the maximum of 10 strategies.`);"},
     "repopulateActivePortfolioFromCriteria": {"staged": True},
-    "schedulePointInTimeSelection": {"fallback": True},
-    "scheduleAutomaticTop1Refresh": {"fallback": True},
-    "applySelectedTime": {"fallback": True},
-    "triggerSelectedTimeRefresh": {"fallback": True},
-    "autoPinLivePortfolioStrategies": {"fallback": True},
-    "applyPortfolioViewConfig": {"fallback": True},
-    "resetAutomaticRankSchedule": {"fallback": True},
-    "applyChartLock": {"fallback": True, "prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;"},
+    "applyChartLock": {"prelude": "if (!locked && isLiveModePortfolio() && isLiveModeArmed()) locked = true;"},
 }
 
 COMMON_EFFECTS = {
@@ -187,8 +181,16 @@ def helper_block(state_decls: dict) -> str:
       const sent = __engineSnapshot();
       const res = __engine.call({{ fn: 'command', method, args, ...(extra || {{}}), state: sent, flags: {{ liveArmed: typeof isLiveModeArmed === 'function' && !!isLiveModeArmed() }}, criteriaData: __engineCriteria(), library: overlayRuleLibrary, hooks: globalThis.__engineHooks,
         scenarioNames: Object.fromEntries(SCENARIOS_CATALOGUE.map(item => [item.id, item.name])) }});
-      if (!res.needsNetwork) __engineApplyState(res.state, sent);
+      if (!res.needsNetwork) {{ __engineApplyState(res.state, sent); (res.spawns || []).forEach(__engineSpawn); }}
       return res;
+    }}
+    // un-awaited page work an engine answer asked for: run the page's fetch, then resume the named engine stage on the page's current state
+    function __engineSpawn(sp) {{
+      Promise.resolve(__awaitTargets[sp.fn](...sp.args)).then(v => ({{ ok: v }}), e => ({{ error: String(e && e.message || e) }})).then(out => {{
+        const r = __engineCommand(sp.method, null, {{ stage: sp.stage, ctx: sp.ctx, result: out }});
+        __engineReplay(r.effects, {{}}, r.timers, r.viewArgs);
+        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
+      }}).catch(e => console.warn('engine continuation failed:', e));
     }}
     function __engineTimer(op) {{
       const timer = op.timer;

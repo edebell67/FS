@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/mutants_page.py — the mutant list for tools/mutate_check.py.
 #
 # VERSION HISTORY
+# v1.10.0 · 2026-10-18 · step 7 mutants (spawns).
 # v1.9.0 · 2026-10-18 · step 6b stage mutants (point-in-time lookups).
 # v1.8.0 · 2026-10-18 · step 6a stage mutants.
 # v1.7.0 · 2026-10-18 · step 5 stage mutants.
@@ -244,6 +245,13 @@ MUTANTS = [
     ("wrapjs: criteria sent", "tools/controller_wrappers.py", "[key, 'top_net'].forEach", "['top_net'].forEach", J, ""),
     ("wrapjs: pause icon", "page.py", 'self.dom("playIcon", "set", "textContent", "▶")', 'self.dom("playIcon", "set", "textContent", "⏸")', J, ""),
     ("wrapjs: persist arg", "tools/controller_wrappers.py", "arguments.length === 0 || arguments[0] === undefined ? [] : [name]", "[name]", J, ""),
+    # ---- step 7: lookups handed to the page as spawns; no controller keeps an original-function fallback for the network
+    ('s7: spawn mode off', 'page.py', '        if not self.spawn_mode:\n            self._fire(self.begin_refresh_point_in_time_selection(at))\n            return', '        if True:\n            self._fire(self.begin_refresh_point_in_time_selection(at))\n            return', W, 'schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh,apply_portfolio_view_config,reset_automatic_rank_schedule,apply_chart_lock'),
+    ('s7: spawn stage', 'page.py', '"fn": "fetchPointInTime", "args": [ctx["url"]], "ctx": ctx, "stage": "_pit_sel_1"})\n\n    def _pit_sel_0', '"fn": "fetchPointInTime", "args": [ctx["url"]], "ctx": ctx, "stage": "_pit_sel_0"})\n\n    def _pit_sel_0', S, ''),
+    ('s7: spawn url', 'page.py', 'self._spawns.append({"method": "refresh_point_in_time_selection", "fn": "fetchPointInTime", "args": [ctx["url"]]', 'self._spawns.append({"method": "refresh_point_in_time_selection", "fn": "fetchPointInTime", "args": [""]', S, ''),
+    ('s7: plan skipped', 'page.py', '        ctx = self._pit_plan(at)\n        if ctx is not None:\n            self._spawns.append', '        ctx = None\n        if ctx is not None:\n            self._spawns.append', W, 'schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh,apply_portfolio_view_config,reset_automatic_rank_schedule,apply_chart_lock'),
+    ('s7: shell spawn off', 'tools/controller_wrappers.py', '(res.spawns || []).forEach(__engineSpawn); }}', '}}', W, 'schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh,apply_portfolio_view_config,reset_automatic_rank_schedule,apply_chart_lock'),
+    ('s7: shell spawn result', 'tools/controller_wrappers.py', 'then(v => ({{ ok: v }}), e => ({{ error: String(e && e.message || e) }})).then(out => {{\n        const r = __engineCommand(sp.method, null, {{ stage: sp.stage, ctx: sp.ctx, result: out }});', 'then(v => ({{ ok: v }}), e => ({{ error: String(e && e.message || e) }})).then(out => {{\n        const r = __engineCommand(sp.method, null, {{ stage: sp.stage, ctx: sp.ctx, result: {{ ok: null }} }});', W, 'schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh,apply_portfolio_view_config,reset_automatic_rank_schedule,apply_chart_lock'),
     # ---- step 6b: the two point-in-time lookups (stages, the plan / apply split of selected_time.py, the shell targets)
     ('s6b: sel no commit', 'page.py', '        self._pit_commit(st)   # the part before the request (flags, the "Loading…" label, the request counter) is visible at once\n        if ctx is None:\n            return None\n        return Await("fetchPointInTime"', '        if ctx is None:\n            return None\n        return Await("fetchPointInTime"', W, 'refresh_point_in_time_selection,refresh_point_in_time_history'),
     ('s6b: sel error text', 'page.py', 'resp, err = None, FetchError(result["error"])', 'resp, err = None, FetchError("failed")', S, ''),

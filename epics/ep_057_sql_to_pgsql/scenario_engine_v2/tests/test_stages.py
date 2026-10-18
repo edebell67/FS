@@ -332,3 +332,27 @@ def test_a_hourly_cohort_answer_for_an_older_context_key_is_ignored():
     hours = {"ok": {"status": 200, "payload": {"hours": [{"hour": "09:00"}]}}}
     changed = command.run({"method": "refresh_point_in_time_history", "stage": r["stage"], "ctx": r["ctx"], "result": hours, "state": {**r["state"], "pit_history_key": "another|context"}})
     assert changed["state"]["pit_history_status_text"] == "Building hourly cohorts…" and ["renderPointInTimeHistory"] not in changed["effects"]
+
+
+def test_an_unawaited_lookup_is_planned_in_place_and_handed_to_the_page_as_a_spawn():
+    st = _pit_state(selected_time_input="10:05")
+    r = command.run({"method": "apply_selected_time", "args": [], "state": st.snapshot(), "hooks": {"maxFrames": 5, "head": "10:05", "eligible": [model(1)], "candidates": []}})
+    assert "needsNetwork" not in r and len(r["spawns"]) == 1
+    sp = r["spawns"][0]
+    assert sp["method"] == "refresh_point_in_time_selection" and sp["fn"] == "fetchPointInTime" and sp["stage"] == "_pit_sel_1"
+    assert sp["args"][0].startswith("/api/point_in_time_scenario?date=2026-10-14&at=10%3A05") and sp["ctx"]["explicit"] is True
+    assert r["state"]["pit_status"][0].startswith("Finding top") and r["state"]["pit_request_sequence"] >= 1   # the part before the request ran, in place
+    ok = {"ok": {"status": 200, "payload": {"models": [model(1)], "at_time": "10:05"}}}
+    done = command.run({"method": sp["method"], "stage": sp["stage"], "ctx": sp["ctx"], "result": ok, "state": r["state"], "hooks": {"maxFrames": 5, "head": "10:05", "eligible": [model(1)], "candidates": []}})
+    assert "selected" in done["state"]["pit_status"][0] or "Added" in done["state"]["pit_status"][0] or "retained" in done["state"]["pit_status"][0]
+    assert command.run({"method": "apply_selected_time", "args": [], "state": _pit_state(pit_mode=False, selected_time_input="bad").snapshot()})["spawns"] == []
+
+
+def test_no_controller_answers_needs_network_for_a_lookup_any_more():
+    from engine.command import STAGE1
+    st = _pit_state(auto_enabled=True, auto_minutes=5, auto_next_minute=0, auto_last_minute=-1, selected_time_input="10:05")
+    for method, args in (("apply_selected_time", []), ("schedule_point_in_time_selection", []), ("trigger_selected_time_refresh", []), ("schedule_automatic_top1_refresh", ["10:00"]),
+                         ("reset_automatic_rank_schedule", []), ("apply_chart_lock", [False, False])):
+        assert method in STAGE1
+        r = command.run({"method": method, "args": args, "state": st.snapshot(), "hooks": {"maxFrames": 5, "head": "10:05", "eligible": [model(1)], "candidates": [model(1)]}})
+        assert "needsNetwork" not in r, method
