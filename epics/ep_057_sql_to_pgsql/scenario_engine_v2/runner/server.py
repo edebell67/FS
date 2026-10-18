@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.8.0 · 2026-10-18 · the proxied shared menu script (ep060-nav.js) is sent with Cache-Control: no-cache so a menu change shows without a hard reload.
 # v1.7.0 · 2026-10-18 · GET /api/races/{id}/board: every frame's leaderboard so far (live while running, complete after) for the dashboard's race viewer.
 # v1.6.0 · 2026-10-18 · DELETE /api/races/{id} removes a finished race (still cancels an active one); DELETE /api/races clears all finished races.
 # v1.5.0 · 2026-10-18 · The engine-client page is served with a green tint (injected at serve time) so it is told apart from the original page on :8765.
@@ -285,7 +286,10 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
 
     @app.get("/{path:path}", include_in_schema=False)
     async def proxy_static(request: Request, path: str):
-        return await forward(request, path)
+        resp = await forward(request, path)
+        if path.endswith("ep060-nav.js"):
+            resp.headers["Cache-Control"] = "no-cache"
+        return resp
 
     return app
 
