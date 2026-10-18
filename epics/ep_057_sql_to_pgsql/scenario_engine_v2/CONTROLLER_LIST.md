@@ -3,25 +3,38 @@
 A controller here = a page function that is not pure logic: kind `mixed` (state + DOM), plus the delegated or ported ones. Columns: kind, async, number of fetch endpoints, DOM references, lines, page start line.
 
 
-## Delegated to engine (wrapper) (19)
+## Delegated to engine (wrapper) (32)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
+| activatePortfolio | mixed | yes |  | 2 | 174 | 4135 |
+| addCatalogueModel | mixed | yes |  | 1 | 21 | 3729 |
 | applyChartLock | mixed |  |  | 5 | 29 | 6687 |
 | applyPortfolioViewConfig | mixed |  |  | 17 | 60 | 2332 |
 | applySelectedTime | mixed |  |  | 5 | 53 | 5739 |
 | autoPinLivePortfolioStrategies | engine |  |  |  | 9 | 2436 |
 | capturePortfolioScenario | engine |  |  |  | 11 | 3614 |
+| createSimilarPortfolio | mixed | yes |  | 3 | 25 | 4519 |
 | currentPortfolioViewConfig | engine |  |  |  | 23 | 2298 |
 | getMergedPortfolioModels | engine |  |  |  | 9 | 3844 |
 | markPortfolioFixed | engine |  |  |  | 12 | 3626 |
+| moveModelBetweenPortfolios | mixed | yes |  | 1 | 22 | 3821 |
 | movePortfolio | engine |  |  |  | 13 | 2214 |
 | pauseReplay | mixed |  |  | 4 | 11 | 6383 |
 | persistPortfolioViewConfig | engine |  |  |  | 9 | 2322 |
+| refreshActivePortfolioView | mixed | yes |  | 1 | 19 | 4087 |
+| refreshLiveData | mixed | yes |  | 2 | 115 | 4716 |
+| refreshPointInTimeHistory | mixed | yes | 1 | 4 | 26 | 5901 |
+| refreshPointInTimeSelection | mixed | yes | 1 | 11 | 211 | 5928 |
+| removeModelFromPortfolio | engine | yes |  |  | 15 | 3651 |
+| removePortfolios | engine | yes |  |  | 26 | 3682 |
+| repopulateActivePortfolioFromCriteria | engine | yes |  |  | 14 | 4120 |
 | resetAutomaticRankSchedule | mixed |  |  | 1 | 22 | 1985 |
 | scheduleAutomaticTop1Refresh | mixed |  |  | 2 | 47 | 5818 |
 | schedulePointInTimeSelection | mixed |  |  | 1 | 26 | 6139 |
+| setRankingCriteria | mixed | yes |  | 5 | 146 | 5142 |
 | startReplay | mixed |  |  | 4 | 13 | 6369 |
+| switchDate | mixed | yes |  | 2 | 89 | 6203 |
 | syncPortfolioViewRefresh | engine |  |  |  | 8 | 4107 |
 | triggerSelectedTimeRefresh | mixed |  |  | 1 | 9 | 1908 |
 | uniquePortfolioName | engine |  |  |  | 7 | 4511 |
@@ -44,29 +57,16 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | pairOverlayTrades | engine |  |  |  | 35 | 7787 |
 | sourceTradeFlipResults | engine |  |  |  | 25 | 2801 |
 
-## Ported in engine/page.py, NOT delegated (19)
+## Ported in engine/page.py, NOT delegated (6)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
-| activatePortfolio | mixed | yes |  | 2 | 174 | 4135 |
 | activePortfolioOverlayRule | engine |  |  |  | 4 | 2471 |
-| addCatalogueModel | mixed | yes |  | 1 | 21 | 3729 |
 | assignedPortfolioOverlayRule | engine |  |  |  | 5 | 2465 |
-| createSimilarPortfolio | mixed | yes |  | 3 | 25 | 4519 |
 | deletePortfolio | mixed | yes |  | 1 | 4 | 3667 |
 | deleteSelectedPortfolios | mixed | yes |  | 1 | 9 | 3672 |
 | livePortfolioModelsForDate | engine |  |  |  | 31 | 2404 |
 | loadPortfolioData | engine | yes |  |  | 40 | 3983 |
-| moveModelBetweenPortfolios | mixed | yes |  | 1 | 22 | 3821 |
-| refreshActivePortfolioView | mixed | yes |  | 1 | 19 | 4087 |
-| refreshLiveData | mixed | yes |  | 2 | 115 | 4716 |
-| refreshPointInTimeHistory | mixed | yes | 1 | 4 | 26 | 5901 |
-| refreshPointInTimeSelection | mixed | yes | 1 | 11 | 211 | 5928 |
-| removeModelFromPortfolio | engine | yes |  |  | 15 | 3651 |
-| removePortfolios | engine | yes |  |  | 26 | 3682 |
-| repopulateActivePortfolioFromCriteria | engine | yes |  |  | 14 | 4120 |
-| setRankingCriteria | mixed | yes |  | 5 | 146 | 5142 |
-| switchDate | mixed | yes |  | 2 | 89 | 6203 |
 
 ## Stays in page (36)
 
