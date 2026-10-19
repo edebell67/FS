@@ -30,7 +30,7 @@ from . import page_utils as pu
 from . import replay_models as rm
 from . import selected_time as stm
 from .core_ported import time_of_day_minutes
-from .data_client import DATE_RE, FetchError, Pending, resolved
+from .data_client import DATE_RE, LINKED_COLORS, MODEL_ID_RE, FetchError, Pending, _is_ok, _message, resolved, url_search_params
 from .page_state import PageState
 
 _ACTIVE = object()
@@ -74,6 +74,8 @@ STAGES = {
     # refresh_live_data is staged only for the browser copy; its one-go form (begin_refresh_live_data / _apply_live) keeps the event-loop model the headless races use
     "refresh_point_in_time_selection": ("_pit_sel_0", "_pit_sel_1"),
     "refresh_point_in_time_history": ("_pit_hist_0", "_pit_hist_1"),
+    "load_model_search_from_database": ("_msearch_0", "_msearch_1"),
+    "load_deep_link_models_from_database": ("_deeplink_0", "_deeplink_1"),
     "activate_portfolio": ("_act_0", "_act_1", "_act_1b", "_act_2", "_act_3", "_act_4", "_act_load_done", "_act_rules_done"),
     "create_similar_portfolio": ("_similar_0", "_similar_1"),
     "set_ranking_criteria": ("_rank_0", "_rank_portfolio_1", "_rank_main_1", "_rank_main_2", "_rank_main_3", "_rank_done"),
@@ -223,6 +225,19 @@ class Page:
         if aw.fn == "schedulePointInTimeSelection":
             self.schedule_point_in_time_selection()
             return None
+        if aw.fn == "fetchPortfolioDayBatches":   # the page's Promise.all over the batches; a non-2xx answer throws (reported as {"error"} when the stage asks to catch)
+            try:
+                answers = [self.client._get(f"{self.client.api}/api/portfolio_day?{url_search_params({'models': ','.join(batch), 'date': aw.args[1]})}")
+                           for batch in aw.args[0]]   # every request goes out before the first answer is looked at (Promise.all)
+                out = []
+                for status, payload in answers:
+                    if not _is_ok(status):
+                        raise FetchError(_message(payload, f"HTTP {status}"))
+                    models = payload.get("models") if isinstance(payload, dict) else None
+                    out.append(models if isinstance(models, list) else [])
+                return {"ok": out}
+            except Exception as error:  # noqa: BLE001
+                return {"error": str(error)}
         raise ValueError(f"no engine implementation for awaited page function {aw.fn!r}")
 
     def _on_fetched(self, background):
@@ -752,6 +767,105 @@ class Page:
     def refresh_point_in_time_history(self):
         self._await(self.begin_refresh_point_in_time_history())
         self.settle()
+
+    # ---- loadModelSearchFromDatabase / loadDeepLinkModelsFromDatabase in stages: the page fetches /api/portfolio_day, the engine validates before and merges after (on the page's current state)
+    def load_model_search_from_database(self, search_term):
+        return self.run_staged("load_model_search_from_database", search_term)
+
+    def _msearch_0(self, search_term):
+        s = self.s
+        s.search_sequence += 1
+        seq, date = s.search_sequence, s.current_date
+        requested = pu.model_search_terms(search_term)
+        query = str(search_term or "").strip().lower()
+        if not requested or any(not MODEL_ID_RE.fullmatch(m) for m in requested):
+            s.model_search_status = "Enter model IDs separated by commas or spaces"
+            return None
+        if not DATE_RE.fullmatch(date or ""):
+            s.model_search_status = "Choose a single date to search PostgreSQL"
+            return None
+        n = len(requested)
+        s.model_search_status = f"Searching {n} model{'' if n == 1 else 's'} in PostgreSQL\u2026"
+        batches = [requested[i:i + 10] for i in range(0, n, 10)]   # the day endpoint accepts at most ten IDs
+        return Await("fetchPortfolioDayBatches", [batches, date], {"seq": seq, "date": date, "query": query, "requested": requested}, next="_msearch_1", catch=True)
+
+    def _msearch_1(self, ctx, result):
+        s = self.s
+        seq, date, query, requested = ctx["seq"], ctx["date"], ctx["query"], ctx["requested"]
+        if "error" in (result or {}):
+            if seq == s.search_sequence:
+                s.model_search_status = f"Database search failed: {result['error']}"
+            return None
+        if seq != s.search_sequence or query != str(s.model_search_input or "").strip().lower() or date != s.current_date:
+            return None
+        by_id = {str(m.get("model") or "").lower(): m for r in (result or {}).get("ok") or [] for m in r}
+        s.search_loaded = [by_id[m.lower()] for m in requested if m.lower() in by_id]
+        for m in s.search_loaded:
+            s.scenario_removed.discard(pu.js_str(m.get("model")))
+        missing = [m for m in requested if m.lower() not in by_id]
+        if not s.search_loaded:
+            s.model_search_status = f"No model data found for {date}{': ' + ', '.join(missing) if missing else ''}"
+            return None
+        s.frame = -1
+        requested_ids = {pu.js_str(m.get("model")).lower() for m in s.search_loaded}
+        s.visible = {m.get("model") for m in self._eligible() if pu.js_str(m.get("model")).lower() in requested_ids}
+        s.selected_model_index = 0
+        self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+        c = len(s.search_loaded)
+        s.model_search_status = f"{c} model{'' if c == 1 else 's'} loaded{' \u00b7 not found: ' + ', '.join(missing) if missing else ''}"
+        if s.pit_mode:   # deep-linked data may arrive after the load: once its series defines the replay head, run the selected-time lookup
+            self.schedule_point_in_time_selection()
+        return None
+
+    def load_deep_link_models_from_database(self, model_ids):
+        return self.run_staged("load_deep_link_models_from_database", model_ids)
+
+    def _deeplink_0(self, model_ids):
+        s = self.s
+        ids = []
+        for raw in model_ids or []:
+            i = pu.js_str(raw).strip()
+            if MODEL_ID_RE.fullmatch(i) and i not in ids:
+                ids.append(i)
+        ids = ids[:10]
+        if not ids:
+            return None
+        date = s.current_date
+        if not DATE_RE.fullmatch(date or ""):
+            s.model_search_status = "Choose a single date to load linked comparison models"
+            return None
+        n = len(ids)
+        s.model_search_status = f"Loading {n} linked comparison strateg{'y' if n == 1 else 'ies'}\u2026"
+        return Await("fetchPortfolioDayBatches", [[ids], date], {"ids": ids, "date": date}, next="_deeplink_1", catch=True)
+
+    def _deeplink_1(self, ctx, result):
+        s = self.s
+        ids, date = ctx["ids"], ctx["date"]
+        if "error" in (result or {}):
+            s.model_search_status = f"Could not load linked models: {result['error']}"
+            return None
+        if s.current_date != date:
+            return None
+        loaded = ((result or {}).get("ok") or [[]])[0]
+        for index, model in enumerate(loaded):
+            mid = str(model.get("model") or "")
+            if not mid:
+                continue
+            s.pinned[mid] = {**model, "color": model.get("color") or LINKED_COLORS[index % len(LINKED_COLORS)], "comparisonRole": "pinned comparison"}
+        loaded_ids = {pu.js_str(m.get("model")) for m in loaded}
+        missing = [i for i in ids if i not in loaded_ids]
+        s.selected_model_index = 0
+        s.visible = {m.get("model") for m in self._eligible()}
+        self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+        c = len(loaded)
+        word = f"strateg{'y' if c == 1 else 'ies'}"
+        miss = f" \u00b7 no data found for {', '.join(missing)}" if missing else ""
+        s.model_search_status = (f"Showing {c} selected {word} only{miss} \u00b7 choose a scenario to add scenario leaders" if s.deep_link_only
+                                 else f"{c} linked comparison {word} added{miss} \u00b7 change scenario to compare")
+        if s.pit_mode:
+            s.pit_requested_key = ""
+            self._fire_pit(None)
+        return None
 
     def refresh_point_in_time_selection(self, at_override=None):
         p = self.begin_refresh_point_in_time_selection(at_override)
@@ -1339,7 +1453,7 @@ class Page:
         saved_date = saved.get("date")
         saved_replay = str(pu.js_str(stm.js_or(saved.get("replayHeadTime"), "")))
         saved_selection = str(pu.js_str(stm.js_or(saved.get("selectedAtTime"), "")))
-        if any(d.get("id") == saved_date for d in s.available_dates):
+        if any(d.get("id") == saved_date for d in s.available_dates) and saved_date != s.current_date:  # v2.65.34: an unchanged date does not rebuild the tabs
             s.current_date = saved_date
             self.view("setupDateTabs")
         rules_ready = self.client.begin_load_overlay_rule_library()  # requested first, applied after the portfolio paints
@@ -1435,7 +1549,7 @@ class Page:
         saved_date = saved.get("date")
         saved_replay = str(pu.js_str(stm.js_or(saved.get("replayHeadTime"), "")))
         saved_selection = str(pu.js_str(stm.js_or(saved.get("selectedAtTime"), "")))
-        if any(d.get("id") == saved_date for d in s.available_dates):
+        if any(d.get("id") == saved_date for d in s.available_dates) and saved_date != s.current_date:  # v2.65.34: an unchanged date does not rebuild the tabs
             s.current_date = saved_date
             self.view("setupDateTabs")
             if DATE_RE.fullmatch(s.current_date or ""):

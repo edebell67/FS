@@ -4135,7 +4135,7 @@ ${preview}`)) return;
     async function activatePortfolio(name) {
       if (activePortfolioName) persistPortfolioViewConfig(activePortfolioName);
       else persistPortfolioViewConfig(null);
-      const savedPortfolioDate = portfolioViewConfigs[name]?.date;
+      const savedPortfolioDate = (['LIVE', 'LIVE_ALT'].includes(String(name).toUpperCase()) && LIVE_DATE) ? LIVE_DATE : portfolioViewConfigs[name]?.date; // LIVE/LIVE_ALT always open on the current trading date
       const savedPortfolioReplayTime = String(portfolioViewConfigs[name]?.replayHeadTime || '');
       const savedPortfolioSelectionTime = String(portfolioViewConfigs[name]?.selectedAtTime || '');
       if (availableDates.some(date => date.id === savedPortfolioDate)) {

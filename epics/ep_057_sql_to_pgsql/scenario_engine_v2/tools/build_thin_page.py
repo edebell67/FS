@@ -70,7 +70,7 @@ def stub_for(name: str) -> str:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.32.html"))
+    ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.34.html"))
     ap.add_argument("--inventory", default="")
     ap.add_argument("--out", default="")
     ap.add_argument("--rebuild", action="store_true", help="replace an existing output, but only if it is itself a generated engine-client page")

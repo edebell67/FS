@@ -71,7 +71,8 @@ PAGE_METHODS = ["move_portfolio", "unique_portfolio_name", "mark_portfolio_fixed
                 "schedule_automatic_top1_refresh", "schedule_point_in_time_selection", "apply_selected_time", "trigger_selected_time_refresh",
                 "start_replay", "pause_replay", "switch_date", "set_ranking_criteria", "activate_portfolio", "refresh_live_data",
                 "refresh_point_in_time_selection", "load_portfolio_data", "refresh_live_data_twice", "refresh_point_in_time_history",
-                "refresh_point_in_time_history_twice", "assigned_portfolio_overlay_rule", "active_portfolio_overlay_rule"]
+                "refresh_point_in_time_history_twice", "assigned_portfolio_overlay_rule", "active_portfolio_overlay_rule",
+                "load_model_search_from_database", "load_deep_link_models_from_database"]
 
 
 @pytest.mark.parametrize("method", PAGE_METHODS)
@@ -138,7 +139,7 @@ def test_engine_client_page_stubs_match_the_original_functions(thin_rows, fn):
 
 
 def test_drift_check_is_clean_and_nothing_is_pending():
-    out = subprocess.run([sys.executable, str(ROOT / "tools" / "check_drift.py"), str(ROOT / "top10_5min_equity_curves_source_v2.65.32.html")],
+    out = subprocess.run([sys.executable, str(ROOT / "tools" / "check_drift.py"), str(ROOT / "top10_5min_equity_curves_source_v2.65.34.html")],
                          capture_output=True, text=True, encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8"}, cwd=str(ROOT))
     assert out.returncode == 0 and "PENDING: 0 items" in out.stdout and "DRIFT" not in out.stdout, out.stdout[-1500:]
 

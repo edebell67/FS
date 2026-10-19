@@ -36,8 +36,8 @@ from engine.page import LivePortfolioRefused, Page  # noqa: E402
 from engine.page_state import FIELDS, PageState, js_state_code  # noqa: E402
 
 ap = argparse.ArgumentParser()
-ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.32.html"))
-ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.32" / "inventory.json"))
+ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.34.html"))
+ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.34" / "inventory.json"))
 ap.add_argument("--methods", default="")
 ap.add_argument("--cases", type=int, default=150)
 ns = ap.parse_args()
@@ -59,6 +59,7 @@ PAGE_FUNCS = [
     "finishAutomaticTop1Refresh", "retainSelectedTimeLeaders", "pointInTimeRequestOptions", "pointInTimeContextKey", "portfolioScenarioConfig",
     "selectedTimeRankCount", "clockMinutes", "replayClockTime", "nextAutomaticTop1Minute", "modelPointAtOrBeforeTime", "selectedTimeJoinAt",
     "selectedTimeModelEligibleAt", "timeOfDayMinutes", "isMetricAwareCriteria", "refreshPointInTimeHistory",
+    "loadModelSearchFromDatabase", "loadDeepLinkModelsFromDatabase", "modelSearchTerms",
 ]
 
 PAGE_EXTRA = js_state_code() + r"""
@@ -173,7 +174,8 @@ JS_NAME = {"move_portfolio": "movePortfolio", "unique_portfolio_name": "uniquePo
            "switch_date": "switchDate", "set_ranking_criteria": "setRankingCriteria", "activate_portfolio": "activatePortfolio",
            "refresh_live_data": "refreshLiveData", "refresh_point_in_time_selection": "refreshPointInTimeSelection",
            "load_portfolio_data": "loadPortfolioData", "refresh_live_data_twice": "__twiceLive", "refresh_live_data_filter_change": "__filterLive", "refresh_active_portfolio_view_twice": "__twiceView", "refresh_point_in_time_history_twice": "__twiceHistory", "update_auto_refresh_status": "updateAutoRefreshTop1Status",
-           "refresh_point_in_time_history": "__realHistory", "assigned_portfolio_overlay_rule": "assignedPortfolioOverlayRule", "active_portfolio_overlay_rule": "activePortfolioOverlayRule"}
+           "refresh_point_in_time_history": "__realHistory", "load_model_search_from_database": "loadModelSearchFromDatabase",
+           "load_deep_link_models_from_database": "loadDeepLinkModelsFromDatabase", "assigned_portfolio_overlay_rule": "assignedPortfolioOverlayRule", "active_portfolio_overlay_rule": "activePortfolioOverlayRule"}
 
 
 RET_KEEP = {"assigned_portfolio_overlay_rule", "active_portfolio_overlay_rule", "move_portfolio", "unique_portfolio_name", "get_merged_portfolio_models", "live_portfolio_models_for_date",
@@ -414,6 +416,22 @@ def rand_case(rng: random.Random, method: str):
         args = [rng.choice([None, "10:05", "11:00"])]
     elif method == "load_portfolio_data":
         args = [{"preferCache": rng.choice([True, False])}]
+    elif method == "load_model_search_from_database":
+        pool = ["M1", "M2", "abc.def", "X_9", "bad id", "a$b", "M1,M2", "M3;M4", "M5 M6", "", "  ", "M1,M1", "ZZ-1"]
+        term = rng.choice(pool + [",".join(f"N{i}" for i in range(rng.choice([11, 20, 25])))])
+        args = [term]
+        # the search box usually still holds the term when the answer arrives; sometimes it was edited meanwhile
+        snap["model_search_input"] = term if rng.random() < 0.8 else rng.choice(["", "other", term + "x"])
+        snap["search_sequence"] = rng.choice([0, 3, 7])
+        st = PageState.from_snapshot(snap)
+    elif method == "load_deep_link_models_from_database":
+        pool = ["M1", "M2", "abc.def", "bad id", "a$b", "M1", " M3 ", "", "ZZ-1"]
+        ids = [rng.choice(pool) for _ in range(rng.choice([0, 1, 2, 4]))]
+        if rng.random() < 0.15:
+            ids = [f"D{i}" for i in range(rng.choice([10, 12, 15]))]
+        args = [rng.choice([ids, ids, None])]
+        snap["deep_link_only"] = rng.choice([True, False])
+        st = PageState.from_snapshot(snap)
     if method in ("refresh_live_data", "refresh_live_data_twice", "refresh_live_data_filter_change"):   # the head / baseline exactly at the last frame
         if rng.random() < 0.4:
             snap["frame"] = hooks["maxFrames"] - 1

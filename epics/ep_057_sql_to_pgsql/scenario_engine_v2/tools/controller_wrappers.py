@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.6.0 · 2026-10-19 · loadModelSearchFromDatabase and loadDeepLinkModelsFromDatabase (staged; the page's fetchPortfolioDayBatches does the Promise.all over /api/portfolio_day).
 # v1.5.0 · 2026-10-18 · __engineSpawn: the page runs a spawn (fetch + resume stage) an engine answer asked for; the original-function fallbacks are gone except for live portfolios (activatePortfolio).
 # v1.4.0 · 2026-10-18 · the staged shell is a reusable driver (__drive / __apply / __resume): started page promises keep a handle, a continuation can be attached to a handle and runs later as its own engine stage; fallback to the original function for what the engine refuses (live portfolios).
 # v1.3.0 · 2026-10-18 · staged shells: Await.catch, args-bearing views (viewArgs), page flags, per-controller extra await targets (refreshLiveData's data layer).
@@ -57,6 +58,8 @@ CONTROLLERS = {
     "createSimilarPortfolio": ("create_similar_portfolio", "dimension", "[dimension]", None, {}),
     "setRankingCriteria": ("set_ranking_criteria", "criteria", "[criteria]", None, {}),
     "refreshLiveData": ("refresh_live_data", "targetDate = LIVE_DATE, { skipPortfolioRefresh = false } = {}", "[targetDate, skipPortfolioRefresh]", None, {}),
+    "loadModelSearchFromDatabase": ("load_model_search_from_database", "searchTerm", "[searchTerm]", None, {}),
+    "loadDeepLinkModelsFromDatabase": ("load_deep_link_models_from_database", "modelIds", "[modelIds]", None, {}),
 }
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
@@ -83,6 +86,8 @@ LIVE_TARGETS = '\n      fetchLiveDay: async (path) => {\n        const requestUr
 EXTRAS = {
     "refreshPointInTimeSelection": {"staged": True},
     "refreshPointInTimeHistory": {"staged": True},
+    "loadModelSearchFromDatabase": {"staged": True},
+    "loadDeepLinkModelsFromDatabase": {"staged": True},
     "activatePortfolio": {"staged": True, "fallback": True, "targets": " loadOverlayRuleLibrary: (...a) => loadOverlayRuleLibrary(...a), __attach: () => null,"},
     "createSimilarPortfolio": {"staged": True},
     "setRankingCriteria": {"staged": True},
@@ -214,6 +219,7 @@ def helper_block(state_decls: dict) -> str:
     const __awaitTargets = {{ loadPortfolioData: (...a) => loadPortfolioData(...a), refreshLiveData: (date, skip) => skip === undefined ? refreshLiveData(date) : refreshLiveData(date, {{ skipPortfolioRefresh: !!skip }}), switchDate: (...a) => switchDate(...a),
       ensureHistoricalDataLoaded: (...a) => ensureHistoricalDataLoaded(...a), schedulePointInTimeSelection: (...a) => schedulePointInTimeSelection(...a), paintLiveChartCache: (...a) => paintLiveChartCache(...a), fetchPointInTime: async path => {{ const response = await fetch(`${{API_BASE}}${{path}}`, {{ cache: 'no-store' }}); const payload = await response.json(); return {{ status: response.status, payload }}; }},
       fetchPointInTimeHours: async path => {{ const response = await fetch(`${{API_BASE}}${{path}}`, {{ cache: 'no-store' }}); const payload = await response.json(); return {{ status: response.status, payload }}; }},
+      fetchPortfolioDayBatches: async (batches, date) => Promise.all(batches.map(async batch => {{ const params = new URLSearchParams({{ models: batch.join(','), date }}); const response = await fetch(`${{API_BASE}}/api/portfolio_day?${{params.toString()}}`, {{ cache: 'no-store' }}); const payload = await response.json(); if (!response.ok) throw new Error(payload.detail || payload.error || `HTTP ${{response.status}}`); return Array.isArray(payload.models) ? payload.models : []; }})),
       activatePortfolio: (...a) => activatePortfolio(...a), applyPortfolioViewConfig: (...a) => applyPortfolioViewConfig(...a) }};   // page async functions an engine stage may ask the page to await
     const __domTargets = {{ {dom_table} }};
     function __engineDom(effect) {{

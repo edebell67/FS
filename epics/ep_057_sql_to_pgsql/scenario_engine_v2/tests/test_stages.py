@@ -356,3 +356,108 @@ def test_no_controller_answers_needs_network_for_a_lookup_any_more():
         assert method in STAGE1
         r = command.run({"method": method, "args": args, "state": st.snapshot(), "hooks": {"maxFrames": 5, "head": "10:05", "eligible": [model(1)], "candidates": [model(1)]}})
         assert "needsNetwork" not in r, method
+
+
+# ---- step 8: loadModelSearchFromDatabase / loadDeepLinkModelsFromDatabase
+def _load_run(method, st, args=None, stage=None, ctx=None, result=None, eligible=None):
+    req = {"method": method, "args": args or [], "state": st.snapshot(),
+           "hooks": {"maxFrames": 5, "head": "10:00", "eligible": eligible if eligible is not None else [model(1), model(2)], "candidates": []}}
+    if stage:
+        req.update({"stage": stage, "ctx": ctx, "result": result})
+    return command.run(req)
+
+
+def _search_state(term="M1,M2", **kw):
+    st = PageState()
+    st.live_date = st.current_date = "2026-10-14"
+    st.model_search_input = term
+    for k, v in kw.items():
+        setattr(st, k, v)
+    return st
+
+
+SEARCH = "load_model_search_from_database"
+DEEP = "load_deep_link_models_from_database"
+
+
+def _answer(method, first, result, **change):
+    """The page's answer to the fetch the first stage asked for, merged into the state as it is NOW (optionally changed while the fetch was out)."""
+    return _load_run(method, PageState.from_snapshot({**first["state"], **change}), stage=first["stage"], ctx=first["ctx"], result=result)
+
+
+def test_model_search_validates_before_it_asks_the_page_to_fetch():
+    r = _load_run(SEARCH, _search_state("M1,M2"), ["M1,M2"])
+    assert r["await"]["fn"] == "fetchPortfolioDayBatches" and r["await"]["catch"] and r["await"]["args"] == [[["M1", "M2"]], "2026-10-14"]
+    assert r["state"]["model_search_status"] == "Searching 2 models in PostgreSQL…" and r["state"]["search_sequence"] == 1
+    assert _load_run(SEARCH, _search_state("M1"), ["M1"])["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…"
+    many = ",".join(f"N{i}" for i in range(11))
+    assert [len(b) for b in _load_run(SEARCH, _search_state(many), [many])["await"]["args"][0]] == [10, 1]   # the day endpoint takes at most ten ids
+    for bad_term in ("a$b", ""):
+        bad = _load_run(SEARCH, _search_state(bad_term), [bad_term])
+        assert "await" not in bad and bad["state"]["model_search_status"] == "Enter model IDs separated by commas or spaces"
+    week = _load_run(SEARCH, _search_state("M1", current_date="WEEK_OVERALL"), ["M1"])
+    assert "await" not in week and week["state"]["model_search_status"] == "Choose a single date to search PostgreSQL"
+
+
+def test_model_search_merges_the_answer_into_the_pages_current_state():
+    first = _load_run(SEARCH, _search_state("M1,M2", scenario_removed={"M1", "Other"}), ["M1,M2"])
+    r = _answer(SEARCH, first, {"ok": [[{"model": "m2", "series": []}, {"model": "M1", "series": []}]]})
+    assert [m["model"] for m in r["state"]["search_loaded"]] == ["M1", "m2"]   # in the order the user asked, matched case-insensitively
+    assert r["state"]["model_search_status"] == "2 models loaded" and r["state"]["frame"] == -1 and r["state"]["selected_model_index"] == 0
+    assert r["state"]["scenario_removed"] == ["Other"]   # a searched model is no longer "removed"
+    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "updateScrubberUI"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
+    assert sorted(r["state"]["visible"]) == ["M1", "M2"]
+    only_m1 = _answer(SEARCH, first, {"ok": [[{"model": "M1", "series": []}]]})
+    assert only_m1["state"]["model_search_status"] == "1 model loaded · not found: M2" and sorted(only_m1["state"]["visible"]) == ["M1"]
+    none = _answer(SEARCH, first, {"ok": [[]]})
+    assert none["state"]["model_search_status"] == "No model data found for 2026-10-14: M1, M2" and not [v for v in none["effects"] if v[0] == "view"]
+    assert none["state"]["search_loaded"] == []
+    moved = _answer(SEARCH, first, {"ok": [[]]}, frame=3)
+    assert moved["state"]["frame"] == 3   # nothing was found: the replay position is left alone
+
+
+def test_model_search_in_selected_time_mode_schedules_the_lookup():
+    first = _load_run(SEARCH, _search_state("M1", pit_mode=True), ["M1"])
+    r = _answer(SEARCH, first, {"ok": [[{"model": "M1", "series": []}]]})
+    assert ["setTimeout", 180] in r["effects"]
+    off = _answer(SEARCH, _load_run(SEARCH, _search_state("M1", pit_mode=False), ["M1"]), {"ok": [[{"model": "M1", "series": []}]]})
+    assert ["setTimeout", 180] not in off["effects"]
+
+
+def test_model_search_drops_a_stale_or_failed_answer():
+    ok = {"ok": [[{"model": "M1", "series": []}]]}
+    first = _load_run(SEARCH, _search_state("M1"), ["M1"])
+    for change in ({"search_sequence": 9}, {"model_search_input": "M2"}, {"current_date": "2026-10-13"}):
+        r = _answer(SEARCH, first, ok, **change)
+        assert r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…", change
+    assert _answer(SEARCH, first, {"error": "boom"})["state"]["model_search_status"] == "Database search failed: boom"
+    assert _answer(SEARCH, first, {"error": "boom"}, search_sequence=9)["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…"   # a newer search owns the line
+
+
+def test_deep_link_load_validates_and_limits_before_it_asks_the_page_to_fetch():
+    st = _search_state("")
+    one = _load_run(DEEP, st, [["M1"]])
+    assert one["await"]["fn"] == "fetchPortfolioDayBatches" and one["await"]["args"] == [[["M1"]], "2026-10-14"]
+    assert one["state"]["model_search_status"] == "Loading 1 linked comparison strategy…"
+    two = _load_run(DEEP, st, [[" M1 ", "M2", "M1", "bad id"]])
+    assert two["await"]["args"][0] == [["M1", "M2"]] and two["state"]["model_search_status"] == "Loading 2 linked comparison strategies…"
+    assert len(_load_run(DEEP, st, [[f"D{i}" for i in range(12)]])["await"]["args"][0][0]) == 10
+    assert "await" not in _load_run(DEEP, st, [[]]) and "await" not in _load_run(DEEP, st, [None])
+    week = _load_run(DEEP, _search_state("", current_date="WEEK_OVERALL"), [["M1"]])
+    assert "await" not in week and week["state"]["model_search_status"] == "Choose a single date to load linked comparison models"
+
+
+def test_deep_link_load_pins_the_models_and_words_the_result():
+    first = _load_run(DEEP, _search_state(""), [["M1", "M2", "M3"]])
+    ok = {"ok": [[{"model": "M1", "series": []}, {"model": "M2", "color": "#123456", "series": []}, {"model": "", "series": []}, {"model": "M4", "series": []}]]}
+    r = _answer(DEEP, first, ok)
+    pinned = dict(r["state"]["pinned"])
+    assert pinned["M1"]["color"] == "#f59e0b" and pinned["M2"]["color"] == "#123456" and pinned["M4"]["color"] == "#fb7185"   # the palette index counts every returned model
+    assert all(v["comparisonRole"] == "pinned comparison" for v in pinned.values()) and "" not in pinned
+    assert r["state"]["model_search_status"] == "4 linked comparison strategies added · no data found for M3 · change scenario to compare"
+    assert [v for v in r["effects"] if v[0] == "view"][0] == ["view", "updateDateLabelAndTitle"] and sorted(r["state"]["visible"]) == ["M1", "M2"]
+    only = _answer(DEEP, first, {"ok": [[{"model": "M1", "series": []}]]}, deep_link_only=True)
+    assert only["state"]["model_search_status"] == "Showing 1 selected strategy only · no data found for M2, M3 · choose a scenario to add scenario leaders"
+    moved = _answer(DEEP, first, ok, current_date="2026-10-13")
+    assert moved["state"]["pinned"] == [] and moved["state"]["model_search_status"] == "Loading 3 linked comparison strategies…"
+    assert _answer(DEEP, first, {"error": "x"})["state"]["model_search_status"] == "Could not load linked models: x"
