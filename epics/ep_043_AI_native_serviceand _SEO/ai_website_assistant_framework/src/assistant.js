@@ -88,6 +88,8 @@ function noAnswerReply() {
 }
 
 export function deterministicReply(client, message, matches) {
+  const quickAnswer = client.quickAnswers?.[String(message).trim().toLowerCase()];
+  if (quickAnswer) return { text: quickAnswer.text, sources: [{ id: quickAnswer.id, title: quickAnswer.title }] };
   const moduleResponse = detectModuleResponse(client, message);
   if (moduleResponse) return { ...moduleResponse, sources: [] };
   if (matches.length) {
@@ -110,6 +112,8 @@ function extractResponseText(payload) {
 }
 
 export async function createAssistantReply({ client, message, history = [], env = process.env, fetchImpl = fetch }) {
+  const quickAnswer = client.quickAnswers?.[String(message).trim().toLowerCase()];
+  if (quickAnswer) return { text: quickAnswer.text, sources: [{ id: quickAnswer.id, title: quickAnswer.title }] };
   const matches = retrieveKnowledge(client, message);
   const moduleResponse = detectModuleResponse(client, message);
   if (moduleResponse) return { ...moduleResponse, sources: [] };

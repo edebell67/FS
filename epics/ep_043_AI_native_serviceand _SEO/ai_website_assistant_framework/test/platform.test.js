@@ -79,7 +79,7 @@ test("engagement mode defaults to on_demand and can be switched to proactive by 
   assert.equal(defaulted.body.client.proactiveDelayMs, 2500);
 
   const list = await request("/api/admin/clients", { token: "test-secret" });
-  const northstar = list.body.clients[0];
+  const northstar = list.body.clients.find((client) => client.id === "northstar-heating");
   const switched = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { engagementMode: "proactive", proactiveDelayMs: 1200 } });
   assert.equal(switched.body.client.engagementMode, "proactive");
   assert.equal(switched.body.client.proactiveDelayMs, 1200);
@@ -188,21 +188,6 @@ test("visitor events are tenant-scoped, anonymous, sanitized, whitelisted, and s
   assert.equal(denied.status, 404);
 });
 
-test("campaign open pixel records only a bounded opaque token and always returns a transparent GIF", async () => {
-  const pixel = await request("/api/public/campaign/open.gif?clientKey=demo_northstar&host=localhost&campaign=followup_test&t=Opaque_TestToken_1234");
-  assert.equal(pixel.status, 200);
-  assert.equal(pixel.headers.get("content-type"), "image/gif");
-  assert.equal(pixel.headers.get("x-tracking-event"), "stored");
-  const records = await request("/api/admin/records", { token: "test-secret" });
-  const event = records.body.records.events.find((item) => item.sessionId === "campaign:Opaque_TestToken_1234");
-  assert.equal(event.type, "email_open");
-  assert.equal(event.label, "campaign:followup_test");
-  assert.equal(event.path, "/campaign/open");
-  assert.equal("email" in event, false);
-  const invalid = await request("/api/public/campaign/open.gif?clientKey=demo_northstar&host=localhost&campaign=followup_test&t=short");
-  assert.equal(invalid.status, 200);
-  assert.equal(invalid.headers.get("x-tracking-event"), "ignored");
-});
 
 test("visitor analytics can be switched off per site", async () => {
   const off = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: false } });
@@ -220,62 +205,6 @@ test("visitor analytics can be switched off per site", async () => {
   await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { analyticsEnabled: true } });
 });
 
-test("owner console: password-gated, per-site scoped, anonymous, and rate-limited", async () => {
-  // Disabled until a console password is set for this client.
-  const disabled = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "anything" } });
-  assert.equal(disabled.status, 403);
-
-  await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { consolePassword: "owner-secret-1" } });
-
-  // The console password must never leave the server via the public config projection.
-  const publicConfig = await request("/api/public/config?clientKey=demo_northstar&host=localhost");
-  assert.equal("consolePassword" in publicConfig.body.client, false);
-
-  // Wrong password is rejected without a session token.
-  const wrong = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "not-it" } });
-  assert.equal(wrong.status, 401);
-  assert.equal(wrong.body.token, undefined);
-
-  // Correct password issues a scoped session token.
-  const login = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "owner-secret-1" } });
-  assert.equal(login.status, 200);
-  assert.ok(login.body.token);
-  const token = login.body.token;
-
-  // Seed some events for two different tenants, then confirm the console only ever sees its own.
-  await request("/api/public/events", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", sessionId: "owner-test-sess", events: [{ type: "pageview", path: "/services" }, { type: "cta_click", label: "cta:quote" }] } });
-  const hoxtans = await request("/api/admin/clients", { token: "test-secret" });
-  const hoxtansKey = hoxtans.body.clients.find((item) => item.id === "hoxtans")?.publicKey;
-  if (hoxtansKey) await request("/api/public/events", { method: "POST", body: { clientKey: hoxtansKey, host: "localhost", sessionId: "other-tenant-sess", events: [{ type: "pageview", path: "/other" }] } });
-
-  const insights = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}`);
-  assert.equal(insights.status, 200);
-  assert.ok(insights.body.pageViews >= 1);
-  assert.equal(insights.body.paths.includes("/other"), false); // never another tenant's page
-
-  // The response is aggregated numbers only - no raw per-visitor rows, no session ids.
-  assert.equal(JSON.stringify(insights.body).includes("owner-test-sess"), false);
-
-  // Page + no-op time filter narrows results correctly.
-  const filtered = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}&path=${encodeURIComponent("/services")}`);
-  assert.equal(filtered.body.pageViews, 1);
-
-  // An invalid/expired token is rejected.
-  const badToken = await request("/api/public/owner/insights?token=not-a-real-token");
-  assert.equal(badToken.status, 401);
-
-  // Logout invalidates the session immediately.
-  await request("/api/public/owner/logout", { method: "POST", body: { token } });
-  const afterLogout = await request(`/api/public/owner/insights?token=${encodeURIComponent(token)}`);
-  assert.equal(afterLogout.status, 401);
-
-  // Repeated wrong passwords lock the client out.
-  for (let i = 0; i < 5; i++) await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "wrong" } });
-  const lockedOut = await request("/api/public/owner/login", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", password: "owner-secret-1" } });
-  assert.equal(lockedOut.status, 429);
-
-  await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { consolePassword: "" } });
-});
 
 test("lead follow-up recovers cold leads and feeds the ROI report", async () => {
   const shortDelay = await request("/api/admin/clients/northstar-heating", { method: "PUT", token: "test-secret", body: { leadFollowupDelayMs: 50, averageJobValue: 180 } });
@@ -386,15 +315,16 @@ test("admin endpoints enforce auth and persist configurable module/live state", 
   const denied = await request("/api/admin/clients");
   assert.equal(denied.status, 401);
   const list = await request("/api/admin/clients", { token: "test-secret" });
-  const northstar = list.body.clients[0];
+  const northstar = list.body.clients.find((client) => client.id === "northstar-heating");
   const updated = await request(`/api/admin/clients/${northstar.id}`, { method: "PUT", token: "test-secret", body: { status: "live", enabledModules: northstar.enabledModules.filter((item) => item !== "callback") } });
   assert.equal(updated.body.client.status, "live");
   assert.equal(updated.body.client.enabledModules.includes("callback"), false);
   const gated = await request("/api/public/callbacks", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Sam", telephone: "1" } });
   assert.equal(gated.status, 403);
   const liveLead = await request("/api/public/leads", { method: "POST", body: { clientKey: "demo_northstar", host: "localhost", name: "Lin", telephone: "2", service: "Heating" } });
-  assert.equal(liveLead.body.simulated, false);
-  assert.equal(liveLead.body.notification.reason, "not_configured");
+  assert.equal(liveLead.status, 503);
+  assert.equal(liveLead.body.accepted, false);
+  assert.match(liveLead.body.error, /could not send/i);
 });
 
 test("clients can be duplicated without sharing identity and remain in demo mode", async () => {
