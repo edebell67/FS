@@ -34,8 +34,8 @@ def _server_up():
 pytestmark = pytest.mark.skipif(not (shutil.which("node") and _server_up()), reason="needs node and the :8765 server")
 
 
-SNAPSHOT = ROOT / "top10_5min_equity_curves_source_v2.65.32.html"
-INVENTORY = ROOT / "inventory_v2.65.32" / "inventory.json"
+SNAPSHOT = ROOT / "top10_5min_equity_curves_source_v2.65.35.html"
+INVENTORY = ROOT / "inventory_v2.65.35" / "inventory.json"
 
 
 def _run(extra):

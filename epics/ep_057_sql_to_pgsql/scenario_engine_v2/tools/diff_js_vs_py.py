@@ -19,6 +19,7 @@
 # v1.14.1 · 2026-10-17 · --utils-only (no API calls) for fast mutation checks of the small helpers.
 # v1.14.0 · 2026-10-17 · utils_* groups: clock / search / rule summary / request options / retainSelectedTimeLeaders / tradeDateRange / step / seek / split / return-type helpers vs the page JS (always run; fast).
 # v1.13.0 · 2026-10-16 · Node cases run on parallel workers (DIFF_WORKERS) with a 2 h timeout; the single 10-minute subprocess timed out on the full grid.
+# v1.13.0 · 2026-10-19 · data_search group follows page v2.65.35: strategy-name queries, the /api/strategy_catalog answer, the 100-match limit, model-ID lists.
 # v1.12.0 · 2026-10-16 · rule_as_written runs only while the page still has the buggy eligibility line (fixed in v2.65.31); the patched-page oracle becomes a no-op on a fixed page.
 # v1.11.0 · 2026-10-16 · engine_rule group (Engine class with an assigned rule vs the patched page JS); --skip-rules for the fast tier.
 # v1.10.0 · 2026-10-16 · Noisy correlated / anti-correlated copies (graded correlations) and mid-day open source trades, after round 2 showed the 0.5 / -0.5 thresholds and the latest-head rule were still unexercised.
@@ -802,12 +803,24 @@ def main():
         return f"{API}/api/portfolio_day?{dc.url_search_params({'models': ','.join(models), 'date': date})}"
 
     found = {m: {"model": m, "color": None if i % 2 else "#123456", "series": [{"time": "10:00"}]} for i, m in enumerate(["DNA_1", "dna_2", "DNA_3", "X_4"])}
-    for term, date, st in product(("DNA_1", "A.B-c_d", "dna_1, DNA_2", "DNA_1 dna_9", "zz", "bad id!", "", None, " DNA_1;DNA_3 ", ",".join(f"DNA_{i}" for i in range(12))),
+    import re as _re
+    catalogue = [{"model": "DNA_1", "strategy": "breakout_4_tp20_sl50"}, {"model": "dna_2", "strategy": "breakout_2_tp10_sl30"}, {"model": "DNA_3", "strategy": "breakout_4_tp5_sl20"}, {"model": "X_4"}]
+    big = [{"model": f"DNA_9{i:03d}", "strategy": "breakout_big_tp1_sl1"} for i in range(130)]   # more matches than the page shows (100)
+    for term, date, st in product(("DNA_1", "A.B-c_d", "dna_1, DNA_2", "DNA_1 dna_9", "zz", "bad id!", "", None, " DNA_1;DNA_3 ", ",".join(f"DNA_{i}" for i in range(12)),
+                                   "breakout_4", "Breakout 4  TP20", "tp5", "dna_2", "nomatch_xyz", "big", "x" * 101, "12345", "DNA_12345", "12345 12346", "1 2 3"),
                                   ("2026-10-14", "nope"), (200, 500)):
-        req = pu.model_search_terms(term)
-        batches = [req[i:i + 10] for i in range(0, len(req), 10)]
-        pairs = [(pd_url(b, date), st if bi == 0 else 200, {"models": [found[m] for m in reversed(list(found)) if m.lower() in {x.lower() for x in b}]} if st == 200 else {"error": "boom"})
-                 for bi, b in enumerate(batches)]
+        terms = pu.model_search_terms(term)
+        query = _re.sub(r"\s+", "_", str(term or "").strip().lower())
+        is_list = len(terms) > 1 and all(_re.fullmatch(r"(?:dna_)?\d+", m, _re.I) for m in terms)
+        direct = is_list or (len(terms) == 1 and _re.fullmatch(r"(?:dna_)?\d{5,}", terms[0], _re.I) is not None)
+        pairs, ids = [], (terms if direct else [])
+        if not direct and term and len(term) <= 100 and date == "2026-10-14":   # a strategy name: the catalogue says which models match
+            cat = big if "big" in query else catalogue
+            pairs.append((f"{API}/api/strategy_catalog?{dc.url_search_params({'date': date})}", st, {"models": cat} if st == 200 else {"error": "boom"}))
+            ids = [str(m["model"]) for m in cat if query in str(m["model"]).lower() or query in str(m.get("strategy") or "").lower()][:100] if st == 200 else []
+        batches = [ids[i:i + 10] for i in range(0, len(ids), 10)]
+        pairs += [(pd_url(b, date), st if bi == 0 else 200, {"models": [found[m] for m in reversed(list(found)) if m.lower() in {x.lower() for x in b}]} if st == 200 else {"error": "boom"})
+                  for bi, b in enumerate(batches)]
         fx = fx_of(*pairs)
         tr = FakeTransport(fx)
         cl = dc.DataClient(tr, API)

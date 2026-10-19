@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.2.0 · 2026-10-19 · get_eligible_models follows page v2.65.35: the query's whitespace counts as '_' and whatever a search loaded is the search result (strategy-name matches as well as model IDs).
 # v1.1.1 · 2026-10-17 · toFixed is core.js_to_fixed.
 # v1.1.0 · 2026-10-17 · update_ribbon: the ribbon's numbers, labels and colours (TRI_SPLIT selected model or the visible models' totals).
 # v1.0.0 · 2026-10-17 · Initial version: faithful ports over PageState + the client's scenario data (replaces the simplified Engine.eligible / max_frames / replay_head_time); differential-tested against the page's own functions.
@@ -9,6 +10,7 @@ PageState and the DataClient. The one DOM write, the model-search status line, i
 from __future__ import annotations
 
 import math
+import re
 
 from . import core_ported as core
 from . import page_utils as pu
@@ -144,10 +146,9 @@ def get_eligible_models(s, client) -> list[dict]:
             (-1 if _active_return_total(s, b) - _active_return_total(s, a) < 0 else 1) if _active_return_total(s, b) - _active_return_total(s, a) != 0
             else locale_compare(_s(a.get("model")), _s(b.get("model"))))))
         scenario_models = picked
-    query = str(s.model_search_input or "").strip().lower() if s.model_search_input is not None else None
+    query = re.sub(r"\s+", "_", str(s.model_search_input or "").strip().lower()) if s.model_search_input is not None else None   # v2.65.35: spaces count as '_' (strategy names)
     terms = pu.model_search_terms(query)
-    ids = set(terms)
-    direct = [m for m in s.search_loaded if _lower(m.get("model")) in ids] if ids else []
+    direct = list(s.search_loaded) if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
     models = scenario_models
     pinned = s.pinned
     if s.pit_mode:

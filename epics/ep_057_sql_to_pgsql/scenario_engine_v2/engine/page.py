@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.11.1 · 2026-10-19 · switch_date re-runs the model search for 3+ characters of any ID or strategy-name text (page v2.65.35).
+# v1.11.0 · 2026-10-19 · load_model_search_from_database follows page v2.65.35: a search that is not a model ID looks up strategy names in /api/strategy_catalog (new stage _msearch_cat), first 100 matches; activate_portfolio follows v2.65.34.
 # v1.10.0 · 2026-10-18 · _fire_pit: an un-awaited refreshPointInTimeSelection. One-go it is begin_ + _fire; for the browser copy (spawn_mode) the engine does the part before the request in place and hands the page a spawn (fetch + the resume stage), so no controller needs the network any more.
 # v1.9.0 · 2026-10-18 · refresh_point_in_time_selection and refresh_point_in_time_history in stages for the browser copy (the page fetches; the engine plans before and merges after, on the page's current state).
 # v1.8.1 · 2026-10-18 · stages hand applyPortfolioViewConfig to the page (it may want the network: the page runs its own fallback); create_similar_portfolio returns nothing, like the page.
@@ -74,7 +76,7 @@ STAGES = {
     # refresh_live_data is staged only for the browser copy; its one-go form (begin_refresh_live_data / _apply_live) keeps the event-loop model the headless races use
     "refresh_point_in_time_selection": ("_pit_sel_0", "_pit_sel_1"),
     "refresh_point_in_time_history": ("_pit_hist_0", "_pit_hist_1"),
-    "load_model_search_from_database": ("_msearch_0", "_msearch_1"),
+    "load_model_search_from_database": ("_msearch_0", "_msearch_cat", "_msearch_1"),
     "load_deep_link_models_from_database": ("_deeplink_0", "_deeplink_1"),
     "activate_portfolio": ("_act_0", "_act_1", "_act_1b", "_act_2", "_act_3", "_act_4", "_act_load_done", "_act_rules_done"),
     "create_similar_portfolio": ("_similar_0", "_similar_1"),
@@ -225,6 +227,14 @@ class Page:
         if aw.fn == "schedulePointInTimeSelection":
             self.schedule_point_in_time_selection()
             return None
+        if aw.fn == "fetchStrategyCatalog":   # the page's fetch of /api/strategy_catalog (a failing answer throws; reported as {"error"} when the stage asks to catch)
+            try:
+                status, payload = self.client._get(f"{self.client.api}/api/strategy_catalog?{url_search_params({'date': aw.args[0]})}")
+                if not _is_ok(status):
+                    raise FetchError(_message(payload, f"HTTP {status}"))
+                return {"ok": (payload.get("models") if isinstance(payload, dict) else None) or []}
+            except Exception as error:  # noqa: BLE001
+                return {"error": str(error)}
         if aw.fn == "fetchPortfolioDayBatches":   # the page's Promise.all over the batches; a non-2xx answer throws (reported as {"error"} when the stage asks to catch)
             try:
                 answers = [self.client._get(f"{self.client.api}/api/portfolio_day?{url_search_params({'models': ','.join(batch), 'date': aw.args[1]})}")
@@ -776,27 +786,57 @@ class Page:
         s = self.s
         s.search_sequence += 1
         seq, date = s.search_sequence, s.current_date
-        requested = pu.model_search_terms(search_term)
-        query = str(search_term or "").strip().lower()
-        if not requested or any(not MODEL_ID_RE.fullmatch(m) for m in requested):
-            s.model_search_status = "Enter model IDs separated by commas or spaces"
+        terms = pu.model_search_terms(search_term)
+        query = re.sub(r"\s+", "_", str(search_term or "").strip().lower())
+        is_list = len(terms) > 1 and all(re.fullmatch(r"(?:dna_)?\d+", m, re.I) for m in terms)
+        is_direct = is_list or (len(terms) == 1 and re.fullmatch(r"(?:dna_)?\d{5,}", terms[0], re.I) is not None)
+        requested = terms if is_direct else [query]
+        if not search_term or len(search_term) > 100 or (is_list and any(not MODEL_ID_RE.fullmatch(m) for m in requested)):
+            s.model_search_status = "Search by one strategy name, or enter model IDs separated by commas or spaces"
             return None
         if not DATE_RE.fullmatch(date or ""):
             s.model_search_status = "Choose a single date to search PostgreSQL"
             return None
         n = len(requested)
-        s.model_search_status = f"Searching {n} model{'' if n == 1 else 's'} in PostgreSQL\u2026"
-        batches = [requested[i:i + 10] for i in range(0, n, 10)]   # the day endpoint accepts at most ten IDs
-        return Await("fetchPortfolioDayBatches", [batches, date], {"seq": seq, "date": date, "query": query, "requested": requested}, next="_msearch_1", catch=True)
+        s.model_search_status = ("Searching model IDs and strategy names in PostgreSQL\u2026" if n == 1 else f"Searching {n} model IDs in PostgreSQL\u2026")
+        ctx = {"seq": seq, "date": date, "query": query, "search_term": str(search_term)}
+        if not is_direct:   # a strategy name: the catalogue says which models match
+            return Await("fetchStrategyCatalog", [date], ctx, next="_msearch_cat", catch=True)
+        return self._msearch_fetch(requested, ctx | {"direct": True, "truncated": False})
+
+    def _msearch_fetch(self, model_ids, ctx):
+        batches = [model_ids[i:i + 10] for i in range(0, len(model_ids), 10)]   # the day endpoint accepts at most ten ids
+        return Await("fetchPortfolioDayBatches", [batches, ctx["date"]], ctx | {"model_ids": list(model_ids)}, next="_msearch_1", catch=True)
+
+    def _msearch_current(self, ctx):
+        s = self.s
+        return ctx["seq"] == s.search_sequence and ctx["query"] == re.sub(r"\s+", "_", str(s.model_search_input or "").strip().lower()) and ctx["date"] == s.current_date
+
+    def _msearch_cat(self, ctx, result):
+        s = self.s
+        if "error" in (result or {}):
+            if ctx["seq"] == s.search_sequence:
+                s.model_search_status = f"Database search failed: {result['error']}"
+            return None
+        query = ctx["query"]
+        matches = [m for m in (result or {}).get("ok") or [] if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]
+        if not self._msearch_current(ctx):
+            return None
+        if not matches:
+            s.search_loaded = []
+            self.view("renderCards", "drawChart")
+            s.model_search_status = f"No model ID or strategy name matches \u201c{ctx['search_term']}\u201d for {ctx['date']}"
+            return None
+        return self._msearch_fetch([str(m.get("model")) for m in matches[:100]], ctx | {"direct": False, "truncated": len(matches) > 100})
 
     def _msearch_1(self, ctx, result):
         s = self.s
-        seq, date, query, requested = ctx["seq"], ctx["date"], ctx["query"], ctx["requested"]
+        seq, date, requested = ctx["seq"], ctx["date"], ctx["model_ids"]
         if "error" in (result or {}):
             if seq == s.search_sequence:
                 s.model_search_status = f"Database search failed: {result['error']}"
             return None
-        if seq != s.search_sequence or query != str(s.model_search_input or "").strip().lower() or date != s.current_date:
+        if not self._msearch_current(ctx):
             return None
         by_id = {str(m.get("model") or "").lower(): m for r in (result or {}).get("ok") or [] for m in r}
         s.search_loaded = [by_id[m.lower()] for m in requested if m.lower() in by_id]
@@ -812,7 +852,11 @@ class Page:
         s.selected_model_index = 0
         self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
         c = len(s.search_loaded)
-        s.model_search_status = f"{c} model{'' if c == 1 else 's'} loaded{' \u00b7 not found: ' + ', '.join(missing) if missing else ''}"
+        plural = "" if c == 1 else "s"
+        if ctx.get("direct"):
+            s.model_search_status = f"{c} model{plural} loaded{' \u00b7 not found: ' + ', '.join(missing) if missing else ''}"
+        else:
+            s.model_search_status = f"{c} model{plural} match \u201c{ctx['search_term']}\u201d{' \u00b7 showing first 100 matches' if ctx.get('truncated') else ''}"
         if s.pit_mode:   # deep-linked data may arrive after the load: once its series defines the replay head, run the selected-time lookup
             self.schedule_point_in_time_selection()
         return None
@@ -1715,7 +1759,7 @@ class Page:
         query = str(s.model_search_input or "").strip()
         deep = getattr(self, "deep_link_model", None)
         is_deep = bool(deep and query and str(deep).lower() == query.lower())
-        if not is_deep and query and len(query) >= 6 and re.fullmatch(r"[a-z0-9._-]+", query, re.I):
+        if not is_deep and query and len(query) >= 3 and re.fullmatch(r"[a-z0-9._;,\s-]+", query, re.I):   # v2.65.35: strategy names (3+ characters, spaces and commas allowed)
             self._timeout(lambda: None, 350, "modelSearchTimer", "loadModelSearchFromDatabase", [query])
         self.settle()
 
@@ -1789,7 +1833,7 @@ class Page:
         query = str(s.model_search_input or "").strip()
         deep = getattr(self, "deep_link_model", None)
         is_deep = bool(deep and query and str(deep).lower() == query.lower())
-        if not is_deep and query and len(query) >= 6 and re.fullmatch(r"[a-z0-9._-]+", query, re.I):
+        if not is_deep and query and len(query) >= 3 and re.fullmatch(r"[a-z0-9._;,\s-]+", query, re.I):   # v2.65.35: strategy names (3+ characters, spaces and commas allowed)
             self._timeout(lambda: None, 350, "modelSearchTimer", "loadModelSearchFromDatabase", [query])
         return None
 

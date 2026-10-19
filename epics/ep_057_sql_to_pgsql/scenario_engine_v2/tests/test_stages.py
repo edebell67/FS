@@ -385,53 +385,108 @@ def _answer(method, first, result, **change):
     return _load_run(method, PageState.from_snapshot({**first["state"], **change}), stage=first["stage"], ctx=first["ctx"], result=result)
 
 
-def test_model_search_validates_before_it_asks_the_page_to_fetch():
-    r = _load_run(SEARCH, _search_state("M1,M2"), ["M1,M2"])
-    assert r["await"]["fn"] == "fetchPortfolioDayBatches" and r["await"]["catch"] and r["await"]["args"] == [[["M1", "M2"]], "2026-10-14"]
-    assert r["state"]["model_search_status"] == "Searching 2 models in PostgreSQL…" and r["state"]["search_sequence"] == 1
-    assert _load_run(SEARCH, _search_state("M1"), ["M1"])["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…"
-    many = ",".join(f"N{i}" for i in range(11))
+def test_model_id_search_validates_before_it_asks_the_page_to_fetch():
+    r = _load_run(SEARCH, _search_state("201700 201701"), ["201700 201701"])
+    assert r["await"]["fn"] == "fetchPortfolioDayBatches" and r["await"]["catch"] and r["await"]["args"] == [[["201700", "201701"]], "2026-10-14"]
+    assert r["state"]["model_search_status"] == "Searching 2 model IDs in PostgreSQL…" and r["state"]["search_sequence"] == 1
+    one = _load_run(SEARCH, _search_state("DNA_201700"), ["DNA_201700"])   # one ID of five or more digits is a direct search
+    assert one["await"]["fn"] == "fetchPortfolioDayBatches" and one["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"
+    many = " ".join(str(200000 + i) for i in range(11))
     assert [len(b) for b in _load_run(SEARCH, _search_state(many), [many])["await"]["args"][0]] == [10, 1]   # the day endpoint takes at most ten ids
-    for bad_term in ("a$b", ""):
+    for bad_term in ("", "x" * 101):
         bad = _load_run(SEARCH, _search_state(bad_term), [bad_term])
-        assert "await" not in bad and bad["state"]["model_search_status"] == "Enter model IDs separated by commas or spaces"
-    week = _load_run(SEARCH, _search_state("M1", current_date="WEEK_OVERALL"), ["M1"])
+        assert "await" not in bad and bad["state"]["model_search_status"] == "Search by one strategy name, or enter model IDs separated by commas or spaces"
+    week = _load_run(SEARCH, _search_state("201700 201701", current_date="WEEK_OVERALL"), ["201700 201701"])
     assert "await" not in week and week["state"]["model_search_status"] == "Choose a single date to search PostgreSQL"
 
 
-def test_model_search_merges_the_answer_into_the_pages_current_state():
-    first = _load_run(SEARCH, _search_state("M1,M2", scenario_removed={"M1", "Other"}), ["M1,M2"])
-    r = _answer(SEARCH, first, {"ok": [[{"model": "m2", "series": []}, {"model": "M1", "series": []}]]})
-    assert [m["model"] for m in r["state"]["search_loaded"]] == ["M1", "m2"]   # in the order the user asked, matched case-insensitively
-    assert r["state"]["model_search_status"] == "2 models loaded" and r["state"]["frame"] == -1 and r["state"]["selected_model_index"] == 0
+def test_strategy_name_search_asks_the_page_for_the_catalogue_first():
+    r = _load_run(SEARCH, _search_state("Breakout 4  TP20"), ["Breakout 4  TP20"])
+    assert r["await"]["fn"] == "fetchStrategyCatalog" and r["await"]["catch"] and r["await"]["args"] == ["2026-10-14"]
+    assert r["ctx"]["query"] == "breakout_4_tp20" and r["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"
+    assert _load_run(SEARCH, _search_state("M1,M2"), ["M1,M2"])["await"]["fn"] == "fetchStrategyCatalog"   # anything that is not a model ID is a name
+
+
+def _catalogue(n=3, name="breakout_4_tp20_sl50"):
+    return {"ok": [{"model": f"DNA_2{i:05d}", "strategy": name} for i in range(n)] + [{"model": "DNA_299999"}]}
+
+
+def _name_search(term="breakout_4", **state):
+    first = _load_run(SEARCH, _search_state(term, **state), [term])
+    return first, _answer(SEARCH, first, _catalogue())
+
+
+def test_strategy_name_matches_by_strategy_or_model_and_then_loads_their_curves():
+    first, r = _name_search("breakout_4")
+    assert r["await"]["fn"] == "fetchPortfolioDayBatches" and r["await"]["args"] == [[["DNA_200000", "DNA_200001", "DNA_200002"]], "2026-10-14"]
+    _, byid = _name_search("dna_2000")   # the model ID is searched too
+    assert byid["ctx"]["model_ids"] == ["DNA_200000", "DNA_200001", "DNA_200002"]
+    done = _answer(SEARCH, {"state": r["state"], "stage": r["stage"], "ctx": r["ctx"]}, {"ok": [[{"model": "DNA_200001", "series": []}, {"model": "DNA_200000", "series": []}]]})
+    assert [m["model"] for m in done["state"]["search_loaded"]] == ["DNA_200000", "DNA_200001"] and done["state"]["model_search_status"] == "2 models match “breakout_4”"
+    one = _answer(SEARCH, {"state": r["state"], "stage": r["stage"], "ctx": r["ctx"]}, {"ok": [[{"model": "DNA_200000", "series": []}]]})
+    assert one["state"]["model_search_status"] == "1 model match “breakout_4”"
+
+
+def test_strategy_name_search_shows_the_first_hundred_and_says_so():
+    first = _load_run(SEARCH, _search_state("breakout"), ["breakout"])
+    r = _answer(SEARCH, first, _catalogue(130))
+    ids = r["ctx"]["model_ids"]
+    assert len(ids) == 100 and ids[0] == "DNA_200000" and r["ctx"]["truncated"] is True and len(r["await"]["args"][0]) == 10   # 100 ids in ten batches
+    exactly = _answer(SEARCH, first, _catalogue(100))
+    assert len(exactly["ctx"]["model_ids"]) == 100 and exactly["ctx"]["truncated"] is False
+    done = _answer(SEARCH, {"state": r["state"], "stage": r["stage"], "ctx": r["ctx"]}, {"ok": [[{"model": i, "series": []} for i in ids[:10]]] + [[] for _ in range(9)]})
+    assert done["state"]["model_search_status"] == "10 models match “breakout” · showing first 100 matches"
+
+
+def test_strategy_name_with_no_match_clears_the_previous_results():
+    first = _load_run(SEARCH, _search_state("zzz_nothing", search_loaded=[{"model": "OLD"}]), ["zzz_nothing"])
+    r = _answer(SEARCH, first, _catalogue())
+    assert "await" not in r and r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "No model ID or strategy name matches “zzz_nothing” for 2026-10-14"
+    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "renderCards"], ["view", "drawChart"]]
+    empty = _answer(SEARCH, first, {"ok": []})
+    assert empty["state"]["search_loaded"] == [] and "No model ID or strategy name matches" in empty["state"]["model_search_status"]
+
+
+def test_strategy_name_catalogue_failure_and_stale_answers():
+    first = _load_run(SEARCH, _search_state("breakout_4"), ["breakout_4"])
+    assert _answer(SEARCH, first, {"error": "catalog down"})["state"]["model_search_status"] == "Database search failed: catalog down"
+    assert _answer(SEARCH, first, {"error": "x"}, search_sequence=9)["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"
+    for change in ({"search_sequence": 9}, {"model_search_input": "breakout_5"}, {"current_date": "2026-10-13"}):
+        r = _answer(SEARCH, first, _catalogue(), **change)
+        assert "await" not in r and r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…", change
+    assert "await" in _answer(SEARCH, first, _catalogue(), model_search_input="Breakout 4".replace(" ", "_"))   # the box's whitespace counts as '_' when comparing
+
+
+def test_model_id_search_merges_the_answer_into_the_pages_current_state():
+    first = _load_run(SEARCH, _search_state("DNA_201700", scenario_removed={"dna_201700", "Other"}), ["DNA_201700"])
+    r = _answer(SEARCH, first, {"ok": [[{"model": "dna_201700", "series": []}]]})
+    assert [m["model"] for m in r["state"]["search_loaded"]] == ["dna_201700"]   # matched case-insensitively
+    assert r["state"]["model_search_status"] == "1 model loaded" and r["state"]["frame"] == -1 and r["state"]["selected_model_index"] == 0
     assert r["state"]["scenario_removed"] == ["Other"]   # a searched model is no longer "removed"
     assert [v for v in r["effects"] if v[0] == "view"] == [["view", "updateScrubberUI"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
-    assert sorted(r["state"]["visible"]) == ["M1", "M2"]
-    only_m1 = _answer(SEARCH, first, {"ok": [[{"model": "M1", "series": []}]]})
-    assert only_m1["state"]["model_search_status"] == "1 model loaded · not found: M2" and sorted(only_m1["state"]["visible"]) == ["M1"]
-    none = _answer(SEARCH, first, {"ok": [[]]})
-    assert none["state"]["model_search_status"] == "No model data found for 2026-10-14: M1, M2" and not [v for v in none["effects"] if v[0] == "view"]
-    assert none["state"]["search_loaded"] == []
-    moved = _answer(SEARCH, first, {"ok": [[]]}, frame=3)
-    assert moved["state"]["frame"] == 3   # nothing was found: the replay position is left alone
+    missing = _answer(SEARCH, first, {"ok": [[]]})
+    assert missing["state"]["model_search_status"] == "No model data found for 2026-10-14: DNA_201700" and missing["state"]["search_loaded"] == []
+    assert _answer(SEARCH, first, {"ok": [[]]}, frame=3)["state"]["frame"] == 3   # nothing was found: the replay position is left alone
+    bare = _load_run(SEARCH, _search_state("201700"), ["201700"])
+    assert _answer(SEARCH, bare, {"ok": [[{"model": "DNA_201700", "series": []}]]})["state"]["search_loaded"] == []   # a bare number is looked up as typed (the page's behaviour)
 
 
 def test_model_search_in_selected_time_mode_schedules_the_lookup():
-    first = _load_run(SEARCH, _search_state("M1", pit_mode=True), ["M1"])
-    r = _answer(SEARCH, first, {"ok": [[{"model": "M1", "series": []}]]})
+    first = _load_run(SEARCH, _search_state("DNA_201700", pit_mode=True), ["DNA_201700"])
+    r = _answer(SEARCH, first, {"ok": [[{"model": "DNA_201700", "series": []}]]})
     assert ["setTimeout", 180] in r["effects"]
-    off = _answer(SEARCH, _load_run(SEARCH, _search_state("M1", pit_mode=False), ["M1"]), {"ok": [[{"model": "M1", "series": []}]]})
+    off = _answer(SEARCH, _load_run(SEARCH, _search_state("DNA_201700", pit_mode=False), ["DNA_201700"]), {"ok": [[{"model": "DNA_201700", "series": []}]]})
     assert ["setTimeout", 180] not in off["effects"]
 
 
 def test_model_search_drops_a_stale_or_failed_answer():
-    ok = {"ok": [[{"model": "M1", "series": []}]]}
-    first = _load_run(SEARCH, _search_state("M1"), ["M1"])
-    for change in ({"search_sequence": 9}, {"model_search_input": "M2"}, {"current_date": "2026-10-13"}):
+    ok = {"ok": [[{"model": "DNA_201700", "series": []}]]}
+    first = _load_run(SEARCH, _search_state("DNA_201700"), ["DNA_201700"])
+    for change in ({"search_sequence": 9}, {"model_search_input": "DNA_201701"}, {"current_date": "2026-10-13"}):
         r = _answer(SEARCH, first, ok, **change)
-        assert r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…", change
+        assert r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…", change
     assert _answer(SEARCH, first, {"error": "boom"})["state"]["model_search_status"] == "Database search failed: boom"
-    assert _answer(SEARCH, first, {"error": "boom"}, search_sequence=9)["state"]["model_search_status"] == "Searching 1 model in PostgreSQL…"   # a newer search owns the line
+    assert _answer(SEARCH, first, {"error": "boom"}, search_sequence=9)["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"   # a newer search owns the line
 
 
 def test_deep_link_load_validates_and_limits_before_it_asks_the_page_to_fetch():

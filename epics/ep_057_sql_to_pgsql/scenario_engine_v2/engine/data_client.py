@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/data_client.py — headless data layer: the page's fetchers (live day, portfolio day, model search, deep links, catalogue, rules, source trades, historical curves) over an injectable transport.
 #
 # VERSION HISTORY
+# v1.x · 2026-10-19 · load_model_search follows page v2.65.35 (strategy names via /api/strategy_catalog, first 100 matches).
 # v1.5.0 · 2026-10-18 · `ops`: every write to the page-owned view caches (viewSet / viewTouch / viewDelete / persist / remember) is recorded in order so a browser copy can replay it on its own caches.
 # v1.4.1 · 2026-10-17 · records the persistPortfolioView view call (browser copy replays it).
 # v1.4.0 · 2026-10-17 · send(): PUT / POST through an injectable write transport (refused when none is set); HeadlessWriteRefused.
@@ -358,17 +359,34 @@ class DataClient:
 
     # ---- loadModelSearchFromDatabase ----
     def load_model_search(self, search_term, date: str) -> dict:
-        requested = pu.model_search_terms(search_term)
-        if not requested or any(not MODEL_ID_RE.fullmatch(m) for m in requested):
-            self.model_search_status = "Enter model IDs separated by commas or spaces"
+        terms = pu.model_search_terms(search_term)
+        query = re.sub(r"\s+", "_", str(search_term or "").strip().lower())   # page v2.65.35: spaces count as '_'
+        is_list = len(terms) > 1 and all(re.fullmatch(r"(?:dna_)?\d+", m, re.I) for m in terms)
+        is_direct = is_list or (len(terms) == 1 and re.fullmatch(r"(?:dna_)?\d{5,}", terms[0], re.I) is not None)
+        requested = terms if is_direct else [query]
+        if not search_term or len(search_term) > 100 or (is_list and any(not MODEL_ID_RE.fullmatch(m) for m in requested)):
+            self.model_search_status = "Search by one strategy name, or enter model IDs separated by commas or spaces"
             return {"loaded": [], "missing": []}
         if not DATE_RE.fullmatch(date or ""):
             self.model_search_status = "Choose a single date to search PostgreSQL"
             return {"loaded": [], "missing": []}
         n = len(requested)
-        self.model_search_status = f"Searching {n} model{'' if n == 1 else 's'} in PostgreSQL…"
+        self.model_search_status = "Searching model IDs and strategy names in PostgreSQL\u2026" if n == 1 else f"Searching {n} model IDs in PostgreSQL\u2026"
         try:
-            batches = [requested[i:i + 10] for i in range(0, n, 10)]
+            model_ids, truncated = requested, False
+            if not is_direct:   # a strategy name: the catalogue says which models match (first 100)
+                status, payload = self._get(f"{self.api}/api/strategy_catalog?{url_search_params({'date': date})}")
+                if not _is_ok(status):
+                    raise FetchError(_message(payload, f"HTTP {status}"))
+                models = (payload.get("models") if isinstance(payload, dict) else None) or []
+                matches = [m for m in models if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]
+                if not matches:
+                    self.model_search_loaded = []
+                    self.model_search_status = f"No model ID or strategy name matches \u201c{search_term}\u201d for {date}"
+                    return {"loaded": [], "missing": []}
+                truncated = len(matches) > 100
+                model_ids = [str(m.get("model")) for m in matches[:100]]
+            batches = [model_ids[i:i + 10] for i in range(0, len(model_ids), 10)]
             results = [self._get(f"{self.api}/api/portfolio_day?{url_search_params({'models': ','.join(b), 'date': date})}") for b in batches]
             responses = []
             for status, payload in results:
@@ -379,13 +397,16 @@ class DataClient:
             self.model_search_status = f"Database search failed: {error}"
             return {"loaded": [], "missing": []}
         by_id = {str(m.get("model") or "").lower(): m for r in responses for m in r}
-        self.model_search_loaded = [by_id[m.lower()] for m in requested if m.lower() in by_id]
-        missing = [m for m in requested if m.lower() not in by_id]
+        self.model_search_loaded = [by_id[m.lower()] for m in model_ids if m.lower() in by_id]
+        missing = [m for m in model_ids if m.lower() not in by_id]
         if not self.model_search_loaded:
             self.model_search_status = f"No model data found for {date}{': ' + ', '.join(missing) if missing else ''}"
             return {"loaded": [], "missing": missing}
         c = len(self.model_search_loaded)
-        self.model_search_status = f"{c} model{'' if c == 1 else 's'} loaded{' · not found: ' + ', '.join(missing) if missing else ''}"
+        if is_direct:
+            self.model_search_status = f"{c} model{'' if c == 1 else 's'} loaded{' \u00b7 not found: ' + ', '.join(missing) if missing else ''}"
+        else:
+            self.model_search_status = f"{c} model{'' if c == 1 else 's'} match \u201c{search_term}\u201d{' \u00b7 showing first 100 matches' if truncated else ''}"
         return {"loaded": self.model_search_loaded, "missing": missing}
 
     # ---- loadDeepLinkModelsFromDatabase ----

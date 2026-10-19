@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_page_js_vs_py.py — differential test of the page controller: the page's own state-changing functions (Node VM) vs engine/page.py, whole-state comparison.
 #
 # VERSION HISTORY
+# v1.9.0 · 2026-10-19 · /api/strategy_catalog fixture (24 or 130 models, one without a strategy name, some days failing) and strategy-name / model-ID queries for load_model_search_from_database (page v2.65.35).
 # v1.8.1 · 2026-10-18 · FAIL_PORTFOLIO_DAY switch (default on): the models harness, which shares this fixture server, turns the failing portfolio loads off so its own cases keep their strength.
 # v1.8.0 · 2026-10-18 · add_catalogue_model cases pad the target portfolio to 9 / 10 strategies; refresh_active_portfolio_view_twice (two overlapping calls; wrapper mode only: the Python event-loop model cannot overlap one-go calls).
 # v1.7.0 · 2026-10-18 · wrapper mode: the oracle is the ORIGINAL page's JS result (state, effects, fetches, return value), not the Python expectation: the wrapper runs on the real event loop, so a hop-count quirk of the Python event-loop model in a failure path must not decide it.
@@ -36,8 +37,8 @@ from engine.page import LivePortfolioRefused, Page  # noqa: E402
 from engine.page_state import FIELDS, PageState, js_state_code  # noqa: E402
 
 ap = argparse.ArgumentParser()
-ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.34.html"))
-ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.34" / "inventory.json"))
+ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.35.html"))
+ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.35" / "inventory.json"))
 ap.add_argument("--methods", default="")
 ap.add_argument("--cases", type=int, default=150)
 ns = ap.parse_args()
@@ -234,6 +235,13 @@ def responder(url: str):
             return 500, {"error": "db down"}   # some portfolio loads fail: the controllers' catch paths
         ids = [m for m in q.get("models", "").split(",") if m]
         return 200, {"models": [mk(int(hashlib.md5(m.encode()).hexdigest()[:4], 16) % 90 + 1, start=seed % 3 * 2) | {"model": m} for m in ids], "generated_at": "2026-10-14T12:00:00"}
+    if u.path.endswith("/api/strategy_catalog"):
+        if FAIL_PORTFOLIO_DAY and seed % 7 == 0:
+            return 500, {"error": "catalog down"}
+        names = ["breakout_4_tp20_sl50", "breakout_2_tp10_sl30", "breakout_r_rev_3_tp5_sl20", "breakout_rev_10_tp20_sl50"]
+        count = 130 if seed % 5 == 0 else 24   # some days list more than the page's 100-match limit
+        return 200, {"date": q.get("date"), "models": [{"model": f"DNA_2{i:05d}", "product": "gbpeur_c", "product_type": "forex", "strategy": names[i % 4], "net": float(i), "alt": float(-i)}
+                                                         for i in range(count)] + [{"model": "DNA_299999"}]}   # the last row has no strategy name
     if u.path.endswith("/api/overlay_rules"):
         return 200, {"rules": [{"id": "r1", "name": "R1", "config": {"interval_minutes": 30, "rules": [{"type": "ranked_top", "metric": "cum_net"}]}}],
                      "assignments": {"P1": "r1"}}
@@ -417,8 +425,10 @@ def rand_case(rng: random.Random, method: str):
     elif method == "load_portfolio_data":
         args = [{"preferCache": rng.choice([True, False])}]
     elif method == "load_model_search_from_database":
-        pool = ["M1", "M2", "abc.def", "X_9", "bad id", "a$b", "M1,M2", "M3;M4", "M5 M6", "", "  ", "M1,M1", "ZZ-1"]
-        term = rng.choice(pool + [",".join(f"N{i}" for i in range(rng.choice([11, 20, 25])))])
+        pool = ["M1", "M2", "abc.def", "X_9", "bad id", "a$b", "M1,M2", "M3;M4", "M5 M6", "", "  ", "M1,M1", "ZZ-1",
+                "breakout_4_tp20_sl50", "Breakout 4 TP20", "tp20_sl50", "breakout", "dna_2", "nomatch_xyz", "x" * 101,
+                "12345", "DNA_201700", "201700 201701", "1 2 3", "DNA_201700 DNA_201701 abc"]
+        term = rng.choice(pool + [",".join(f"N{i}" for i in range(rng.choice([11, 20, 25])))] + [" ".join(str(200000 + i) for i in range(rng.choice([11, 25])))])
         args = [term]
         # the search box usually still holds the term when the answer arrives; sometimes it was edited meanwhile
         snap["model_search_input"] = term if rng.random() < 0.8 else rng.choice(["", "other", term + "x"])

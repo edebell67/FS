@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_models_js_vs_py.py — differential test of engine/replay_models.py: the page's getScenarioCandidates / getEligibleModels / getReplayTimelineModels / pointInTimeAtReplayHead / getMaxFrames (and localeCompare) vs Python.
 #
 # VERSION HISTORY
+# v1.x · 2026-10-19 · queries with several spaces and a name-shaped query; half the cases have nothing loaded (page v2.65.35: spaces count as '_').
 # v1.0.0 · 2026-10-17 · Initial version.
 """Usage: python diff_models_js_vs_py.py [--cases N] [--methods a,b]. Random page states over mixed-case ids, missing / null metrics and duplicate returns; compared: the returned model lists, the model-search status line, the whole state."""
 import copy
@@ -114,8 +115,8 @@ def make_case(rng, method):
         "deep_link_only": rng.random() < 0.15, "active_portfolio": rng.choice([None, None, "P1"]), "portfolio_models": tied(rng, mklist(rng, 2, 6)),
         "min_win_rate": rng.choice([0, 10, 50]), "product_type": rng.choice(["all", "forex", "crypto"]), "product": rng.choice(["all", "gbp", "eur"]),
         "strategy_family": rng.choice(["all", "breakout", "breakout_r", "unknown"]),
-        "model_search_input": rng.choice(["", "", "m1", "M1", " dna_201700 ", "m1,dna_201700", "zzz", "m", "m1 m2 z9"]),
-        "search_loaded": mklist(rng, 0, 3), "scenario_removed": set(rng.sample(IDS, rng.randint(0, 3))), "frame": rng.choice([-1, 0, 1, 2, 9]),
+        "model_search_input": rng.choice(["", "", "m1", "M1", " dna_201700 ", "m1,dna_201700", "zzz", "m", "m1 m2 z9", "m1  m2", "m1_m2", "Breakout 4 TP20"]),   # v2.65.35: spaces count as '_'
+        "search_loaded": rng.choice([[], mklist(rng, 0, 3)]), "scenario_removed": set(rng.sample(IDS, rng.randint(0, 3))), "frame": rng.choice([-1, 0, 1, 2, 9]),
         "pit_timeline_models": rng.choice([[], mklist(rng, 1, 3)]), "model_search_status": rng.choice(["", "old"]),
     })
     st.update({"baseline": rng.choice([0, 0, 1, 2, 4]), "split_mode": rng.choice(["ALL_NET", "TRI_SPLIT", "BUY_NET", "SELL_NET", "MULTI_SPLIT"]),

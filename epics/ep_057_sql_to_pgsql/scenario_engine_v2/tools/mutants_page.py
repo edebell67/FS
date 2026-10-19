@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/mutants_page.py — the mutant list for tools/mutate_check.py.
 #
 # VERSION HISTORY
+# v1.12.0 · 2026-10-19 · step 9: model-search mutants for page v2.65.35 (the old s8 search mutants that no longer apply are removed).
 # v1.11.0 · 2026-10-19 · step 8 mutants (model search and deep-link loaders).
 # v1.10.0 · 2026-10-18 · step 7 mutants (spawns).
 # v1.9.0 · 2026-10-18 · step 6b stage mutants (point-in-time lookups).
@@ -399,22 +400,11 @@ MUTANTS = [
     ('dom L442: applySelectedTimeBtn classList.add click-f', "page.py", 'self.dom("applySelectedTimeBtn", "classList.add", "click-feedback-selected", "click-feedback-pending")', 'self.dom("applySelectedTimeBtn", "classList.add", "click-feedback-selected", "click-feedback-pending~")', W, 'move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status,apply_chart_lock,reset_automatic_rank_schedule,unique_portfolio_name,current_portfolio_view_config,apply_portfolio_view_config,get_merged_portfolio_models,auto_pin_live_portfolio_strategies,schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh'),
     ('dom L443: applySelectedTimeBtn setAttribute aria-bus', "page.py", 'self.dom("applySelectedTimeBtn", "setAttribute", "aria-busy", "true")', 'self.dom("applySelectedTimeBtn", "setAttribute", "aria-busy", "true~")', W, 'move_portfolio,mark_portfolio_fixed,capture_portfolio_scenario,persist_portfolio_view_config,start_replay,pause_replay,sync_portfolio_view_refresh,update_auto_refresh_status,apply_chart_lock,reset_automatic_rank_schedule,unique_portfolio_name,current_portfolio_view_config,apply_portfolio_view_config,get_merged_portfolio_models,auto_pin_live_portfolio_strategies,schedule_point_in_time_selection,schedule_automatic_top1_refresh,apply_selected_time,trigger_selected_time_refresh'),
     # ---- step 8: loadModelSearchFromDatabase / loadDeepLinkModelsFromDatabase stages (engine/page.py; direct and wrapper parity)
-    ('s8: search batch size', 'page.py', 'i + 10] for i in range(0, n, 10)]', 'i + 11] for i in range(0, n, 11)]', P, 'load_model_search_from_database'),
-    ('s8: search seq guard', 'page.py', 'if seq != s.search_sequence or query != str', 'if query != str', S, ''),
-    ('s8: search query guard', 'page.py', 'or query != str(s.model_search_input or "").strip().lower() or date != s.current_date:', 'or date != s.current_date:', P, 'load_model_search_from_database'),
-    ('s8: search date guard', 'page.py', 'str(s.model_search_input or "").strip().lower() or date != s.current_date:', 'str(s.model_search_input or "").strip().lower():', S, ''),
-    ('s8: search error seq guard', 'page.py', '            if seq == s.search_sequence:\n                s.model_search_status = f"Database search failed', '            if True:\n                s.model_search_status = f"Database search failed', S, ''),
-    ('s8: search removed models', 'page.py', '            s.scenario_removed.discard(pu.js_str(m.get("model")))\n        missing = [m for m in requested', '            pass\n        missing = [m for m in requested', S, ''),
     ('s8: search frame', 'page.py', '        s.frame = -1\n        requested_ids', '        s.frame = 0\n        requested_ids', P, 'load_model_search_from_database'),
     ('s8: search visible filter', 'page.py', 'if pu.js_str(m.get("model")).lower() in requested_ids}', 'if True}', P, 'load_model_search_from_database'),
     ('s8: search selected index', 'page.py', '        s.selected_model_index = 0\n        self.view("updateScrubberUI", "updateRibbon"', '        self.view("updateScrubberUI", "updateRibbon"', P, 'load_model_search_from_database'),
     ('s8: search views', 'page.py', 'self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")\n        c = len(s.search_loaded)', 'self.view("updateScrubberUI", "updateRibbon", "renderCards")\n        c = len(s.search_loaded)', P, 'load_model_search_from_database'),
-    ('s8: search not found text', 'page.py', '\' \\u00b7 not found: \' + \', \'.join(missing) if missing else \'\'}"\n        if s.pit_mode', '\'\' if missing else \'\'}"\n        if s.pit_mode', S, ''),
     ('s8: search pit follow-up', 'page.py', '        if s.pit_mode:   # deep-linked data may arrive', '        if False:   # deep-linked data may arrive', P, 'load_model_search_from_database'),
-    ('s8: search none found text', 'page.py', 'No model data found for {date}{\': \' + \', \'.join(missing) if missing else \'\'}"\n            return None\n        s.frame', 'No model data found for {date}"\n            return None\n        s.frame', S, ''),
-    ('s8: search invalid text', 'page.py', 's.model_search_status = "Enter model IDs separated by commas or spaces"', 's.model_search_status = ""', P, 'load_model_search_from_database'),
-    ('s8: search date text', 'page.py', 's.model_search_status = "Choose a single date to search PostgreSQL"', 's.model_search_status = ""', S, ''),
-    ('s8: search id validation', 'page.py', 'or any(not MODEL_ID_RE.fullmatch(m) for m in requested):', 'or False:', P, 'load_model_search_from_database'),
     ('s8: deeplink limit', 'page.py', '        ids = ids[:10]\n        if not ids:\n            return None\n        date = s.current_date', '        ids = ids[:11]\n        if not ids:\n            return None\n        date = s.current_date', P, 'load_deep_link_models_from_database'),
     ('s8: deeplink dedupe', 'page.py', 'if MODEL_ID_RE.fullmatch(i) and i not in ids:\n                ids.append(i)\n        ids = ids[:10]\n        if not ids:\n            return None\n        date', 'if MODEL_ID_RE.fullmatch(i):\n                ids.append(i)\n        ids = ids[:10]\n        if not ids:\n            return None\n        date', P, 'load_deep_link_models_from_database'),
     ('s8: deeplink date guard', 'page.py', '        if s.current_date != date:\n            return None\n        loaded = ((result', '        loaded = ((result', S, ''),
@@ -429,6 +419,36 @@ MUTANTS = [
     ('s8: deeplink visible', 'page.py', '        s.visible = {m.get("model") for m in self._eligible()}\n        self.view("updateDateLabelAndTitle"', '        self.view("updateDateLabelAndTitle"', P, 'load_deep_link_models_from_database'),
     ('s8: deeplink views', 'page.py', 'self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")\n        c = len(loaded)', 'self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")\n        c = len(loaded)', P, 'load_deep_link_models_from_database'),
     ('s8: deeplink loading text', 'page.py', 'linked comparison strateg{\'y\' if n == 1 else \'ies\'}\\u2026"', 'linked comparison strateg{\'y\'}\\u2026"', S, ''),
+    # ---- step 9: loadModelSearchFromDatabase for page v2.65.35 (strategy names via /api/strategy_catalog)
+    ('s9: search length limit', 'page.py', 'or len(search_term) > 100 or', 'or len(search_term) > 101 or', S, ''),
+    ('s9: search direct digits', 'page.py', '(?:dna_)?\\d{5,}", terms[0]', '(?:dna_)?\\d{6,}", terms[0]', P, 'load_model_search_from_database'),
+    ('s9: search whitespace to underscore', 'page.py', 'query = re.sub(r"\\s+", "_", str(search_term or "").strip().lower())', 'query = str(search_term or "").strip().lower()', S, ''),
+    ('s9: search progress text count', 'page.py', '("Searching model IDs and strategy names in PostgreSQL\\u2026" if n == 1 else', '("Searching model IDs and strategy names in PostgreSQL\\u2026" if n == 0 else', S, ''),
+    ('s9: search catalogue catch', 'page.py', 'ctx, next="_msearch_cat", catch=True)', 'ctx, next="_msearch_cat", catch=False)', S, ''),
+    ('s9: search match by model id', 'page.py', ' if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]', ' if query in str(m.get("strategy") or "").lower()]', S, ''),
+    ('s9: search match by strategy', 'page.py', ' if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]', ' if query in str(m.get("model") or "").lower()]', S, ''),
+    ('s9: search hundred limit', 'page.py', 'for m in matches[:100]], ctx', 'for m in matches[:99]], ctx', S, ''),
+    ('s9: search truncated flag', 'page.py', '"truncated": len(matches) > 100}', '"truncated": len(matches) >= 100}', S, ''),
+    ('s9: search no match clears', 'page.py', '            s.search_loaded = []\n            self.view("renderCards", "drawChart")', '            self.view("renderCards", "drawChart")', S, ''),
+    ('s9: search no match views', 'page.py', '            self.view("renderCards", "drawChart")\n            s.model_search_status = f"No model ID', '            s.model_search_status = f"No model ID', S, ''),
+    ('s9: search catalogue stale guard', 'page.py', '        if not self._msearch_current(ctx):\n            return None\n        if not matches:', '        if not matches:', S, ''),
+    ('s9: search catalogue error guard', 'page.py', '            if ctx["seq"] == s.search_sequence:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        query = ctx["query"]', '            if True:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        query = ctx["query"]', S, ''),
+    ('s9: search day error guard', 'page.py', '            if seq == s.search_sequence:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        if not self._msearch_current(ctx):', '            if True:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        if not self._msearch_current(ctx):', S, ''),
+    ('s9: search current seq', 'page.py', 'return ctx["seq"] == s.search_sequence and ctx["query"] ==', 'return ctx["query"] ==', S, ''),
+    ('s9: search current query', 'page.py', 'and ctx["query"] == re.sub(r"\\s+", "_", str(s.model_search_input or "").strip().lower()) and ctx["date"]', 'and ctx["date"]', S, ''),
+    ('s9: search current date', 'page.py', ' and ctx["date"] == s.current_date\n', ' and True\n', S, ''),
+    ('s9: search truncated text', 'page.py', "{' \\u00b7 showing first 100 matches' if ctx.get('truncated') else ''}", "{''}", S, ''),
+    ('s9: search match text', 'page.py', "match \\u201c{ctx['search_term']}", "matches \\u201c{ctx['search_term']}", S, ''),
+    ('s9: search direct text', 'page.py', 'if ctx.get("direct"):', 'if not ctx.get("direct"):', S, ''),
+    ('s9: search batch size', 'page.py', 'range(0, len(model_ids), 10)]', 'range(0, len(model_ids), 11)]', S, ''),
+    ('s9: search removed models', 'page.py', '            s.scenario_removed.discard(pu.js_str(m.get("model")))\n        missing = [m for m in requested', '            pass\n        missing = [m for m in requested', S, ''),
+    ('s9: search none found text', 'page.py', 'No model data found for {date}{\': \' + \', \'.join(missing) if missing else \'\'}"\n            return None\n        s.frame', 'No model data found for {date}"\n            return None\n        s.frame', S, ''),
+    ('s9: search date text', 'page.py', 's.model_search_status = "Choose a single date to search PostgreSQL"', 's.model_search_status = ""', S, ''),
+    ('s9: search invalid text', 'page.py', 's.model_search_status = "Search by one strategy name, or enter model IDs separated by commas or spaces"', 's.model_search_status = ""', S, ''),
+    # ---- step 9: getEligibleModels for page v2.65.35 (search results are whatever the search loaded)
+    ('s9: eligible whitespace', 'replay_models.py', 'query = re.sub(r"\\s+", "_", str(s.model_search_input or "").strip().lower()) if', 'query = str(s.model_search_input or "").strip().lower() if', M, 'get_eligible_models'),
+    ('s9: eligible direct is the loaded list', 'replay_models.py', 'direct = list(s.search_loaded) if query else []', 'direct = [m for m in s.search_loaded if _lower(m.get("model")) in set(terms)] if query else []', M, 'get_eligible_models'),
+    ('s9: eligible direct needs a query', 'replay_models.py', 'direct = list(s.search_loaded) if query else []', 'direct = list(s.search_loaded)', M, 'get_eligible_models'),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).
