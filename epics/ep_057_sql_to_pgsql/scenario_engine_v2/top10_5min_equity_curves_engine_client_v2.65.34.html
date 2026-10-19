@@ -5733,9 +5733,30 @@ ${preview}`)) return;
       return __drive(res);
     }
     function schedulePointInTimeSelection() {
-      const res = __engineCommand('schedule_point_in_time_selection', []);
-      __engineReplay(res.effects, {  }, res.timers);
-      return res.ret;
+      const at = pointInTimeAtReplayHead();
+      if (at) scheduleAutomaticTop1Refresh(at);
+      if (!pointInTimeMode) return;
+      refreshPointInTimeHistory();
+      if (at) {
+        const { scenario, return_type: returnType, product_type: productType,
+          product, strategy_family: strategyFamily, limit, min_win_rate: winRate } = pointInTimeRequestOptions();
+        const nextKey = [currentDate, at, scenario, returnType, productType,
+          product, strategyFamily, limit, winRate, activePortfolioName || 'scenario'].join('|');
+        // Invalidate the previous lookup as soon as its selected date/time changes,
+        // before the debounce starts the replacement request.
+        if (!selectedTimeExplicitRefresh && pointInTimeRequestedKey && pointInTimeRequestedKey !== nextKey) {
+          pointInTimeRequestSequence++;
+          pointInTimeRequestedKey = '';
+          applySelectedTimeBtn?.classList.remove('click-feedback-pending');
+          applySelectedTimeBtn?.removeAttribute('aria-busy');
+        }
+      }
+      if (!selectedTimeExplicitRefresh && isPlaying && at && !/:00$/.test(at)) {
+        clearTimeout(pointInTimeDebounceTimer);
+        return;
+      }
+      clearTimeout(pointInTimeDebounceTimer);
+      if (!selectedTimeExplicitRefresh) pointInTimeDebounceTimer = setTimeout(() => refreshPointInTimeSelection(at), 180);
     }
 
     function updatePointInTimeToggleUI() {

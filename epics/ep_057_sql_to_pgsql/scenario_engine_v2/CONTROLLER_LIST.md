@@ -3,7 +3,7 @@
 A controller here = a page function that is not pure logic: kind `mixed` (state + DOM), plus the delegated or ported ones. Columns: kind, async, number of fetch endpoints, DOM references, lines, page start line.
 
 
-## Delegated to engine (wrapper) (32)
+## Delegated to engine (wrapper) (31)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -31,7 +31,6 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | repopulateActivePortfolioFromCriteria | engine | yes |  |  | 14 | 4122 |
 | resetAutomaticRankSchedule | mixed |  |  | 1 | 22 | 1987 |
 | scheduleAutomaticTop1Refresh | mixed |  |  | 2 | 47 | 5823 |
-| schedulePointInTimeSelection | mixed |  |  | 1 | 26 | 6144 |
 | setRankingCriteria | mixed | yes |  | 5 | 146 | 5147 |
 | startReplay | mixed |  |  | 4 | 13 | 6374 |
 | switchDate | mixed | yes |  | 2 | 89 | 6208 |
@@ -57,7 +56,7 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | pairOverlayTrades | engine |  |  |  | 35 | 7792 |
 | sourceTradeFlipResults | engine |  |  |  | 25 | 2803 |
 
-## Ported in engine/page.py, NOT delegated (8)
+## Ported in engine/page.py, NOT delegated (9)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -69,6 +68,7 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | loadPortfolioData | engine | yes |  |  | 40 | 3985 |
 | loadModelSearchFromDatabase | mixed | yes | 1 | 6 | 57 | 5551 |
 | loadDeepLinkModelsFromDatabase | mixed | yes | 1 | 4 | 46 | 5609 |
+| schedulePointInTimeSelection | mixed |  |  | 1 | 26 | 6144 |
 
 ## Stays in page (34)
 

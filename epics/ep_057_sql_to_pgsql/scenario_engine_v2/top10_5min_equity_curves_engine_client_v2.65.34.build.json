@@ -41,7 +41,6 @@
   "applyPortfolioViewConfig",
   "getMergedPortfolioModels",
   "autoPinLivePortfolioStrategies",
-  "schedulePointInTimeSelection",
   "scheduleAutomaticTop1Refresh",
   "applySelectedTime",
   "triggerSelectedTimeRefresh",
@@ -63,5 +62,5 @@
   1434,
   9059
  ],
- "bytes": 528315
+ "bytes": 529547
 }

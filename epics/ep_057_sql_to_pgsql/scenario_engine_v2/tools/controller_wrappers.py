@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-10-19 · schedulePointInTimeSelection switched OFF: it runs once per replay frame, so a synchronous engine call per frame slowed replay (the page keeps its own debounce timer).
 # v1.6.0 · 2026-10-19 · loadModelSearchFromDatabase and loadDeepLinkModelsFromDatabase: engine stages exist, delegation switched OFF (0.6-0.8 s page freeze measured); fetchPortfolioDayBatches target kept for when they are enabled.
 # v1.5.0 · 2026-10-18 · __engineSpawn: the page runs a spawn (fetch + resume stage) an engine answer asked for; the original-function fallbacks are gone except for live portfolios (activatePortfolio).
 # v1.4.0 · 2026-10-18 · the staged shell is a reusable driver (__drive / __apply / __resume): started page promises keep a handle, a continuation can be attached to a handle and runs later as its own engine stage; fallback to the original function for what the engine refuses (live portfolios).
@@ -40,7 +41,7 @@ CONTROLLERS = {
     "applyPortfolioViewConfig": ("apply_portfolio_view_config", "config", "[config]", None, {}),
     "getMergedPortfolioModels": ("get_merged_portfolio_models", "", "[]", None, {}),
     "autoPinLivePortfolioStrategies": ("auto_pin_live_portfolio_strategies", "", "[]", None, {}),
-    "schedulePointInTimeSelection": ("schedule_point_in_time_selection", "", "[]", None, {}),
+    # schedulePointInTimeSelection is NOT delegated (2026-10-19): the replay loop calls it on EVERY frame (a local debounce timer in the original page); delegating made each frame a synchronous engine call.
     "scheduleAutomaticTop1Refresh": ("schedule_automatic_top1_refresh", "at", "[at]", None, {}),
     "applySelectedTime": ("apply_selected_time", "", "[]", None, {}),
     "triggerSelectedTimeRefresh": ("trigger_selected_time_refresh", "", "[]", None, {}),
