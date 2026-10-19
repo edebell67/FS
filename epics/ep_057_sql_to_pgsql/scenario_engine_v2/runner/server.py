@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.9.0 · 2026-10-19 · the data-service proxy shares ONE httpx client: a client per request cost 0.7-1.8 s of CA-bundle loading ON the event loop, which froze every engine call (and so the thin page) waiting behind a proxied request.
 # v1.8.0 · 2026-10-18 · the proxied shared menu script (ep060-nav.js) is sent with Cache-Control: no-cache so a menu change shows without a hard reload.
 # v1.7.0 · 2026-10-18 · GET /api/races/{id}/board: every frame's leaderboard so far (live while running, complete after) for the dashboard's race viewer.
 # v1.6.0 · 2026-10-18 · DELETE /api/races/{id} removes a finished race (still cancels an active one); DELETE /api/races clears all finished races.
@@ -270,12 +271,12 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
         return Response(content=html, media_type="text/html", headers={"Cache-Control": "no-store"})
 
     # ---- same-origin access to the data service (it only allows the 'null' origin for CORS) ----
+    proxy_client = httpx.AsyncClient(timeout=120.0)   # built once, here: constructing one loads the CA bundle (0.7-1.8 s) and must never happen on the event loop per request
     async def forward(request: Request, path: str) -> Response:
         target = f"{upstream}/{path}"
         headers = {k: v for k, v in request.headers.items() if k.lower() not in HOP}
         try:
-            async with httpx.AsyncClient(timeout=120.0) as client:
-                r = await client.request(request.method, target, params=request.query_params, content=await request.body(), headers=headers)
+            r = await proxy_client.request(request.method, target, params=request.query_params, content=await request.body(), headers=headers)
         except httpx.HTTPError as e:
             raise HTTPException(502, f"data service unavailable: {type(e).__name__}") from e
         return Response(content=r.content, status_code=r.status_code, headers={k: v for k, v in r.headers.items() if k.lower() not in HOP})

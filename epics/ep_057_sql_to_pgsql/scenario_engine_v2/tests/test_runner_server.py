@@ -217,3 +217,20 @@ def test_board_endpoint_serves_every_frame(api):
     tail = c.get(f"/api/races/{rid}/board", params={"since": 2}).json()["board"]
     assert tail == full["board"][2:]
     assert c.get("/api/races/nope/board").status_code == 404
+
+
+def test_the_proxy_builds_its_http_client_once_not_per_request(monkeypatch):
+    """Constructing an httpx client loads the CA bundle (0.7-1.8 s) and the proxy runs on the event loop: a client per request froze every engine call behind it."""
+    import httpx
+    built = []
+    real = httpx.AsyncClient.__init__
+
+    def counting(self, *a, **kw):
+        built.append(1)
+        real(self, *a, **kw)
+
+    monkeypatch.setattr(httpx.AsyncClient, "__init__", counting)
+    c = TestClient(create_app(RaceManager(client_factory=lambda cfg: FakeClient()), data_api="http://127.0.0.1:9"))
+    for _ in range(3):
+        assert c.get("/api/live_day").status_code == 502
+    assert len(built) == 1
