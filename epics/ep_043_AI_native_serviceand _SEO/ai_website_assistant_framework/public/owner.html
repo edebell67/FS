@@ -10,10 +10,10 @@
   <div id="login-screen" class="screen">
     <div class="login-card">
       <span class="logo">📊</span>
-      <h1>Owner Dashboard</h1>
-      <p class="hint">Enter your site key and owner token to access reporting, tracking, and promotions.</p>
-      <label>Site key / tenant ID<input id="login-tenant" placeholder="e.g. northstar-heating"></label>
-      <label>Owner token<input id="login-token" type="password" placeholder="Your business owner token"></label>
+      <h1 id="login-title">Owner Dashboard</h1>
+      <p id="login-hint" class="hint">Enter your site key and owner token to access reporting, tracking, and promotions.</p>
+      <label id="login-tenant-label">Site key / tenant ID<input id="login-tenant" placeholder="e.g. northstar-heating" autocomplete="off"></label>
+      <label>Owner password<input id="login-token" type="password" placeholder="Owner password" autocomplete="new-password" data-lpignore="true" data-1p-ignore="true"></label>
       <button id="login-btn" class="primary">Access dashboard</button>
       <p id="login-error" class="error" hidden></p>
     </div>

@@ -342,10 +342,40 @@ async function loadServices(){
   } catch(e){}
 }
 
+async function handoffLogin(){
+  const params = new URLSearchParams(location.hash.slice(1));
+  const token = params.get('handoff');
+  const tenant = new URLSearchParams(location.search).get('tenant') || '';
+  if(!token || !tenant) return;
+  STATE = { tenant, token, client:null, stream:null };
+  try {
+    const data = await api(`/api/owner/reporting?tenant=${encodeURIComponent(tenant)}`);
+    STATE.client = data;
+    $('dash-title').textContent = data.businessName || 'Owner Dashboard';
+    $('login-screen').hidden = true;
+    $('dash-screen').hidden = false;
+    history.replaceState(null, '', `${location.pathname}?tenant=${encodeURIComponent(tenant)}`);
+    loadOverview();
+    openReportingStream();
+  } catch(e){
+    $('login-error').textContent = e.message || 'Your dashboard handoff expired. Please return to the widget and sign in again.';
+    $('login-error').hidden = false;
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-  // Check if already authenticated (e.g. from deep link)
+  const routeTenant = new URLSearchParams(location.search).get('tenant') || '';
+  if (routeTenant) {
+    $('login-tenant').value = routeTenant;
+    $('login-tenant').readOnly = true;
+    $('login-tenant-label').hidden = true;
+    $('login-title').textContent = 'The Tech Principle';
+    $('login-hint').textContent = 'Enter your owner password to access your private reporting dashboard.';
+  }
+  $('login-token').value = '';
   $('login-token').addEventListener('keydown', e => { if(e.key==='Enter') login(); });
   $('login-tenant').addEventListener('keydown', e => { if(e.key==='Enter') $('login-token').focus(); });
+  handoffLogin();
 });
 
 // Expose functions for inline onclick

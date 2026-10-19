@@ -6,6 +6,7 @@ import test from "node:test";
 import { fileURLToPath } from "node:url";
 import { createApp } from "../src/server.js";
 import { JsonStore } from "../src/store.js";
+import { deterministicReply, retrieveKnowledge } from "../src/assistant.js";
 
 const frameworkRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const siteRoot = path.resolve(frameworkRoot, "..", "..", "ep_046_thetechprinciple", "site");
@@ -25,11 +26,76 @@ test("The Tech Principle local site resolves to its isolated anonymous tracking 
   assert.equal(client.status, "live");
   assert.equal(client.analyticsEnabled, true);
   assert.ok(client.knowledge.length > 0, "production knowledge base should not be empty");
+  const quickAnswerExpectations = [
+    ["What services do you provide?", /Web design and rebuilds.*AI site assistants.*Local SEO and lead generation.*Trading and data products/s],
+    ["Tell me about your business.", /independent technology studio.*diagnose.*build.*prove/s],
+    ["How much do your services cost?", /scope each project around the work required.*clear estimate/s],
+  ];
+  for (const [prompt, expected] of quickAnswerExpectations) {
+    const reply = deterministicReply(client, prompt, retrieveKnowledge(client, prompt));
+    assert.match(reply.text, expected, `quick action should return its dedicated approved TTP answer: ${prompt}`);
+    assert.equal(reply.sources.length, 1, `quick action should use only its dedicated source: ${prompt}`);
+  }
+  const quoteReply = deterministicReply(client, "I would like a quote.", retrieveKnowledge(client, "I would like a quote."));
+  assert.equal(quoteReply.action?.type, "lead");
   assert.ok(store.resolveClient({ publicKey: "thetechprinciple_local", host: "localhost" }), "local dev host should still resolve");
   assert.equal(store.resolveClient({ publicKey: "thetechprinciple_local", host: "unapproved.example" }), null);
   const ownerDashboard = await readFile(path.join(frameworkRoot, "public", "owner.js"), "utf8");
   assert.match(ownerDashboard, /tracking\?\.uniqueVisits/);
   assert.match(ownerDashboard, /tracking\?\.serviceViews/);
+});
+
+test("The Tech Principle enquiry fails closed when no delivery transport is configured", async (t) => {
+  const temporary = await mkdtemp(path.join(os.tmpdir(), "thetechprinciple-enquiry-no-transport-"));
+  await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(frameworkRoot, "data", "clients.json")));
+  await writeFile(path.join(temporary, "records.json"), JSON.stringify({
+    conversations: [], leads: [], callbacks: [], bookings: [], payments: [], emails: [], crmLeads: [], events: [], questionFollowups: []
+  }));
+  const server = await createApp({ store: new JsonStore(temporary), env: { ADMIN_TOKEN: "test-admin", NODE_ENV: "production" } });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(temporary, { recursive: true, force: true }); });
+
+  const response = await fetch(`${base}/api/public/leads`, {
+    method: "POST", headers: { "content-type": "application/json", origin: "https://thetechprinciple.com" },
+    body: JSON.stringify({ clientKey: "thetechprinciple_local", host: "thetechprinciple.com", name: "Ada", telephone: "07000000000", email: "ada@example.com", reasonForVisit: "website build" })
+  });
+  assert.equal(response.status, 503);
+  const body = await response.json();
+  assert.equal(body.accepted, false);
+  assert.match(body.error, /could not send your enquiry/i);
+});
+
+test("The Tech Principle enquiry confirms only after the authenticated sender returns a provider message ID", async (t) => {
+  const temporary = await mkdtemp(path.join(os.tmpdir(), "thetechprinciple-enquiry-handoff-"));
+  await writeFile(path.join(temporary, "clients.json"), await readFile(path.join(frameworkRoot, "data", "clients.json")));
+  await writeFile(path.join(temporary, "records.json"), JSON.stringify({
+    conversations: [], leads: [], callbacks: [], bookings: [], payments: [], emails: [], crmLeads: [], events: [], questionFollowups: []
+  }));
+  let handoff;
+  const server = await createApp({ store: new JsonStore(temporary), env: {
+    ADMIN_TOKEN: "test-admin", NODE_ENV: "production", ASSISTANT_ENQUIRY_DELIVERY_MODE: "directory-gmail",
+    ASSISTANT_ENQUIRY_DELIVERY_APPROVED: "true", DIRECTORY_ENQUIRY_DELIVERY_URL: "https://directory.internal/api/internal/assistant-enquiries",
+    DIRECTORY_ENQUIRY_DELIVERY_KEY: "test-internal-key",
+    fetchImpl: async (url, init) => {
+      handoff = { url: String(url), init };
+      return Response.json({ accepted: true, providerMessageId: "gmail-provider-id", sentReadback: "SENT" }, { status: 201 });
+    }
+  } });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const base = `http://127.0.0.1:${server.address().port}`;
+  t.after(async () => { await new Promise((resolve) => server.close(resolve)); await rm(temporary, { recursive: true, force: true }); });
+
+  const response = await fetch(`${base}/api/public/leads`, {
+    method: "POST", headers: { "content-type": "application/json", origin: "https://thetechprinciple.com" },
+    body: JSON.stringify({ clientKey: "thetechprinciple_local", host: "thetechprinciple.com", name: "Ada", telephone: "07000000000", email: "ada@example.com", reasonForVisit: "website build" })
+  });
+  assert.equal(response.status, 201);
+  const body = await response.json();
+  assert.equal(body.notification.delivered, true);
+  assert.equal(body.notification.providerMessageId, "gmail-provider-id");
+  assert.equal(handoff.url, "https://directory.internal/api/internal/assistant-enquiries");
+  assert.equal(handoff.init.headers.authorization, "Bearer test-internal-key");
 });
 
 test("The Tech Principle events flow into owner reporting, service comparison, and promotion measurement", async (t) => {
