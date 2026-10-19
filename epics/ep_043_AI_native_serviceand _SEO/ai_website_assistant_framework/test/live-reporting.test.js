@@ -39,7 +39,7 @@ test("owner reporting stream: initial snapshot on connect, live push on new even
   const server = await createApp({
     store: new JsonStore(temporary),
     env: {
-      ADMIN_TOKEN: "test-admin", OPENAI_API_KEY: "", NOTIFICATION_WEBHOOK_URL: "",
+      ADMIN_TOKEN: "test-admin", OPENAI_API_KEY: "", NODE_ENV: "production", ASSISTANT_ENQUIRY_DELIVERY_MODE: "directory-gmail", ASSISTANT_ENQUIRY_DELIVERY_APPROVED: "true", DIRECTORY_ENQUIRY_DELIVERY_URL: "https://directory.internal/api/internal/assistant-enquiries", DIRECTORY_ENQUIRY_DELIVERY_KEY: "test-internal-key", fetchImpl: async () => Response.json({ accepted: true, providerMessageId: "test-provider-id" }, { status: 201 }),
       BUSINESS_OWNER_TOKENS_JSON: JSON.stringify({ "the-tech-principle-local": "test-owner", "northstar-heating": "test-owner-north" })
     }
   });

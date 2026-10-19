@@ -120,6 +120,7 @@ test("migrate_to_sqlite: full field fidelity, not just row counts", async (t) =>
   const migratedClient = store.resolveClient({ publicKey: "thetechprinciple_local", host: "thetechprinciple.com" });
   assert.ok(migratedClient, "migrated client resolves by the same publicKey+host it did in JsonStore");
   assert.equal(migratedClient.status, "live");
-  assert.equal(migratedClient.knowledge.length, 13);
+  const sourceClient = JSON.parse(await readFile(path.join(scratch, "clients.json"), "utf8")).find((client) => client.publicKey === "thetechprinciple_local");
+  assert.deepEqual(migratedClient.knowledge, sourceClient.knowledge);
   store.close();
 });
