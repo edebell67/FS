@@ -3,7 +3,7 @@
 A controller here = a page function that is not pure logic: kind `mixed` (state + DOM), plus the delegated or ported ones. Columns: kind, async, number of fetch endpoints, DOM references, lines, page start line.
 
 
-## Delegated to engine (wrapper) (34)
+## Delegated to engine (wrapper) (32)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -17,8 +17,6 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | createSimilarPortfolio | mixed | yes |  | 3 | 25 | 4524 |
 | currentPortfolioViewConfig | engine |  |  |  | 23 | 2300 |
 | getMergedPortfolioModels | engine |  |  |  | 9 | 3846 |
-| loadDeepLinkModelsFromDatabase | mixed | yes | 1 | 4 | 46 | 5609 |
-| loadModelSearchFromDatabase | mixed | yes | 1 | 6 | 57 | 5551 |
 | markPortfolioFixed | engine |  |  |  | 12 | 3628 |
 | moveModelBetweenPortfolios | mixed | yes |  | 1 | 22 | 3823 |
 | movePortfolio | engine |  |  |  | 13 | 2216 |
@@ -59,7 +57,7 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | pairOverlayTrades | engine |  |  |  | 35 | 7792 |
 | sourceTradeFlipResults | engine |  |  |  | 25 | 2803 |
 
-## Ported in engine/page.py, NOT delegated (6)
+## Ported in engine/page.py, NOT delegated (8)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -69,6 +67,8 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | deleteSelectedPortfolios | mixed | yes |  | 1 | 9 | 3674 |
 | livePortfolioModelsForDate | engine |  |  |  | 31 | 2406 |
 | loadPortfolioData | engine | yes |  |  | 40 | 3985 |
+| loadModelSearchFromDatabase | mixed | yes | 1 | 6 | 57 | 5551 |
+| loadDeepLinkModelsFromDatabase | mixed | yes | 1 | 4 | 46 | 5609 |
 
 ## Stays in page (34)
 

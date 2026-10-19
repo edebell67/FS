@@ -1,7 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
-# v1.6.0 · 2026-10-19 · loadModelSearchFromDatabase and loadDeepLinkModelsFromDatabase (staged; the page's fetchPortfolioDayBatches does the Promise.all over /api/portfolio_day).
+# v1.6.0 · 2026-10-19 · loadModelSearchFromDatabase and loadDeepLinkModelsFromDatabase: engine stages exist, delegation switched OFF (0.6-0.8 s page freeze measured); fetchPortfolioDayBatches target kept for when they are enabled.
 # v1.5.0 · 2026-10-18 · __engineSpawn: the page runs a spawn (fetch + resume stage) an engine answer asked for; the original-function fallbacks are gone except for live portfolios (activatePortfolio).
 # v1.4.0 · 2026-10-18 · the staged shell is a reusable driver (__drive / __apply / __resume): started page promises keep a handle, a continuation can be attached to a handle and runs later as its own engine stage; fallback to the original function for what the engine refuses (live portfolios).
 # v1.3.0 · 2026-10-18 · staged shells: Await.catch, args-bearing views (viewArgs), page flags, per-controller extra await targets (refreshLiveData's data layer).
@@ -58,8 +58,8 @@ CONTROLLERS = {
     "createSimilarPortfolio": ("create_similar_portfolio", "dimension", "[dimension]", None, {}),
     "setRankingCriteria": ("set_ranking_criteria", "criteria", "[criteria]", None, {}),
     "refreshLiveData": ("refresh_live_data", "targetDate = LIVE_DATE, { skipPortfolioRefresh = false } = {}", "[targetDate, skipPortfolioRefresh]", None, {}),
-    "loadModelSearchFromDatabase": ("load_model_search_from_database", "searchTerm", "[searchTerm]", None, {}),
-    "loadDeepLinkModelsFromDatabase": ("load_deep_link_models_from_database", "modelIds", "[modelIds]", None, {}),
+    # NOT delegated (measured 2026-10-19): loadModelSearchFromDatabase / loadDeepLinkModelsFromDatabase run in the engine (engine/page.py stages, parity 400/400) but delegating them froze the page
+    # 0.6-0.8 s per call (the original: 18-40 ms), so the page keeps its own copies. To re-enable: restore the two entries here and in EXTRAS.
 }
 # per controller: prelude (page-only logic run before the call), range (first line regex, last line regex) = DOM shell block copied from the original, pause_if = state field that,
 # when true after the call, also runs the original pauseReplay DOM lines
@@ -86,8 +86,6 @@ LIVE_TARGETS = '\n      fetchLiveDay: async (path) => {\n        const requestUr
 EXTRAS = {
     "refreshPointInTimeSelection": {"staged": True},
     "refreshPointInTimeHistory": {"staged": True},
-    "loadModelSearchFromDatabase": {"staged": True},
-    "loadDeepLinkModelsFromDatabase": {"staged": True},
     "activatePortfolio": {"staged": True, "fallback": True, "targets": " loadOverlayRuleLibrary: (...a) => loadOverlayRuleLibrary(...a), __attach: () => null,"},
     "createSimilarPortfolio": {"staged": True},
     "setRankingCriteria": {"staged": True},

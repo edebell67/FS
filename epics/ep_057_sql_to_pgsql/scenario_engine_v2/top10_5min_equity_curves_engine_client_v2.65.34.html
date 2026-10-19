@@ -5389,83 +5389,108 @@ ${preview}`)) return;
     }
 
     async function loadModelSearchFromDatabase(searchTerm) {
-      const __targets = { ...__awaitTargets, };
-      const __handles = {};
-      const __apply = r => {
-        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
-        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      };
-      const __resume = (stage, ctx, result) => {
-        const r2 = __engineCommand('load_model_search_from_database', null, { stage, ctx, result });
-        if (r2.needsNetwork) throw new Error('engine stage for load_model_search_from_database needs the network');
-        __apply(r2);
-        return __drive(r2);
-      };
-      const __drive = async res => {
-        while (res.await) {
-          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
-          let out;
-          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
-            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('load_model_search_from_database continuation failed:', e));
-            out = null;
-          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
-            const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
-            out = null;
-          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
-          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
-          else out = await __targets[aw.fn](...aw.args);
-          if (stageNow === 'done') break;
-          res = __engineCommand('load_model_search_from_database', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
-          if (res.needsNetwork) throw new Error('engine stage for load_model_search_from_database needs the network');
-          __apply(res);
+      const requestSequence = ++modelSearchRequestSequence;
+      const date = currentDate;
+      const requestedModels = modelSearchTerms(searchTerm);
+      const query = String(searchTerm || '').trim().toLocaleLowerCase();
+      if (!requestedModels.length || requestedModels.some(model => !/^[A-Za-z0-9._-]+$/.test(model))) {
+        if (modelSearchStatus) modelSearchStatus.textContent = 'Enter model IDs separated by commas or spaces';
+        return;
+      }
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        if (modelSearchStatus) modelSearchStatus.textContent = 'Choose a single date to search PostgreSQL';
+        return;
+      }
+      if (modelSearchStatus) modelSearchStatus.textContent = `Searching ${requestedModels.length} model${requestedModels.length === 1 ? '' : 's'} in PostgreSQL…`;
+      try {
+        // The day endpoint accepts at most ten IDs, so fetch larger pastes in
+        // independent chunks while preserving the user's requested order.
+        const batches = [];
+        for (let index = 0; index < requestedModels.length; index += 10) batches.push(requestedModels.slice(index, index + 10));
+        const responses = await Promise.all(batches.map(async batch => {
+          const params = new URLSearchParams({ models: batch.join(','), date });
+          const response = await fetch(`${API_BASE}/api/portfolio_day?${params.toString()}`, { cache: 'no-store' });
+          const payload = await response.json();
+          if (!response.ok) throw new Error(payload.detail || payload.error || `HTTP ${response.status}`);
+          return Array.isArray(payload.models) ? payload.models : [];
+        }));
+        if (requestSequence !== modelSearchRequestSequence || query !== modelSearchInput?.value.trim().toLocaleLowerCase() || date !== currentDate) return;
+        const modelsById = new Map(responses.flat().map(model => [String(model.model || '').toLocaleLowerCase(), model]));
+        modelSearchLoadedModels = requestedModels.map(model => modelsById.get(model.toLocaleLowerCase())).filter(Boolean);
+        modelSearchLoadedModels.forEach(model => scenarioRemovedModels.delete(String(model.model)));
+        const missingModels = requestedModels.filter(model => !modelsById.has(model.toLocaleLowerCase()));
+        if (!modelSearchLoadedModels.length) {
+          if (modelSearchStatus) modelSearchStatus.textContent = `No model data found for ${date}${missingModels.length ? `: ${missingModels.join(', ')}` : ''}`;
+          return;
         }
-        return res.ret;
-      };
-      let res = __engineCommand('load_model_search_from_database', [searchTerm]);
-      if (res.needsNetwork) throw new Error('engine stage for load_model_search_from_database needs the network');
-      __apply(res);
-      return __drive(res);
+        currentFrameIndex = -1;
+        const eligibleModels = getEligibleModels();
+        const requestedIds = new Set(modelSearchLoadedModels.map(model => String(model.model).toLocaleLowerCase()));
+        visibleModels = new Set(eligibleModels.filter(model => requestedIds.has(String(model.model).toLocaleLowerCase())).map(model => model.model));
+        selectedModelIndex = 0;
+        updateScrubberUI();
+        updateRibbon();
+        renderCards();
+        drawChart();
+        if (modelSearchStatus) {
+          const loadedCount = modelSearchLoadedModels.length;
+          modelSearchStatus.textContent = `${loadedCount} model${loadedCount === 1 ? '' : 's'} loaded${missingModels.length ? ` · not found: ${missingModels.join(', ')}` : ''}`;
+        }
+        // Deep-linked model data may arrive after the initial page load. Once
+        // its series defines the replay head, run the selected-time lookup.
+        if (pointInTimeMode) schedulePointInTimeSelection();
+      } catch (error) {
+        if (requestSequence === modelSearchRequestSequence && modelSearchStatus) {
+          modelSearchStatus.textContent = `Database search failed: ${error.message}`;
+        }
+      }
     }
 
     async function loadDeepLinkModelsFromDatabase(modelIds) {
-      const __targets = { ...__awaitTargets, };
-      const __handles = {};
-      const __apply = r => {
-        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
-        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      };
-      const __resume = (stage, ctx, result) => {
-        const r2 = __engineCommand('load_deep_link_models_from_database', null, { stage, ctx, result });
-        if (r2.needsNetwork) throw new Error('engine stage for load_deep_link_models_from_database needs the network');
-        __apply(r2);
-        return __drive(r2);
-      };
-      const __drive = async res => {
-        while (res.await) {
-          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
-          let out;
-          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
-            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('load_deep_link_models_from_database continuation failed:', e));
-            out = null;
-          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
-            const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
-            out = null;
-          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
-          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
-          else out = await __targets[aw.fn](...aw.args);
-          if (stageNow === 'done') break;
-          res = __engineCommand('load_deep_link_models_from_database', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
-          if (res.needsNetwork) throw new Error('engine stage for load_deep_link_models_from_database needs the network');
-          __apply(res);
+      const ids = [...new Set((modelIds || []).map(id => String(id).trim()).filter(id => /^[A-Za-z0-9._-]+$/.test(id)))].slice(0, 10);
+      if (!ids.length) return;
+      const date = currentDate;
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        if (modelSearchStatus) modelSearchStatus.textContent = 'Choose a single date to load linked comparison models';
+        return;
+      }
+      if (modelSearchStatus) modelSearchStatus.textContent = `Loading ${ids.length} linked comparison strateg${ids.length === 1 ? 'y' : 'ies'}…`;
+      try {
+        const params = new URLSearchParams({ models: ids.join(','), date });
+        const response = await fetch(`${API_BASE}/api/portfolio_day?${params}`, { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.detail || payload.error || `HTTP ${response.status}`);
+        if (currentDate !== date) return;
+        const loadedModels = Array.isArray(payload.models) ? payload.models : [];
+        const linkedColors = ['#f59e0b', '#e879f9', '#34d399', '#fb7185', '#a78bfa', '#f97316', '#38bdf8', '#facc15', '#2dd4bf', '#c084fc'];
+        loadedModels.forEach((model, index) => {
+          const modelId = String(model.model || '');
+          if (!modelId) return;
+          pinnedComparisonModels.set(modelId, { ...model, color: model.color || linkedColors[index % linkedColors.length], comparisonRole: 'pinned comparison' });
+        });
+        const loadedIds = new Set(loadedModels.map(model => String(model.model)));
+        const missingIds = ids.filter(modelId => !loadedIds.has(modelId));
+        selectedModelIndex = 0;
+        visibleModels = new Set(getEligibleModels().map(model => model.model));
+        updateDateLabelAndTitle();
+        updateScrubberUI();
+        updateRibbon();
+        renderCards();
+        drawChart();
+        if (modelSearchStatus) {
+          const loadedCount = loadedModels.length;
+          modelSearchStatus.textContent = deepLinkModelsOnly
+            ? `Showing ${loadedCount} selected strateg${loadedCount === 1 ? 'y' : 'ies'} only${missingIds.length ? ` · no data found for ${missingIds.join(', ')}` : ''} · choose a scenario to add scenario leaders`
+            : `${loadedCount} linked comparison strateg${loadedCount === 1 ? 'y' : 'ies'} added${missingIds.length ? ` · no data found for ${missingIds.join(', ')}` : ''} · change scenario to compare`;
         }
-        return res.ret;
-      };
-      let res = __engineCommand('load_deep_link_models_from_database', [modelIds]);
-      if (res.needsNetwork) throw new Error('engine stage for load_deep_link_models_from_database needs the network');
-      __apply(res);
-      return __drive(res);
+        if (pointInTimeMode) {
+          pointInTimeRequestedKey = '';
+          refreshPointInTimeSelection();
+        }
+      } catch (error) {
+        if (modelSearchStatus) modelSearchStatus.textContent = `Could not load linked models: ${error.message}`;
+        console.warn('Deep-linked comparison model lookup failed:', error);
+      }
     }
 
     function getReplayTimelineModels() {

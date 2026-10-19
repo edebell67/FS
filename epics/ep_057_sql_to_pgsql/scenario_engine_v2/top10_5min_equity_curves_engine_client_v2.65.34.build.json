@@ -57,13 +57,11 @@
   "activatePortfolio",
   "createSimilarPortfolio",
   "setRankingCriteria",
-  "refreshLiveData",
-  "loadModelSearchFromDatabase",
-  "loadDeepLinkModelsFromDatabase"
+  "refreshLiveData"
  ],
  "lines_before": [
   1434,
   9059
  ],
- "bytes": 526579
+ "bytes": 528315
 }
