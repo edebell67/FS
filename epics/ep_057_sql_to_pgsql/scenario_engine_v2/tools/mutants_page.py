@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/mutants_page.py — the mutant list for tools/mutate_check.py.
 #
 # VERSION HISTORY
+# v1.13.0 · 2026-10-20 · step 10: getEligibleModels mutants for page v2.65.36.
 # v1.12.0 · 2026-10-19 · step 9: model-search mutants for page v2.65.35 (the old s8 search mutants that no longer apply are removed).
 # v1.11.0 · 2026-10-19 · step 8 mutants (model search and deep-link loaders).
 # v1.10.0 · 2026-10-18 · step 7 mutants (spawns).
@@ -429,11 +430,11 @@ MUTANTS = [
     ('s9: search match by strategy', 'page.py', ' if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]', ' if query in str(m.get("model") or "").lower()]', S, ''),
     ('s9: search hundred limit', 'page.py', 'for m in matches[:100]], ctx', 'for m in matches[:99]], ctx', S, ''),
     ('s9: search truncated flag', 'page.py', '"truncated": len(matches) > 100}', '"truncated": len(matches) >= 100}', S, ''),
-    ('s9: search no match clears', 'page.py', '            s.search_loaded = []\n            self.view("renderCards", "drawChart")', '            self.view("renderCards", "drawChart")', S, ''),
-    ('s9: search no match views', 'page.py', '            self.view("renderCards", "drawChart")\n            s.model_search_status = f"No model ID', '            s.model_search_status = f"No model ID', S, ''),
+    ('s9: search no match clears', 'page.py', '            s.search_loaded = []\n            s.search_resolved_query = query', '            s.search_resolved_query = query', S, ''),
+    ('s9: search no match views', 'page.py', '            self.view("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart")\n            s.model_search_status = s.search_resolved_message\n            return None\n        return self._msearch_fetch', '            s.model_search_status = s.search_resolved_message\n            return None\n        return self._msearch_fetch', S, ''),
     ('s9: search catalogue stale guard', 'page.py', '        if not self._msearch_current(ctx):\n            return None\n        if not matches:', '        if not matches:', S, ''),
-    ('s9: search catalogue error guard', 'page.py', '            if ctx["seq"] == s.search_sequence:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        query = ctx["query"]', '            if True:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        query = ctx["query"]', S, ''),
-    ('s9: search day error guard', 'page.py', '            if seq == s.search_sequence:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        if not self._msearch_current(ctx):', '            if True:\n                s.model_search_status = f"Database search failed: {result[\'error\']}"\n            return None\n        if not self._msearch_current(ctx):', S, ''),
+    ('s9: search catalogue error guard', 'page.py', '            if ctx["seq"] == s.search_sequence:\n                self._msearch_conclude(ctx["query"], f"Database search failed: {result[\'error\']}")\n            return None\n        query = ctx["query"]', '            if True:\n                self._msearch_conclude(ctx["query"], f"Database search failed: {result[\'error\']}")\n            return None\n        query = ctx["query"]', S, ''),
+    ('s9: search day error guard', 'page.py', '            if seq == s.search_sequence:\n                self._msearch_conclude(ctx["query"], f"Database search failed: {result[\'error\']}")\n            return None\n        if not self._msearch_current(ctx):', '            if True:\n                self._msearch_conclude(ctx["query"], f"Database search failed: {result[\'error\']}")\n            return None\n        if not self._msearch_current(ctx):', S, ''),
     ('s9: search current seq', 'page.py', 'return ctx["seq"] == s.search_sequence and ctx["query"] ==', 'return ctx["query"] ==', S, ''),
     ('s9: search current query', 'page.py', 'and ctx["query"] == re.sub(r"\\s+", "_", str(s.model_search_input or "").strip().lower()) and ctx["date"]', 'and ctx["date"]', S, ''),
     ('s9: search current date', 'page.py', ' and ctx["date"] == s.current_date\n', ' and True\n', S, ''),
@@ -442,13 +443,21 @@ MUTANTS = [
     ('s9: search direct text', 'page.py', 'if ctx.get("direct"):', 'if not ctx.get("direct"):', S, ''),
     ('s9: search batch size', 'page.py', 'range(0, len(model_ids), 10)]', 'range(0, len(model_ids), 11)]', S, ''),
     ('s9: search removed models', 'page.py', '            s.scenario_removed.discard(pu.js_str(m.get("model")))\n        missing = [m for m in requested', '            pass\n        missing = [m for m in requested', S, ''),
-    ('s9: search none found text', 'page.py', 'No model data found for {date}{\': \' + \', \'.join(missing) if missing else \'\'}"\n            return None\n        s.frame', 'No model data found for {date}"\n            return None\n        s.frame', S, ''),
+    ('s9: search none found text', 'page.py', '            s.search_resolved_message = f"No model data found for {date}{\': \' + \', \'.join(missing) if missing else \'\'}"', '            s.search_resolved_message = f"No model data found for {date}"', S, ''),
     ('s9: search date text', 'page.py', 's.model_search_status = "Choose a single date to search PostgreSQL"', 's.model_search_status = ""', S, ''),
     ('s9: search invalid text', 'page.py', 's.model_search_status = "Search by one strategy name, or enter model IDs separated by commas or spaces"', 's.model_search_status = ""', S, ''),
     # ---- step 9: getEligibleModels for page v2.65.35 (search results are whatever the search loaded)
     ('s9: eligible whitespace', 'replay_models.py', 'query = re.sub(r"\\s+", "_", str(s.model_search_input or "").strip().lower()) if', 'query = str(s.model_search_input or "").strip().lower() if', M, 'get_eligible_models'),
     ('s9: eligible direct is the loaded list', 'replay_models.py', 'direct = list(s.search_loaded) if query else []', 'direct = [m for m in s.search_loaded if _lower(m.get("model")) in set(terms)] if query else []', M, 'get_eligible_models'),
     ('s9: eligible direct needs a query', 'replay_models.py', 'direct = list(s.search_loaded) if query else []', 'direct = list(s.search_loaded)', M, 'get_eligible_models'),
+    # ---- step 10: getEligibleModels for page v2.65.36
+    ('s10: eligible no match clears', 'replay_models.py', '    if query and not direct:   # v2.65.36: a search that matched nothing leaves no leaders on screen\n        models = []', '    if False:   # v2.65.36: a search that matched nothing leaves no leaders on screen\n        models = []', M, 'get_eligible_models'),
+    ('s10: eligible pit search set', 'replay_models.py', '    elif s.pit_mode and query:   # v2.65.36', '    elif False:   # v2.65.36', M, 'get_eligible_models'),
+    ('s10: eligible pit color fallback', 'replay_models.py', 'm.get("color") or SEARCH_COLORS[(i + 1) % len(SEARCH_COLORS)]', 'm.get("color") or SEARCH_COLORS[i % len(SEARCH_COLORS)]', M, 'get_eligible_models'),
+    ('s10: eligible pit role', 'replay_models.py', '"comparisonRole": "searched model"} for i, m in enumerate(direct)]', '"comparisonRole": "searched"} for i, m in enumerate(direct)]', M, 'get_eligible_models'),
+    ('s10: eligible pinned only with a match', 'replay_models.py', '    if not query or direct:\n        for model_id, pm in pinned.items():', '    if True:\n        for model_id, pm in pinned.items():', M, 'get_eligible_models'),
+    ('s10: eligible resolved status', 'replay_models.py', 's.search_resolved_message if s.search_resolved_query == query else', 's.search_resolved_message if True else', M, 'get_eligible_models'),
+    ('s10: eligible searching status', 'replay_models.py', '"Searching model IDs and strategy names\\u2026"\n    elif s.pit_mode:', '"Searching\\u2026"\n    elif s.pit_mode:', M, 'get_eligible_models'),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).

@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/diff_models_js_vs_py.py — differential test of engine/replay_models.py: the page's getScenarioCandidates / getEligibleModels / getReplayTimelineModels / pointInTimeAtReplayHead / getMaxFrames (and localeCompare) vs Python.
 #
 # VERSION HISTORY
+# v1.x · 2026-10-20 · COLORS shim (page v2.65.36 reads an undefined COLORS), searched-model cases with and without matches (page v2.65.36 getEligibleModels).
 # v1.x · 2026-10-19 · queries with several spaces and a name-shaped query; half the cases have nothing loaded (page v2.65.35: spaces count as '_').
 # v1.0.0 · 2026-10-17 · Initial version.
 """Usage: python diff_models_js_vs_py.py [--cases N] [--methods a,b]. Random page states over mixed-case ids, missing / null metrics and duplicate returns; compared: the returned model lists, the model-search status line, the whole state."""
@@ -8,6 +9,7 @@ import copy
 import json
 import os
 import random
+import re
 import subprocess
 import sys
 import tempfile
@@ -29,6 +31,8 @@ METHODS = {"get_scenario_candidates": "getScenarioCandidates", "get_eligible_mod
 FUNCS = ["getScenarioCandidates", "getEligibleModels", "getReplayTimelineModels", "pointInTimeAtReplayHead", "getMaxFrames", "getMetricKeys",
          "getStrategyFamily", "modelSearchTerms", "isMetricAwareCriteria", "updateRibbon", "getBasePoint", "getReplayHeadPoint"]
 EXTRA = js_state_code() + r"""
+// the page (v2.65.36) reads a COLORS list it never defines; the harness defines the engine's fallback palette so the page function can run
+globalThis.COLORS = ['#f59e0b', '#e879f9', '#34d399', '#fb7185', '#a78bfa', '#f97316', '#38bdf8', '#facc15', '#2dd4bf', '#c084fc'];
 globalThis.productTypeFilter = { value: '' };
 async function __models(fx, name, c) {
   __ps_set(c.state);
@@ -135,6 +139,12 @@ def make_case(rng, method):
         st.pinned.clear()
     if st.search_loaded and rng.random() < 0.5:
         st.model_search_input = rng.choice(st.search_loaded)["model"].lower()
+    for m in st.search_loaded:   # a searched model without a colour takes the fallback palette (selected-time mode)
+        if rng.random() < 0.4 and method == "get_eligible_models":   # only where the colour is read; the ribbon shim stores an undefined colour literally, which a real DOM ignores
+            m.pop("color", None)
+    normalized = re.sub(r"\s+", "_", str(st.model_search_input or "").strip().lower())   # what the page compares the resolved query with
+    st.search_resolved_query = rng.choice([None, normalized, normalized, "another_query"])
+    st.search_resolved_message = rng.choice(["", "No model ID or strategy name matches “x” for 2026-10-14", "No model data found for 2026-10-14: m1", "Database search failed: boom"])
     snap = st.snapshot()
     criteria = {}
     for key in {crit, f"{crit}_net", f"{crit}_alt", "top_net"}:

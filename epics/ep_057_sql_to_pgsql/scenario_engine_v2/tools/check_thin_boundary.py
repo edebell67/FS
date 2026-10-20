@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_inventory  # noqa: E402
 import controller_wrappers as cw  # noqa: E402
 
-VERSION = "v2.65.35"
+VERSION = "v2.65.38"
 SOURCE = ROOT / f"top10_5min_equity_curves_source_{VERSION}.html"
 BUILT = ROOT / f"top10_5min_equity_curves_engine_client_{VERSION}.html"
 
@@ -38,6 +38,11 @@ BOUNDARY = {
     "deleteSelectedPortfolios": "UI glue: a confirm() dialog, then removePortfolios (delegated)",
     "activePortfolioOverlayRule": "a lookup the redraw / rotation paths call per frame: a synchronous engine call each time would cost more than it saves",
     "assignedPortfolioOverlayRule": "as above",
+    "openTargetRanking": "Target leaders modal: DOM only, opens the dialog and calls the loader",
+    "loadTargetDaysRanking": "Target leaders: fetches EP058 rankings/target-days and renders the modal table; DOM-bound user action, the page's own copy stays",
+    "selectTargetRankingStrategy": "Target leaders 'Show models': fills the Find model box and fires its input event (DOM glue)",
+    "modelBaselinePoint": "chart/tooltip hot path (every draw): never delegated",
+    "modelDeltaSeries": "chart hot path (every draw): never delegated",
     "loadModelSearchFromDatabase": "ported (engine stages, parity-tested) but not delegated: a synchronous engine call froze the page 0.6-0.8 s per call, against 18-40 ms for the page's own copy",
     "loadDeepLinkModelsFromDatabase": "as above",
     "schedulePointInTimeSelection": "called once per replay frame (a local debounce timer in the original page): a synchronous engine call per frame slowed replay, so the page keeps its own copy",

@@ -442,7 +442,8 @@ def test_strategy_name_with_no_match_clears_the_previous_results():
     first = _load_run(SEARCH, _search_state("zzz_nothing", search_loaded=[{"model": "OLD"}]), ["zzz_nothing"])
     r = _answer(SEARCH, first, _catalogue())
     assert "await" not in r and r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "No model ID or strategy name matches “zzz_nothing” for 2026-10-14"
-    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "renderCards"], ["view", "drawChart"]]
+    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "updateDateLabelAndTitle"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
+    assert r["state"]["search_resolved_query"] == "zzz_nothing" and r["state"]["search_resolved_message"] == r["state"]["model_search_status"]   # the chart explains why it is empty
     empty = _answer(SEARCH, first, {"ok": []})
     assert empty["state"]["search_loaded"] == [] and "No model ID or strategy name matches" in empty["state"]["model_search_status"]
 
@@ -450,6 +451,7 @@ def test_strategy_name_with_no_match_clears_the_previous_results():
 def test_strategy_name_catalogue_failure_and_stale_answers():
     first = _load_run(SEARCH, _search_state("breakout_4"), ["breakout_4"])
     assert _answer(SEARCH, first, {"error": "catalog down"})["state"]["model_search_status"] == "Database search failed: catalog down"
+    assert _answer(SEARCH, first, {"error": "catalog down"})["state"]["search_resolved_message"] == "Database search failed: catalog down"
     assert _answer(SEARCH, first, {"error": "x"}, search_sequence=9)["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"
     for change in ({"search_sequence": 9}, {"model_search_input": "breakout_5"}, {"current_date": "2026-10-13"}):
         r = _answer(SEARCH, first, _catalogue(), **change)
@@ -463,9 +465,12 @@ def test_model_id_search_merges_the_answer_into_the_pages_current_state():
     assert [m["model"] for m in r["state"]["search_loaded"]] == ["dna_201700"]   # matched case-insensitively
     assert r["state"]["model_search_status"] == "1 model loaded" and r["state"]["frame"] == -1 and r["state"]["selected_model_index"] == 0
     assert r["state"]["scenario_removed"] == ["Other"]   # a searched model is no longer "removed"
-    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "updateScrubberUI"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
+    assert [v for v in r["effects"] if v[0] == "view"] == [["view", "updateDateLabelAndTitle"], ["view", "updateScrubberUI"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
+    assert r["state"]["search_resolved_query"] == "dna_201700"   # a search that loaded something records its query, with no message
     missing = _answer(SEARCH, first, {"ok": [[]]})
     assert missing["state"]["model_search_status"] == "No model data found for 2026-10-14: DNA_201700" and missing["state"]["search_loaded"] == []
+    assert missing["state"]["search_resolved_query"] == "dna_201700" and missing["state"]["search_resolved_message"] == missing["state"]["model_search_status"]
+    assert [v for v in missing["effects"] if v[0] == "view"] == [["view", "updateDateLabelAndTitle"], ["view", "updateRibbon"], ["view", "renderCards"], ["view", "drawChart"]]
     assert _answer(SEARCH, first, {"ok": [[]]}, frame=3)["state"]["frame"] == 3   # nothing was found: the replay position is left alone
     bare = _load_run(SEARCH, _search_state("201700"), ["201700"])
     assert _answer(SEARCH, bare, {"ok": [[{"model": "DNA_201700", "series": []}]]})["state"]["search_loaded"] == []   # a bare number is looked up as typed (the page's behaviour)
@@ -487,6 +492,18 @@ def test_model_search_drops_a_stale_or_failed_answer():
         assert r["state"]["search_loaded"] == [] and r["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…", change
     assert _answer(SEARCH, first, {"error": "boom"})["state"]["model_search_status"] == "Database search failed: boom"
     assert _answer(SEARCH, first, {"error": "boom"}, search_sequence=9)["state"]["model_search_status"] == "Searching model IDs and strategy names in PostgreSQL…"   # a newer search owns the line
+    failed = _answer(SEARCH, first, {"error": "boom"})
+    assert failed["state"]["search_resolved_query"] == "dna_201700" and failed["state"]["search_resolved_message"] == "Database search failed: boom"
+    stale = _answer(SEARCH, first, {"error": "boom"}, search_sequence=9)
+    assert stale["state"]["search_resolved_message"] == ""   # a newer search owns the conclusion too
+
+
+def test_a_new_search_forgets_the_previous_conclusion():
+    st = _search_state("DNA_201700", search_resolved_query="old", search_resolved_message="No model ID or strategy name matches old")
+    r = _load_run(SEARCH, st, ["DNA_201700"])
+    assert r["state"]["search_resolved_query"] is None and r["state"]["search_resolved_message"] == ""
+    invalid = _load_run(SEARCH, _search_state("", search_resolved_query="old", search_resolved_message="x"), [""])
+    assert invalid["state"]["search_resolved_query"] is None and invalid["state"]["search_resolved_message"] == ""   # reset before the input is validated
 
 
 def test_deep_link_load_validates_and_limits_before_it_asks_the_page_to_fetch():

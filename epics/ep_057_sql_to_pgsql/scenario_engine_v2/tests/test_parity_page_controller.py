@@ -139,7 +139,7 @@ def test_engine_client_page_stubs_match_the_original_functions(thin_rows, fn):
 
 
 def test_drift_check_is_clean_and_nothing_is_pending():
-    out = subprocess.run([sys.executable, str(ROOT / "tools" / "check_drift.py"), str(ROOT / "top10_5min_equity_curves_source_v2.65.35.html")],
+    out = subprocess.run([sys.executable, str(ROOT / "tools" / "check_drift.py"), str(ROOT / "top10_5min_equity_curves_source_v2.65.38.html")],
                          capture_output=True, text=True, encoding="utf-8", env={**os.environ, "PYTHONIOENCODING": "utf-8"}, cwd=str(ROOT))
     assert out.returncode == 0 and "PENDING: 0 items" in out.stdout and "DRIFT" not in out.stdout, out.stdout[-1500:]
 

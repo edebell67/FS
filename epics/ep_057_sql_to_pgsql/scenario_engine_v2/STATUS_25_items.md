@@ -1,4 +1,4 @@
-# Scenario engine v2 — status of the 25 items (2026-10-17; updated 2026-10-19)
+# Scenario engine v2 — status of the 25 items (2026-10-17; updated 2026-10-20: page v2.65.38)
 
 Parent epic: EP057 (`epics/ep_057_sql_to_pgsql`); the arena side is EP052. Package: `epics/ep_057_sql_to_pgsql/scenario_engine_v2/`. Task files for this work are in `workstream/050_review/general` (not 300_complete: awaiting acceptance). Local commits only (not pushed): 08146ed0, c94ae7a2, d4633ce0, 106f8dc4, 667ca88e, 98261e91.
 Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `20261017_190000_ep057_997_arena_strategy_intelligence.md` (mirrored in `obs/Hermes Task Memory/workstream_mirror/`).
@@ -44,3 +44,10 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 - Lesson recorded in memory: parity tests need failing fetches, boundary values and overlapping calls in their fixtures; adding them found a real bug (a failed portfolio reload escaped `refresh_live_data`; fixed in 3949f662).
 - Final mutant run (2026-10-18, 348 mutants, `python tools/mutate_check.py`): after repairing the 24 mutants my refactors had made stale and re-running the 25 that crashed on a parallel-copy race, every mutant that targets controller / stage / shell code is killed except the documented equivalents in `tools/mutants_page.py` EQUIVALENT. Not attributable to this work: 7 mutants whose target text was already gone at the baseline commit (stale before: replay: clear interval, pit: debounce, trigger: deep link reset, sync refresh: live date, ribbon: toFixed ties, server: date pattern, view: lock state) and 12 that survive at the baseline commit too (live models: sort, models:* ×5, ribbon: tri split fallback, thin:* ×4, view: background render, wrap: skip view call; the models:* ones flip between killed and alive across identical runs). Run test-runner mutants with `--jobs 1` (parallel copies of tests/ race).
 
+
+## Page v2.65.38 sync (2026-10-20)
+
+- Thin page rebuilt from v2.65.38 (`top10_5min_equity_curves_engine_client_v2.65.38.html`, map `engine_map_v2.65.38.json`). `getEligibleModels` and the Find model search follow v2.65.36 (no leaders when a search matches nothing; matches are the chart set in selected-time mode; resolved-search state; redraw of title, ribbon, cards and chart on no match).
+- New page functions, all kept in the page: `openTargetRanking`, `loadTargetDaysRanking`, `selectTargetRankingStrategy` (Target leaders · 20d modal, reads EP058 `/api/intelligence/rankings/target-days`) and `modelBaselinePoint`, `modelDeltaSeries` (chart hot path). Listed in `check_thin_boundary.py`.
+- Page bug passed on, not changed: `getEligibleModels` reads an undefined `COLORS` for a colourless searched model; the engine uses the linked-model palette instead.
+- Target leaders ranking is slow cold (about 44 s for one day while the machine was loaded; 20 days 78-90 s), instant when cached.

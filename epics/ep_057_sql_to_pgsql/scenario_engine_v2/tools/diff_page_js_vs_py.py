@@ -37,8 +37,8 @@ from engine.page import LivePortfolioRefused, Page  # noqa: E402
 from engine.page_state import FIELDS, PageState, js_state_code  # noqa: E402
 
 ap = argparse.ArgumentParser()
-ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.35.html"))
-ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.35" / "inventory.json"))
+ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.38.html"))
+ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.38" / "inventory.json"))
 ap.add_argument("--methods", default="")
 ap.add_argument("--cases", type=int, default=150)
 ns = ap.parse_args()

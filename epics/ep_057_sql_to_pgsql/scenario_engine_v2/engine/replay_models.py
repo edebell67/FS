@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.3.0 · 2026-10-20 · get_eligible_models follows page v2.65.36: no leaders when a search matched nothing, matches are the chart set in selected-time mode, pinned models only join when something matched, the search status shows what the search concluded.
 # v1.2.0 · 2026-10-19 · get_eligible_models follows page v2.65.35: the query's whitespace counts as '_' and whatever a search loaded is the search result (strategy-name matches as well as model IDs).
 # v1.1.1 · 2026-10-17 · toFixed is core.js_to_fixed.
 # v1.1.0 · 2026-10-17 · update_ribbon: the ribbon's numbers, labels and colours (TRI_SPLIT selected model or the visible models' totals).
@@ -13,6 +14,7 @@ import math
 import re
 
 from . import core_ported as core
+from .data_client import LINKED_COLORS as SEARCH_COLORS   # the page's fallback colour list is not defined anywhere (page v2.65.36 reads an undefined COLORS); the engine uses the linked-model palette
 from . import page_utils as pu
 from .selected_time import js_truthy
 
@@ -151,10 +153,12 @@ def get_eligible_models(s, client) -> list[dict]:
     direct = list(s.search_loaded) if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
     models = scenario_models
     pinned = s.pinned
-    if s.pit_mode:
-        for m in direct:
-            if not any(_s(e.get("model")) == _s(m.get("model")) for e in models):
-                models = [*models, {**m, "color": "#e879f9", "comparisonRole": "searched model"}]
+    if query and not direct:   # v2.65.36: a search that matched nothing leaves no leaders on screen
+        models = []
+    elif s.pit_mode and query:   # v2.65.36: in selected-time mode the matches are the chart set
+        models = [{**m, "color": m.get("color") or SEARCH_COLORS[(i + 1) % len(SEARCH_COLORS)], "comparisonRole": "searched model"} for i, m in enumerate(direct)]
+    elif s.pit_mode:
+        pass   # with no search the selected-time cohort is the chart set
     elif direct:
         if pinned:
             for m in direct:
@@ -164,17 +168,20 @@ def get_eligible_models(s, client) -> list[dict]:
             models = direct
     elif query and len(terms) == 1 and not pinned:
         models = [m for m in scenario_models if query in _lower(m.get("model"))]
-    for model_id, pm in pinned.items():
-        index = next((i for i, m in enumerate(models) if _s(m.get("model")) == model_id), -1)
-        if index < 0:
-            models = [*models, pm]
-        elif _has_series(pm) and not _has_series(models[index]):
-            models = [pm if i == index else m for i, m in enumerate(models)]
+    if not query or direct:
+        for model_id, pm in pinned.items():
+            index = next((i for i, m in enumerate(models) if _s(m.get("model")) == model_id), -1)
+            if index < 0:
+                models = [*models, pm]
+            elif _has_series(pm) and not _has_series(models[index]):
+                models = [pm if i == index else m for i, m in enumerate(models)]
     n = len(pinned)
     plural = lambda c, one, many: one if c == 1 else many  # noqa: E731
     if s.deep_link_only:
         s.model_search_status = (f"Showing {n} selected strateg{plural(n, 'y', 'ies')} only · choose a scenario to add scenario leaders"
                                  if n else "Loading selected strategies…")
+    elif query and not direct:
+        s.model_search_status = s.search_resolved_message if s.search_resolved_query == query else "Searching model IDs and strategy names\u2026"
     elif s.pit_mode:
         count = len([m for m in scenario_models if _re_time_leader(_s(m.get("comparisonRole")))])
         s.model_search_status = (f"{count} time-selected strateg{plural(count, 'y', 'ies')}"

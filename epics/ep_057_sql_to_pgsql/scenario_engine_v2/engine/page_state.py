@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page_state.py — the page's global state as one object, defined once in a table that also generates the JS code used to test it.
 #
 # VERSION HISTORY
+# v1.5.0 · 2026-10-20 · search_resolved_query / search_resolved_message (page v2.65.36: what the last Find model search concluded, shown while nothing matched).
 # v1.5.0 · 2026-10-18 · view_args: arguments of view calls (index of the ['view', name] effect -> args), for the browser copy.
 # v1.4.0 · 2026-10-17 · hourly-cohort history state (pit_hours, pit_history_at, status text, viewport / panel flags).
 # v1.3.0 · 2026-10-17 · model_search_status (the model-search status line).
@@ -79,6 +80,8 @@ FIELDS = [
     # --- models on screen ---
     ("search_loaded", "modelSearchLoadedModels", "val", list),
     ("search_sequence", "modelSearchRequestSequence", "val", 0),
+    ("search_resolved_query", "modelSearchResolvedQuery", "val", None),
+    ("search_resolved_message", "modelSearchResolvedMessage", "val", ""),
     ("pinned", "pinnedComparisonModels", "map", list),
     ("deep_link_only", "deepLinkModelsOnly", "val", False),
     ("portfolio_models", "portfolioModels", "val", list),

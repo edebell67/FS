@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.12.0 · 2026-10-20 · the model search follows page v2.65.36: it records what it concluded (search_resolved_query / _message) and redraws the date label, ribbon, cards and chart when nothing matched.
 # v1.11.1 · 2026-10-19 · switch_date re-runs the model search for 3+ characters of any ID or strategy-name text (page v2.65.35).
 # v1.11.0 · 2026-10-19 · load_model_search_from_database follows page v2.65.35: a search that is not a model ID looks up strategy names in /api/strategy_catalog (new stage _msearch_cat), first 100 matches; activate_portfolio follows v2.65.34.
 # v1.10.0 · 2026-10-18 · _fire_pit: an un-awaited refreshPointInTimeSelection. One-go it is begin_ + _fire; for the browser copy (spawn_mode) the engine does the part before the request in place and hands the page a spawn (fetch + the resume stage), so no controller needs the network any more.
@@ -788,6 +789,7 @@ class Page:
         seq, date = s.search_sequence, s.current_date
         terms = pu.model_search_terms(search_term)
         query = re.sub(r"\s+", "_", str(search_term or "").strip().lower())
+        s.search_resolved_query, s.search_resolved_message = None, ""
         is_list = len(terms) > 1 and all(re.fullmatch(r"(?:dna_)?\d+", m, re.I) for m in terms)
         is_direct = is_list or (len(terms) == 1 and re.fullmatch(r"(?:dna_)?\d{5,}", terms[0], re.I) is not None)
         requested = terms if is_direct else [query]
@@ -808,6 +810,11 @@ class Page:
         batches = [model_ids[i:i + 10] for i in range(0, len(model_ids), 10)]   # the day endpoint accepts at most ten ids
         return Await("fetchPortfolioDayBatches", [batches, ctx["date"]], ctx | {"model_ids": list(model_ids)}, next="_msearch_1", catch=True)
 
+    def _msearch_conclude(self, query, message):
+        s = self.s
+        s.search_resolved_query, s.search_resolved_message = query, message
+        s.model_search_status = message
+
     def _msearch_current(self, ctx):
         s = self.s
         return ctx["seq"] == s.search_sequence and ctx["query"] == re.sub(r"\s+", "_", str(s.model_search_input or "").strip().lower()) and ctx["date"] == s.current_date
@@ -816,7 +823,7 @@ class Page:
         s = self.s
         if "error" in (result or {}):
             if ctx["seq"] == s.search_sequence:
-                s.model_search_status = f"Database search failed: {result['error']}"
+                self._msearch_conclude(ctx["query"], f"Database search failed: {result['error']}")
             return None
         query = ctx["query"]
         matches = [m for m in (result or {}).get("ok") or [] if query in str(m.get("model") or "").lower() or query in str(m.get("strategy") or "").lower()]
@@ -824,8 +831,10 @@ class Page:
             return None
         if not matches:
             s.search_loaded = []
-            self.view("renderCards", "drawChart")
-            s.model_search_status = f"No model ID or strategy name matches \u201c{ctx['search_term']}\u201d for {ctx['date']}"
+            s.search_resolved_query = query
+            s.search_resolved_message = f"No model ID or strategy name matches \u201c{ctx['search_term']}\u201d for {ctx['date']}"
+            self.view("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart")
+            s.model_search_status = s.search_resolved_message
             return None
         return self._msearch_fetch([str(m.get("model")) for m in matches[:100]], ctx | {"direct": False, "truncated": len(matches) > 100})
 
@@ -834,7 +843,7 @@ class Page:
         seq, date, requested = ctx["seq"], ctx["date"], ctx["model_ids"]
         if "error" in (result or {}):
             if seq == s.search_sequence:
-                s.model_search_status = f"Database search failed: {result['error']}"
+                self._msearch_conclude(ctx["query"], f"Database search failed: {result['error']}")
             return None
         if not self._msearch_current(ctx):
             return None
@@ -844,13 +853,17 @@ class Page:
             s.scenario_removed.discard(pu.js_str(m.get("model")))
         missing = [m for m in requested if m.lower() not in by_id]
         if not s.search_loaded:
-            s.model_search_status = f"No model data found for {date}{': ' + ', '.join(missing) if missing else ''}"
+            s.search_resolved_query = ctx["query"]
+            s.search_resolved_message = f"No model data found for {date}{': ' + ', '.join(missing) if missing else ''}"
+            self.view("updateDateLabelAndTitle", "updateRibbon", "renderCards", "drawChart")
+            s.model_search_status = s.search_resolved_message
             return None
+        s.search_resolved_query = ctx["query"]
         s.frame = -1
         requested_ids = {pu.js_str(m.get("model")).lower() for m in s.search_loaded}
         s.visible = {m.get("model") for m in self._eligible() if pu.js_str(m.get("model")).lower() in requested_ids}
         s.selected_model_index = 0
-        self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
+        self.view("updateDateLabelAndTitle", "updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
         c = len(s.search_loaded)
         plural = "" if c == 1 else "s"
         if ctx.get("direct"):
