@@ -1,6 +1,8 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/controller_wrappers.py — generates the browser-side wrappers that delegate page controllers to the engine (engine/command.py).
 #
 # VERSION HISTORY
+# v1.9.0 · 2026-10-20 · scheduleAutomaticTop1Refresh switched OFF: called once per replay frame, a synchronous engine call per frame made replay slow.
+# v1.8.0 · 2026-10-20 · refreshPointInTimeHistory switched OFF: it runs once per replay frame (a local early return in the original page), so delegating it made replay slow (a synchronous engine call per frame).
 # v1.7.0 · 2026-10-19 · schedulePointInTimeSelection switched OFF: it runs once per replay frame, so a synchronous engine call per frame slowed replay (the page keeps its own debounce timer).
 # v1.6.0 · 2026-10-19 · loadModelSearchFromDatabase and loadDeepLinkModelsFromDatabase: engine stages exist, delegation switched OFF (0.6-0.8 s page freeze measured); fetchPortfolioDayBatches target kept for when they are enabled.
 # v1.5.0 · 2026-10-18 · __engineSpawn: the page runs a spawn (fetch + resume stage) an engine answer asked for; the original-function fallbacks are gone except for live portfolios (activatePortfolio).
@@ -42,7 +44,7 @@ CONTROLLERS = {
     "getMergedPortfolioModels": ("get_merged_portfolio_models", "", "[]", None, {}),
     "autoPinLivePortfolioStrategies": ("auto_pin_live_portfolio_strategies", "", "[]", None, {}),
     # schedulePointInTimeSelection is NOT delegated (2026-10-19): the replay loop calls it on EVERY frame (a local debounce timer in the original page); delegating made each frame a synchronous engine call.
-    "scheduleAutomaticTop1Refresh": ("schedule_automatic_top1_refresh", "at", "[at]", None, {}),
+    # scheduleAutomaticTop1Refresh is NOT delegated (2026-10-20): the replay calls it on every frame (measured 14 calls in 8 s, 81 KB each); a local timer in the original page.
     "applySelectedTime": ("apply_selected_time", "", "[]", None, {}),
     "triggerSelectedTimeRefresh": ("trigger_selected_time_refresh", "", "[]", None, {}),
     # staged: the page awaits a page async function between engine stages (engine/page.py STAGES)
@@ -54,7 +56,7 @@ CONTROLLERS = {
     "switchDate": ("switch_date", "dateKey, { skipPortfolioLoad = false, refreshData = false } = {}", "[dateKey, skipPortfolioLoad, refreshData]", None, {}),
     "refreshActivePortfolioView": ("refresh_active_portfolio_view", "", "[]", None, {}),
     "refreshPointInTimeSelection": ("refresh_point_in_time_selection", "atOverride = null", "[atOverride]", None, {}),
-    "refreshPointInTimeHistory": ("refresh_point_in_time_history", "", "[]", None, {}),
+    # refreshPointInTimeHistory is NOT delegated (2026-10-20): the replay runs it on every frame; in the original page it returns at once when nothing changed, delegated it was a synchronous engine call per frame (measured 16 calls in 8 s of replay, longest freeze 1.7 s against 139 ms).
     "activatePortfolio": ("activate_portfolio", "name", "[name]", None, {}),
     "createSimilarPortfolio": ("create_similar_portfolio", "dimension", "[dimension]", None, {}),
     "setRankingCriteria": ("set_ranking_criteria", "criteria", "[criteria]", None, {}),
@@ -86,7 +88,6 @@ SWITCH_PRE = """    // page-only code of switchDate (the URL and the date pills)
 LIVE_TARGETS = '\n      fetchLiveDay: async (path) => {\n        const requestUrl = `${API_BASE}${path}`;\n        let res, payload;\n        const early = window.__ep057EarlyChartRequest;\n        if (early && !early.used && early.url === requestUrl) {\n          early.used = true;\n          const outcome = await early.request;\n          if (!outcome.error) {\n            res = outcome.response;\n            payload = outcome.payload;\n          }\n        }\n        if (!res) {\n          res = await fetch(requestUrl, { cache: \'no-store\' });\n          payload = await res.json();\n        }\n        if (!res.ok) throw new Error(payload.error || res.status);\n        __box.payload = payload;\n        return true;\n      },\n      applyLivePayload: (targetDate, requestedScenario, requestedProductType, requestedProduct, requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType) => {\n        const payload = __box.payload;\n        liveChartDataLoadedKeys.add(liveChartCacheKey(targetDate));\n        cacheLiveChartResponse(payload, targetDate, requestedScenario, requestedProductType, requestedProduct,\n          requestedStrategyFamily, requestedLimit, requestedCriteria, requestedReturnType);\n        if (productFilter) {\n          const products = Array.isArray(payload.products) ? payload.products : [];\n          productFilter.innerHTML = \'<option value="all">All</option>\' + products.map(product =>\n            `<option value="${product}">${product.toUpperCase()}</option>`\n          ).join(\'\');\n          if (!products.includes(currentProduct)) currentProduct = \'all\';\n          productFilter.value = currentProduct;\n        }\n        syncTpSlScenarios(Array.isArray(payload.tp_sl_scenarios) ? payload.tp_sl_scenarios : []);\n        Object.keys(payload).forEach(sc => {\n          if (!Array.isArray(payload[sc])) return;\n          ALL_CRITERIA_DATA[sc] ||= {};\n          ALL_CRITERIA_DATA[sc][targetDate] = payload[sc];\n        });\n        pendingFilterDataRefresh = false;\n        if (targetDate === LIVE_DATE) initialLiveDataAvailable = true;\n        updateStrategyFamilyOptions();\n        const t = new Date().toLocaleTimeString([], { hour: \'2-digit\', minute: \'2-digit\' });\n        setLiveBadge(targetDate === LIVE_DATE ? `Live · updated ${t}` : `${targetDate} · ${modelLimit} models`, \'ok\');\n      },\n      syncLivePortfolioScreenState: (targetDate) => syncLivePortfolioScreenState(targetDate),'
 EXTRAS = {
     "refreshPointInTimeSelection": {"staged": True},
-    "refreshPointInTimeHistory": {"staged": True},
     "activatePortfolio": {"staged": True, "fallback": True, "targets": " loadOverlayRuleLibrary: (...a) => loadOverlayRuleLibrary(...a), __attach: () => null,"},
     "createSimilarPortfolio": {"staged": True},
     "setRankingCriteria": {"staged": True},

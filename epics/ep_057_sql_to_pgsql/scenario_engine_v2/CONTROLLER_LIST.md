@@ -1,9 +1,9 @@
-# Controller list - page v2.65.35 (generated 2026-10-19 from inventory_v2.65.35/inventory.json, tools/controller_wrappers.py, engine/page.py)
+# Controller list - page v2.65.35 (generated 2026-10-20 from inventory_v2.65.35/inventory.json, tools/controller_wrappers.py, engine/page.py)
 
 A controller here = a page function that is not pure logic: kind `mixed` (state + DOM), plus the delegated or ported ones. Columns: kind, async, number of fetch endpoints, DOM references, lines, page start line.
 
 
-## Delegated to engine (wrapper) (31)
+## Delegated to engine (wrapper) (29)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -24,13 +24,11 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | persistPortfolioViewConfig | engine |  |  |  | 9 | 2325 |
 | refreshActivePortfolioView | mixed | yes |  | 1 | 19 | 4090 |
 | refreshLiveData | mixed | yes |  | 2 | 115 | 4722 |
-| refreshPointInTimeHistory | mixed | yes | 1 | 4 | 26 | 5935 |
 | refreshPointInTimeSelection | mixed | yes | 1 | 11 | 211 | 5962 |
 | removeModelFromPortfolio | engine | yes |  |  | 15 | 3654 |
 | removePortfolios | engine | yes |  |  | 26 | 3685 |
 | repopulateActivePortfolioFromCriteria | engine | yes |  |  | 14 | 4123 |
 | resetAutomaticRankSchedule | mixed |  |  | 1 | 22 | 1988 |
-| scheduleAutomaticTop1Refresh | mixed |  |  | 2 | 47 | 5852 |
 | setRankingCriteria | mixed | yes |  | 5 | 146 | 5148 |
 | startReplay | mixed |  |  | 4 | 13 | 6403 |
 | switchDate | mixed | yes |  | 2 | 89 | 6237 |
@@ -56,7 +54,7 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | pairOverlayTrades | engine |  |  |  | 35 | 7821 |
 | sourceTradeFlipResults | engine |  |  |  | 25 | 2804 |
 
-## Ported in engine/page.py, NOT delegated (9)
+## Ported in engine/page.py, NOT delegated (11)
 
 | Function | Kind | Async | Fetches | DOM refs | Lines | Line |
 |---|---|---|---|---|---|---|
@@ -69,6 +67,8 @@ A controller here = a page function that is not pure logic: kind `mixed` (state 
 | loadModelSearchFromDatabase | mixed | yes | 2 | 7 | 86 | 5551 |
 | loadDeepLinkModelsFromDatabase | mixed | yes | 1 | 4 | 46 | 5638 |
 | schedulePointInTimeSelection | mixed |  |  | 1 | 26 | 6173 |
+| refreshPointInTimeHistory | mixed | yes | 1 | 4 | 26 | 5935 |
+| scheduleAutomaticTop1Refresh | mixed |  |  | 2 | 47 | 5852 |
 
 ## Stays in page (34)
 

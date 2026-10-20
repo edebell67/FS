@@ -41,6 +41,8 @@ BOUNDARY = {
     "loadModelSearchFromDatabase": "ported (engine stages, parity-tested) but not delegated: a synchronous engine call froze the page 0.6-0.8 s per call, against 18-40 ms for the page's own copy",
     "loadDeepLinkModelsFromDatabase": "as above",
     "schedulePointInTimeSelection": "called once per replay frame (a local debounce timer in the original page): a synchronous engine call per frame slowed replay, so the page keeps its own copy",
+    "refreshPointInTimeHistory": "run on every replay frame (a local early return in the original page): a synchronous engine call per frame made replay slow, so the page keeps its own copy",
+    "scheduleAutomaticTop1Refresh": "called on every replay frame (a local timer in the original page): a synchronous engine call per frame made replay slow, so the page keeps its own copy",
     "livePortfolioModelsForDate": "a pure lookup on live-portfolio store data the page owns (live tabs place orders)",
 }
 FALLBACK_COPIES = {"activatePortfolio"}   # the original, kept only for LIVE / LIVE_ALT tabs

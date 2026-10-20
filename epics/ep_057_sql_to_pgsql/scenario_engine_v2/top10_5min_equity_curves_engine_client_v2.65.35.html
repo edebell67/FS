@@ -5642,9 +5642,51 @@ ${preview}`)) return;
     }
 
     function scheduleAutomaticTop1Refresh(at) {
-      const res = __engineCommand('schedule_automatic_top1_refresh', [at]);
-      __engineReplay(res.effects, {  }, res.timers);
-      return res.ret;
+      if (!autoRefreshTop1Enabled) return;
+      const minute = clockMinutes(at);
+      if (minute === null) return;
+      const context = pointInTimeContextKey();
+      if (autoRefreshTop1Context !== context) {
+        // A pending result belongs to the previous scenario/filter/date. Drop it
+        // before starting a fresh interval for the newly selected context.
+        if (autoRefreshTop1RequestAt !== null) {
+          autoRefreshTop1RequestAt = null;
+          pendingExplicitTop1Time = null;
+          selectedTimeExplicitRefresh = false;
+          pointInTimeRequestSequence++;
+          pointInTimeRequestedKey = '';
+          applySelectedTimeBtn?.classList.remove('click-feedback-pending');
+          applySelectedTimeBtn?.removeAttribute('aria-busy');
+        }
+        autoRefreshTop1Context = context;
+        autoRefreshTop1LastMinute = minute;
+        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
+        updateAutoRefreshTop1Status(`On · next at ${replayClockTime(autoRefreshTop1NextMinute)}`);
+      }
+      if (autoRefreshTop1LastMinute === null || autoRefreshTop1NextMinute === null) {
+        autoRefreshTop1LastMinute = minute;
+        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
+      }
+      // Compare actual HH:MM replay timestamps, independent of how many ticks
+      // playback needed to reach the interval. Rewind starts a fresh interval.
+      if (minute < autoRefreshTop1LastMinute) {
+        autoRefreshTop1LastMinute = minute;
+        autoRefreshTop1NextMinute = nextAutomaticTop1Minute(minute, autoRefreshTop1Minutes, true);
+        updateAutoRefreshTop1Status(`On · replay rewound · next at ${replayClockTime(autoRefreshTop1NextMinute)}`);
+      }
+      autoRefreshTop1LastMinute = minute;
+      if (minute < autoRefreshTop1NextMinute || autoRefreshTop1RequestAt !== null || selectedTimeExplicitRefresh) return;
+
+      const scheduledAt = replayClockTime(autoRefreshTop1NextMinute);
+      autoRefreshTop1RequestAt = scheduledAt;
+      pendingExplicitTop1Time = scheduledAt;
+      selectedTimeExplicitRefresh = true;
+      pointInTimeRequestedKey = '';
+      clearTimeout(pointInTimeDebounceTimer);
+      applySelectedTimeBtn?.classList.add('click-feedback-pending');
+      applySelectedTimeBtn?.setAttribute('aria-busy', 'true');
+      updateAutoRefreshTop1Status(`Checking ${autoRefreshTop1Direction} #${autoRefreshTop1Rank} at ${scheduledAt}…`);
+      void refreshPointInTimeSelection(scheduledAt);
     }
 
     function renderPointInTimeHistory() {
@@ -5683,43 +5725,30 @@ ${preview}`)) return;
     }
 
     async function refreshPointInTimeHistory() {
-      const __targets = { ...__awaitTargets, };
-      const __handles = {};
-      const __apply = r => {
-        __engineReplay(r.effects, {  }, r.timers, r.viewArgs);
-        (r.calls || []).forEach(([fn, a]) => globalThis[fn](...a));
-      };
-      const __resume = (stage, ctx, result) => {
-        const r2 = __engineCommand('refresh_point_in_time_history', null, { stage, ctx, result });
-        if (r2.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
-        __apply(r2);
-        return __drive(r2);
-      };
-      const __drive = async res => {
-        while (res.await) {
-          const aw = res.await, ctxNow = res.ctx, stageNow = res.stage;
-          let out;
-          if (aw.attach) {   // run a stage when a started page promise settles (a detached .then)
-            __handles[aw.args[0]].then(v => __resume(aw.attach, ctxNow, { ok: v === undefined ? null : v }), e => __resume(aw.attach, ctxNow, { error: String(e && e.message || e) })).catch(e => console.warn('refresh_point_in_time_history continuation failed:', e));
-            out = null;
-          } else if (aw.fire) {   // start a page async function and carry on; keep the promise under a handle if asked
-            const p = Promise.resolve(__targets[aw.fn](...aw.args));
-            if (aw.handle) { __handles[aw.handle] = p; p.catch(() => {}); } else p.catch(e => console.warn('Date refresh failed:', e));
-            out = null;
-          } else if (aw.sync) out = __targets[aw.fn](...aw.args);
-          else if (aw.catch) { try { out = { ok: await __targets[aw.fn](...aw.args) }; } catch (e) { out = { error: String(e && e.message || e) }; } }
-          else out = await __targets[aw.fn](...aw.args);
-          if (stageNow === 'done') break;
-          res = __engineCommand('refresh_point_in_time_history', null, { stage: stageNow, ctx: ctxNow, result: out === undefined ? null : out });
-          if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
-          __apply(res);
-        }
-        return res.ret;
-      };
-      let res = __engineCommand('refresh_point_in_time_history', []);
-      if (res.needsNetwork) throw new Error('engine stage for refresh_point_in_time_history needs the network');
-      __apply(res);
-      return __drive(res);
+      if (currentCriteria === 'top1_at_time' || !pointInTimeMode || !pointInTimeHistoryNearViewport ||
+          pointInTimeHistoryPanel?.classList.contains('hidden') || !/^\d{4}-\d{2}-\d{2}$/.test(currentDate)) return;
+      const key = pointInTimeContextKey();
+      if (key === pointInTimeHistoryKey) return;
+      pointInTimeHistoryKey = key;
+      pointInTimeHistoryAt = '';
+      const sequence = ++pointInTimeHistorySequence;
+      pointInTimeHistoryStatus.textContent = 'Building hourly cohorts…';
+      const query = new URLSearchParams({ date: currentDate, ...Object.fromEntries(
+        Object.entries(pointInTimeRequestOptions()).map(([name, value]) => [name, String(value)])
+      ) });
+      try {
+        const response = await fetch(`${API_BASE}/api/point_in_time_scenario_hours?${query}`, { cache: 'no-store' });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || response.status);
+        if (sequence !== pointInTimeHistorySequence || key !== pointInTimeHistoryKey) return;
+        pointInTimeHours = Array.isArray(payload.hours) ? payload.hours : [];
+        pointInTimeHistoryStatus.textContent = `${pointInTimeHours.length} hourly cohorts · select an hour to inspect its strategies`;
+        renderPointInTimeHistory();
+      } catch (error) {
+        if (sequence !== pointInTimeHistorySequence) return;
+        pointInTimeHistoryStatus.textContent = `Hourly cohorts unavailable: ${error.message}`;
+        pointInTimeHistoryKey = '';
+      }
     }
 
     async function refreshPointInTimeSelection(atOverride = null) {

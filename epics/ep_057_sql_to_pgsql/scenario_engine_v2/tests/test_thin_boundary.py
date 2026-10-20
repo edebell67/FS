@@ -25,7 +25,7 @@ def test_only_the_documented_logic_is_left_in_the_page():
     r = cb.analyse()
     assert r["problems"] == [], r["problems"]
     assert r["fallback_copies"] == ["activatePortfolio"]   # a LIVE / LIVE_ALT tab places orders: the engine refuses it and the page runs its own copy
-    assert len(r["delegated"]) >= 30 and len(r["removed_to_engine_calls"]) == 12
+    assert len(r["delegated"]) >= 29 and len(r["removed_to_engine_calls"]) == 12   # 29: three per-frame controllers were taken out (schedulePointInTimeSelection, refreshPointInTimeHistory, scheduleAutomaticTop1Refresh)
 
 
 def test_a_stray_controller_would_be_reported(monkeypatch):

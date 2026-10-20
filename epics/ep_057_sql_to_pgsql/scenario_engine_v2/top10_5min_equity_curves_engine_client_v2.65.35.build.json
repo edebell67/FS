@@ -41,7 +41,6 @@
   "applyPortfolioViewConfig",
   "getMergedPortfolioModels",
   "autoPinLivePortfolioStrategies",
-  "scheduleAutomaticTop1Refresh",
   "applySelectedTime",
   "triggerSelectedTimeRefresh",
   "removeModelFromPortfolio",
@@ -52,7 +51,6 @@
   "switchDate",
   "refreshActivePortfolioView",
   "refreshPointInTimeSelection",
-  "refreshPointInTimeHistory",
   "activatePortfolio",
   "createSimilarPortfolio",
   "setRankingCriteria",
@@ -62,5 +60,5 @@
   1435,
   9088
  ],
- "bytes": 531521
+ "bytes": 533128
 }
