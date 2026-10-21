@@ -145,6 +145,13 @@ def make_case(rng, method):
     normalized = re.sub(r"\s+", "_", str(st.model_search_input or "").strip().lower())   # what the page compares the resolved query with
     st.search_resolved_query = rng.choice([None, normalized, normalized, "another_query"])
     st.search_resolved_message = rng.choice(["", "No model ID or strategy name matches “x” for 2026-10-14", "No model data found for 2026-10-14: m1", "Database search failed: boom"])
+    if st.active_portfolio:   # page v2.65.50: Find model is portfolio based: searched and pinned models must be members (ids in any case, sometimes none, sometimes the key is absent)
+        pool = [m["model"] for m in st.search_loaded] + list(st.pinned) + [m["model"] for m in st.portfolio_models] + rng.sample(IDS, rng.randint(0, 3))
+        members = [x.upper() if rng.random() < 0.3 else x for x in pool if rng.random() < 0.6]
+        if rng.random() < 0.1:
+            st.portfolios.pop("P1", None)
+        else:
+            st.portfolios["P1"] = members
     snap = st.snapshot()
     criteria = {}
     for key in {crit, f"{crit}_net", f"{crit}_alt", "top_net"}:

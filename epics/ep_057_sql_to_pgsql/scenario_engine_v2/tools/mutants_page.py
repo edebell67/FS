@@ -458,6 +458,11 @@ MUTANTS = [
     ('s10: eligible pinned only with a match', 'replay_models.py', '    if not query or direct:\n        for model_id, pm in pinned.items():', '    if True:\n        for model_id, pm in pinned.items():', M, 'get_eligible_models'),
     ('s10: eligible resolved status', 'replay_models.py', 's.search_resolved_message if s.search_resolved_query == query else', 's.search_resolved_message if True else', M, 'get_eligible_models'),
     ('s10: eligible searching status', 'replay_models.py', '"Searching model IDs and strategy names\\u2026"\n    elif s.pit_mode:', '"Searching\\u2026"\n    elif s.pit_mode:', M, 'get_eligible_models'),
+    # ---- step 11: portfolio-based Find model (page v2.65.50)
+    ('s11: portfolio search filter', 'replay_models.py', 'if portfolio_ids is None or _lower(m.get("model")) in portfolio_ids] if query else []', 'if True] if query else []', M, 'get_eligible_models'),
+    ('s11: portfolio pinned filter', 'replay_models.py', '            if portfolio_ids is not None and _lower(model_id) not in portfolio_ids:\n                continue\n', '            if False:\n                continue\n', M, 'get_eligible_models'),
+    ('s11: portfolio ids case', 'replay_models.py', 'portfolio_ids = {_lower(x) for x in', 'portfolio_ids = {str(x) for x in', M, 'get_eligible_models'),
+    ('s11: portfolio none without active', 'replay_models.py', 'if s.active_portfolio else None   # page v2.65.50', 'if True else None   # page v2.65.50', M, 'get_eligible_models'),
 ]
 
 # Mutants that cannot change behaviour, with the reason (not run).

@@ -5423,7 +5423,12 @@ ${preview}`)) return;
       }
       const query = modelSearchInput?.value.trim().toLocaleLowerCase().replace(/\s+/g, '_');
       const searchTerms = modelSearchTerms(query);
-      const directMatch = query ? modelSearchLoadedModels : [];
+      const portfolioIds = activePortfolioName
+        ? new Set((portfolios[activePortfolioName] || []).map(model => String(model).toLocaleLowerCase()))
+        : null;
+      const directMatch = query
+        ? modelSearchLoadedModels.filter(model => !portfolioIds || portfolioIds.has(String(model.model || '').toLocaleLowerCase()))
+        : [];
       let models = scenarioModels;
       if (query && !directMatch.length) {
         // Do not leave selected-time leaders on screen when the search has not
@@ -5448,6 +5453,7 @@ ${preview}`)) return;
       }
       if (!query || directMatch.length) {
         for (const [modelId, pinnedModel] of pinnedComparisonModels) {
+          if (portfolioIds && !portfolioIds.has(String(modelId).toLocaleLowerCase())) continue;
           const index = models.findIndex(model => String(model.model) === modelId);
           if (index < 0) models = [...models, pinnedModel];
           else if (pinnedModel?.series?.length && !models[index]?.series?.length) models = models.map((model, i) => i === index ? pinnedModel : model);
@@ -5502,6 +5508,36 @@ ${preview}`)) return;
       }
       if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
         if (modelSearchStatus) modelSearchStatus.textContent = 'Choose a single date to search PostgreSQL';
+        return;
+      }
+      if (activePortfolioName) {
+        const portfolioName = activePortfolioName;
+        const memberIds = new Set((portfolios[portfolioName] || []).map(model => String(model).toLocaleLowerCase()));
+        const portfolioMembers = portfolioModels.filter(model => memberIds.has(String(model.model || '').toLocaleLowerCase()));
+        const requestedIds = new Set(searchTerms.map(term => term.replace(/^dna_/i, '').toLocaleLowerCase()));
+        const matches = portfolioMembers.filter(model => {
+          const modelId = String(model.model || '').toLocaleLowerCase();
+          const idWithoutPrefix = modelId.replace(/^dna_/, '');
+          if (isDirectModelSearch) return requestedIds.has(modelId) || requestedIds.has(idWithoutPrefix);
+          const strategy = String(model.strategy || model.strategy_name || model.name || '').toLocaleLowerCase().replace(/\s+/g, '_');
+          return modelId.includes(query) || strategy.includes(query);
+        });
+        if (activePortfolioName !== portfolioName || requestSequence !== modelSearchRequestSequence || date !== currentDate) return;
+        modelSearchLoadedModels = matches;
+        modelSearchResolvedQuery = query;
+        const memberCount = (portfolios[portfolioName] || []).length;
+        modelSearchResolvedMessage = matches.length
+          ? `${matches.length} matching model${matches.length === 1 ? '' : 's'} in ${portfolioName}`
+          : `No loaded ${portfolioName} model matches “${searchTerm}”${memberCount ? '' : ' · portfolio is empty'}`;
+        const eligibleModels = getEligibleModels();
+        visibleModels = new Set(eligibleModels.map(model => model.model));
+        selectedModelIndex = 0;
+        updateDateLabelAndTitle();
+        updateScrubberUI();
+        updateRibbon();
+        renderCards();
+        drawChart();
+        if (modelSearchStatus) modelSearchStatus.textContent = modelSearchResolvedMessage;
         return;
       }
       if (modelSearchStatus) modelSearchStatus.textContent = requestedModels.length === 1
@@ -6710,7 +6746,7 @@ ${preview}`)) return;
         updateRibbon();
         renderCards();
         drawChart();
-        if (searchTerm.length >= 3 && /^[a-z0-9._;,\s-]+$/i.test(searchTerm) &&
+        if (!activePortfolioName && searchTerm.length >= 3 && /^[a-z0-9._;,\s-]+$/i.test(searchTerm) &&
             !searchTerms.every(model => loadedIds.has(model))) {
           modelSearchTimer = setTimeout(() => loadModelSearchFromDatabase(searchTerm), 350);
         }

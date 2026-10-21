@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.5.0 · 2026-10-21 · get_eligible_models: with an active portfolio, searched and pinned models are limited to its members (page v2.65.50 portfolio-based Find model).
 # v1.4.0 · 2026-10-21 · get_replay_timeline_models returns the displayed (eligible) cohort first, as page v2.65.39.
 # v1.3.0 · 2026-10-20 · get_eligible_models follows page v2.65.36: no leaders when a search matched nothing, matches are the chart set in selected-time mode, pinned models only join when something matched, the search status shows what the search concluded.
 # v1.2.0 · 2026-10-19 · get_eligible_models follows page v2.65.35: the query's whitespace counts as '_' and whatever a search loaded is the search result (strategy-name matches as well as model IDs).
@@ -151,7 +152,8 @@ def get_eligible_models(s, client) -> list[dict]:
         scenario_models = picked
     query = re.sub(r"\s+", "_", str(s.model_search_input or "").strip().lower()) if s.model_search_input is not None else None   # v2.65.35: spaces count as '_' (strategy names)
     terms = pu.model_search_terms(query)
-    direct = list(s.search_loaded) if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
+    portfolio_ids = {_lower(x) for x in (s.portfolios.get(s.active_portfolio) or [])} if s.active_portfolio else None   # page v2.65.50: Find model is portfolio based
+    direct = [m for m in s.search_loaded if portfolio_ids is None or _lower(m.get("model")) in portfolio_ids] if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
     models = scenario_models
     pinned = s.pinned
     if query and not direct:   # v2.65.36: a search that matched nothing leaves no leaders on screen
@@ -171,6 +173,8 @@ def get_eligible_models(s, client) -> list[dict]:
         models = [m for m in scenario_models if query in _lower(m.get("model"))]
     if not query or direct:
         for model_id, pm in pinned.items():
+            if portfolio_ids is not None and _lower(model_id) not in portfolio_ids:
+                continue
             index = next((i for i, m in enumerate(models) if _s(m.get("model")) == model_id), -1)
             if index < 0:
                 models = [*models, pm]

@@ -1,17 +1,17 @@
 {
  "page_version": "v2.65.39",
- "rebased_from": "v2.65.38",
+ "rebased_from": "v2.65.39",
  "summary": {
   "compute": {
    "ported": 50,
-   "shadowed": 1,
-   "pending": 2
+   "shadowed": 1
   },
   "view": {
-   "stays_in_page": 91
+   "stays_in_page": 93
   },
   "data": {
-   "ported": 12
+   "ported": 10,
+   "stays_in_page": 2
   },
   "split": {
    "ported": 13
@@ -1732,19 +1732,19 @@
    "name": "getEligibleModels",
    "ordinal": 1,
    "line": 5565,
-   "lines": 71,
+   "lines": 77,
    "inventory_kind": "mixed",
    "category": "compute",
    "status": "ported",
    "python_target": "replay_models.get_eligible_models",
-   "body_sha256": "d1a96cc8de75688564e4dd91ac4fb8cff67b8737d9b7665ad0d515cd1dc99195",
-   "verified_body_sha256": "d1a96cc8de75688564e4dd91ac4fb8cff67b8737d9b7665ad0d515cd1dc99195",
+   "body_sha256": "37e7be57913b156f4cdb6a61cd3eb93e0d85e10332c95beb7b11f6304adbb7cc",
+   "verified_body_sha256": "37e7be57913b156f4cdb6a61cd3eb93e0d85e10332c95beb7b11f6304adbb7cc",
    "differential_tested": true
   },
   {
    "name": "getExactSearchModel",
    "ordinal": 1,
-   "line": 5637,
+   "line": 5643,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1757,21 +1757,20 @@
   {
    "name": "loadModelSearchFromDatabase",
    "ordinal": 1,
-   "line": 5647,
-   "lines": 110,
+   "line": 5653,
+   "lines": 140,
    "inventory_kind": "mixed",
    "category": "data",
    "status": "stays_in_page",
    "python_target": "page.Page.load_model_search_from_database",
-   "body_sha256": "5bb547343a8016c1f0697db2fdd365c820cb5f717b1c7dcde00ef187a7813905",
+   "body_sha256": "0cd69fb51c2f6ce69b9299b2edc13b92c19d72c125f9e96cedbea08fecae9755",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "page v2.65.39+ adds a localStorage cache, an early deep-link request and the fast API; the engine copies (parity-verified up to v2.65.38) are not delegated and are not claimed current"
+   "differential_tested": true
   },
   {
    "name": "loadDeepLinkModelsFromDatabase",
    "ordinal": 1,
-   "line": 5758,
+   "line": 5794,
    "lines": 75,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1779,13 +1778,12 @@
    "python_target": "page.Page.load_deep_link_models_from_database",
    "body_sha256": "03c0b08744da8f9221341a1de2c35bc65c220a5548c19a1639f131ba3f61f8d7",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "page v2.65.39+ adds a localStorage cache, an early deep-link request and the fast API; the engine copies (parity-verified up to v2.65.38) are not delegated and are not claimed current"
+   "differential_tested": true
   },
   {
    "name": "getReplayTimelineModels",
    "ordinal": 1,
-   "line": 5834,
+   "line": 5870,
    "lines": 31,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1798,7 +1796,7 @@
   {
    "name": "pointInTimeAtReplayHead",
    "ordinal": 1,
-   "line": 5866,
+   "line": 5902,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1811,7 +1809,7 @@
   {
    "name": "clockMinutes",
    "ordinal": 1,
-   "line": 5877,
+   "line": 5913,
    "lines": 6,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1824,7 +1822,7 @@
   {
    "name": "replayClockTime",
    "ordinal": 1,
-   "line": 5884,
+   "line": 5920,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1837,7 +1835,7 @@
   {
    "name": "nextAutomaticTop1Minute",
    "ordinal": 1,
-   "line": 5889,
+   "line": 5925,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1850,7 +1848,7 @@
   {
    "name": "selectedTimeRankCount",
    "ordinal": 1,
-   "line": 5897,
+   "line": 5933,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1863,7 +1861,7 @@
   {
    "name": "retainSelectedTimeLeaders",
    "ordinal": 1,
-   "line": 5901,
+   "line": 5937,
    "lines": 26,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1876,7 +1874,7 @@
   {
    "name": "applySelectedTime",
    "ordinal": 1,
-   "line": 5928,
+   "line": 5964,
    "lines": 53,
    "inventory_kind": "mixed",
    "category": "split",
@@ -1889,7 +1887,7 @@
   {
    "name": "pointInTimeRequestOptions",
    "ordinal": 1,
-   "line": 5982,
+   "line": 6018,
    "lines": 18,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1902,7 +1900,7 @@
   {
    "name": "pointInTimeContextKey",
    "ordinal": 1,
-   "line": 6001,
+   "line": 6037,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1915,7 +1913,7 @@
   {
    "name": "scheduleAutomaticTop1Refresh",
    "ordinal": 1,
-   "line": 6007,
+   "line": 6043,
    "lines": 47,
    "inventory_kind": "mixed",
    "category": "split",
@@ -1928,7 +1926,7 @@
   {
    "name": "renderPointInTimeHistory",
    "ordinal": 1,
-   "line": 6055,
+   "line": 6091,
    "lines": 34,
    "inventory_kind": "view",
    "category": "view",
@@ -1941,7 +1939,7 @@
   {
    "name": "refreshPointInTimeHistory",
    "ordinal": 1,
-   "line": 6090,
+   "line": 6126,
    "lines": 26,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1954,7 +1952,7 @@
   {
    "name": "refreshPointInTimeSelection",
    "ordinal": 1,
-   "line": 6117,
+   "line": 6153,
    "lines": 211,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1967,7 +1965,7 @@
   {
    "name": "schedulePointInTimeSelection",
    "ordinal": 1,
-   "line": 6328,
+   "line": 6364,
    "lines": 26,
    "inventory_kind": "mixed",
    "category": "split",
@@ -1980,7 +1978,7 @@
   {
    "name": "updatePointInTimeToggleUI",
    "ordinal": 1,
-   "line": 6355,
+   "line": 6391,
    "lines": 30,
    "inventory_kind": "view",
    "category": "view",
@@ -1993,7 +1991,7 @@
   {
    "name": "getMaxFrames",
    "ordinal": 1,
-   "line": 6386,
+   "line": 6422,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2006,7 +2004,7 @@
   {
    "name": "switchDate",
    "ordinal": 1,
-   "line": 6392,
+   "line": 6428,
    "lines": 89,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2019,7 +2017,7 @@
   {
    "name": "updateDeltaButtonsUI",
    "ordinal": 1,
-   "line": 6482,
+   "line": 6518,
    "lines": 47,
    "inventory_kind": "view",
    "category": "view",
@@ -2032,7 +2030,7 @@
   {
    "name": "setReplaySpeed",
    "ordinal": 1,
-   "line": 6533,
+   "line": 6569,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2045,7 +2043,7 @@
   {
    "name": "togglePlay",
    "ordinal": 1,
-   "line": 6550,
+   "line": 6586,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "view",
@@ -2058,7 +2056,7 @@
   {
    "name": "startReplay",
    "ordinal": 1,
-   "line": 6558,
+   "line": 6594,
    "lines": 13,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2071,7 +2069,7 @@
   {
    "name": "pauseReplay",
    "ordinal": 1,
-   "line": 6572,
+   "line": 6608,
    "lines": 11,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2084,7 +2082,7 @@
   {
    "name": "startPlaybackLoop",
    "ordinal": 1,
-   "line": 6584,
+   "line": 6620,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2097,7 +2095,7 @@
   {
    "name": "step",
    "ordinal": 1,
-   "line": 6601,
+   "line": 6637,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2110,7 +2108,7 @@
   {
    "name": "seekToPct",
    "ordinal": 1,
-   "line": 6612,
+   "line": 6648,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2123,7 +2121,7 @@
   {
    "name": "updateScrubberUI",
    "ordinal": 1,
-   "line": 6623,
+   "line": 6659,
    "lines": 42,
    "inventory_kind": "view",
    "category": "view",
@@ -2136,7 +2134,7 @@
   {
    "name": "storedHourlyColumns",
    "ordinal": 1,
-   "line": 6684,
+   "line": 6720,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "view",
@@ -2149,7 +2147,7 @@
   {
    "name": "persistHourlyColumns",
    "ordinal": 1,
-   "line": 6692,
+   "line": 6728,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2162,7 +2160,7 @@
   {
    "name": "renderHourlyColumnPanel",
    "ordinal": 1,
-   "line": 6696,
+   "line": 6732,
    "lines": 29,
    "inventory_kind": "view",
    "category": "view",
@@ -2175,7 +2173,7 @@
   {
    "name": "hourlyMetricCell",
    "ordinal": 1,
-   "line": 6726,
+   "line": 6762,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "view",
@@ -2188,7 +2186,7 @@
   {
    "name": "renderHourlyRows",
    "ordinal": 1,
-   "line": 6736,
+   "line": 6772,
    "lines": 32,
    "inventory_kind": "view",
    "category": "view",
@@ -2201,7 +2199,7 @@
   {
    "name": "hourlyMoney",
    "ordinal": 1,
-   "line": 6769,
+   "line": 6805,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "view",
@@ -2214,7 +2212,7 @@
   {
    "name": "hourlyTone",
    "ordinal": 1,
-   "line": 6774,
+   "line": 6810,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2227,7 +2225,7 @@
   {
    "name": "hourlyIntervalLabel",
    "ordinal": 1,
-   "line": 6778,
+   "line": 6814,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "view",
@@ -2240,7 +2238,7 @@
   {
    "name": "renderHourlyFamilyTabs",
    "ordinal": 1,
-   "line": 6784,
+   "line": 6820,
    "lines": 12,
    "inventory_kind": "view",
    "category": "view",
@@ -2253,7 +2251,7 @@
   {
    "name": "syncHourlyProducts",
    "ordinal": 1,
-   "line": 6797,
+   "line": 6833,
    "lines": 6,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2266,7 +2264,7 @@
   {
    "name": "loadHourlyReport",
    "ordinal": 1,
-   "line": 6804,
+   "line": 6840,
    "lines": 36,
    "inventory_kind": "mixed",
    "category": "data",
@@ -2279,7 +2277,7 @@
   {
    "name": "openHourlyReport",
    "ordinal": 1,
-   "line": 6841,
+   "line": 6877,
    "lines": 17,
    "inventory_kind": "view",
    "category": "view",
@@ -2292,7 +2290,7 @@
   {
    "name": "closeHourlyReport",
    "ordinal": 1,
-   "line": 6859,
+   "line": 6895,
    "lines": 5,
    "inventory_kind": "view",
    "category": "view",
@@ -2305,7 +2303,7 @@
   {
    "name": "openTargetRanking",
    "ordinal": 1,
-   "line": 6865,
+   "line": 6901,
    "lines": 5,
    "inventory_kind": "view",
    "category": "view",
@@ -2318,7 +2316,7 @@
   {
    "name": "targetDaysCacheKey",
    "ordinal": 1,
-   "line": 6871,
+   "line": 6907,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2326,13 +2324,12 @@
    "python_target": null,
    "body_sha256": "9bd8f73c3d9872730d46c2420992d1561aa313e6886f4c3d8a9bec69376c7a0b",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "Target leaders client cache / prewarm / render: browser-side"
+   "differential_tested": false
   },
   {
    "name": "renderTargetDaysRanking",
    "ordinal": 1,
-   "line": 6875,
+   "line": 6911,
    "lines": 40,
    "inventory_kind": "view",
    "category": "view",
@@ -2340,13 +2337,12 @@
    "python_target": null,
    "body_sha256": "3c32e168cf0c22adf800e643775efaf761ab696be5e58410837f41a9bf1169d9",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "Target leaders client cache / prewarm / render: browser-side"
+   "differential_tested": false
   },
   {
    "name": "loadTargetDaysRanking",
    "ordinal": 1,
-   "line": 6916,
+   "line": 6952,
    "lines": 45,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2359,7 +2355,7 @@
   {
    "name": "selectTargetRankingStrategy",
    "ordinal": 1,
-   "line": 6962,
+   "line": 6998,
    "lines": 8,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2372,7 +2368,7 @@
   {
    "name": "prewarmTargetDaysRanking",
    "ordinal": 1,
-   "line": 6971,
+   "line": 7007,
    "lines": 19,
    "inventory_kind": "engine",
    "category": "view",
@@ -2380,13 +2376,12 @@
    "python_target": null,
    "body_sha256": "a1eb87e43729d5be8d9de97990890de1db7acb2cf4b733aea6ee50710ed0747c",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "Target leaders client cache / prewarm / render: browser-side"
+   "differential_tested": false
   },
   {
    "name": "updateChartLockControlState",
    "ordinal": 1,
-   "line": 6991,
+   "line": 7027,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "view",
@@ -2399,7 +2394,7 @@
   {
    "name": "applyChartLock",
    "ordinal": 1,
-   "line": 7002,
+   "line": 7038,
    "lines": 29,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2412,20 +2407,20 @@
   {
    "name": "setupEventListeners",
    "ordinal": 1,
-   "line": 7032,
+   "line": 7068,
    "lines": 697,
    "inventory_kind": "mixed",
    "category": "view",
    "status": "stays_in_page",
    "python_target": null,
-   "body_sha256": "2e3add264c88f34cb926743b8f394bf5c5d3641faa5f6c52b153ef2556d2d416",
+   "body_sha256": "a1d5889f1801a525be87f63dbe1c606bef707612559ada7f005b247bab36e828",
    "verified_body_sha256": null,
    "differential_tested": false
   },
   {
    "name": "getBasePoint",
    "ordinal": 1,
-   "line": 7730,
+   "line": 7766,
    "lines": 14,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2438,7 +2433,7 @@
   {
    "name": "getReplayHeadPoint",
    "ordinal": 1,
-   "line": 7745,
+   "line": 7781,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2451,7 +2446,7 @@
   {
    "name": "updateRibbon",
    "ordinal": 1,
-   "line": 7753,
+   "line": 7789,
    "lines": 86,
    "inventory_kind": "mixed",
    "category": "compute",
@@ -2464,7 +2459,7 @@
   {
    "name": "renderCards",
    "ordinal": 1,
-   "line": 7840,
+   "line": 7876,
    "lines": 153,
    "inventory_kind": "view",
    "category": "view",
@@ -2477,7 +2472,7 @@
   {
    "name": "setupCanvas",
    "ordinal": 1,
-   "line": 7994,
+   "line": 8030,
    "lines": 13,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2490,7 +2485,7 @@
   {
    "name": "computeTradeOverlaySignals",
    "ordinal": 1,
-   "line": 8025,
+   "line": 8061,
    "lines": 143,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2503,7 +2498,7 @@
   {
    "name": "pairOverlayTrades",
    "ordinal": 1,
-   "line": 8171,
+   "line": 8207,
    "lines": 35,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2516,7 +2511,7 @@
   {
    "name": "computeSplitTargetSignal",
    "ordinal": 1,
-   "line": 8209,
+   "line": 8245,
    "lines": 38,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2529,7 +2524,7 @@
   {
    "name": "modelPointAtOrBeforeTime",
    "ordinal": 1,
-   "line": 8248,
+   "line": 8284,
    "lines": 11,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2542,7 +2537,7 @@
   {
    "name": "modelBaselinePoint",
    "ordinal": 1,
-   "line": 8260,
+   "line": 8296,
    "lines": 20,
    "inventory_kind": "engine",
    "category": "view",
@@ -2555,7 +2550,7 @@
   {
    "name": "modelDeltaSeries",
    "ordinal": 1,
-   "line": 8281,
+   "line": 8317,
    "lines": 11,
    "inventory_kind": "engine",
    "category": "view",
@@ -2568,7 +2563,7 @@
   {
    "name": "selectedTimeJoinAt",
    "ordinal": 1,
-   "line": 8293,
+   "line": 8329,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2581,7 +2576,7 @@
   {
    "name": "selectedTimeModelEligibleAt",
    "ordinal": 1,
-   "line": 8298,
+   "line": 8334,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2594,7 +2589,7 @@
   {
    "name": "selectedTimePointEligible",
    "ordinal": 1,
-   "line": 8303,
+   "line": 8339,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2607,7 +2602,7 @@
   {
    "name": "computeLeaderRotation",
    "ordinal": 1,
-   "line": 8311,
+   "line": 8347,
    "lines": 159,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2620,7 +2615,7 @@
   {
    "name": "computeMultiSplitRotation",
    "ordinal": 1,
-   "line": 8474,
+   "line": 8510,
    "lines": 176,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2633,7 +2628,7 @@
   {
    "name": "drawLeaderSignalBadge",
    "ordinal": 1,
-   "line": 8651,
+   "line": 8687,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2646,7 +2641,7 @@
   {
    "name": "showTargetPulse",
    "ordinal": 1,
-   "line": 8668,
+   "line": 8704,
    "lines": 11,
    "inventory_kind": "view",
    "category": "view",
@@ -2659,7 +2654,7 @@
   {
    "name": "drawTradeValueLabel",
    "ordinal": 1,
-   "line": 8680,
+   "line": 8716,
    "lines": 20,
    "inventory_kind": "engine",
    "category": "view",
@@ -2672,7 +2667,7 @@
   {
    "name": "updateOverlayTradeSummary",
    "ordinal": 1,
-   "line": 8701,
+   "line": 8737,
    "lines": 27,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2685,7 +2680,7 @@
   {
    "name": "openOverlayTradesModal",
    "ordinal": 1,
-   "line": 8729,
+   "line": 8765,
    "lines": 118,
    "inventory_kind": "view",
    "category": "view",
@@ -2698,7 +2693,7 @@
   {
    "name": "drawSignalBadge",
    "ordinal": 1,
-   "line": 8848,
+   "line": 8884,
    "lines": 29,
    "inventory_kind": "engine",
    "category": "view",
@@ -2711,7 +2706,7 @@
   {
    "name": "drawChart",
    "ordinal": 1,
-   "line": 8878,
+   "line": 8914,
    "lines": 273,
    "inventory_kind": "view",
    "category": "view",
@@ -2724,7 +2719,7 @@
   {
    "name": "scheduleDashboardUtilityRuntime",
    "ordinal": 1,
-   "line": 9153,
+   "line": 9189,
    "lines": 9,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2737,7 +2732,7 @@
   {
    "name": "drawBaselineMarker",
    "ordinal": 1,
-   "line": 9163,
+   "line": 9199,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2750,7 +2745,7 @@
   {
    "name": "drawReplayCursor",
    "ordinal": 1,
-   "line": 9179,
+   "line": 9215,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2763,7 +2758,7 @@
   {
    "name": "renderDeltaLine",
    "ordinal": 1,
-   "line": 9195,
+   "line": 9231,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2776,7 +2771,7 @@
   {
    "name": "drawPointLabel",
    "ordinal": 1,
-   "line": 9211,
+   "line": 9247,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "view",
@@ -2789,7 +2784,7 @@
   {
    "name": "drawGridAndAxes",
    "ordinal": 1,
-   "line": 9222,
+   "line": 9258,
    "lines": 46,
    "inventory_kind": "engine",
    "category": "view",
