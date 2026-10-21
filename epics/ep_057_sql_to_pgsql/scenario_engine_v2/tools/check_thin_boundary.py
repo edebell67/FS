@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_inventory  # noqa: E402
 import controller_wrappers as cw  # noqa: E402
 
-VERSION = "v2.65.38"
+VERSION = "v2.65.39"
 SOURCE = ROOT / f"top10_5min_equity_curves_source_{VERSION}.html"
 BUILT = ROOT / f"top10_5min_equity_curves_engine_client_{VERSION}.html"
 

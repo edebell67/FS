@@ -28,8 +28,8 @@ V2 = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(V2 / "tools"))
 from mutants_page import MUTANTS  # noqa: E402
 
-PAGE = V2 / "top10_5min_equity_curves_source_v2.65.38.html"
-INV = V2 / "inventory_v2.65.38" / "inventory.json"
+PAGE = V2 / "top10_5min_equity_curves_source_v2.65.39.html"
+INV = V2 / "inventory_v2.65.39" / "inventory.json"
 CASES = os.environ.get("MUT_CASES", "60")
 
 

@@ -1,0 +1,64 @@
+{
+ "source": "top10_5min_equity_curves_source_v2.65.39.html",
+ "version": "v2.65.39",
+ "output": "top10_5min_equity_curves_engine_client_v2.65.39.html",
+ "entry_points_now_engine_calls": [
+  "computeTradeOverlaySignals",
+  "pairOverlayTrades",
+  "computeSplitTargetSignal",
+  "computeLeaderRotation",
+  "computeMultiSplitRotation"
+ ],
+ "removed": [
+  "applyAssignedOverlayTradeResults",
+  "assignedRuleTarget",
+  "sourceTradeFlipResults",
+  "overlayRuleCandidate",
+  "overlayRuleMetricValue",
+  "asOfCorrelation",
+  "curvePointAtOrBefore"
+ ],
+ "kept_with_data_layer": [
+  "assignedOverlayTradeCacheKey"
+ ],
+ "inlined": [
+  "runner/static/engine_client.js",
+  "runner/static/launch_panel.js"
+ ],
+ "controllers_delegated": [
+  "movePortfolio",
+  "markPortfolioFixed",
+  "capturePortfolioScenario",
+  "persistPortfolioViewConfig",
+  "startReplay",
+  "pauseReplay",
+  "syncPortfolioViewRefresh",
+  "updateAutoRefreshTop1Status",
+  "applyChartLock",
+  "resetAutomaticRankSchedule",
+  "uniquePortfolioName",
+  "currentPortfolioViewConfig",
+  "applyPortfolioViewConfig",
+  "getMergedPortfolioModels",
+  "autoPinLivePortfolioStrategies",
+  "applySelectedTime",
+  "triggerSelectedTimeRefresh",
+  "removeModelFromPortfolio",
+  "addCatalogueModel",
+  "moveModelBetweenPortfolios",
+  "repopulateActivePortfolioFromCriteria",
+  "removePortfolios",
+  "switchDate",
+  "refreshActivePortfolioView",
+  "refreshPointInTimeSelection",
+  "activatePortfolio",
+  "createSimilarPortfolio",
+  "setRankingCriteria",
+  "refreshLiveData"
+ ],
+ "lines_before": [
+  1504,
+  9512
+ ],
+ "bytes": 560443
+}

@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.4.0 · 2026-10-21 · get_replay_timeline_models returns the displayed (eligible) cohort first, as page v2.65.39.
 # v1.3.0 · 2026-10-20 · get_eligible_models follows page v2.65.36: no leaders when a search matched nothing, matches are the chart set in selected-time mode, pinned models only join when something matched, the search status shows what the search concluded.
 # v1.2.0 · 2026-10-19 · get_eligible_models follows page v2.65.35: the query's whitespace counts as '_' and whatever a search loaded is the search result (strategy-name matches as well as model IDs).
 # v1.1.1 · 2026-10-17 · toFixed is core.js_to_fixed.
@@ -209,6 +210,9 @@ def _re_time_leader(role: str) -> bool:
 
 # ---- getReplayTimelineModels / pointInTimeAtReplayHead / getMaxFrames ----
 def get_replay_timeline_models(s, client) -> list[dict]:
+    displayed = get_eligible_models(s, client)   # page v2.65.39: the replay clock follows the cohort the chart draws
+    if displayed:
+        return displayed
     query = str(s.model_search_input or "").strip().lower() if s.model_search_input is not None else None
     if s.pit_mode:
         active = get_eligible_models(s, client) if s.pit_models else []
