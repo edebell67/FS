@@ -51,3 +51,10 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 - New page functions, all kept in the page: `openTargetRanking`, `loadTargetDaysRanking`, `selectTargetRankingStrategy` (Target leaders · 20d modal, reads EP058 `/api/intelligence/rankings/target-days`) and `modelBaselinePoint`, `modelDeltaSeries` (chart hot path). Listed in `check_thin_boundary.py`.
 - Page bug passed on, not changed: `getEligibleModels` reads an undefined `COLORS` for a colourless searched model; the engine uses the linked-model palette instead.
 - Target leaders ranking is slow cold (about 44 s for one day while the machine was loaded; 20 days 78-90 s), instant when cached.
+
+## Page v2.65.53 sync (2026-10-21)
+
+- Thin page rebuilt from v2.65.53. `getEligibleModels` follows it: Find model stays global inside a portfolio (replaces the v2.65.50 membership filter that was ported earlier the same day), search results waiting for metrics pass the portfolio filters, no colour fallback. New page functions `applySearchModelsToActivePortfolio` and `hydrateStrategySearchMetrics` stay in the page (listed in `check_thin_boundary.py`).
+- Find model and selected-curve lookups reach the read-only fast API (:8767) through the runner's own origin (`EP057_FAST_API`).
+- Known equivalent mutant: the "No global search results" status text is unreachable (an empty result is caught by the earlier no-match branch).
+- NOT run: the tests that need :8765 (5 stub-parity errors, skipped parity groups): the server was not answering within 100 s (machine memory 94%).

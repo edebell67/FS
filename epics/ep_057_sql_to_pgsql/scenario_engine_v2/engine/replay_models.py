@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.6.0 · 2026-10-21 · get_eligible_models follows page v2.65.53: Find model stays global inside a portfolio (replaces the v2.65.50 membership filter), pending-metrics search results pass the portfolio filters, no colour fallback for searched models.
 # v1.5.0 · 2026-10-21 · get_eligible_models: with an active portfolio, searched and pinned models are limited to its members (page v2.65.50 portfolio-based Find model).
 # v1.4.0 · 2026-10-21 · get_replay_timeline_models returns the displayed (eligible) cohort first, as page v2.65.39.
 # v1.3.0 · 2026-10-20 · get_eligible_models follows page v2.65.36: no leaders when a search matched nothing, matches are the chart set in selected-time mode, pinned models only join when something matched, the search status shows what the search concluded.
@@ -16,7 +17,6 @@ import math
 import re
 
 from . import core_ported as core
-from .data_client import LINKED_COLORS as SEARCH_COLORS   # the page's fallback colour list is not defined anywhere (page v2.65.36 reads an undefined COLORS); the engine uses the linked-model palette
 from . import page_utils as pu
 from .selected_time import js_truthy
 
@@ -135,6 +135,8 @@ def get_eligible_models(s, client) -> list[dict]:
         scenario_models = get_scenario_candidates(s, client, s.current_criteria)
     else:
         def passes(m):
+            if js_truthy(m.get("searchResult")) and js_truthy(m.get("metrics_pending")):   # v2.65.51: a search result still waiting for its metrics is never filtered out
+                return True
             wr = _get(m, keys["winRateKey"])
             if wr is _UNDEF or wr is None:
                 wr = _get(m, "win_rate")
@@ -152,14 +154,15 @@ def get_eligible_models(s, client) -> list[dict]:
         scenario_models = picked
     query = re.sub(r"\s+", "_", str(s.model_search_input or "").strip().lower()) if s.model_search_input is not None else None   # v2.65.35: spaces count as '_' (strategy names)
     terms = pu.model_search_terms(query)
-    portfolio_ids = {_lower(x) for x in (s.portfolios.get(s.active_portfolio) or [])} if s.active_portfolio else None   # page v2.65.50: Find model is portfolio based
-    direct = [m for m in s.search_loaded if portfolio_ids is None or _lower(m.get("model")) in portfolio_ids] if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
+    direct = list(s.search_loaded) if query else []   # v2.65.35: what a search loaded (model IDs or strategy-name matches) is the search result
     models = scenario_models
     pinned = s.pinned
     if query and not direct:   # v2.65.36: a search that matched nothing leaves no leaders on screen
         models = []
+    elif s.active_portfolio and query:   # v2.65.51: the lookup stays global inside a portfolio
+        models = direct
     elif s.pit_mode and query:   # v2.65.36: in selected-time mode the matches are the chart set
-        models = [{**m, "color": m.get("color") or SEARCH_COLORS[(i + 1) % len(SEARCH_COLORS)], "comparisonRole": "searched model"} for i, m in enumerate(direct)]
+        models = [{**m, "comparisonRole": "searched model"} for m in direct]
     elif s.pit_mode:
         pass   # with no search the selected-time cohort is the chart set
     elif direct:
@@ -171,10 +174,8 @@ def get_eligible_models(s, client) -> list[dict]:
             models = direct
     elif query and len(terms) == 1 and not pinned:
         models = [m for m in scenario_models if query in _lower(m.get("model"))]
-    if not query or direct:
+    if not s.active_portfolio and (not query or direct):   # v2.65.51: a portfolio does not mix pinned cards into the chart
         for model_id, pm in pinned.items():
-            if portfolio_ids is not None and _lower(model_id) not in portfolio_ids:
-                continue
             index = next((i for i, m in enumerate(models) if _s(m.get("model")) == model_id), -1)
             if index < 0:
                 models = [*models, pm]
@@ -187,6 +188,8 @@ def get_eligible_models(s, client) -> list[dict]:
                                  if n else "Loading selected strategies…")
     elif query and not direct:
         s.model_search_status = s.search_resolved_message if s.search_resolved_query == query else "Searching model IDs and strategy names\u2026"
+    elif s.active_portfolio and query:
+        s.model_search_status = (f"{len(models)} global search result{plural(len(models), '', 's')} shown in {s.active_portfolio}" if models else "No global search results for this date")
     elif s.pit_mode:
         count = len([m for m in scenario_models if _re_time_leader(_s(m.get("comparisonRole")))])
         s.model_search_status = (f"{count} time-selected strateg{plural(count, 'y', 'ies')}"
