@@ -2337,7 +2337,7 @@
     }
 
     // ---- controllers run in the Python engine (engine/command.py): the page sends its state, applies the answer in place, then replays the effects in order ----
-    function __engineSnapshot() { return { portfolios: Object.entries(portfolios), portfolio_criteria: portfolioCriteria, portfolio_scenario_configs: portfolioScenarioConfigs, portfolio_view_configs: portfolioViewConfigs, merge_selection: [...portfolioMergeSelection], active_portfolio: activePortfolioName, main_criteria: mainScenarioCriteria, main_view_config: mainScenarioViewConfig, similar_payload: similarStrategyPayload, live_store: livePortfolioStore, current_date: currentDate, current_criteria: currentCriteria, return_type: currentReturnType, product_type: currentProductType, product: currentProduct, strategy_family: currentStrategyFamily, model_limit: modelLimit, min_win_rate: minWinRate, split_mode: splitMode, chart_locked: chartLocked, chart_lock_before_live: liveModePriorChartLock, use_assigned_rule: useAssignedOverlayRule, editing_rule_id: editingNamedOverlayRuleId, pending_rule_config: pendingNamedOverlayRuleConfig, rank_select_value: (selectedTimeRankSelect ? selectedTimeRankSelect.value : null), selected_time_input: (selectedTimeInput ? selectedTimeInput.value : null), auto_direction_select: (autoRefreshTop1DirectionSelect ? autoRefreshTop1DirectionSelect.value : null), auto_rank_select: (autoRefreshTop1RankSelect ? autoRefreshTop1RankSelect.value : null), model_search_input: (modelSearchInput ? modelSearchInput.value : null), auto_enabled: autoRefreshTop1Enabled, auto_direction: autoRefreshTop1Direction, auto_rank: autoRefreshTop1Rank, auto_minutes: autoRefreshTop1Minutes, auto_last_minute: autoRefreshTop1LastMinute, auto_next_minute: autoRefreshTop1NextMinute, auto_context: autoRefreshTop1Context, auto_request_at: autoRefreshTop1RequestAt, pending_explicit_time: pendingExplicitTop1Time, explicit_refresh: selectedTimeExplicitRefresh, pit_mode: pointInTimeMode, pit_models: pointInTimeModels, pit_requested_key: pointInTimeRequestedKey, pit_request_sequence: pointInTimeRequestSequence, pit_history_key: pointInTimeHistoryKey, pit_history_sequence: pointInTimeHistorySequence, pit_hours: pointInTimeHours, pit_history_at: pointInTimeHistoryAt, pit_history_status_text: (pointInTimeHistoryStatus ? pointInTimeHistoryStatus.textContent : null), pit_history_near_viewport: pointInTimeHistoryNearViewport, pit_history_panel_hidden: Boolean(pointInTimeHistoryPanel && pointInTimeHistoryPanel.classList.contains('hidden')), pit_timeline_models: pointInTimeTimelineModels, pit_selection_preference: pointInTimeSelectionPreference, history: [...selectedTimeLeaderHistory.entries()], history_context: selectedTimeLeaderHistoryContext, scenario_removed: [...scenarioRemovedModels].map(String).sort(), top1_prev_mode: top1AtTimePreviousPointInTimeMode, search_loaded: modelSearchLoadedModels, search_sequence: modelSearchRequestSequence, search_resolved_query: modelSearchResolvedQuery, search_resolved_message: modelSearchResolvedMessage, pinned: [...pinnedComparisonModels.entries()], deep_link_only: deepLinkModelsOnly, portfolio_models: portfolioModels, visible: [...visibleModels].map(String).sort(), selected_model_index: selectedModelIndex, frame: currentFrameIndex, baseline: baselineFrameIndex, is_playing: isPlaying, replay_interval: replayInterval, date_switch_sequence: dateSwitchSequence, live_refresh_sequence: liveRefreshSequence, available_dates: availableDates, live_date: LIVE_DATE, pit_status: (pointInTimeStatus ? [pointInTimeStatus.textContent, pointInTimeStatus.className] : ['', '']), model_search_status: (modelSearchStatus ? modelSearchStatus.textContent : null), auto_status_text: (autoRefreshTop1Status ? autoRefreshTop1Status.textContent : null), live_refresh_in_flight: portfolioViewRefreshInFlight, portfolio_refresh_timer: portfolioViewRefreshTimer }; }
+    function __engineSnapshot() { return { portfolios: Object.entries(portfolios), portfolio_criteria: portfolioCriteria, portfolio_scenario_configs: portfolioScenarioConfigs, portfolio_view_configs: portfolioViewConfigs, merge_selection: [...portfolioMergeSelection], active_portfolio: activePortfolioName, main_criteria: mainScenarioCriteria, main_view_config: mainScenarioViewConfig, similar_payload: similarStrategyPayload, live_store: livePortfolioStore, current_date: currentDate, current_criteria: currentCriteria, return_type: currentReturnType, product_type: currentProductType, product: currentProduct, strategy_family: currentStrategyFamily, model_limit: modelLimit, min_win_rate: minWinRate, split_mode: splitMode, chart_locked: chartLocked, chart_lock_before_live: liveModePriorChartLock, use_assigned_rule: useAssignedOverlayRule, editing_rule_id: editingNamedOverlayRuleId, pending_rule_config: pendingNamedOverlayRuleConfig, rank_select_value: (selectedTimeRankSelect ? selectedTimeRankSelect.value : null), selected_time_input: (selectedTimeInput ? selectedTimeInput.value : null), auto_direction_select: (autoRefreshTop1DirectionSelect ? autoRefreshTop1DirectionSelect.value : null), auto_rank_select: (autoRefreshTop1RankSelect ? autoRefreshTop1RankSelect.value : null), model_search_input: (modelSearchInput ? modelSearchInput.value : null), auto_enabled: autoRefreshTop1Enabled, auto_direction: autoRefreshTop1Direction, auto_rank: autoRefreshTop1Rank, auto_minutes: autoRefreshTop1Minutes, auto_last_minute: autoRefreshTop1LastMinute, auto_next_minute: autoRefreshTop1NextMinute, auto_context: autoRefreshTop1Context, auto_request_at: autoRefreshTop1RequestAt, pending_explicit_time: pendingExplicitTop1Time, explicit_refresh: selectedTimeExplicitRefresh, pit_mode: pointInTimeMode, pit_models: pointInTimeModels, pit_requested_key: pointInTimeRequestedKey, pit_request_sequence: pointInTimeRequestSequence, pit_history_key: pointInTimeHistoryKey, pit_history_sequence: pointInTimeHistorySequence, pit_hours: pointInTimeHours, pit_history_at: pointInTimeHistoryAt, pit_history_status_text: (pointInTimeHistoryStatus ? pointInTimeHistoryStatus.textContent : null), pit_history_near_viewport: pointInTimeHistoryNearViewport, pit_history_panel_hidden: Boolean(pointInTimeHistoryPanel && pointInTimeHistoryPanel.classList.contains('hidden')), pit_timeline_models: pointInTimeTimelineModels, pit_selection_preference: pointInTimeSelectionPreference, history: [...selectedTimeLeaderHistory.entries()], history_context: selectedTimeLeaderHistoryContext, scenario_removed: [...scenarioRemovedModels].map(String).sort(), top1_prev_mode: top1AtTimePreviousPointInTimeMode, search_loaded: modelSearchLoadedModels, search_sequence: modelSearchRequestSequence, search_no_curve: modelSearchNoCurveMatches, search_resolved_query: modelSearchResolvedQuery, search_resolved_message: modelSearchResolvedMessage, pinned: [...pinnedComparisonModels.entries()], deep_link_only: deepLinkModelsOnly, portfolio_models: portfolioModels, visible: [...visibleModels].map(String).sort(), selected_model_index: selectedModelIndex, frame: currentFrameIndex, baseline: baselineFrameIndex, is_playing: isPlaying, replay_interval: replayInterval, date_switch_sequence: dateSwitchSequence, live_refresh_sequence: liveRefreshSequence, available_dates: availableDates, live_date: LIVE_DATE, pit_status: (pointInTimeStatus ? [pointInTimeStatus.textContent, pointInTimeStatus.className] : ['', '']), model_search_status: (modelSearchStatus ? modelSearchStatus.textContent : null), auto_status_text: (autoRefreshTop1Status ? autoRefreshTop1Status.textContent : null), live_refresh_in_flight: portfolioViewRefreshInFlight, portfolio_refresh_timer: portfolioViewRefreshTimer }; }
     function __merge(current, value) {
       if (Array.isArray(current) && Array.isArray(value)) { current.length = 0; value.forEach(x => current.push(x)); return current; }
       if (current && value && typeof current === 'object' && typeof value === 'object' && !Array.isArray(current) && !Array.isArray(value)) {
@@ -2406,6 +2406,7 @@
       if (ch('top1_prev_mode')) top1AtTimePreviousPointInTimeMode = __merge(top1AtTimePreviousPointInTimeMode, s.top1_prev_mode);
       if (ch('search_loaded')) modelSearchLoadedModels = __merge(modelSearchLoadedModels, s.search_loaded);
       if (ch('search_sequence')) modelSearchRequestSequence = __merge(modelSearchRequestSequence, s.search_sequence);
+      if (ch('search_no_curve')) modelSearchNoCurveMatches = __merge(modelSearchNoCurveMatches, s.search_no_curve);
       if (ch('search_resolved_query')) modelSearchResolvedQuery = __merge(modelSearchResolvedQuery, s.search_resolved_query);
       if (ch('search_resolved_message')) modelSearchResolvedMessage = __merge(modelSearchResolvedMessage, s.search_resolved_message);
       if (ch('pinned')) { pinnedComparisonModels.clear(); s.pinned.forEach(([k, v]) => pinnedComparisonModels.set(k, v)); }
@@ -3884,6 +3885,7 @@ ${preview}`)) return;
         autoRefreshTop1Context = '';
         applySelectedTimeBtn?.classList.remove('click-feedback-pending');
         applySelectedTimeBtn?.removeAttribute('aria-busy');
+        clearModelSearchState();
         // Switching away from an explicit handoff restores the regular
         // scenario/portfolio model source while keeping handoff models pinned.
         deepLinkModelsOnly = false;
@@ -4171,6 +4173,9 @@ ${preview}`)) return;
     }
 
     async function __original_activatePortfolio(name) {
+      // Search cards belong to the view where they were requested. Do not
+      // carry global no-curve results into an empty named portfolio.
+      clearModelSearchState();
       if (activePortfolioName) persistPortfolioViewConfig(activePortfolioName);
       else persistPortfolioViewConfig(null);
       const isLivePortfolioTab = ['LIVE', 'LIVE_ALT'].includes(String(name).toUpperCase());
@@ -5426,6 +5431,17 @@ ${preview}`)) return;
 
     function modelSearchTerms(value = modelSearchInput?.value) {
       return [...new Set(String(value || '').split(/[,;\s]+/).map(term => term.trim()).filter(Boolean))];
+    }
+
+    function clearModelSearchState() {
+      modelSearchRequestSequence++;
+      clearTimeout(modelSearchTimer);
+      modelSearchLoadedModels = [];
+      modelSearchNoCurveMatches = [];
+      modelSearchResolvedQuery = null;
+      modelSearchResolvedMessage = '';
+      if (modelSearchInput) modelSearchInput.value = '';
+      if (modelSearchStatus) modelSearchStatus.textContent = '';
     }
 
     function getEligibleModels() {
@@ -7415,13 +7431,7 @@ ${preview}`)) return;
 
         // Clear the Find model field and invalidate any search response that
         // could otherwise restore its results after this action.
-        modelSearchRequestSequence++;
-        clearTimeout(modelSearchTimer);
-        modelSearchLoadedModels = [];
-        modelSearchResolvedQuery = null;
-        modelSearchResolvedMessage = '';
-        if (modelSearchInput) modelSearchInput.value = '';
-        if (modelSearchStatus) modelSearchStatus.textContent = '';
+        clearModelSearchState();
 
         // A linked-model API request can still be in flight when Clear All is
         // pressed. Invalidate it so its late response cannot repin curves.
@@ -7585,8 +7595,10 @@ ${preview}`)) return;
     function renderCards() {
       modelCardsContainer.innerHTML = '';
       const eligible = getEligibleModels();
+      const hasActiveSearch = Boolean(modelSearchInput?.value.trim());
+      const noCurveMatches = hasActiveSearch ? modelSearchNoCurveMatches : [];
 
-      if (!eligible.length && !modelSearchNoCurveMatches.length) {
+      if (!eligible.length && !noCurveMatches.length) {
         modelCardsContainer.innerHTML = `
           <div class="col-span-full py-8 text-center text-slate-500 font-mono text-xs">
             ${pointInTimeMode ? `No strategies selected for this scenario at ${pointInTimeStatus.textContent}.` : `No strategies match Win Rate ≥ ${minWinRate}%. Drag the slider lower to reveal models.`}
@@ -7735,7 +7747,7 @@ ${preview}`)) return;
         modelCardsContainer.appendChild(card);
       });
 
-      modelSearchNoCurveMatches.forEach(model => {
+      noCurveMatches.forEach(model => {
         const card = document.createElement('div');
         card.className = 'model-pill p-2.5 rounded-lg border border-dashed border-slate-700 bg-slate-950/45 font-mono';
         const header = document.createElement('div');

@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.13.0 · 2026-10-21 · clear_model_search_state (page clearModelSearchState): used by apply_selected_time and activate_portfolio, which now also forget the search's no-curve matches and conclusion.
 # v1.12.0 · 2026-10-20 · the model search follows page v2.65.36: it records what it concluded (search_resolved_query / _message) and redraws the date label, ribbon, cards and chart when nothing matched.
 # v1.11.1 · 2026-10-19 · switch_date re-runs the model search for 3+ characters of any ID or strategy-name text (page v2.65.35).
 # v1.11.0 · 2026-10-19 · load_model_search_from_database follows page v2.65.35: a search that is not a model ID looks up strategy names in /api/strategy_catalog (new stage _msearch_cat), first 100 matches; activate_portfolio follows v2.65.34.
@@ -547,6 +548,18 @@ class Page:
         if not s.explicit_refresh:
             self._timeout(lambda: self._fire(self.begin_refresh_point_in_time_selection(at)), 180, "pointInTimeDebounceTimer", "refreshPointInTimeSelection", [at])
 
+    def clear_model_search_state(self):
+        """clearModelSearchState (page v2.65.53): forgets the search: pending lookups, loaded and no-curve matches, what it concluded, the box and its status."""
+        s = self.s
+        s.search_sequence += 1
+        self._clear_timer("modelSearchTimer")
+        s.search_loaded = []
+        s.search_no_curve = []
+        s.search_resolved_query = None
+        s.search_resolved_message = ""
+        s.model_search_input = ""
+        s.model_search_status = ""
+
     def apply_selected_time(self):
         s = self.s
         before = list(s.pit_models) if (s.pit_mode and isinstance(s.pit_models, list)) else list(self._eligible())
@@ -561,10 +574,7 @@ class Page:
             return
         self.pause_replay()
         self._clear_timer("pointInTimeDebounceTimer")
-        s.search_sequence += 1
-        self._clear_timer("modelSearchTimer")
-        s.search_loaded = []
-        s.model_search_input = ""
+        self.clear_model_search_state()
         self.view("updateScrubberUI", "updateRibbon", "renderCards", "drawChart")
         s.selected_time_input = requested_at
         s.pending_explicit_time = requested_at
@@ -1504,6 +1514,7 @@ class Page:
         s = self.s
         if str(name).upper() in LIVE_PORTFOLIOS:
             raise LivePortfolioRefused(name)
+        self.clear_model_search_state()   # page v2.65.53: search cards belong to the view they were requested in
         self.persist_portfolio_view_config(s.active_portfolio if s.active_portfolio else None)
         raw_saved = s.portfolio_view_configs.get(name)
         saved = raw_saved or {}
@@ -1600,6 +1611,7 @@ class Page:
         s = self.s
         if str(name).upper() in LIVE_PORTFOLIOS:
             raise LivePortfolioRefused(name)
+        self.clear_model_search_state()   # page v2.65.53: search cards belong to the view they were requested in
         self.persist_portfolio_view_config(s.active_portfolio if s.active_portfolio else None)
         raw_saved = s.portfolio_view_configs.get(name)
         saved = raw_saved or {}

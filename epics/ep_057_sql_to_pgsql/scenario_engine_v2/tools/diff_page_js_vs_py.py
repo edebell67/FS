@@ -52,7 +52,7 @@ PAGE_FUNCS = [
     "createSimilarPortfolio", "repopulateActivePortfolioFromCriteria", "livePortfolioModelsForDate", "autoPinLivePortfolioStrategies",
     "syncPortfolioViewRefresh", "refreshActivePortfolioView", "currentPortfolioViewConfig", "applyPortfolioViewConfig",
     "persistPortfolioViewConfig", "applyChartLock", "updateAutoRefreshTop1Status", "resetAutomaticRankSchedule", "scheduleAutomaticTop1Refresh",
-    "schedulePointInTimeSelection", "applySelectedTime", "triggerSelectedTimeRefresh", "startReplay", "pauseReplay", "switchDate",
+    "clearModelSearchState", "schedulePointInTimeSelection", "applySelectedTime", "triggerSelectedTimeRefresh", "startReplay", "pauseReplay", "switchDate",
     "setRankingCriteria", "activatePortfolio", "assignedPortfolioOverlayRule", "activePortfolioOverlayRule",
     # dependencies, real
     "refreshLiveData", "fetchPortfolioData", "loadPortfolioData", "loadOverlayRuleLibrary", "ensureHistoricalDataLoaded", "syncTpSlScenarios",
@@ -277,6 +277,9 @@ DATES = ["2026-10-13", "2026-10-14", "2026-10-15"]
 CRITERIA = ["top_net", "top_alt_net", "top_win", "top1_at_time", "top3_momentum_net", "family_leaders", "top5_breakout", "top3_tp3_sl3"]
 
 
+_SEARCH_RNG = random.Random(7)   # its own stream, so adding these fields did not move any other case
+
+
 def rand_state(rng: random.Random) -> dict:
     n_port = rng.choice([0, 1, 2, 3, 4])
     names = rng.sample(["P1", "P2", "P3", "Alpha", "Beta", "X" * 32], n_port)
@@ -308,7 +311,7 @@ def rand_state(rng: random.Random) -> dict:
         "is_playing": rng.choice([False, False, True]), "replay_interval": rng.choice([None, 1]), "date_switch_sequence": rng.randint(0, 3),
         "live_refresh_sequence": rng.randint(0, 3), "available_dates": [{"id": d, "label": d} for d in DATES],
         "main_criteria": rng.choice(["top_net", "top_win"]), "main_view_config": rng.choice([None, {"criteria": "top_win", "returnType": "ALT", "limit": 20}]),
-        "model_search_input": rng.choice(["", "M1", "abcdefg", "abcde", "abcdef"]), "merge_selection": rng.sample(names, rng.randint(0, len(names))) + (["Ghost"] if rng.random() < 0.3 else []),
+        "model_search_input": rng.choice(["", "M1", "abcdefg", "abcde", "abcdef"]), "search_no_curve": _SEARCH_RNG.choice([[], [mk(2)]]), "search_resolved_query": _SEARCH_RNG.choice([None, "m1", "abcdef"]), "search_resolved_message": _SEARCH_RNG.choice(["", "No model ID or strategy name matches"]), "model_search_status": _SEARCH_RNG.choice(["", "3 matches"]), "merge_selection": rng.sample(names, rng.randint(0, len(names))) + (["Ghost"] if rng.random() < 0.3 else []),
         "pit_status": ["", ""], "auto_status_text": "", "pit_history_near_viewport": rng.choice([True, True, False]), "pit_history_panel_hidden": rng.choice([False, False, True]),
         "pit_hours": rng.choice([[], [{"hour": "09:00"}]]), "pit_history_at": rng.choice(["", "09:00"]), "pit_history_status_text": rng.choice(["", "old"]), "live_refresh_in_flight": rng.random() < 0.2, "portfolio_refresh_timer": rng.choice([None, 1]),
     })
@@ -336,6 +339,8 @@ def rand_state(rng: random.Random) -> dict:
 
 def rand_case(rng: random.Random, method: str):
     snap = rand_state(rng)
+    if method not in ("apply_selected_time", "activate_portfolio"):   # the search status is only the subject of these two; elsewhere getEligibleModels rewrites it on the page side first
+        snap["model_search_status"] = ""
     st = PageState.from_snapshot(snap)
     ports = list(st.portfolios)
     pick = lambda: rng.choice(ports) if ports else "Nope"  # noqa: E731

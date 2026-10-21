@@ -80,6 +80,7 @@ FIELDS = [
     # --- models on screen ---
     ("search_loaded", "modelSearchLoadedModels", "val", list),
     ("search_sequence", "modelSearchRequestSequence", "val", 0),
+    ("search_no_curve", "modelSearchNoCurveMatches", "val", list),
     ("search_resolved_query", "modelSearchResolvedQuery", "val", None),
     ("search_resolved_message", "modelSearchResolvedMessage", "val", ""),
     ("pinned", "pinnedComparisonModels", "map", list),

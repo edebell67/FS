@@ -1,13 +1,13 @@
 {
  "page_version": "v2.65.53",
- "rebased_from": "v2.65.39",
+ "rebased_from": "v2.65.53",
  "summary": {
   "compute": {
    "ported": 50,
    "shadowed": 1
   },
   "view": {
-   "stays_in_page": 93
+   "stays_in_page": 95
   },
   "data": {
    "ported": 10,
@@ -21,7 +21,6 @@
    "refused_headless": 15
   },
   "state": {
-   "pending": 1,
    "ported": 28,
    "not_applicable_headless": 1
   }
@@ -259,8 +258,7 @@
    "python_target": null,
    "body_sha256": "2469fd0a117e80daa786aadf8a0440865f6969a7b4c69751044951822046785b",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "adds global search matches to the active portfolio and saves it: DOM/portfolio-store glue on a user action, stays in the page"
+   "differential_tested": false
   },
   {
    "name": "movePortfolio",
@@ -1163,19 +1161,19 @@
    "name": "renderPortfolioTabs",
    "ordinal": 1,
    "line": 3985,
-   "lines": 52,
+   "lines": 53,
    "inventory_kind": "view",
    "category": "view",
    "status": "stays_in_page",
    "python_target": null,
-   "body_sha256": "23963e0a75f1bb06e185d8298657f242e11db188f010867e479e52d93988a3d7",
+   "body_sha256": "9127f5b28db20aa32f0fdab6f4bc6c8831a634006a06603b6946bd434257f30a",
    "verified_body_sha256": null,
    "differential_tested": false
   },
   {
    "name": "getPersistedPortfolioViewCache",
    "ordinal": 1,
-   "line": 4038,
+   "line": 4039,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "state",
@@ -1188,7 +1186,7 @@
   {
    "name": "persistPortfolioView",
    "ordinal": 1,
-   "line": 4049,
+   "line": 4050,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "view",
@@ -1201,7 +1199,7 @@
   {
    "name": "rememberPortfolioView",
    "ordinal": 1,
-   "line": 4059,
+   "line": 4060,
    "lines": 17,
    "inventory_kind": "engine",
    "category": "state",
@@ -1214,7 +1212,7 @@
   {
    "name": "getLastPortfolioView",
    "ordinal": 1,
-   "line": 4077,
+   "line": 4078,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "state",
@@ -1227,7 +1225,7 @@
   {
    "name": "loadPortfolioData",
    "ordinal": 1,
-   "line": 4094,
+   "line": 4095,
    "lines": 40,
    "inventory_kind": "engine",
    "category": "data",
@@ -1240,7 +1238,7 @@
   {
    "name": "fetchPortfolioData",
    "ordinal": 1,
-   "line": 4135,
+   "line": 4136,
    "lines": 58,
    "inventory_kind": "engine",
    "category": "data",
@@ -1253,7 +1251,7 @@
   {
    "name": "refreshActivePortfolioView",
    "ordinal": 1,
-   "line": 4198,
+   "line": 4199,
    "lines": 19,
    "inventory_kind": "mixed",
    "category": "state",
@@ -1266,7 +1264,7 @@
   {
    "name": "syncPortfolioViewRefresh",
    "ordinal": 1,
-   "line": 4218,
+   "line": 4219,
    "lines": 8,
    "inventory_kind": "engine",
    "category": "state",
@@ -1279,7 +1277,7 @@
   {
    "name": "repopulateActivePortfolioFromCriteria",
    "ordinal": 1,
-   "line": 4231,
+   "line": 4232,
    "lines": 14,
    "inventory_kind": "engine",
    "category": "state",
@@ -1292,20 +1290,20 @@
   {
    "name": "activatePortfolio",
    "ordinal": 1,
-   "line": 4246,
-   "lines": 177,
+   "line": 4247,
+   "lines": 180,
    "inventory_kind": "mixed",
    "category": "state",
    "status": "ported",
    "python_target": "page.Page.activate_portfolio",
-   "body_sha256": "42a1311d8a96080161d1412b82ed59b0852c76f213e8cc7999933ada3d5388f3",
-   "verified_body_sha256": "42a1311d8a96080161d1412b82ed59b0852c76f213e8cc7999933ada3d5388f3",
+   "body_sha256": "1dd7e00cf9c10866d6d3b0d92dd1ec09673ac07c5fbe50cb90bfd001b84f10ce",
+   "verified_body_sha256": "1dd7e00cf9c10866d6d3b0d92dd1ec09673ac07c5fbe50cb90bfd001b84f10ce",
    "differential_tested": true
   },
   {
    "name": "renderPortfolioList",
    "ordinal": 1,
-   "line": 4467,
+   "line": 4471,
    "lines": 147,
    "inventory_kind": "view",
    "category": "view",
@@ -1318,7 +1316,7 @@
   {
    "name": "openPortfolioModal",
    "ordinal": 1,
-   "line": 4615,
+   "line": 4619,
    "lines": 9,
    "inventory_kind": "view",
    "category": "view",
@@ -1331,7 +1329,7 @@
   {
    "name": "uniquePortfolioName",
    "ordinal": 1,
-   "line": 4625,
+   "line": 4629,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "state",
@@ -1344,7 +1342,7 @@
   {
    "name": "createSimilarPortfolio",
    "ordinal": 1,
-   "line": 4633,
+   "line": 4637,
    "lines": 25,
    "inventory_kind": "mixed",
    "category": "state",
@@ -1357,7 +1355,7 @@
   {
    "name": "renderSimilarStrategyOptions",
    "ordinal": 1,
-   "line": 4659,
+   "line": 4663,
    "lines": 29,
    "inventory_kind": "view",
    "category": "view",
@@ -1370,7 +1368,7 @@
   {
    "name": "openSimilarStrategyModal",
    "ordinal": 1,
-   "line": 4689,
+   "line": 4693,
    "lines": 18,
    "inventory_kind": "view",
    "category": "view",
@@ -1383,7 +1381,7 @@
   {
    "name": "init",
    "ordinal": 1,
-   "line": 4708,
+   "line": 4712,
    "lines": 85,
    "inventory_kind": "view",
    "category": "view",
@@ -1396,7 +1394,7 @@
   {
    "name": "LIVE_DATE",
    "ordinal": 1,
-   "line": 4801,
+   "line": 4805,
    "lines": 14,
    "inventory_kind": "engine",
    "category": "live",
@@ -1409,7 +1407,7 @@
   {
    "name": "setLiveBadge",
    "ordinal": 1,
-   "line": 4816,
+   "line": 4820,
    "lines": 11,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1422,7 +1420,7 @@
   {
    "name": "refreshLiveData",
    "ordinal": 1,
-   "line": 4828,
+   "line": 4832,
    "lines": 115,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1435,7 +1433,7 @@
   {
    "name": "getSelectedTimeNoteEntries",
    "ordinal": 1,
-   "line": 4944,
+   "line": 4948,
    "lines": 6,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1448,7 +1446,7 @@
   {
    "name": "openSelectionNotesModal",
    "ordinal": 1,
-   "line": 4951,
+   "line": 4955,
    "lines": 24,
    "inventory_kind": "view",
    "category": "view",
@@ -1461,7 +1459,7 @@
   {
    "name": "tradeDateRange",
    "ordinal": 1,
-   "line": 4977,
+   "line": 4981,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1474,7 +1472,7 @@
   {
    "name": "openTradesModal",
    "ordinal": 1,
-   "line": 4985,
+   "line": 4989,
    "lines": 151,
    "inventory_kind": "view",
    "category": "view",
@@ -1487,7 +1485,7 @@
   {
    "name": "setupTradesModal",
    "ordinal": 1,
-   "line": 5137,
+   "line": 5141,
    "lines": 18,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1500,7 +1498,7 @@
   {
    "name": "setSectionCollapsed",
    "ordinal": 1,
-   "line": 5157,
+   "line": 5161,
    "lines": 8,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1513,7 +1511,7 @@
   {
    "name": "collapseStorageKey",
    "ordinal": 1,
-   "line": 5166,
+   "line": 5170,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "view",
@@ -1526,7 +1524,7 @@
   {
    "name": "updateCollapseAllControl",
    "ordinal": 1,
-   "line": 5171,
+   "line": 5175,
    "lines": 11,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1539,7 +1537,7 @@
   {
    "name": "setAllSectionsCollapsed",
    "ordinal": 1,
-   "line": 5183,
+   "line": 5187,
    "lines": 8,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1552,7 +1550,7 @@
   {
    "name": "setupCollapsibleSections",
    "ordinal": 1,
-   "line": 5192,
+   "line": 5196,
    "lines": 23,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1565,7 +1563,7 @@
   {
    "name": "startLiveRefresh",
    "ordinal": 1,
-   "line": 5216,
+   "line": 5220,
    "lines": 8,
    "inventory_kind": "engine",
    "category": "view",
@@ -1578,7 +1576,7 @@
   {
    "name": "syncLiveRefreshInterval",
    "ordinal": 1,
-   "line": 5225,
+   "line": 5229,
    "lines": 8,
    "inventory_kind": "engine",
    "category": "view",
@@ -1591,7 +1589,7 @@
   {
    "name": "setupDateTabs",
    "ordinal": 1,
-   "line": 5234,
+   "line": 5238,
    "lines": 16,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1604,7 +1602,7 @@
   {
    "name": "setRankingCriteria",
    "ordinal": 1,
-   "line": 5254,
+   "line": 5258,
    "lines": 146,
    "inventory_kind": "mixed",
    "category": "split",
@@ -1617,7 +1615,7 @@
   {
    "name": "updateScenarioUI",
    "ordinal": 1,
-   "line": 5401,
+   "line": 5405,
    "lines": 13,
    "inventory_kind": "view",
    "category": "view",
@@ -1630,7 +1628,7 @@
   {
    "name": "renderModalScenarioCards",
    "ordinal": 1,
-   "line": 5415,
+   "line": 5419,
    "lines": 44,
    "inventory_kind": "view",
    "category": "view",
@@ -1643,7 +1641,7 @@
   {
    "name": "updateDateLabelAndTitle",
    "ordinal": 1,
-   "line": 5460,
+   "line": 5464,
    "lines": 27,
    "inventory_kind": "view",
    "category": "view",
@@ -1656,7 +1654,7 @@
   {
    "name": "setSplitMode",
    "ordinal": 1,
-   "line": 5488,
+   "line": 5492,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1669,7 +1667,7 @@
   {
    "name": "syncSplitModeControls",
    "ordinal": 1,
-   "line": 5498,
+   "line": 5502,
    "lines": 19,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1682,7 +1680,7 @@
   {
    "name": "getMetricKeys",
    "ordinal": 1,
-   "line": 5519,
+   "line": 5523,
    "lines": 13,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1695,7 +1693,7 @@
   {
    "name": "getStrategyFamily",
    "ordinal": 1,
-   "line": 5533,
+   "line": 5537,
    "lines": 8,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1708,7 +1706,7 @@
   {
    "name": "updateStrategyFamilyOptions",
    "ordinal": 1,
-   "line": 5542,
+   "line": 5546,
    "lines": 4,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1721,7 +1719,7 @@
   {
    "name": "getScenarioCandidates",
    "ordinal": 1,
-   "line": 5547,
+   "line": 5551,
    "lines": 37,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1734,7 +1732,7 @@
   {
    "name": "modelSearchTerms",
    "ordinal": 1,
-   "line": 5585,
+   "line": 5589,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1745,9 +1743,22 @@
    "differential_tested": true
   },
   {
+   "name": "clearModelSearchState",
+   "ordinal": 1,
+   "line": 5593,
+   "lines": 10,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "ported",
+   "python_target": "page.Page.clear_model_search_state",
+   "body_sha256": "19dd18100df0c6ffb25f3fd40b066ff62c7b2ab4e27a738b8b21e40bfbaba7e9",
+   "verified_body_sha256": "19dd18100df0c6ffb25f3fd40b066ff62c7b2ab4e27a738b8b21e40bfbaba7e9",
+   "differential_tested": true
+  },
+  {
    "name": "getEligibleModels",
    "ordinal": 1,
-   "line": 5589,
+   "line": 5604,
    "lines": 82,
    "inventory_kind": "mixed",
    "category": "compute",
@@ -1760,7 +1771,7 @@
   {
    "name": "getExactSearchModel",
    "ordinal": 1,
-   "line": 5672,
+   "line": 5687,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1773,7 +1784,7 @@
   {
    "name": "hydrateStrategySearchMetrics",
    "ordinal": 1,
-   "line": 5682,
+   "line": 5697,
    "lines": 63,
    "inventory_kind": "mixed",
    "category": "view",
@@ -1781,13 +1792,12 @@
    "python_target": null,
    "body_sha256": "689c3526907c3ad325fbee2191a9b7dacaa4b5f592172224ea6d52daab56a6b1",
    "verified_body_sha256": null,
-   "differential_tested": false,
-   "note": "fetches the metrics of search results after the first paint (fast API): browser-side progressive loading, stays in the page"
+   "differential_tested": false
   },
   {
    "name": "loadModelSearchFromDatabase",
    "ordinal": 1,
-   "line": 5746,
+   "line": 5761,
    "lines": 193,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1800,7 +1810,7 @@
   {
    "name": "loadDeepLinkModelsFromDatabase",
    "ordinal": 1,
-   "line": 5940,
+   "line": 5955,
    "lines": 75,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1813,7 +1823,7 @@
   {
    "name": "getReplayTimelineModels",
    "ordinal": 1,
-   "line": 6016,
+   "line": 6031,
    "lines": 31,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1826,7 +1836,7 @@
   {
    "name": "pointInTimeAtReplayHead",
    "ordinal": 1,
-   "line": 6048,
+   "line": 6063,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1839,7 +1849,7 @@
   {
    "name": "clockMinutes",
    "ordinal": 1,
-   "line": 6059,
+   "line": 6074,
    "lines": 6,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1852,7 +1862,7 @@
   {
    "name": "replayClockTime",
    "ordinal": 1,
-   "line": 6066,
+   "line": 6081,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1865,7 +1875,7 @@
   {
    "name": "nextAutomaticTop1Minute",
    "ordinal": 1,
-   "line": 6071,
+   "line": 6086,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1878,7 +1888,7 @@
   {
    "name": "selectedTimeRankCount",
    "ordinal": 1,
-   "line": 6079,
+   "line": 6094,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1891,7 +1901,7 @@
   {
    "name": "retainSelectedTimeLeaders",
    "ordinal": 1,
-   "line": 6083,
+   "line": 6098,
    "lines": 26,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1904,20 +1914,20 @@
   {
    "name": "applySelectedTime",
    "ordinal": 1,
-   "line": 6110,
-   "lines": 53,
+   "line": 6125,
+   "lines": 49,
    "inventory_kind": "mixed",
    "category": "split",
    "status": "ported",
    "python_target": "page.Page.apply_selected_time",
-   "body_sha256": "4f55eff1c74f0acf737c811bc77033326d3abedb5a430d48a1d740ebb303d0ba",
-   "verified_body_sha256": "4f55eff1c74f0acf737c811bc77033326d3abedb5a430d48a1d740ebb303d0ba",
+   "body_sha256": "c99e0fdb6c68de7424bcb58a7f31a89f15a3ee3f6d6932fee45ae629c2f7b77a",
+   "verified_body_sha256": "c99e0fdb6c68de7424bcb58a7f31a89f15a3ee3f6d6932fee45ae629c2f7b77a",
    "differential_tested": true
   },
   {
    "name": "pointInTimeRequestOptions",
    "ordinal": 1,
-   "line": 6164,
+   "line": 6175,
    "lines": 18,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1930,7 +1940,7 @@
   {
    "name": "pointInTimeContextKey",
    "ordinal": 1,
-   "line": 6183,
+   "line": 6194,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "compute",
@@ -1943,7 +1953,7 @@
   {
    "name": "scheduleAutomaticTop1Refresh",
    "ordinal": 1,
-   "line": 6189,
+   "line": 6200,
    "lines": 47,
    "inventory_kind": "mixed",
    "category": "split",
@@ -1956,7 +1966,7 @@
   {
    "name": "renderPointInTimeHistory",
    "ordinal": 1,
-   "line": 6237,
+   "line": 6248,
    "lines": 34,
    "inventory_kind": "view",
    "category": "view",
@@ -1969,7 +1979,7 @@
   {
    "name": "refreshPointInTimeHistory",
    "ordinal": 1,
-   "line": 6272,
+   "line": 6283,
    "lines": 26,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1982,7 +1992,7 @@
   {
    "name": "refreshPointInTimeSelection",
    "ordinal": 1,
-   "line": 6299,
+   "line": 6310,
    "lines": 211,
    "inventory_kind": "mixed",
    "category": "data",
@@ -1995,7 +2005,7 @@
   {
    "name": "schedulePointInTimeSelection",
    "ordinal": 1,
-   "line": 6510,
+   "line": 6521,
    "lines": 26,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2008,7 +2018,7 @@
   {
    "name": "updatePointInTimeToggleUI",
    "ordinal": 1,
-   "line": 6537,
+   "line": 6548,
    "lines": 30,
    "inventory_kind": "view",
    "category": "view",
@@ -2021,7 +2031,7 @@
   {
    "name": "getMaxFrames",
    "ordinal": 1,
-   "line": 6568,
+   "line": 6579,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2034,7 +2044,7 @@
   {
    "name": "switchDate",
    "ordinal": 1,
-   "line": 6574,
+   "line": 6585,
    "lines": 89,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2047,7 +2057,7 @@
   {
    "name": "updateDeltaButtonsUI",
    "ordinal": 1,
-   "line": 6664,
+   "line": 6675,
    "lines": 47,
    "inventory_kind": "view",
    "category": "view",
@@ -2060,7 +2070,7 @@
   {
    "name": "setReplaySpeed",
    "ordinal": 1,
-   "line": 6715,
+   "line": 6726,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2073,7 +2083,7 @@
   {
    "name": "togglePlay",
    "ordinal": 1,
-   "line": 6732,
+   "line": 6743,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "view",
@@ -2086,7 +2096,7 @@
   {
    "name": "startReplay",
    "ordinal": 1,
-   "line": 6740,
+   "line": 6751,
    "lines": 13,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2099,7 +2109,7 @@
   {
    "name": "pauseReplay",
    "ordinal": 1,
-   "line": 6754,
+   "line": 6765,
    "lines": 11,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2112,7 +2122,7 @@
   {
    "name": "startPlaybackLoop",
    "ordinal": 1,
-   "line": 6766,
+   "line": 6777,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2125,7 +2135,7 @@
   {
    "name": "step",
    "ordinal": 1,
-   "line": 6783,
+   "line": 6794,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2138,7 +2148,7 @@
   {
    "name": "seekToPct",
    "ordinal": 1,
-   "line": 6794,
+   "line": 6805,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2151,7 +2161,7 @@
   {
    "name": "updateScrubberUI",
    "ordinal": 1,
-   "line": 6805,
+   "line": 6816,
    "lines": 42,
    "inventory_kind": "view",
    "category": "view",
@@ -2164,7 +2174,7 @@
   {
    "name": "storedHourlyColumns",
    "ordinal": 1,
-   "line": 6866,
+   "line": 6877,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "view",
@@ -2177,7 +2187,7 @@
   {
    "name": "persistHourlyColumns",
    "ordinal": 1,
-   "line": 6874,
+   "line": 6885,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2190,7 +2200,7 @@
   {
    "name": "renderHourlyColumnPanel",
    "ordinal": 1,
-   "line": 6878,
+   "line": 6889,
    "lines": 29,
    "inventory_kind": "view",
    "category": "view",
@@ -2203,7 +2213,7 @@
   {
    "name": "hourlyMetricCell",
    "ordinal": 1,
-   "line": 6908,
+   "line": 6919,
    "lines": 9,
    "inventory_kind": "engine",
    "category": "view",
@@ -2216,7 +2226,7 @@
   {
    "name": "renderHourlyRows",
    "ordinal": 1,
-   "line": 6918,
+   "line": 6929,
    "lines": 32,
    "inventory_kind": "view",
    "category": "view",
@@ -2229,7 +2239,7 @@
   {
    "name": "hourlyMoney",
    "ordinal": 1,
-   "line": 6951,
+   "line": 6962,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "view",
@@ -2242,7 +2252,7 @@
   {
    "name": "hourlyTone",
    "ordinal": 1,
-   "line": 6956,
+   "line": 6967,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2255,7 +2265,7 @@
   {
    "name": "hourlyIntervalLabel",
    "ordinal": 1,
-   "line": 6960,
+   "line": 6971,
    "lines": 5,
    "inventory_kind": "engine",
    "category": "view",
@@ -2268,7 +2278,7 @@
   {
    "name": "renderHourlyFamilyTabs",
    "ordinal": 1,
-   "line": 6966,
+   "line": 6977,
    "lines": 12,
    "inventory_kind": "view",
    "category": "view",
@@ -2281,7 +2291,7 @@
   {
    "name": "syncHourlyProducts",
    "ordinal": 1,
-   "line": 6979,
+   "line": 6990,
    "lines": 6,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2294,7 +2304,7 @@
   {
    "name": "loadHourlyReport",
    "ordinal": 1,
-   "line": 6986,
+   "line": 6997,
    "lines": 36,
    "inventory_kind": "mixed",
    "category": "data",
@@ -2307,7 +2317,7 @@
   {
    "name": "openHourlyReport",
    "ordinal": 1,
-   "line": 7023,
+   "line": 7034,
    "lines": 17,
    "inventory_kind": "view",
    "category": "view",
@@ -2320,7 +2330,7 @@
   {
    "name": "closeHourlyReport",
    "ordinal": 1,
-   "line": 7041,
+   "line": 7052,
    "lines": 5,
    "inventory_kind": "view",
    "category": "view",
@@ -2333,7 +2343,7 @@
   {
    "name": "openTargetRanking",
    "ordinal": 1,
-   "line": 7047,
+   "line": 7058,
    "lines": 5,
    "inventory_kind": "view",
    "category": "view",
@@ -2346,7 +2356,7 @@
   {
    "name": "targetDaysCacheKey",
    "ordinal": 1,
-   "line": 7053,
+   "line": 7064,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "view",
@@ -2359,7 +2369,7 @@
   {
    "name": "renderTargetDaysRanking",
    "ordinal": 1,
-   "line": 7057,
+   "line": 7068,
    "lines": 40,
    "inventory_kind": "view",
    "category": "view",
@@ -2372,7 +2382,7 @@
   {
    "name": "loadTargetDaysRanking",
    "ordinal": 1,
-   "line": 7098,
+   "line": 7109,
    "lines": 45,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2385,7 +2395,7 @@
   {
    "name": "selectTargetRankingStrategy",
    "ordinal": 1,
-   "line": 7144,
+   "line": 7155,
    "lines": 8,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2398,7 +2408,7 @@
   {
    "name": "prewarmTargetDaysRanking",
    "ordinal": 1,
-   "line": 7153,
+   "line": 7164,
    "lines": 19,
    "inventory_kind": "engine",
    "category": "view",
@@ -2411,7 +2421,7 @@
   {
    "name": "updateChartLockControlState",
    "ordinal": 1,
-   "line": 7173,
+   "line": 7184,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "view",
@@ -2424,7 +2434,7 @@
   {
    "name": "applyChartLock",
    "ordinal": 1,
-   "line": 7184,
+   "line": 7195,
    "lines": 29,
    "inventory_kind": "mixed",
    "category": "split",
@@ -2437,20 +2447,20 @@
   {
    "name": "setupEventListeners",
    "ordinal": 1,
-   "line": 7214,
-   "lines": 707,
+   "line": 7225,
+   "lines": 701,
    "inventory_kind": "mixed",
    "category": "view",
    "status": "stays_in_page",
    "python_target": null,
-   "body_sha256": "a7664dd60e0af73332ccc2deedc3836cde03efe02fcc244fc1ddb38878965aa4",
+   "body_sha256": "ad43ad1880c8e835cdda113b8bbf9249b580f05ab9504d6754bd65a10414b7c0",
    "verified_body_sha256": null,
    "differential_tested": false
   },
   {
    "name": "getBasePoint",
    "ordinal": 1,
-   "line": 7922,
+   "line": 7927,
    "lines": 14,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2463,7 +2473,7 @@
   {
    "name": "getReplayHeadPoint",
    "ordinal": 1,
-   "line": 7937,
+   "line": 7942,
    "lines": 7,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2476,7 +2486,7 @@
   {
    "name": "updateRibbon",
    "ordinal": 1,
-   "line": 7945,
+   "line": 7950,
    "lines": 86,
    "inventory_kind": "mixed",
    "category": "compute",
@@ -2489,20 +2499,20 @@
   {
    "name": "renderCards",
    "ordinal": 1,
-   "line": 8032,
-   "lines": 175,
+   "line": 8037,
+   "lines": 177,
    "inventory_kind": "view",
    "category": "view",
    "status": "stays_in_page",
    "python_target": null,
-   "body_sha256": "15bb20bb328054021972a413d7b64a4ef7720c24744ea39834b627977e4da452",
+   "body_sha256": "5f74967682e694356bd90b9c9437c2f0a171f6b9d963916e56670d522684cd59",
    "verified_body_sha256": null,
    "differential_tested": false
   },
   {
    "name": "setupCanvas",
    "ordinal": 1,
-   "line": 8208,
+   "line": 8215,
    "lines": 13,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2515,7 +2525,7 @@
   {
    "name": "computeTradeOverlaySignals",
    "ordinal": 1,
-   "line": 8239,
+   "line": 8246,
    "lines": 143,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2528,7 +2538,7 @@
   {
    "name": "pairOverlayTrades",
    "ordinal": 1,
-   "line": 8385,
+   "line": 8392,
    "lines": 35,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2541,7 +2551,7 @@
   {
    "name": "computeSplitTargetSignal",
    "ordinal": 1,
-   "line": 8423,
+   "line": 8430,
    "lines": 38,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2554,7 +2564,7 @@
   {
    "name": "modelPointAtOrBeforeTime",
    "ordinal": 1,
-   "line": 8462,
+   "line": 8469,
    "lines": 11,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2567,7 +2577,7 @@
   {
    "name": "modelBaselinePoint",
    "ordinal": 1,
-   "line": 8474,
+   "line": 8481,
    "lines": 20,
    "inventory_kind": "engine",
    "category": "view",
@@ -2580,7 +2590,7 @@
   {
    "name": "modelDeltaSeries",
    "ordinal": 1,
-   "line": 8495,
+   "line": 8502,
    "lines": 11,
    "inventory_kind": "engine",
    "category": "view",
@@ -2593,7 +2603,7 @@
   {
    "name": "selectedTimeJoinAt",
    "ordinal": 1,
-   "line": 8507,
+   "line": 8514,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2606,7 +2616,7 @@
   {
    "name": "selectedTimeModelEligibleAt",
    "ordinal": 1,
-   "line": 8512,
+   "line": 8519,
    "lines": 4,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2619,7 +2629,7 @@
   {
    "name": "selectedTimePointEligible",
    "ordinal": 1,
-   "line": 8517,
+   "line": 8524,
    "lines": 3,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2632,7 +2642,7 @@
   {
    "name": "computeLeaderRotation",
    "ordinal": 1,
-   "line": 8525,
+   "line": 8532,
    "lines": 159,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2645,7 +2655,7 @@
   {
    "name": "computeMultiSplitRotation",
    "ordinal": 1,
-   "line": 8688,
+   "line": 8695,
    "lines": 176,
    "inventory_kind": "engine",
    "category": "compute",
@@ -2658,7 +2668,7 @@
   {
    "name": "drawLeaderSignalBadge",
    "ordinal": 1,
-   "line": 8865,
+   "line": 8872,
    "lines": 16,
    "inventory_kind": "engine",
    "category": "view",
@@ -2671,7 +2681,7 @@
   {
    "name": "showTargetPulse",
    "ordinal": 1,
-   "line": 8882,
+   "line": 8889,
    "lines": 11,
    "inventory_kind": "view",
    "category": "view",
@@ -2684,7 +2694,7 @@
   {
    "name": "drawTradeValueLabel",
    "ordinal": 1,
-   "line": 8894,
+   "line": 8901,
    "lines": 20,
    "inventory_kind": "engine",
    "category": "view",
@@ -2697,7 +2707,7 @@
   {
    "name": "updateOverlayTradeSummary",
    "ordinal": 1,
-   "line": 8915,
+   "line": 8922,
    "lines": 27,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2710,7 +2720,7 @@
   {
    "name": "openOverlayTradesModal",
    "ordinal": 1,
-   "line": 8943,
+   "line": 8950,
    "lines": 118,
    "inventory_kind": "view",
    "category": "view",
@@ -2723,7 +2733,7 @@
   {
    "name": "drawSignalBadge",
    "ordinal": 1,
-   "line": 9062,
+   "line": 9069,
    "lines": 29,
    "inventory_kind": "engine",
    "category": "view",
@@ -2736,7 +2746,7 @@
   {
    "name": "drawChart",
    "ordinal": 1,
-   "line": 9092,
+   "line": 9099,
    "lines": 273,
    "inventory_kind": "view",
    "category": "view",
@@ -2749,7 +2759,7 @@
   {
    "name": "scheduleDashboardUtilityRuntime",
    "ordinal": 1,
-   "line": 9367,
+   "line": 9374,
    "lines": 9,
    "inventory_kind": "mixed",
    "category": "view",
@@ -2762,7 +2772,7 @@
   {
    "name": "drawBaselineMarker",
    "ordinal": 1,
-   "line": 9377,
+   "line": 9384,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2775,7 +2785,7 @@
   {
    "name": "drawReplayCursor",
    "ordinal": 1,
-   "line": 9393,
+   "line": 9400,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2788,7 +2798,7 @@
   {
    "name": "renderDeltaLine",
    "ordinal": 1,
-   "line": 9409,
+   "line": 9416,
    "lines": 15,
    "inventory_kind": "engine",
    "category": "view",
@@ -2801,7 +2811,7 @@
   {
    "name": "drawPointLabel",
    "ordinal": 1,
-   "line": 9425,
+   "line": 9432,
    "lines": 10,
    "inventory_kind": "engine",
    "category": "view",
@@ -2814,7 +2824,7 @@
   {
    "name": "drawGridAndAxes",
    "ordinal": 1,
-   "line": 9436,
+   "line": 9443,
    "lines": 46,
    "inventory_kind": "engine",
    "category": "view",

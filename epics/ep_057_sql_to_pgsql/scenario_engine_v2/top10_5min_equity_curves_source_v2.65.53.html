@@ -4000,6 +4000,7 @@ ${preview}`)) return;
         autoRefreshTop1Context = '';
         applySelectedTimeBtn?.classList.remove('click-feedback-pending');
         applySelectedTimeBtn?.removeAttribute('aria-busy');
+        clearModelSearchState();
         // Switching away from an explicit handoff restores the regular
         // scenario/portfolio model source while keeping handoff models pinned.
         deepLinkModelsOnly = false;
@@ -4244,6 +4245,9 @@ ${preview}`)) return;
     }
 
     async function activatePortfolio(name) {
+      // Search cards belong to the view where they were requested. Do not
+      // carry global no-curve results into an empty named portfolio.
+      clearModelSearchState();
       if (activePortfolioName) persistPortfolioViewConfig(activePortfolioName);
       else persistPortfolioViewConfig(null);
       const isLivePortfolioTab = ['LIVE', 'LIVE_ALT'].includes(String(name).toUpperCase());
@@ -5586,6 +5590,17 @@ ${preview}`)) return;
       return [...new Set(String(value || '').split(/[,;\s]+/).map(term => term.trim()).filter(Boolean))];
     }
 
+    function clearModelSearchState() {
+      modelSearchRequestSequence++;
+      clearTimeout(modelSearchTimer);
+      modelSearchLoadedModels = [];
+      modelSearchNoCurveMatches = [];
+      modelSearchResolvedQuery = null;
+      modelSearchResolvedMessage = '';
+      if (modelSearchInput) modelSearchInput.value = '';
+      if (modelSearchStatus) modelSearchStatus.textContent = '';
+    }
+
     function getEligibleModels() {
       let scenarioModels;
       const portfolioFilters = model => {
@@ -6141,11 +6156,7 @@ ${preview}`)) return;
       clearTimeout(pointInTimeDebounceTimer);
       // Remove an ad-hoc search from an earlier cohort; selected-time leaders and
       // pinned comparisons are retained as intentional chart comparisons.
-      modelSearchRequestSequence++;
-      clearTimeout(modelSearchTimer);
-      modelSearchLoadedModels = [];
-      if (modelSearchInput) modelSearchInput.value = '';
-      if (modelSearchStatus) modelSearchStatus.textContent = '';
+      clearModelSearchState();
       // The typed time is a ranking cutoff for this lookup, not a replay seek.
       // Keep the current replay head so existing curves and overlay trades stay
       // visible while candidates are fetched and after they are added.
@@ -7862,13 +7873,7 @@ ${preview}`)) return;
 
         // Clear the Find model field and invalidate any search response that
         // could otherwise restore its results after this action.
-        modelSearchRequestSequence++;
-        clearTimeout(modelSearchTimer);
-        modelSearchLoadedModels = [];
-        modelSearchResolvedQuery = null;
-        modelSearchResolvedMessage = '';
-        if (modelSearchInput) modelSearchInput.value = '';
-        if (modelSearchStatus) modelSearchStatus.textContent = '';
+        clearModelSearchState();
 
         // A linked-model API request can still be in flight when Clear All is
         // pressed. Invalidate it so its late response cannot repin curves.
@@ -8032,8 +8037,10 @@ ${preview}`)) return;
     function renderCards() {
       modelCardsContainer.innerHTML = '';
       const eligible = getEligibleModels();
+      const hasActiveSearch = Boolean(modelSearchInput?.value.trim());
+      const noCurveMatches = hasActiveSearch ? modelSearchNoCurveMatches : [];
 
-      if (!eligible.length && !modelSearchNoCurveMatches.length) {
+      if (!eligible.length && !noCurveMatches.length) {
         modelCardsContainer.innerHTML = `
           <div class="col-span-full py-8 text-center text-slate-500 font-mono text-xs">
             ${pointInTimeMode ? `No strategies selected for this scenario at ${pointInTimeStatus.textContent}.` : `No strategies match Win Rate ≥ ${minWinRate}%. Drag the slider lower to reveal models.`}
@@ -8182,7 +8189,7 @@ ${preview}`)) return;
         modelCardsContainer.appendChild(card);
       });
 
-      modelSearchNoCurveMatches.forEach(model => {
+      noCurveMatches.forEach(model => {
         const card = document.createElement('div');
         card.className = 'model-pill p-2.5 rounded-lg border border-dashed border-slate-700 bg-slate-950/45 font-mono';
         const header = document.createElement('div');
