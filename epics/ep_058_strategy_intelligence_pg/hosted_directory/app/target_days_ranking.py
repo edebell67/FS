@@ -140,7 +140,7 @@ def rank_by_target_days(today: dt.date, fetch_day: Callable[[str, str], dict], d
     return body
 
 
-def prewarm(today: dt.date, fetch_day: Callable[[str, str], dict], product_types=("forex", "all"), days: int = 20, workers: int = 4) -> None:
+def prewarm(today: dt.date, fetch_day: Callable[[str, str], dict], product_types=("forex", "all"), days: int = 22, workers: int = 4) -> None:
     """Fills the day cache for the default window so the first modal open is instant; failures are ignored (the request path retries)."""
     for ptype in product_types:
         try:

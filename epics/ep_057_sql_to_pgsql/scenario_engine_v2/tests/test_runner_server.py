@@ -234,3 +234,37 @@ def test_the_proxy_builds_its_http_client_once_not_per_request(monkeypatch):
     for _ in range(3):
         assert c.get("/api/live_day").status_code == 502
     assert len(built) == 1
+
+
+def test_find_model_calls_go_to_the_fast_api_and_the_served_page_points_at_this_origin(monkeypatch):
+    import json
+    import threading
+    from http.server import BaseHTTPRequestHandler, HTTPServer
+
+    def serve(tag):
+        class H(BaseHTTPRequestHandler):
+            def log_message(self, *a):
+                pass
+
+            def do_GET(self):  # noqa: N802
+                body = json.dumps({"from": tag, "path": self.path}).encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+        s = HTTPServer(("127.0.0.1", 0), H)
+        threading.Thread(target=s.serve_forever, daemon=True).start()
+        return s
+    data, fast = serve("data"), serve("fast")
+    monkeypatch.setenv("EP057_FAST_API", f"http://127.0.0.1:{fast.server_port}")
+    try:
+        c = TestClient(create_app(RaceManager(), data_api=f"http://127.0.0.1:{data.server_port}"))
+        for path in ("strategy_search", "strategy_search_day", "portfolio_day"):
+            assert c.get(f"/api/{path}?query=abc").json()["from"] == "fast"
+        assert c.get("/api/live_day").json()["from"] == "data"   # everything else still goes to the data service
+        page = c.get("/top10_5min_equity_curves_engine_client.html").text
+        assert "|| location.origin" in page and "|| 'http://127.0.0.1:8767'" not in page
+    finally:
+        data.shutdown()
+        fast.shutdown()

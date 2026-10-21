@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.10.0 · 2026-10-21 · the page's Find model / selected-curve calls (/api/strategy_search, /api/strategy_search_day, /api/portfolio_day) go to the read-only fast API (EP057_FAST_API, default :8767) through this origin (that service only allows CORS from :8765); the served page points its model API here.
 # v1.9.0 · 2026-10-19 · the data-service proxy shares ONE httpx client: a client per request cost 0.7-1.8 s of CA-bundle loading ON the event loop, which froze every engine call (and so the thin page) waiting behind a proxied request.
 # v1.8.0 · 2026-10-18 · the proxied shared menu script (ep060-nav.js) is sent with Cache-Control: no-cache so a menu change shows without a hard reload.
 # v1.7.0 · 2026-10-18 · GET /api/races/{id}/board: every frame's leaderboard so far (live while running, complete after) for the dashboard's race viewer.
@@ -267,13 +268,15 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
         path = thin_page_path()
         if path is None:
             raise HTTPException(404, "no engine-client page has been built (python tools/build_thin_page.py)")
-        html = Path(path).read_text(encoding="utf-8").replace("</head>", ENGINE_PAGE_TINT + "</head>", 1)
+        html = Path(path).read_text(encoding="utf-8").replace("</head>", ENGINE_PAGE_TINT + "</head>", 1).replace("'http://127.0.0.1:8767'", "location.origin")
         return Response(content=html, media_type="text/html", headers={"Cache-Control": "no-store"})
 
     # ---- same-origin access to the data service (it only allows the 'null' origin for CORS) ----
+    FAST_PATHS = {"api/strategy_search", "api/strategy_search_day", "api/portfolio_day"}
+    FAST_API = os.environ.get("EP057_FAST_API", "http://127.0.0.1:8767").rstrip("/")
     proxy_client = httpx.AsyncClient(timeout=120.0)   # built once, here: constructing one loads the CA bundle (0.7-1.8 s) and must never happen on the event loop per request
     async def forward(request: Request, path: str) -> Response:
-        target = f"{upstream}/{path}"
+        target = f"{FAST_API if path in FAST_PATHS else upstream}/{path}"
         headers = {k: v for k, v in request.headers.items() if k.lower() not in HOP}
         try:
             r = await proxy_client.request(request.method, target, params=request.query_params, content=await request.body(), headers=headers)
