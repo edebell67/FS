@@ -122,3 +122,36 @@ def test_unknown_scenarios_are_refused():
     with pytest.raises(ValueError):
         tl.leader_schedule(None, "2026-10-20", "top_win", 10, [], "u")
 
+
+
+def test_plan_recognises_the_catalogue_scenarios_and_their_cohort_sizes():
+    assert tl.plan("top_net", 10)["groups"] == [("top_net", None, 10)] and tl.plan("NET_RETURN", 7)["score"] == "net"
+    assert tl.plan("top_alt_net", 10)["score"] == "alt" and tl.plan("top_buy_sell_net", 10)["score"] == "buy_sell"
+    assert tl.plan("top5_breakout_r_rev_alt", 10) == {"score": "alt", "groups": [("top5_breakout_r_rev_alt", ("family", "breakout_r_rev"), 5)]}
+    assert tl.plan("top5_breakout_net", 3)["groups"][0][2] == 3   # never more than the page's model limit
+    assert tl.plan("top3_tp5_sl20_alt", 10) == {"score": "alt", "groups": [("top3_tp5_sl20_alt", ("tp_sl", 5, 20), 3)]}
+    leaders = tl.plan("family_leaders_net", 10)
+    assert [g[1] for g in leaders["groups"]] == [("family", f) for f in tl.FAMILY_ORDER] and {g[2] for g in leaders["groups"]} == {1}
+    for other in ("top_win", "touched_rank_one_30m", "strongest_three", "weakening_selection", "top3_momentum_net", ""):
+        assert tl.plan(other, 10) is None and other not in tl.TIMELINE_SCENARIOS
+    assert "top5_breakout_net" in tl.TIMELINE_SCENARIOS
+
+
+def test_a_family_scenario_ranks_only_that_familys_strategies_and_leaders_merge_the_four_families(cache_dir):
+    stats = [{"model": "B1", "strategy": "breakout_2_tp5_sl20"}, {"model": "R1", "strategy": "breakout_R_2_tp5_sl20"}, {"model": "X1", "strategy": "other"}]
+    family_of = lambda s: "breakout" if (s or "").startswith("breakout_2") else ("breakout_r" if (s or "").startswith("breakout_R") else "unknown")
+    tp_sl_of = lambda s: (5, 20) if s and "tp5_sl20" in s else None
+    seen_universes = []
+
+    class Cur(FakeCursor):
+        def execute(self, sql, params):
+            seen_universes.append(sorted(params[3]))
+            super().execute(sql, params)
+    table = {"2026-10-20T10:00:00": ["B1", "R1", "X1"], "2026-10-20T10:05:00": ["B1", "R1", "X1"]}
+    cur = Cur(table)
+    order, iv = tl.scenario_schedule(cur, "2026-10-20", "top5_breakout_net", 10, stats, family_of, tp_sl_of, "all", today_iso="2026-10-21")
+    assert order == ["B1"] and seen_universes == [["B1"]] and iv["B1"] == [{"start": "10:00", "end": "10:10"}]
+    order, iv = tl.scenario_schedule(cur, "2026-10-20", "family_leaders_net", 10, stats, family_of, tp_sl_of, "all", today_iso="2026-10-21")
+    assert order == ["B1", "R1"] and set(iv) == {"B1", "R1"}   # one leader per family that has strategies; the empty families are skipped
+    order, _iv = tl.scenario_schedule(cur, "2026-10-20", "top3_tp5_sl20_net", 10, stats, family_of, tp_sl_of, "all", today_iso="2026-10-21")
+    assert order == ["B1", "R1"]

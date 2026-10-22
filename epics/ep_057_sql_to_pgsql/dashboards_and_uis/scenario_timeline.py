@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/dashboards_and_uis/scenario_timeline.py — who was in a scenario's top N at every 5-minute snapshot, as per-model leader_intervals.
 #
 # VERSION HISTORY
+# v1.2.0 · 2026-10-22 · Family (top5_*), TP/SL (top3_tp*_sl*), family leaders and buy/sell scenarios: `plan()` turns a scenario id into ranking groups (a universe of strategies, how many to show, the score).
 # v1.1.0 · 2026-10-22 · Strategies with the same P&L (to the cent) at a snapshot count once, as the catalogue's "distinct outcomes" rule does (grouped in the query: the lowest model id represents a group), so each snapshot has up to N distinct lines; early in the day there can be fewer.
 # v1.0.0 · 2026-10-22 · Initial version: Top Net and Top Alt Net. A strategy's curve is shown only while it is in the top N at the snapshot (its line starts at its real cumulative value when it joins and stops when it drops out), so a chart looks the same whenever it is viewed.
 """Time-consistent scenarios.
@@ -18,19 +19,51 @@ import datetime as dt
 import hashlib
 import json
 import os
+import re
 import threading
 from pathlib import Path
 
-ALGORITHM = "d2"   # part of every cache file name: bump when the membership rule changes so older files are never reused
+ALGORITHM = "d4"   # part of every cache file name: bump when the membership rule changes so older files are never reused
 CACHE_DIR = Path(os.environ.get("SCENARIO_TIMELINE_CACHE", Path(__file__).resolve().parent / "scenario_timeline_cache"))
 
-# scenario id -> SQL expression ranking a snapshot row (higher is better)
+# score keys -> SQL expression ranking a snapshot row (higher is better)
 SCORES = {
-    "top_net": "x.cum_net",
-    "NET_RETURN": "x.cum_net",
-    "top_alt_net": "x.cum_alt_net",
+    "net": "x.cum_net",
+    "alt": "x.cum_alt_net",
+    "buy_sell": "GREATEST(x.cum_buy_net, x.cum_sell_net)",   # each model's dominant side, as the catalogue's Top Buy/Sell
 }
-TIMELINE_SCENARIOS = frozenset(SCORES)
+# scenario id -> score key for the scenarios that rank every strategy
+SIMPLE = {"top_net": "net", "NET_RETURN": "net", "top_alt_net": "alt", "top_buy_sell_net": "buy_sell"}
+FAMILY_ORDER = ("breakout", "breakout_r", "breakout_rev", "breakout_r_rev")
+_FAMILY_RE = re.compile(r"top5_(breakout(?:_r_rev|_rev|_r)?)(?:_(net|alt))?")
+_TP_SL_RE = re.compile(r"top3_tp(\d+)_sl(\d+)(?:_(net|alt))?")
+_LEADERS_RE = re.compile(r"family_leaders(?:_(net|alt))?")
+
+
+def plan(scenario: str, limit: int):
+    """-> None when the scenario is not decided per snapshot, else {"score": key, "groups": [(label, selector, n)]}. `selector` is None (every strategy),
+    ("family", name) or ("tp_sl", tp, sl); `n` is how many strategies the group shows at each snapshot (the same cohort sizes the catalogue uses)."""
+    if scenario in SIMPLE:
+        return {"score": SIMPLE[scenario], "groups": [(scenario, None, int(limit))]}
+    m = _FAMILY_RE.fullmatch(scenario)
+    if m:
+        return {"score": m.group(2) or "net", "groups": [(scenario, ("family", m.group(1)), min(5, int(limit)))]}
+    m = _TP_SL_RE.fullmatch(scenario)
+    if m:
+        return {"score": m.group(3) or "net", "groups": [(scenario, ("tp_sl", int(m.group(1)), int(m.group(2))), min(3, int(limit)))]}
+    m = _LEADERS_RE.fullmatch(scenario)
+    if m:
+        return {"score": m.group(1) or "net", "groups": [(f"{scenario}:{family}", ("family", family), 1) for family in FAMILY_ORDER]}
+    return None
+
+
+class _Timeline:
+    """`scenario in TIMELINE_SCENARIOS` for every id plan() understands (the sets the page and the data service test against)."""
+    def __contains__(self, scenario) -> bool:
+        return isinstance(scenario, str) and plan(scenario, 10) is not None
+
+
+TIMELINE_SCENARIOS = _Timeline()
 
 RANK_SQL = """
     WITH stamps AS (
@@ -113,7 +146,8 @@ def intervals_from_members(stamps: list[str], members: dict[str, list[str]], ope
 
 def _cache_file(key: tuple) -> Path:
     date_str, scenario, limit, universe = key
-    return CACHE_DIR / f"{date_str}_{scenario}_{limit}_{universe}_{ALGORITHM}.json"
+    safe = re.sub(r"[^A-Za-z0-9_.-]", "_", f"{date_str}_{scenario}_{limit}_{universe}_{ALGORITHM}")   # a label such as family_leaders_net:breakout must not name an NTFS stream
+    return CACHE_DIR / (safe + ".json")
 
 
 def _load(key: tuple) -> dict:
@@ -142,21 +176,23 @@ def _save(key: tuple, entry: dict) -> None:
         pass
 
 
-def leader_schedule(cur, date_str: str, scenario: str, limit: int, universe_ids: list[str], universe: str,
-                    today_iso: str | None = None) -> tuple[list[str], dict[str, list[dict]]]:
-    """The scenario's members at every snapshot of `date_str` as (models in first-appearance order, leader_intervals by model). Ranks only snapshots newer than
-    the cached ones (the newest cached one again), so after the first load of a day a refresh costs a few hundred milliseconds."""
-    if scenario not in SCORES:
-        raise ValueError(f"no snapshot timeline for scenario {scenario}")
+def leader_schedule(cur, date_str: str, score: str, limit: int, universe_ids: list[str], universe: str,
+                    today_iso: str | None = None, label: str | None = None) -> tuple[list[str], dict[str, list[dict]]]:
+    """One group's members at every snapshot of `date_str` as (models in first-appearance order, leader_intervals by model). `score` is a SCORES key (a
+    scenario id such as top_net is accepted too). Ranks only snapshots newer than the cached ones (the newest cached one again), so after the first load
+    of a day a refresh costs a few hundred milliseconds."""
+    score = SIMPLE.get(score, score)
+    if score not in SCORES:
+        raise ValueError(f"no snapshot timeline for score {score}")
     today_iso = today_iso or dt.date.today().isoformat()
-    key = (date_str, scenario, int(limit), universe)
+    key = (date_str, label or score, int(limit), universe)
     entry = _load(key)
     stamps: list[str] = entry["stamps"]
     after = stamps[-2] if len(stamps) >= 2 else f"{date_str} 00:00:00"
     if entry.get("complete") and date_str < today_iso:
         pass   # a finished day that was ranked after it ended: nothing can change
     else:
-        cur.execute(RANK_SQL.format(score=SCORES[scenario]), (after, date_str, date_str, list(universe_ids), int(limit)))
+        cur.execute(RANK_SQL.format(score=SCORES[score]), (after, date_str, date_str, list(universe_ids), int(limit)))
         rows = cur.fetchall()
         by_stamp: dict[str, list[str]] = {}
         for ts, model, _rn, _cents in rows:
@@ -171,3 +207,31 @@ def leader_schedule(cur, date_str: str, scenario: str, limit: int, universe_ids:
             entry["complete"] = True   # ranked after the day ended: the last snapshot is final
         _save(key, entry)
     return intervals_from_members(entry["stamps"], entry["members"], open_ended_last=(date_str >= today_iso))
+
+
+def scenario_schedule(cur, date_str: str, scenario: str, limit: int, stats: list[dict], family_of, tp_sl_of, universe_prefix: str,
+                      today_iso: str | None = None) -> tuple[list[str], dict[str, list[dict]]]:
+    """The whole scenario: every group of its plan() ranked over its own universe (strategies picked from `stats` with `family_of(strategy)` / `tp_sl_of(strategy)`),
+    merged into one order and one interval map."""
+    spec = plan(scenario, limit)
+    if spec is None:
+        raise ValueError(f"no snapshot timeline for scenario {scenario}")
+    order: list[str] = []
+    intervals: dict[str, list[dict]] = {}
+    for label, selector, n in spec["groups"]:
+        if selector is None:
+            ids = [s["model"] for s in stats]
+        elif selector[0] == "family":
+            ids = [s["model"] for s in stats if family_of(s.get("strategy")) == selector[1]]
+        else:
+            ids = [s["model"] for s in stats if tp_sl_of(s.get("strategy")) == (selector[1], selector[2])]
+        if not ids:
+            continue
+        digest = hashlib.sha1(",".join(sorted(ids)).encode()).hexdigest()[:10]
+        group_order, group_intervals = leader_schedule(cur, date_str, spec["score"], n, ids, f"{universe_prefix}-{len(ids)}-{digest}", today_iso, label)
+        for model in group_order:
+            if model not in intervals:
+                order.append(model)
+                intervals[model] = []
+            intervals[model].extend(group_intervals[model])
+    return order, intervals
