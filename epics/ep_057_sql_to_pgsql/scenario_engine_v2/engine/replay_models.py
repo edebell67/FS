@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.8.0 · 2026-10-22 · get_scenario_candidates keeps models flagged timeline_distinct without the final-P&L distinctness filter (page v2.65.55).
 # v1.7.0 · 2026-10-22 · get_eligible_models follows page v2.65.54: scenario cohort while the selected-time ranking loads; no pinned cards on the tied-#1 scenario.
 # v1.6.0 · 2026-10-21 · get_eligible_models follows page v2.65.53: Find model stays global inside a portfolio (replaces the v2.65.50 membership filter), pending-metrics search results pass the portfolio filters, no colour fallback for searched models.
 # v1.5.0 · 2026-10-21 · get_eligible_models: with an active portfolio, searched and pinned models are limited to its members (page v2.65.50 portfolio-based Find model).
@@ -116,6 +117,9 @@ def get_scenario_candidates(s, client, criteria=None, product_type_filter=None) 
                 and (dedicated or s.strategy_family == "all" or core.strategy_family_of(m) == s.strategy_family)]
     seen, out = set(), []
     for m in eligible:
+        if js_truthy(m.get("timeline_distinct")):   # page v2.65.55: decided per snapshot by the data service, not by the final P&L
+            out.append(m)
+            continue
         perf = js_round(active_return(m) * 100) / 100
         k = "NaN" if perf != perf else perf
         if k in seen:

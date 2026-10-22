@@ -68,8 +68,13 @@ NUMS = [0, 0.0, 1.0, 1.004, 1.006, 2.5, -0.005, 7.25, -3, None, "4.5", "x"]
 CRIT = ["top_net", "top_win", "top5_breakout", "top3_tp3_sl3", "top3_momentum_net", "top1_at_time", "family_leaders", "NET_RETURN", "touched_rank_one_30m"]
 
 
+_FLAG_RNG = random.Random(13)   # its own stream, so the flag does not move any other case
+
+
 def mkmodel(rng, mid=None):
     m = {"model": mid or rng.choice(IDS), "color": "#112233"}
+    if _FLAG_RNG.random() < 0.25:   # page v2.65.55: curves decided per snapshot by the data service skip the final-P&L distinctness filter
+        m["timeline_distinct"] = _FLAG_RNG.choice([True, True, 1, "x", False, 0, None])
     if rng.random() < 0.9:
         m["product"] = rng.choice(["gbp", "EUR", "gbp", "Eur"])
     if rng.random() < 0.8:
@@ -155,7 +160,7 @@ def make_case(rng, method):
             if st.active_portfolio and m in st.portfolio_models and rng.random() < 0.7:   # a pending model that the portfolio filters would drop
                 st.min_win_rate = 50
                 m["win_rate"] = m["alt_win_rate"] = 1
-    if _POOL_RNG.random() < 0.25:   # page v2.65.54: selected-time mode whose as-of list is still empty shows the scenario cohort; searches and pins on the tied-#1 scenario
+    if _POOL_RNG.random() < 0.25:   # page v2.65.55: selected-time mode whose as-of list is still empty shows the scenario cohort; searches and pins on the tied-#1 scenario
         st.update({"pit_mode": True, "deep_link_only": False, "active_portfolio": None, "min_win_rate": 0, "product_type": "all", "product": "all", "strategy_family": "all",
                    "pit_models": _POOL_RNG.choice([None, []]), "current_criteria": _POOL_RNG.choice([crit, "touched_rank_one_30m"])})
     snap = st.snapshot()
@@ -163,6 +168,12 @@ def make_case(rng, method):
     for key in {crit, f"{crit}_net", f"{crit}_alt", "top_net"}:
         if rng.random() < 0.7:
             criteria[key] = {date: rng.choice([[], mklist(rng, 1, 5)]), rng.choice(dp.DATES): mklist(rng, 0, 2)}
+    if _FLAG_RNG.random() < 0.4:   # equal final P&L inside a scenario list, some flagged as decided per snapshot: only the unflagged ones may be dropped as duplicates
+        for bucket in criteria.values():
+            for day_models in bucket.values():
+                for m in day_models:
+                    m["cum_net"] = m["cum_alt_net"] = 5.0
+                    m["timeline_distinct"] = _FLAG_RNG.choice([True, True, 1, "x", False, 0, None])
     ribbon = {k: rng.choice(["", "old"]) for k in rm._RIBBON_FIELDS}
     catalogue = [{"id": c, "name": rng.choice(["Name " + c, None])} if rng.random() < 0.6 else {"id": "zz"} for c in CRIT[:4]]
     return {"state": snap, "criteria": criteria, "ribbon": ribbon, "catalogue": catalogue}
