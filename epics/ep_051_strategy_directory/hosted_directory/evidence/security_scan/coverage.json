@@ -1,0 +1,115 @@
+{
+  "completeness": "complete",
+  "deferred": [],
+  "documentType": "codex-security.coverage",
+  "excludePaths": [],
+  "explicitExclusions": [
+    {
+      "pattern": "runtime/**",
+      "reason": "Generated payloads validated via digest/schema/reconciliation."
+    },
+    {
+      "pattern": "evidence/**",
+      "reason": "Generated assurance outputs are non-executable evidence."
+    },
+    {
+      "pattern": "output/**",
+      "reason": "Non-executable screenshots."
+    }
+  ],
+  "includePaths": [
+    "."
+  ],
+  "inventoryStrategy": "repository",
+  "mode": "repository",
+  "openQuestions": [],
+  "scanId": "cae01926-68c2-4708-8a02-41a27556228f",
+  "schemaVersion": "1.0",
+  "surfaces": [
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/main.py",
+        "app/intelligence/contracts.py"
+      ],
+      "id": "surface_public-apis-and-bounds",
+      "label": "Public APIs and bounds",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/contracts.py",
+        "app/repository.py",
+        "app/intelligence/market.py"
+      ],
+      "id": "surface_snapshot-and-market-provenance",
+      "label": "Snapshot and market provenance",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/intelligence/user.py",
+        "migrations/003_private_intelligence_security.sql",
+        "migrations/007_retention_security_definer.sql"
+      ],
+      "id": "surface_tenant-identity-rls-and-retention",
+      "label": "Tenant identity, RLS and retention",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/intelligence/discovery.py",
+        "app/intelligence/comparative.py",
+        "app/intelligence/regime.py"
+      ],
+      "id": "surface_discovery-scoring-and-regime-recommendation-integrity",
+      "label": "Discovery, scoring and regime recommendation integrity",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "web/",
+        "app/main.py"
+      ],
+      "id": "surface_browser-rendering-and-response-headers",
+      "label": "Browser rendering and response headers",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/intelligence/cache.py",
+        "app/intelligence/market.py"
+      ],
+      "id": "surface_cache-freshness-and-atomic-promotion",
+      "label": "Cache freshness and atomic promotion",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/intelligence/assurance.py",
+        "assurance/"
+      ],
+      "id": "surface_operations-release-and-audit-automation",
+      "label": "Operations, release and audit automation",
+      "receiptRefs": []
+    },
+    {
+      "disposition": "no_issue_found",
+      "evidence": [
+        "app/config.py",
+        ".env.example",
+        "README.md",
+        "Dockerfile"
+      ],
+      "id": "surface_deployment-secrets-and-roles",
+      "label": "Deployment secrets and roles",
+      "receiptRefs": []
+    }
+  ]
+}

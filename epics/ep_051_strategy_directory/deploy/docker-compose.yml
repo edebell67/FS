@@ -1,0 +1,42 @@
+# EP051 container topology. Version 1.0.0 (2026-08-23).
+name: ep051-strategy-directory
+services:
+  db:
+    image: postgres:16.4-alpine
+    environment:
+      POSTGRES_DB: ${EP051_DB_NAME:-ep051}
+      POSTGRES_USER: ${EP051_DB_USER:-ep051_app}
+      POSTGRES_PASSWORD: ${EP051_DB_PASSWORD:?EP051_DB_PASSWORD is required}
+    volumes: [ep051_db:/var/lib/postgresql/data]
+    healthcheck: {test: [CMD-SHELL, "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"], interval: 10s, timeout: 5s, retries: 5}
+    networks: [private]
+  cache:
+    image: redis:7.2.5-alpine
+    command: [redis-server, --save, "", --appendonly, "no"]
+    healthcheck: {test: [CMD, redis-cli, ping], interval: 10s, timeout: 3s, retries: 5}
+    networks: [private]
+  directory:
+    image: python:3.13.1-slim
+    working_dir: /app
+    command: ["python", "solution/service.py"]
+    environment:
+      PORT: "8080"
+      EP051_SNAPSHOT: "${EP051_SNAPSHOT:-not-published}"
+    volumes: ["..:/app:ro"]
+    ports: ["${EP051_HTTP_PORT:-8080}:8080"]
+    depends_on:
+      db: {condition: service_healthy}
+      cache: {condition: service_healthy}
+    healthcheck: {test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/healthz')"], interval: 10s, timeout: 3s, retries: 5}
+    read_only: true
+    tmpfs: [/tmp]
+    networks: [public, private]
+  worker:
+    image: python:3.13.1-slim
+    working_dir: /app
+    command: ["python", "solution/verify_runtime.py"]
+    volumes: ["..:/app:ro"]
+    restart: "no"
+    networks: [private]
+volumes: {ep051_db: {}}
+networks: {public: {}, private: {internal: true}}

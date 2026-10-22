@@ -133,8 +133,8 @@ test("verification HTML uses the approved black-and-lime TTP shell without raw a
     listingUrl: "https://thetechprinciple.com/directory/business/example-ltd",
     expiresAt: new Date("2026-08-16T00:00:00Z"),
   });
-  assert.match(email.html, /background:#111111/);
-  assert.match(email.html, /background:#d7f542;color:#111111/);
+  assert.match(email.html, /background:#080808/);
+  assert.match(email.html, /background:#b6ff00;color:#080808/);
   assert.match(email.html, /Review and correct details/);
   assert.match(email.html, /View public listing/);
   assert.doesNotMatch(email.html, /prepared message as sent/i);

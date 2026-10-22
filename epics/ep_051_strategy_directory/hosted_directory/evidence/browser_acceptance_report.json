@@ -1,0 +1,22 @@
+{
+  "schema_version": "1.0.0",
+  "run_at": "2026-08-24T16:10:00+01:00",
+  "base_url": "http://127.0.0.1:8012",
+  "passed": true,
+  "assertions": {
+    "all_http_200": true,
+    "all_content_ready": true,
+    "no_mobile_horizontal_overflow_at_390px": true,
+    "console_error_count": 0
+  },
+  "pages": [
+    {"name":"directory","title":"DNA Strategy Directory","desktop":"output/playwright/directory-final-desktop.png","mobile":"output/playwright/directory-final-mobile.png"},
+    {"name":"strategy","title":"Strategy evidence","desktop":"output/playwright/strategy-final-desktop.png","mobile":"output/playwright/strategy-final-mobile.png"},
+    {"name":"compare","title":"Compare DNA strategies","desktop":"output/playwright/compare-final-desktop.png","mobile":"output/playwright/compare-final-mobile.png"},
+    {"name":"builder","title":"DNA portfolio builder","desktop":"output/playwright/builder-final-desktop.png","mobile":"output/playwright/builder-final-mobile.png"},
+    {"name":"intelligence","title":"DNA Intelligence Finder","desktop":"output/playwright/intelligence-final-desktop.png","mobile":"output/playwright/intelligence-final-mobile.png"},
+    {"name":"regimes","title":"DNA regime intelligence","desktop":"output/playwright/regimes-final-desktop.png","mobile":"output/playwright/regimes-final-mobile.png"},
+    {"name":"account","title":"Your DNA intelligence","desktop":"output/playwright/account-final-desktop.png","mobile":"output/playwright/account-final-mobile.png"}
+  ],
+  "console_errors": []
+}

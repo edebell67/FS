@@ -1,0 +1,724 @@
+<!doctype html>
+<!-- epics/ep_057_sql_to_pgsql/cross_signal_prototype/cross_signal.template.html — interactive cross-signal replay / strategy comparison screen (template for cross_signal.html)
+
+ VERSION HISTORY
+ v1.13.0 · 2026-10-02 · Adds the Side filter (Both / Buy only / Sell only) for any strategy, on A and on B; saved with results.
+ v1.12.0 · 2026-10-02 · Adds the buy_only and sell_only strategies (one position on a fixed side, TP / SL, re-enter after each exit).
+ v1.11.0 · 2026-10-01 · Adds the light / dark switch (theme variables, theme-aware canvas colours, remembered, defaults to the system setting).
+ v1.10.0 · 2026-10-01 · Adds the draggable chart-height handle (mouse, touch, arrow keys; remembered) and moves Note / Save / CSV into the top row.
+ v1.9.1 · 2026-10-01 · Status line says 'quotes API down · live prices from the Z: file backup' instead of showing the raw API error.
+ v1.10.1 · 2026-10-02 · Side-by-side A/B trade lists also show cum_net / cum_alt.
+ v1.10.0 · 2026-10-02 · Trades list and saved trades carry running cum_net / cum_alt (pips) per trade.
+ v1.9.0 · 2026-10-01 · Adds the add-position overlay for any strategy (Add at +/- pips, size, max adds) with multi-position P&L.
+ v1.8.0 · 2026-10-01 · Mobile-friendly pass: grouped collapsible controls, 44px touch targets, 16px inputs, scrollable tables, wrapped empty/loading messages.
+ v1.7.0 · 2026-10-01 · Adds the product-config modal (trade quantity) and quantity-based amount cards.
+ v1.6.0 · 2026-10-01 · Adds live paper mode: instrument picker (forex + crypto), per-instrument pip size, price-frequency control, live badge and signal alerts.
+ v1.5.0 · 2026-10-01 · Adds date selection from the capture files, save-result for later review, and weekday / no-data handling.
+ v1.4.0 · 2026-10-01 · Adds time-based (N minutes) lookback and brk / brk_r / brk_rev strategies with lookback comparison table.
+ v1.3.0 · 2026-10-01 · Adds side-by-side strategy comparison (two charts, A vs B analysis) and alt_net flip-side display with red/green colouring.
+ v1.2.0 · 2026-10-01 · Adds P&L with bid/ask fills, commission, 20:00 stop and the strategy registry (counter_1, ladder_fade_1, trend_1, swing_1 ...).
+ v1.0.0 · 2026-10-01 · Initial version: price chart with replay and the first cross-signal strategies.
+ -->
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cross Signal – __PRODUCT__</title>
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('theme')||(matchMedia('(prefers-color-scheme: light)').matches?'light':'dark')}catch(e){document.documentElement.dataset.theme='dark'}</script>
+<style>
+:root{color-scheme:dark;--bg:#0f1216;--panel:#181d24;--fg:#e6e9ee;--mut:#8b94a3;--up:#2ecc71;--dn:#e74c3c;--ref:#f5b942;--line:#4aa3ff;--accent:#4aa3ff;--bd:#2a323d;--btn:#2a323d;--grid:var(--grid);--grip:#4a5566;--toast-bg:#162a1e;--toast-err-bg:#2a1618;--flash:#2ecc7155}
+:root[data-theme=light]{color-scheme:light;--bg:#f3f5f8;--panel:#ffffff;--fg:#1b2330;--mut:#566173;--up:#15803d;--dn:#c62828;--ref:#c77d00;--line:#1d6fd6;--accent:#1d6fd6;--bd:#c9d1dc;--btn:#e2e7ee;--grid:#e7ebf1;--grip:#a6b0be;--toast-bg:#e7f6ec;--toast-err-bg:#fdeceb;--flash:#15803d33}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14px system-ui,sans-serif;padding:12px}
+h1{font-size:18px;margin:0 0 8px}.row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px}
+label{display:flex;flex-direction:column;font-size:11px;color:var(--mut);gap:2px}
+input{background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px;width:110px;font-size:14px}
+button{background:var(--btn);color:var(--fg);border:0;border-radius:6px;padding:8px 12px;font-size:13px;align-self:flex-end}
+#charts{display:grid;grid-template-columns:1fr;gap:8px}#charts.two{grid-template-columns:1fr 1fr}@media(max-width:900px){#charts.two{grid-template-columns:1fr}}.wrap{background:var(--panel);border-radius:8px;position:relative}input[type=checkbox]{width:20px;height:20px;accent-color:var(--accent);padding:0}canvas{width:100%;height:var(--chartH,55vh);min-height:120px;display:block;touch-action:none}
+#stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px;margin:8px 0}
+.card{background:var(--panel);border-radius:8px;padding:8px}.card b{display:block;font-size:18px}.card span{font-size:11px;color:var(--mut)}
+#log{max-height:240px;overflow:auto;background:var(--panel);border-radius:8px;font:12px ui-monospace,monospace}
+#trades div{padding:4px 8px;border-bottom:1px solid var(--grid);white-space:nowrap}#log div{padding:4px 8px;border-bottom:1px solid var(--grid);white-space:nowrap}.B{color:var(--up)}.S{color:var(--dn)}
+input[type=range]{width:100%;padding:0}small{color:var(--mut)}
+#toast{position:fixed;top:12px;right:12px;z-index:50;max-width:min(92vw,420px);background:var(--toast-bg);color:var(--fg);border:1px solid var(--up);border-left:6px solid var(--up);border-radius:8px;padding:10px 14px;font-size:13px;box-shadow:0 6px 24px #0008;opacity:0;transform:translateY(-8px);transition:opacity .2s,transform .2s;pointer-events:none}
+#toast.show{opacity:1;transform:none}#toast.err{background:var(--toast-err-bg);border-color:var(--dn)}
+button.ok{background:#1f7a46!important}button.err{background:#a33!important}
+@keyframes flashrow{from{background:var(--flash)}to{background:transparent}}tr.flash td{animation:flashrow 2.5s ease-out}
+#cfgmask{position:fixed;inset:0;background:#000a;z-index:60;display:flex;align-items:center;justify-content:center;padding:16px}
+#cfgmask[hidden]{display:none}
+#cfgmodal{background:var(--panel);border:1px solid var(--bd);border-radius:12px;width:min(480px,100%);max-height:90vh;overflow:auto;padding:18px 20px;box-shadow:0 12px 48px #000a}
+#cfgmodal h2{margin:0 0 4px;font-size:17px}#cfgmodal .sub{color:var(--mut);font-size:12px;margin-bottom:14px}
+#cfgmodal .fld{margin-bottom:14px}#cfgmodal .fld label{display:block;font-size:13px;color:var(--fg);margin-bottom:4px}
+#cfgmodal .fld input{width:100%;font-size:16px;padding:9px}#cfgmodal .hint{font-size:11px;color:var(--mut);margin-top:3px}
+#cfgmodal .err{color:var(--dn);font-size:12px;min-height:16px;margin-top:3px}
+#cfgmodal .actions{display:flex;justify-content:flex-end;gap:8px;margin-top:6px}#cfgmodal .actions button{padding:9px 16px;font-size:14px}
+#cfgmodal .actions .primary{background:#1f7a46}
+.status{margin:0 0 8px;line-height:1.5}.status small{font-size:12px}
+details{background:var(--panel);border-radius:8px;margin:0 0 8px;padding:0 10px}details>summary{cursor:pointer;font-weight:600;padding:10px 0;list-style-position:inside}details[open]>summary{border-bottom:1px solid var(--grid);margin-bottom:8px}
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:6px}.scroll table{min-width:520px}
+.sbs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#trades,#log,#saved>div{-webkit-overflow-scrolling:touch}
+@media(max-width:700px){
+  body{padding:8px}h1{font-size:16px}
+  label{font-size:12px}
+  .row{gap:8px}.row>label{flex:1 1 150px}.row.quick>label{flex:1 1 140px}
+  input,select,button{min-height:44px;font-size:16px}
+  input:not([type=checkbox]):not([type=range]),select{width:100%;max-width:none!important}
+  input[type=checkbox]{width:26px;height:26px;min-height:0}
+  input[type=range]{min-height:36px}
+  button{padding:10px 14px}.row.quick button#cfgbtn,.row.quick button#play{flex:1 1 auto}
+  .row.quick a{padding:0 8px;font-size:14px}
+  summary{min-height:44px;display:flex;align-items:center}
+  canvas{height:var(--chartH,44vh)!important;min-height:120px;touch-action:pan-y}
+  #stats{grid-template-columns:repeat(2,1fr)}.card b{font-size:17px}
+  .sbs{grid-template-columns:1fr}
+  #toast{left:8px;right:8px;top:8px;max-width:none}
+  #cfgmask{padding:8px;align-items:flex-end}#cfgmodal{padding:16px;border-radius:14px 14px 8px 8px;max-height:92vh}
+  #cfgmodal .actions button{min-height:48px;flex:1}
+  #saved td button{min-height:44px;min-width:44px;padding:6px 10px;font-size:14px}
+  .row.quick a{display:inline-flex;align-items:center;min-height:44px}
+}
+#chartgrip{height:20px;display:flex;align-items:center;justify-content:center;cursor:ns-resize;touch-action:none;margin:2px 0 6px;border-radius:6px;user-select:none}
+#chartgrip span{width:72px;height:5px;border-radius:3px;background:var(--grip)}#chartgrip:hover span,#chartgrip:focus-visible span,#chartgrip.drag span{background:var(--accent)}
+#chartgrip:focus-visible{outline:2px solid var(--accent)}@media(max-width:700px){#chartgrip{height:44px}#chartgrip span{width:96px;height:6px}}
+.titlebar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}.titlebar h1{margin:0}
+#themebtn{align-self:center;white-space:nowrap}
+</style></head><body>
+<div class="titlebar"><h1>Cross signal · __PRODUCT__ · <span id="sname"></span></h1><button id="themebtn" type="button" aria-label="Switch between light and dark mode" title="Switch light / dark mode"></button></div>
+<div class="status"><small>tap / click the chart = set start time + ref price</small> <small id="live"></small> <small id="badge" style="font-weight:bold"></small> <small id="freqinfo" style="color:var(--mut)"></small> <small style="color:var(--mut)">build __BUILD__</small></div>
+<div class="row quick">
+<label>Instrument<select id="inst" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px;max-width:170px"></select></label>
+<button id="cfgbtn" title="Trading configuration for this product (trade quantity ...)">⚙ Config</button>
+<label>Date<select id="day" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px"></select></label>
+<button id="dprev" title="previous day">◀</button>
+<button id="dnext" title="next day">▶</button>
+<button id="dreload" title="reload this day's data">↻ Reload</button>
+<label>Strategy<select id="strat" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px;max-width:230px"></select></label>
+<label>Side<select id="sidemode" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px" title="Execute both sides, or only buys / only sells. Opposite-side signals are ignored, or close an open trade on stop-and-reverse strategies."><option value="both">Both sides</option><option value="B">Buy only</option><option value="S">Sell only</option></select></label>
+<button id="play">▶ Replay</button>
+<label>Speed<select id="spd" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px"><option value="1500">Very slow</option><option value="700" selected>Slow</option><option value="250">Medium</option><option value="80">Fast</option><option value="20">Turbo</option></select></label>
+
+<label>Note<input id="note" type="text" style="width:150px" placeholder="optional"></label>
+<button id="save" title="save this result for review">💾 Save result</button>
+<a href="/api/results.csv" style="color:var(--accent);align-self:flex-end;font-size:13px;padding:8px 4px" title="download saved results as CSV">CSV</a>
+</div>
+<details id="more"><summary>Strategy settings</summary><div class="row">
+<label>Start time<input id="start" type="time" step="1"></label>
+<label>Ref price<input id="ref" type="number" step="0.00005"></label>
+<label>Price freq<select id="freq" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px" title="Sampling interval of the price feed. The capture files are ~5 s apart: coarser options thin the history to that interval; 1-2 s only apply to live sampling."><option value="1">1 sec (live only)</option><option value="2">2 sec (live only)</option><option value="5" selected>5 sec (as captured)</option><option value="10">10 sec</option><option value="15">15 sec</option><option value="30">30 sec</option><option value="60">1 min</option></select></label>
+<label>Pip size<input id="pip" type="number" step="any" value="0.0001"></label>
+<label>Step (±)<input id="d" type="number" step="0.00005" value="0.0005"></label>
+<label>Freq K<input id="freqk" type="number" step="1" value="5"></label>
+<label>Stop at<input id="stopat" type="time" step="1" value="20:00:00"></label>
+<label>Brk n<input id="brkn" type="number" step="1" value="3"></label>
+<label>Lookback<select id="lbmode" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px"><option value="n">n distinct prices</option><option value="m">N minutes</option></select></label>
+<label>Minutes<input id="lbmin" type="number" step="1" value="7"></label>
+<label>TP (pips)<input id="tpp" type="number" step="0.5" value="20"></label>
+<label>SL (pips)<input id="slp" type="number" step="0.5" value="5"></label>
+<label>Comm (pips)<input id="comm" type="number" step="0.5" value="1"></label>
+<label>Hold (min)<input id="hold" type="number" step="1" value="5"></label>
+<label>Stall (min)<input id="stall" type="number" step="1" value="15"></label>
+<label>Add at (pips ±, 0 = off)<input id="addat" type="number" step="0.5" value="0" title="Add a position when the newest open position reaches this net return: +2 = up 2 pips, -2 = down 2 pips. Works on any strategy."></label>
+<label>Add size (positions)<input id="addsz" type="number" step="1" min="1" value="1"></label>
+<label>Max adds<input id="addmax" type="number" step="1" min="1" value="1"></label>
+<button id="auto">Ref = first price</button>
+</div></details>
+<details id="cmpbox"><summary>Compare with a second strategy (B)</summary><div class="row">
+<label>Compare with B<input id="cmp" type="checkbox" style="width:auto;height:30px"></label>
+<label>Strategy B<select id="stratB" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px;max-width:200px"></select></label>
+<label>B: Side<select id="sidemodeB" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px"><option value="both">Both sides</option><option value="B">Buy only</option><option value="S">Sell only</option></select></label>
+<label>B: Brk n<input id="brknB" type="number" step="1" value="10"></label>
+<label>B: Lookback<select id="lbmodeB" style="background:var(--panel);color:var(--fg);border:1px solid var(--bd);border-radius:6px;padding:6px"><option value="n">n distinct prices</option><option value="m">N minutes</option></select></label>
+<label>B: Minutes<input id="lbminB" type="number" step="1" value="30"></label>
+</div></details>
+<div id="charts"><div class="wrap"><canvas id="c"></canvas></div><div class="wrap" id="wrap2" style="display:none"><canvas id="c2"></canvas></div></div>
+<div id="chartgrip" role="separator" aria-orientation="horizontal" aria-label="Drag to resize the charts" tabindex="0" title="Drag to change the chart height (double-click to reset)"><span></span></div>
+<label style="margin:6px 0">Replay up to <span id="upto"></span><input id="scrub" type="range" min="0" max="1000" value="1000"></label>
+<div id="stats"></div>
+<div id="cmpOut"></div>
+<div id="sweep"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+<div id="savemsg" style="font-size:12px;color:var(--mut);margin:4px 0"></div>
+<div id="saved"></div>
+<div id="trades" style="max-height:200px;overflow:auto;background:var(--panel);border-radius:8px;font:12px ui-monospace,monospace;margin-bottom:8px"></div>
+<div id="log"></div>
+<div id="cfgmask" hidden><form id="cfgform" role="dialog" aria-modal="true" aria-labelledby="cfgtitle" novalidate>
+  <div id="cfgmodal"><h2 id="cfgtitle">Trading config</h2><div class="sub" id="cfgsub"></div><div id="cfgfields"></div>
+  <div class="sub">Paper trading only: nothing is sent to a broker or exchange. The configuration is stored per product.</div>
+  <div class="actions"><button type="button" id="cfgcancel">Cancel</button><button type="submit" class="primary">Save</button></div></div></form></div>
+<script>
+let DATA=__DATA__,loaded=false,CODE='__PRODUCT__',ASSET='F',PIPAUTO=true,DAYS=[];const TYPES={};
+const PIPV=()=>+$('pip').value||1e-4;                       // price units per "pip" (editable; auto per instrument)
+const dp=()=>Math.max(0,-Math.floor(Math.log10(PIPV()))+1); // decimals to show for prices
+const autoPip=(px,type)=>type==='C'?10**(Math.floor(Math.log10(px))-4):(px>=50?0.01:0.0001);
+function setPip(px){if(!PIPAUTO||!px)return;const pp=+autoPip(px,ASSET).toPrecision(3);$('pip').value=pp;$('d').value=+(5*pp).toPrecision(3)}
+const $=id=>document.getElementById(id);
+const fmt=t=>new Date(t).toTimeString().slice(0,8);
+let dayStart=0;
+const meanP=b=>{let s=0,n=0;b.p.forEach(x=>{s+=x[0]*x[1];n+=x[1]});return s/n};
+const prep=()=>{DATA.forEach(b=>{b.m=meanP(b);b.mx=Math.max(...b.p.map(x=>x[0]));b.mn=Math.min(...b.p.map(x=>x[0]))});dayStart=DATA.length?new Date(DATA[0].t).setHours(0,0,0,0):0};
+prep();
+let startT=DATA.length?DATA[0].t:0, R0=DATA.length?DATA[0].m:0;
+function setStart(t,r){startT=t;R0=r;$('start').value=fmt(t);$('ref').value=r.toFixed(dp());run()}
+
+// Engine: up-cross -> BUY & ref ratchets to the new top; down-cross -> SELL & ref ratchets to the new bottom;
+// stall with no cross -> ref pulled back to the recent top (long) / bottom (short) so a failure flips the signal.
+// counter_1: fade the move. After price runs >= step away from ref, BUY once no trade has printed below the
+// low for holdMs (floor), SELL once no trade has printed above the high for holdMs (ceiling). Ref resets to the signal price.
+function engineCounter(startT,R0,d,holdMs,upto,repeat){
+  let R=R0,dir=0,lo=1e9,hi=-1e9,loT=startT,hiT=startT;
+  const steps=[{t:startT,R}],log=[],marks=[];
+  for(const b of DATA){
+    if(b.t<startT)continue; if(b.t>upto)break;
+    let up=0,dn=0;for(const [p,n] of b.p){if(p>R+d)up+=n;else if(p<R-d)dn+=n}
+    if(b.mn<lo){lo=b.mn;loT=b.t} if(b.mx>hi){hi=b.mx;hiT=b.t}
+    let act='';
+    if((repeat||dir!==1)&&lo<=R-d&&b.t-loT>=holdMs){
+      act='BUY floor '+lo.toFixed(dp());marks.push({t:b.t,p:b.m,s:'B'});dir=1;R=b.m;lo=b.mn;hi=b.mx;loT=hiT=b.t;steps.push({t:b.t,R});
+    }else if((repeat||dir!==-1)&&hi>=R+d&&b.t-hiT>=holdMs){
+      act='SELL ceiling '+hi.toFixed(dp());marks.push({t:b.t,p:b.m,s:'S'});dir=-1;R=b.m;lo=b.mn;hi=b.mx;loT=hiT=b.t;steps.push({t:b.t,R});
+    }
+    log.push({t:b.t,R,up,dn,act:act.startsWith('BUY')?'BUY':act.startsWith('SELL')?'SELL':'',note:act,price:b.m,dir});
+  }
+  return {steps,log,marks,R,dir};
+}
+// Generic helper for simple engines: fire(b,ctx) returns 'B','S' or ''.
+function simple(startT,R0,upto,onBatch){
+  const st={R:R0,dir:0},steps=[{t:startT,R:R0}],log=[],marks=[];
+  for(const b of DATA){
+    if(b.t<startT)continue; if(b.t>upto)break;
+    const r=onBatch(b,st)||{};const a=r.sig||'';
+    if(a){marks.push({t:b.t,p:b.m,s:a});st.dir=a==='B'?1:a==='S'?-1:0}
+    if(r.R!==undefined&&r.R!==st.R){st.R=r.R;steps.push({t:b.t,R:st.R})}
+    log.push({t:b.t,R:st.R,up:r.up||0,dn:r.dn||0,act:a==='B'?'BUY':a==='S'?'SELL':a==='X'?'EXIT':'',note:r.note||'',price:b.m,dir:st.dir});
+  }
+  return {steps,log,marks,R:st.R,dir:st.dir};
+}
+// range_fade_1: fixed ref. BUY when price trades step below ref, SELL when step above (mean reversion to a fixed level).
+function engineRangeFade(startT,R0,d,upto){
+  return simple(startT,R0,upto,(b,st)=>{
+    let up=0,dn=0;for(const [p,n] of b.p){if(p>R0+d)up+=n;else if(p<R0-d)dn+=n}
+    if(b.mn<=R0-d&&st.dir!==1)return{sig:'B',up,dn,note:'BUY below ref-step'};
+    if(b.mx>=R0+d&&st.dir!==-1)return{sig:'S',up,dn,note:'SELL above ref+step'};
+    return{up,dn};
+  });
+}
+// swing_1: zigzag reversal. Flip once price retraces one step from the running extreme; ref follows the extreme.
+function engineSwing(startT,R0,d,upto){
+  let hi=R0,lo=R0;
+  return simple(startT,R0,upto,(b,st)=>{
+    hi=Math.max(hi,b.mx);lo=Math.min(lo,b.mn);
+    if(st.dir>=0&&b.mn<=hi-d&&hi>R0){const r={sig:'S',R:b.m,note:'SELL pullback from '+hi.toFixed(dp())};hi=lo=b.m;return r}
+    if(st.dir<=0&&b.mx>=lo+d&&lo<R0){const r={sig:'B',R:b.m,note:'BUY bounce from '+lo.toFixed(dp())};hi=lo=b.m;return r}
+    return{R:st.dir>0?hi:st.dir<0?lo:st.R};
+  });
+}
+// channel_1: N-minute channel breakout (N = Hold). BUY above the prior N-min high, SELL below the prior N-min low.
+function engineChannel(startT,R0,d,holdMs,upto){
+  const win=[];
+  return simple(startT,R0,upto,(b,st)=>{
+    while(win.length&&b.t-win[0].t>holdMs)win.shift();
+    let out={};
+    if(win.length>2){
+      const H=Math.max(...win.map(x=>x.mx)),L=Math.min(...win.map(x=>x.mn));
+      if(b.mx>H&&st.dir!==1)out={sig:'B',R:H,note:'BUY break '+H.toFixed(dp())};
+      else if(b.mn<L&&st.dir!==-1)out={sig:'S',R:L,note:'SELL break '+L.toFixed(dp())};
+    }
+    win.push(b);return out;
+  });
+}
+// ladder_fade_1: frequency count per 0.00005 price level (counted from the start of the data, causal). When price moves onto a
+// level visited <= K times, trade against the move that got it there (arrived from below -> SELL, from above -> BUY).
+function engineLadder(startT,R0,k,upto){
+  const cnt={},q5=PIPV()/2,lv=b=>(Math.round(b.m/q5)*q5).toFixed(dp()+1);
+  const warm=Math.min(500,Math.floor(DATA.length*0.03));let prev=null,i=0;
+  for(const b of DATA){if(b.t>=startT)break;const l=lv(b);cnt[l]=(cnt[l]||0)+1;prev=+l;i++}
+  return simple(startT,R0,upto,(b,st)=>{
+    const l=lv(b),v=+l;cnt[l]=(cnt[l]||0)+1;const from=prev;prev=v;i++;
+    if(i<=warm||from===null||v===from||cnt[l]>k)return{note:'lvl '+l+' n='+cnt[l]};
+    const sig=v>from?'S':'B';if(st.dir===(sig==='B'?1:-1))return{};
+    return{sig,R:b.m,note:(sig==='B'?'BUY':'SELL')+' rare lvl '+l+' n='+cnt[l]};
+  });
+}
+// brk_rev = brk plus: an opposite-side entry signal closes the open trade and reverses it (before TP/SL).
+// brk / brk_r: short-term breakout over the previous n DISTINCT prices (the quote feed repeats the same price on ~98% of ticks).
+// New price above all previous n -> BUY (brk) or SELL (brk_r, the fade); below all n -> the opposite. One position at a time,
+// exit at TP / SL pips (no re-entry on the exit batch). Exit marks ('X') flatten the position in pnl().
+function engineBrk(startT,R0,upto,n,tp,sl,follow,rev,mins,only){
+  const hist=[],win=[];let pos=null,firstT=null;
+  return simple(startT,R0,upto,(b,st)=>{
+    const bid=b.bid!=null?b.bid:b.m,ask=b.ask!=null?b.ask:b.m;let out={};
+    if(firstT===null)firstT=b.t;
+    const isNew=!hist.length||b.m!==hist[hist.length-1];
+    let sg=null; // side an entry would take on this batch
+    if(mins>0){ // time lookback: above / below every mid of the previous `mins` minutes (a full window is needed first)
+      while(win.length&&win[0].t<b.t-mins*60000)win.shift();
+      if(b.t-firstT>=mins*60000&&win.length){let mx=-1e9,mn=1e9;for(const w of win){if(w.m>mx)mx=w.m;if(w.m<mn)mn=w.m}
+        if(b.m>mx)sg=follow?'B':'S';else if(b.m<mn)sg=follow?'S':'B'}
+    }else if(isNew&&hist.length>=n){const w=hist.slice(-n);
+      if(b.m>Math.max(...w))sg=follow?'B':'S';else if(b.m<Math.min(...w))sg=follow?'S':'B'}
+    const lb=mins>0?mins+'m':n;
+    let opp=false;if(only&&sg&&sg!==only){opp=true;sg=null} // signal for the side that is switched off
+    const open=s2=>{pos={s:s2,e:s2==='B'?ask:bid};return{sig:s2,note:(rev&&out.rv?'REVERSE to ':'')+(s2==='B'?'BUY':'SELL')+' vs prev '+lb}};
+    if(pos){
+      const pips=(pos.s==='B'?bid-pos.e:pos.e-ask)/PIPV();
+      if(pips>=tp||pips<=-sl){out={sig:'X',note:(pips>0?'TP ':'SL ')+pips.toFixed(1)};pos=null}
+      else if(rev&&opp){out={sig:'X',note:'EXIT on opposite signal ('+(only==='B'?'buy':'sell')+' only)'};pos=null}
+      else if(rev&&sg&&sg!==pos.s){out={rv:1};out=open(sg)} // opposite entry criteria met: close and reverse
+    }else if(sg)out=open(sg);
+    if(isNew)hist.push(b.m);
+    if(mins>0)win.push({t:b.t,m:b.m});
+    return out;
+  });
+}
+// buy_only / sell_only: always holds ONE position on a fixed side. Exit at TP or SL (pips, per trade); re-enter on the next batch after
+// any exit (target or stop), so the strategy is back in the market straight away. BUY fills at the ask, SELL at the bid.
+function engineSide(startT,R0,upto,tp,sl,side){
+  let pos=null;
+  return simple(startT,R0,upto,(b,st)=>{
+    const bid=b.bid!=null?b.bid:b.m,ask=b.ask!=null?b.ask:b.m;
+    if(pos){
+      const pips=(pos.s==='B'?bid-pos.e:pos.e-ask)/PIPV();
+      if(pips>=tp||pips<=-sl){pos=null;return{sig:'X',note:(pips>0?'TP ':'SL ')+pips.toFixed(1)+' · re-enter next tick'}}
+      return{};
+    }
+    pos={s:side,e:side==='B'?ask:bid};
+    return{sig:side,note:(side==='B'?'BUY':'SELL')+' ('+(side==='B'?'buy':'sell')+' only)'};
+  });
+}
+const STRATS={
+  trend_1:{label:'trend_1 – breakout ratchet',run:(a)=>engine(a.startT,a.R0,a.d,a.stall,a.upto)},
+  counter_1:{label:'counter_1 – floor/ceiling fade',run:a=>engineCounter(a.startT,a.R0,a.d,a.hold,a.upto,false)},
+  counter_2:{label:'counter_2 – counter_1, repeat signals',run:a=>engineCounter(a.startT,a.R0,a.d,a.hold,a.upto,true)},
+  range_fade_1:{label:'range_fade_1 – fixed-ref mean reversion',run:a=>engineRangeFade(a.startT,a.R0,a.d,a.upto)},
+  swing_1:{label:'swing_1 – zigzag reversal',run:a=>engineSwing(a.startT,a.R0,a.d,a.upto)},
+  ladder_fade_1:{label:'ladder_fade_1 – fade low-frequency prices',run:a=>engineLadder(a.startT,a.R0,a.k,a.upto)},
+  brk:{label:'brk – with n-price breakout, TP/SL',run:a=>engineBrk(a.startT,a.R0,a.upto,a.n,a.tp,a.sl,true,false,a.mins,a.only)},
+  buy_only:{label:'buy_only – BUY only, TP/SL, re-enter after exit',run:a=>engineSide(a.startT,a.R0,a.upto,a.tp,a.sl,'B')},
+  sell_only:{label:'sell_only – SELL only, TP/SL, re-enter after exit',run:a=>engineSide(a.startT,a.R0,a.upto,a.tp,a.sl,'S')},
+  brk_rev:{label:'brk_rev – brk that can reverse on opposite signal',run:a=>engineBrk(a.startT,a.R0,a.upto,a.n,a.tp,a.sl,true,true,a.mins,a.only)},
+  brk_r:{label:'brk_r – fade n-price breakout, TP/SL',run:a=>engineBrk(a.startT,a.R0,a.upto,a.n,a.tp,a.sl,false,false,a.mins,a.only)},
+  channel_1:{label:'channel_1 – N-min channel breakout',run:a=>engineChannel(a.startT,a.R0,a.d,a.hold,a.upto)},
+};
+$('stratB').innerHTML=Object.entries(STRATS).map(([k,v])=>`<option value="${k}"${k==='brk'?' selected':''}>${v.label}</option>`).join('');
+$('strat').innerHTML=Object.entries(STRATS).map(([k,v])=>`<option value="${k}"${k==='counter_1'?' selected':''}>${v.label}</option>`).join('');
+function engine(startT,R0,d,stallMs,upto){
+  let R=R0,dir=0,lastMove=startT,top=-1e9,bot=1e9;
+  const steps=[{t:startT,R}],log=[],marks=[];
+  for(const b of DATA){
+    if(b.t<startT)continue; if(b.t>upto)break;
+    let up=0,dn=0;
+    for(const [p,n] of b.p){if(p>R+d)up+=n;else if(p<R-d)dn+=n}
+    top=Math.max(top,b.mx);bot=Math.min(bot,b.mn);
+    let act='';
+    if(up>0&&up>=dn){
+      act=dir>0?'ratchet↑':'BUY';if(dir<=0)marks.push({t:b.t,p:b.mx,s:'B'});
+      R=b.mx;dir=1;lastMove=b.t;top=b.mx;bot=b.mn;steps.push({t:b.t,R});
+    }else if(dn>0){
+      act=dir<0?'ratchet↓':'SELL';if(dir>=0)marks.push({t:b.t,p:b.mn,s:'S'});
+      R=b.mn;dir=-1;lastMove=b.t;top=b.mx;bot=b.mn;steps.push({t:b.t,R});
+    }else if(dir!==0&&b.t-lastMove>=stallMs){
+      const nR=dir>0?Math.min(R,top):Math.max(R,bot);
+      if(nR!==R){act='stall→ref '+nR.toFixed(dp());R=nR;steps.push({t:b.t,R})}
+      lastMove=b.t;
+    }
+    log.push({t:b.t,R,up,dn,act,price:b.m,dir});
+  }
+  return {steps,log,marks,R,dir};
+}
+
+let replayT=null;
+const cv=$('c');
+const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim(); // theme colour for canvas drawing
+// One chart per strategy. Price is drawn only up to the replay position; the axes stay fixed to the whole day.
+function drawChart(canvas,res,upto,label,total,alt){
+  const ctx=canvas.getContext('2d'),dpr=devicePixelRatio||1,w=canvas.clientWidth,h=canvas.clientHeight;canvas.width=w*dpr;canvas.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);if(!DATA.length)return;
+  const pad={l:56,r:8,t:22,b:20};
+  const t0=DATA[0].t,t1=DATA[DATA.length-1].t;
+  let lo=Math.min(...DATA.map(b=>b.mn),R0),hi=Math.max(...DATA.map(b=>b.mx),R0);const m=(hi-lo)*.05||.0005;lo-=m;hi+=m;
+  const X=t=>pad.l+(t-t0)/(t1-t0||1)*(w-pad.l-pad.r),Y=p=>pad.t+(hi-p)/(hi-lo)*(h-pad.t-pad.b);
+  canvas._view={t0,t1,lo,hi,pad,w,h};
+  ctx.font='11px system-ui';ctx.fillStyle=css('--mut');ctx.strokeStyle=css('--grid');
+  for(let i=0;i<=5;i++){const p=lo+(hi-lo)*i/5,y=Y(p);ctx.beginPath();ctx.moveTo(pad.l,y);ctx.lineTo(w-pad.r,y);ctx.stroke();ctx.fillText(p.toFixed(dp()),2,y+3)}
+  for(let i=0;i<=6;i++){const t=t0+(t1-t0)*i/6;ctx.fillText(fmt(t).slice(0,5),X(t)-12,h-5)}
+  ctx.strokeStyle=css('--line');ctx.lineWidth=1.5;ctx.beginPath();let first=true;
+  for(const b of DATA){if(b.t>upto)break;first?ctx.moveTo(X(b.t),Y(b.m)):ctx.lineTo(X(b.t),Y(b.m));first=false}ctx.stroke();
+  ctx.strokeStyle=css('--ref');ctx.lineWidth=2;ctx.beginPath();
+  res.steps.forEach((s,i)=>{if(i){ctx.lineTo(X(s.t),Y(res.steps[i-1].R))}else ctx.moveTo(X(s.t),Y(s.R));ctx.lineTo(X(s.t),Y(s.R))});
+  ctx.lineTo(X(Math.min(upto,t1)),Y(res.R));ctx.stroke();
+  ctx.setLineDash([5,4]);ctx.strokeStyle=css('--fg');ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(X(startT),pad.t);ctx.lineTo(X(startT),h-pad.b);ctx.stroke();
+  ctx.strokeStyle=css('--mut');ctx.beginPath();ctx.moveTo(X(Math.min(upto,t1)),pad.t);ctx.lineTo(X(Math.min(upto,t1)),h-pad.b);ctx.stroke();ctx.setLineDash([]);
+  ctx.beginPath();ctx.arc(X(startT),Y(R0),5,0,7);ctx.fillStyle=css('--fg');ctx.fill();
+  res.marks.filter(k=>k.s!=='X').forEach(k=>{ctx.fillStyle=k.s==='B'?css('--up'):css('--dn');ctx.beginPath();
+    const x=X(k.t),y=Y(k.p),s=7;k.s==='B'?(ctx.moveTo(x,y-s),ctx.lineTo(x-s,y+s),ctx.lineTo(x+s,y+s)):(ctx.moveTo(x,y+s),ctx.lineTo(x-s,y-s),ctx.lineTo(x+s,y-s));ctx.fill();if(k.add){ctx.strokeStyle=css('--fg');ctx.lineWidth=1.5;ctx.stroke()}});
+  ctx.font='bold 12px system-ui';let tx=pad.l+4;
+  for(const [txt,col] of [[label,css('--fg')],[' · total '+total.toFixed(1),pcol(total)],[' · alt '+alt.toFixed(1)+' pips',pcol(alt)]]){ctx.fillStyle=col;ctx.fillText(txt,tx,14);tx+=ctx.measureText(txt).width}
+}
+// Side filter, for ANY strategy: with Buy only (Sell only) a sell (buy) entry is dropped, or, when a buy (sell) position is open, turned into an
+// exit. So stop-and-reverse strategies become long-only (short-only): they go flat on the opposite signal instead of reversing.
+const sideOf=id=>{const v=$(id).value;return v==='B'||v==='S'?v:null};
+function sideFilter(res,only){
+  if(!only||!res)return res;
+  const out=[];let cur=null;
+  for(const k of res.marks){
+    if(k.id!=null){out.push(k);continue}
+    if(k.s==='X'){if(cur){out.push(k);cur=null}continue}
+    if(k.s===only){out.push(k);cur=only}
+    else if(cur===only){out.push({t:k.t,p:k.p,s:'X'});cur=null}
+  }
+  return {...res,marks:out};
+}
+// Add-position rule, for ANY strategy: while the strategy holds a position, open extra positions on the same side when the NEWEST
+// open position's net return reaches `Add at` pips (+2 = up 2 pips, -2 = down 2 pips). `Add size` positions per add, `Max adds` add
+// events per strategy position (each measured from the newest position). Added positions close together with the strategy's position
+// (exit, reversal, TP/SL or the stop time); for TP/SL strategies (brk family) each added position also has its own TP/SL.
+function withAdds(res,eUpto,useTpSl){
+  const addAt=+$('addat').value||0;if(!addAt||!res||!res.marks.length)return res;
+  const size=Math.max(1,+$('addsz').value||1),maxA=Math.max(1,+$('addmax').value||1),tp=+$('tpp').value,sl=+$('slp').value,P1=PIPV();
+  const iv=[];let cur=null;
+  for(const k of res.marks){if(k.id!=null)continue;
+    if(k.s==='X'){if(cur){cur.end=k.t;iv.push(cur);cur=null}continue}
+    if(cur&&cur.s!==k.s){cur.end=k.t;iv.push(cur);cur=null}
+    if(!cur)cur={s:k.s,start:k.t}}
+  if(cur)iv.push(cur);
+  const lb=t=>{let lo=0,hi=DATA.length;while(lo<hi){const m=(lo+hi)>>1;if(DATA[m].t<t)lo=m+1;else hi=m}return lo};
+  const qt=b=>({bid:b.bid!=null?b.bid:b.m,ask:b.ask!=null?b.ask:b.m});
+  const extra=[],extraLog=[];let nid=1;
+  for(const p of iv){
+    const i0=lb(p.start);if(i0>=DATA.length)continue;
+    const q0=qt(DATA[i0]);let lastEntry=p.s==='B'?q0.ask:q0.bid,adds=0;const active=[];
+    const endIdx=p.end!==undefined?lb(p.end):DATA.length;
+    for(let j=i0+1;j<endIdx&&DATA[j].t<=eUpto;j++){
+      const b=DATA[j],{bid,ask}=qt(b);
+      if(useTpSl)for(let a=active.length-1;a>=0;a--){const z=active[a],pp=(p.s==='B'?bid-z.e:z.e-ask)/P1;
+        if(pp>=tp||pp<=-sl){extra.push({t:b.t,p:b.m,s:'X',id:z.id});active.splice(a,1)}}
+      if(adds<maxA){const lp=(p.s==='B'?bid-lastEntry:lastEntry-ask)/P1;
+        if((addAt>0&&lp>=addAt)||(addAt<0&&lp<=addAt)){const e=p.s==='B'?ask:bid;
+          for(let k=0;k<size;k++){const id=nid++;extra.push({t:b.t,p:b.m,s:p.s,id,add:true});active.push({id,e})}
+          extraLog.push({t:b.t,R:b.m,up:0,dn:0,act:'',note:'ADD '+size+' '+(p.s==='B'?'BUY':'SELL')+' (newest position '+(lp>0?'+':'')+lp.toFixed(1)+' pips)',price:b.m,dir:p.s==='B'?1:-1});
+          lastEntry=e;adds++}}
+    }
+    if(p.end!==undefined&&endIdx<DATA.length&&DATA[endIdx].t<=eUpto)for(const z of active)extra.push({t:DATA[endIdx].t,p:DATA[endIdx].m,s:'X',id:z.id});
+  }
+  if(!extra.length)return res;
+  return {...res,marks:[...res.marks,...extra].sort((a,b)=>a.t-b.t),log:[...res.log,...extraLog].sort((a,b)=>a.t-b.t)};
+}
+// Stop-and-reverse P&L: each signal closes the previous position at the signal price and opens the new one. Pips = 0.0001.
+const withCum=P=>{let cn=0,ca=0;return [...P.closed,...P.opens].sort((a,b)=>a.st-b.st).map(x=>{cn+=x.pips;ca+=(x.alt||0);return {...x,cum_net:cn,cum_alt:ca}})};
+const altH=v=>v==null?'–':`<span${v>0?' style="color:var(--up);font-weight:bold"':v<0?' style="color:var(--dn);font-weight:bold"':''}>${v.toFixed(1)}</span>`; // positive green, negative red
+const pcol=v=>v>0?css('--up'):v<0?css('--dn'):css('--fg');
+let LAST=null;
+let byT=null,byTn=-1;
+// Fills at bid/ask when the batch has a quote (BUY at ask, SELL at bid; a long closes at bid, a short closes at ask); mid otherwise.
+function pnl(marks,lastB){
+  if(byTn!==DATA.length){byT=new Map(DATA.map(b=>[b.t,b]));byTn=DATA.length}
+  const px=(b,side)=>b&&b.bid!=null?(side==='B'?b.ask:b.bid):b?b.m:null; // side = the order being placed
+  const trades=[];let cur=null;const openMap=new Map();
+  for(const k of marks){
+    const b=byT.get(k.t);
+    if(k.id!=null){ // positions added by the add-position rule, tracked by id independently of the strategy's own position
+      if(k.s==='X'){const o=openMap.get(k.id);if(o){o.exit=px(b,o.s==='B'?'S':'B');o.et=k.t;o.xb=b;trades.push(o);openMap.delete(k.id)}}
+      else openMap.set(k.id,{s:k.s,entry:px(b,k.s),st:k.t,eb:b,added:true});
+      continue}
+    if(k.s==='X'){if(cur){cur.exit=px(b,cur.s==='B'?'S':'B');cur.et=k.t;cur.xb=b;trades.push(cur);cur=null}continue}
+    if(cur&&cur.s!==k.s){cur.exit=px(b,k.s);cur.et=k.t;cur.xb=b;trades.push(cur);cur=null}
+    if(!cur)cur={s:k.s,entry:px(b,k.s),st:k.t,eb:b};
+  }
+  const cm=+$('comm').value||0;
+  // alt_net (display only): the mirror trade over the same entry/exit moments. An original BUY becomes a SELL filled at the bid and
+  // bought back at the ask; an original SELL becomes a BUY filled at the ask and sold at the bid. Commission deducted as normal.
+  const alt=x=>{const e=x.eb,q=x.xb;if(!e||!q)return null;
+    return x.s==='B'?(px(e,'S')-px(q,'B'))/PIPV()-cm:(px(q,'S')-px(e,'B'))/PIPV()-cm};
+  const closed=trades.map(x=>({...x,pips:(x.s==='B'?x.exit-x.entry:x.entry-x.exit)/PIPV()-cm,alt:alt(x)}));
+  const opens=[];
+  const openOf=o=>{const ex=px(lastB,o.s==='B'?'S':'B'),oo={...o,xb:lastB};return {...oo,exit:ex,open:true,pips:(o.s==='B'?ex-o.entry:o.entry-ex)/PIPV()-cm,alt:alt(oo)}};
+  if(lastB){if(cur)opens.push(openOf(cur));for(const o of openMap.values())opens.push(openOf(o))}
+  const openPips=opens.reduce((a,x)=>a+x.pips,0),openAlt=opens.reduce((a,x)=>a+(x.alt||0),0);
+  const open=opens.length?{...opens[0],pips:openPips,alt:openAlt,n:opens.length}:null; // aggregate of every open position, for the cards
+  const net=closed.reduce((a,x)=>a+x.pips,0),wins=closed.filter(x=>x.pips>0).length,altNet=closed.reduce((a,x)=>a+(x.alt||0),0);
+  return {closed,open,opens,net,wins,total:net+openPips,altNet,altTotal:altNet+openAlt};
+}
+// Side-by-side: how B's trades fared given what A was doing when B entered (and the reverse).
+const tradesOf=P=>[...P.closed,...P.opens].map(x=>({s:x.s,st:x.st,et:x.open?Infinity:x.et,pips:x.pips}));
+function condRows(X,Y,xn){
+  const g={},add=(k,y)=>{const o=g[k]||(g[k]={n:0,w:0,p:0});o.n++;o.w+=y.pips>0?1:0;o.p+=y.pips};
+  const cx=X.filter(x=>x.et!==Infinity).sort((a,b)=>a.et-b.et);
+  for(const y of Y){
+    const cur=X.find(x=>x.st<=y.st&&y.st<x.et);
+    add(xn+' '+(!cur?'flat':cur.s===y.s?'in same side':'in opposite side'),y);
+    const lc=[...cx].reverse().find(x=>x.et<=y.st);
+    add(xn+' last closed: '+(!lc?'none':lc.pips>0?'profit':'loss'),y);
+  }
+  return Object.keys(g).sort().map(k=>`<tr><td>${k}</td><td>${g[k].n}</td><td>${g[k].w}</td><td>${Math.round(g[k].w/g[k].n*100)}%</td><td class="${g[k].p>=0?'B':'S'}">${g[k].p.toFixed(1)}</td></tr>`).join('');
+}
+function sideBySide(PA,PB){
+  const L=P=>withCum(P).map(x=>`<div>${x.s==='B'?'BUY ':'SELL'} ${fmt(x.st)}→${x.open?'open':fmt(x.et)} ${x.entry.toFixed(dp())}→${x.exit.toFixed(dp())} ${altH(x.pips)} · alt ${altH(x.alt)} , cum_net ${altH(x.cum_net)} , cum_alt ${altH(x.cum_alt)}</div>`).join('');
+  return `<div style="margin:6px 0 2px"><b>Trades side by side</b> (A left, B right)</div><div class="sbs" style="max-height:300px;overflow:auto;background:var(--panel);border-radius:8px;font:11px ui-monospace,monospace;padding:4px"><div>${L(PA)}</div><div>${L(PB)}</div></div>`;
+}
+function compareHTML(PA,PB){
+  const A=tradesOf(PA),B=tradesOf(PB),th='<tr><th align=left>When entered…</th><th align=left>Trades</th><th align=left>Profit</th><th align=left>Win</th><th align=left>Pips</th></tr>';
+  const tbl=(t,r)=>`<div style="margin:6px 0 2px"><b>${t}</b></div><div class="scroll"><table style="width:100%;border-collapse:collapse;font:12px ui-monospace,monospace;background:var(--panel);border-radius:8px">${th}${r}</table></div>`;
+  const same=B.filter(y=>A.some(x=>x.st===y.st)).length;
+  return `<div style="margin:8px 0"><b>A vs B</b> · A total ${altH(PA.total)} / alt ${altH(PA.altTotal)} (${A.length} trades) · B total ${altH(PB.total)} / alt ${altH(PB.altTotal)} (${B.length} trades) · B entries at the same moment as an A entry: ${same}/${B.length}</div>`
+   +sideBySide(PA,PB)
+   +tbl('B trades, by what A was doing',condRows(A,B,'A'))+tbl('A trades, by what B was doing',condRows(B,A,'B'));
+}
+function noData(){ // message in the chart area: still loading, or this day has no usable quotes; wrapped to the canvas width
+  const day=$('day').value||'This date';
+  const lines=!loaded?['Loading '+day+' …','(the first load of a day can take ~20 s)']
+    :[day+': no usable '+CODE.toUpperCase()+' quotes (weekend / market closed, or the feed was down).','Pick another date: Date dropdown or the ◀ ▶ buttons.'];
+  $('charts').className='';$('wrap2').style.display='none';
+  const c=$('c'),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);
+  ctx.clearRect(0,0,w,h);ctx.textAlign='center';
+  const wrap=(t,max)=>{const out=[];let cur='';for(const word of t.split(' ')){const test=cur?cur+' '+word:word;if(ctx.measureText(test).width>max&&cur){out.push(cur);cur=word}else cur=test}if(cur)out.push(cur);return out};
+  let y=h/2-30;
+  lines.forEach((t,i)=>{ctx.font=i?'12px system-ui':'bold 15px system-ui';ctx.fillStyle=i?css('--mut'):css('--fg');for(const l of wrap(t,w-32)){ctx.fillText(l,w/2,y);y+=i?16:20}y+=6});
+  ctx.textAlign='left';
+  ['stats','sweep','cmpOut','trades','log'].forEach(id=>$(id).innerHTML='');
+}
+function run(){
+  if(!DATA.length){noData();return}
+  const d=+$('d').value||.0005,stall=(+$('stall').value||15)*60000;
+  const frac=$('scrub').value/1000,t0=DATA[0]?.t||0,t1=DATA.length?DATA[DATA.length-1].t:0,upto=replayT!==null?replayT:t0+(t1-t0)*frac;
+  $('sname').textContent=$('strat').value;$('upto').textContent=fmt(upto);$('upto').dataset.t=upto;
+  // Stop trading at `Stop at`: engines see no data after it, and any open position is marked at the last quote before it.
+  const sv=$('stopat').value,stopT=sv?dayStart+((+sv.slice(0,2)*60+ +sv.slice(3,5))*60+(+sv.slice(6,8)||0))*1000:Infinity;
+  const eUpto=Math.min(upto,stopT-1);
+  const res=withAdds(sideFilter(STRATS[$('strat').value].run({startT,R0,d,stall,hold:(+$('hold').value||5)*60000,k:+$('freqk').value||5,n:+$('brkn').value||3,mins:$('lbmode').value==='m'?(+$('lbmin').value||7):0,tp:+$('tpp').value||3,sl:+$('slp').value||10,only:sideOf('sidemode'),upto:eUpto}),sideOf('sidemode')),eUpto,/^(brk|buy_only|sell_only)/.test($('strat').value));
+  const resB=$('cmp').checked?withAdds(sideFilter(STRATS[$('stratB').value].run({startT,R0,d,stall,hold:(+$('hold').value||5)*60000,k:+$('freqk').value||5,n:+$('brknB').value||10,mins:$('lbmodeB').value==='m'?(+$('lbminB').value||30):0,tp:+$('tpp').value||3,sl:+$('slp').value||10,only:sideOf('sidemodeB'),upto:eUpto}),sideOf('sidemodeB')),eUpto,/^(brk|buy_only|sell_only)/.test($('stratB').value)):null;
+  const lastB=[...DATA].reverse().find(b=>b.t<=eUpto),P=pnl(res.marks,lastB);
+  const PB=resB?pnl(resB.marks,lastB):null;
+  LAST={marksA:res.marks.length,lastA:res.marks[res.marks.length-1],P,PB,eUpto,A:{k:$('strat').value,side:$('sidemode').value,n:+$('brkn').value||3,mins:$('lbmode').value==='m'?+$('lbmin').value:0},B:resB?{k:$('stratB').value,side:$('sidemodeB').value,n:+$('brknB').value||10,mins:$('lbmodeB').value==='m'?+$('lbminB').value:0}:null};
+  const nm=(k,n,m,side)=>(/^brk/.test(k)?k+(m>0?' '+m+'m':' n='+n):k)+(side==='B'?' · buy only':side==='S'?' · sell only':'');
+  $('charts').className=resB?'two':'';$('wrap2').style.display=resB?'':'none';
+  drawChart($('c'),res,upto,(resB?'A · ':'')+nm($('strat').value,$('brkn').value||3,$('lbmode').value==='m'?+$('lbmin').value:0,$('sidemode').value)+'',P.total,P.altTotal);
+  if(resB)drawChart($('c2'),resB,upto,'B · '+nm($('stratB').value,$('brknB').value||10,$('lbmodeB').value==='m'?+$('lbminB').value:0,$('sidemodeB').value)+'',PB.total,PB.altTotal);
+  const last=res.log[res.log.length-1],nb=res.marks.filter(k=>k.s==='B').length,ns=res.marks.filter(k=>k.s==='S').length;
+  $('stats').innerHTML=[['Ref price',res.R.toFixed(dp())],['State',res.dir>0?'LONG':res.dir<0?'SHORT':'WATCH'],
+    ['Above ref+step',last?last.up:0],['Below ref-step',last?last.dn:0],['BUY signals',nb],['SELL signals',ns],['Total return (pips)',altH(P.total)],['Alt net (pips) – flip side',altH(P.altTotal)],['cum_net (closed + open)',altH(P.total)],['cum_alt (closed + open)',altH(P.altTotal)],['cum_net (closed only)',altH(P.net)],['cum_alt (closed only)',altH(P.altNet)],['Closed trades',P.closed.length+' · win '+(P.closed.length?Math.round(P.wins/P.closed.length*100):0)+'%'],['Closed P&L (pips)',altH(P.net)],['Open P&L (pips)',P.open?altH(P.open.pips):'–'],['Trade quantity',qty()?qty()+' '+CODE.toUpperCase():'not set (⚙ Config)'],['P&L amount (qty × move)',qty()?amtH(P.total*PIPV()*qty()):'–'],['Alt amount',qty()?amtH(P.altTotal*PIPV()*qty()):'–']]
+    .map(([a,b])=>`<div class="card"><b>${b}</b><span>${a}</span></div>`).join('');
+  $('cmpOut').innerHTML=resB?compareHTML(P,PB):'';
+  // Lookback comparison: same strategy for n = 3..10 (brk / brk_r only), same start, TP/SL and stop time.
+  const sw=$('sweep'),sk=$('strat').value;
+  if((sk==='brk'||sk==='brk_r'||sk==='brk_rev')&&!timer){ // the lookback table is skipped while replaying (it reruns 8 backtests)
+    const tp=+$('tpp').value||3,slv=+$('slp').value||10,isM=$('lbmode').value==='m',vals=isM?[1,2,3,5,7,10,15,30,60]:[3,4,5,6,7,8,9,10],cur=isM?(+$('lbmin').value||7):(+$('brkn').value||3),rows=vals.map(v=>{
+      const r=withAdds(engineBrk(startT,R0,eUpto,v,tp,slv,sk!=='brk_r',sk==='brk_rev',isM?v:0,sideOf('sidemode')),eUpto,true),Q=pnl(r.marks,lastB);
+      return `<tr${v===cur?' style="background:var(--grid)"':''}><td>${v}${isM?' min':''}</td><td>${Q.closed.length+Q.opens.length}</td><td>${Q.closed.length?Math.round(Q.wins/Q.closed.length*100):0}%</td><td>${altH(Q.total)}</td><td>${altH(Q.altTotal)}</td></tr>`}).join('');
+    sw.innerHTML=`<div class="scroll"><table style="width:100%;border-collapse:collapse;font:12px ui-monospace,monospace;background:var(--panel);border-radius:8px"><tr><th align=left>Lookback</th><th align=left>Trades</th><th align=left>Win</th><th align=left>Total pips (bid/ask)</th><th align=left>Alt net</th></tr>${rows}</table></div>`;
+  }else if(!timer)sw.innerHTML='';
+  $('trades').innerHTML='<div><b>Trades taken</b> (pips, 1 pip = '+PIPV()+', fills at bid/ask where quotes exist, commission per trade as set)</div>'+withCum(P).reverse().map(x=>`<div>${x.s==='B'?'LONG':'SHORT'}${x.added?' +add':''} ${fmt(x.st)} @ ${x.entry.toFixed(dp())} → ${x.open?'open':fmt(x.et)} @ ${x.exit.toFixed(dp())} = ${altH(x.pips)} · alt ${altH(x.alt)} · cum_net ${altH(x.cum_net)} · cum_alt ${altH(x.cum_alt)}</div>`).join('');
+  $('log').innerHTML=res.log.filter(l=>l.act||l.up||l.dn||l.note).slice(-200).reverse().map(l=>
+    `<div class="${l.act==='BUY'?'B':l.act==='SELL'?'S':''}">${fmt(l.t)} px ${l.price.toFixed(dp())} ref ${l.R.toFixed(dp())} above ${l.up} below ${l.dn} ${l.note||l.act}</div>`).join('');
+}
+[$('c'),$('c2')].forEach(c=>c.addEventListener('pointerdown',e=>{const r=c.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,v=c._view;if(!v)return;
+  const t=v.t0+(x-v.pad.l)/(v.w-v.pad.l-v.pad.r)*(v.t1-v.t0),p=v.hi-(y-v.pad.t)/(v.h-v.pad.t-v.pad.b)*(v.hi-v.lo);
+  setStart(Math.max(v.t0,Math.min(v.t1,t)),Math.round(p/(PIPV()/2))*(PIPV()/2))}));
+if(innerWidth>=700){$('more').open=true;$('cmpbox').open=true}
+$('pip').oninput=()=>{PIPAUTO=false;run()};
+$('start').onchange=()=>{const [h,m,s]=$('start').value.split(':').map(Number);startT=dayStart+((h*60+m)*60+(s||0))*1000;run()};
+$('ref').onchange=()=>{R0=+$('ref').value;run()};
+$('auto').onclick=()=>{const b=DATA.find(b=>b.t>=startT);if(b)setStart(startT,b.m)};
+['d','stall','hold','freqk','brkn','lbmin','lbminB','brknB','tpp','slp','comm','addat','addsz','addmax','stopat','scrub'].forEach(id=>$(id).oninput=run);['cmp','stratB','lbmode','lbmodeB','sidemode','sidemodeB'].forEach(id=>$(id).onchange=run);addEventListener('resize',run);
+// Slow replay: from the start time, reveal one batch per tick.
+let timer=null;
+function stopPlay(){clearInterval(timer);timer=null;replayT=null;run();$('play').textContent='▶ Replay'}
+function step(){
+  const cur=+$('upto').dataset.t||startT;
+  let i=DATA.findLastIndex(b=>b.t<=cur);if(i<0)i=0;
+  let j=i+1;while(j<DATA.length&&DATA[j].m===DATA[i].m)j++; // the feed repeats ~98% of prices: jump to the next price change
+  if(j>=DATA.length){stopPlay();return}
+  const nb=DATA[j],t0=DATA[0].t,t1=DATA[DATA.length-1].t;
+  replayT=nb.t;$("scrub").value=Math.min(1000,Math.ceil((nb.t-t0)/(t1-t0||1)*1000));run();
+}
+$('play').onclick=()=>{
+  if(timer){stopPlay();return}
+  const t0=DATA[0].t,t1=DATA[DATA.length-1].t;
+  replayT=startT;run();
+  $('play').textContent='⏸ Pause';timer=setInterval(step,+$('spd').value);
+};
+$('strat').onchange=run;
+$('spd').onchange=()=>{if(timer){clearInterval(timer);timer=setInterval(step,+$('spd').value)}};
+$('scrub').addEventListener('pointerdown',stopPlay);
+// Live (paper trading, display only): ticks recorded by the server from the quote APIs are appended to today's day view.
+let liveMarks=null,liveKey='',SRC={},srcAt=0;
+function freqInfo(){ // what the current data looks like
+  if(DATA.length<3){$('freqinfo').textContent='';return}
+  const n=Math.min(DATA.length-1,400),d=[];for(let i=1;i<=n;i++)d.push((DATA[i].t-DATA[i-1].t)/1000);d.sort((a,b)=>a-b);
+  $('freqinfo').textContent='· price freq '+$('freq').selectedOptions[0].text.replace(' (live only)','').replace(' (as captured)','')+' · loaded ticks median '+d[d.length>>1].toFixed(1)+' s apart';
+}
+// Thin captured history to a coarser interval (it cannot be made finer than the ~5 s it was captured at).
+const resample=(arr,sec)=>{if(sec<=5)return arr;const out=[];let last=-1e18;for(const x of arr){if(x.t-last>=sec*1000-1500){out.push(x);last=x.t}}return out};
+async function setFreq(v){try{await fetch('/api/config?sample='+Math.min(+v,60),{cache:'no-store'})}catch(e){}if($('day').value)loadDay($('day').value,true)}
+$('freq').onchange=()=>setFreq($('freq').value);
+function badge(txt,col){$('badge').textContent=txt;$('badge').style.color=col}
+async function poll(){
+  if(!loaded||$('day').value!==todayStr||!DATA.length)return;
+  const after=DATA[DATA.length-1].t;let j;
+  try{j=await (await fetch('/api/live?code='+CODE+'&after='+after,{cache:'no-store'})).json()}catch(e){badge('● live feed unreachable',css('--dn'));return}
+  if(Array.isArray(j)&&j.length){
+    DATA.push(...j.map(x=>({...x,m:x.p[0][0],mx:x.p[0][0],mn:x.p[0][0]})));
+    if(replayT===null&&$('scrub').value==1000){run();signalWatch()}
+  }
+  if(Date.now()-srcAt>10000){srcAt=Date.now();try{SRC=(await (await fetch('/api/instruments',{cache:'no-store'})).json()).sources||SRC}catch(e){}}
+  const l=DATA[DATA.length-1],age=(Date.now()-l.t)/1000,via=SRC[ASSET]==='file'?' · via file backup':SRC[ASSET]==='api'?' · via API':'';
+  badge('● LIVE (paper) '+CODE.toUpperCase()+' '+l.bid+' / '+l.ask+' · '+fmt(l.t)+via+(age>90?' · quiet '+Math.round(age/60)+'m':''),age>90?css('--ref'):css('--up'));
+}
+function signalWatch(){ // toast when the selected strategy opens / reverses / exits a position on a live tick
+  if(!LAST)return;const key=[$('strat').value,$('sidemode').value,$('brkn').value,$('lbmode').value,$('lbmin').value,$('tpp').value,$('slp').value,$('comm').value,$('addat').value,$('addsz').value,$('addmax').value,startT].join('|');
+  if(key!==liveKey||liveMarks===null){liveKey=key;liveMarks=LAST.marksA;return}
+  if(LAST.marksA>liveMarks&&LAST.lastA){
+    const k=LAST.lastA,l=DATA[DATA.length-1],q=qty()?qty()+' '+CODE.toUpperCase()+' ':'',what=(k.add?'ADD ':'')+(k.s==='B'?'BUY '+q+'@ '+l.ask:k.s==='S'?'SELL '+q+'@ '+l.bid:'EXIT @ '+(l.bid+l.ask)/2);
+    toast('LIVE signal (paper) · '+$('strat').value+' · '+CODE.toUpperCase()+' · '+what+' · '+fmt(l.t));
+  }
+  liveMarks=LAST.marksA;
+}
+// ---- Product trading config (modal). Add a field = add an entry here; `bind` ties a field to an existing main-page input id, so a
+// setting can later be moved off the main page without changing how the strategies read it. Stored per product on the server. ----
+let PCFG={};
+const CFG_FIELDS=[
+  {key:'quantity',label:'Trade quantity',type:'number',min:0,step:'any',required:()=>ASSET==='C',unit:()=>CODE.toUpperCase(),
+   hint:'Units of the product per trade (for example 0.05 BTC). It turns price moves into an amount: P&L = pips × pip size × quantity.'},
+];
+const qty=()=>+((PCFG[CODE]||{}).quantity)||0;
+const amtH=v=>`<span${v>0?' style="color:var(--up);font-weight:bold"':v<0?' style="color:var(--dn);font-weight:bold"':''}>${v.toFixed(Math.abs(v)<1?4:2)}</span>`;
+let cfgReason='';
+function openCfg(reason){
+  cfgReason=reason||'';const cur=PCFG[CODE]||{};
+  $('cfgtitle').textContent='Trading config · '+CODE.toUpperCase();
+  $('cfgsub').textContent=reason==='needed'?'Set a trade quantity before trading '+CODE.toUpperCase()+'. Signals are still shown without it, but no amounts are calculated.':'Configuration for this product.';
+  $('cfgfields').innerHTML=CFG_FIELDS.map(f=>{const v=f.bind?$(f.bind).value:(cur[f.key]??'');
+    return `<div class="fld"><label for="cfg_${f.key}">${f.label}${f.unit?' ('+f.unit()+')':''}${f.required&&f.required()?' *':''}</label><input id="cfg_${f.key}" type="${f.type}" ${f.min!=null?'min="'+f.min+'"':''} step="${f.step||'any'}" inputmode="decimal" value="${v}" autocomplete="off"><div class="hint">${f.hint||''}</div><div class="err" id="err_${f.key}"></div></div>`}).join('');
+  $('cfgmask').hidden=false;setTimeout(()=>{const i=$('cfgfields').querySelector('input');if(i){i.focus();i.select()}},30);
+}
+function closeCfg(){$('cfgmask').hidden=true;$('cfgbtn').focus()}
+async function saveCfg(e){
+  e.preventDefault();const cfg={};let bad=false;
+  for(const f of CFG_FIELDS){
+    const raw=$('cfg_'+f.key).value.trim(),err=$('err_'+f.key);err.textContent='';
+    if(raw===''){if(f.required&&f.required()){err.textContent=f.label+' is required to trade this product';bad=true}continue}
+    const n=+raw;if(f.type==='number'&&(!isFinite(n)||(f.min!=null&&n<=f.min))){err.textContent='Enter a number greater than '+(f.min||0);bad=true;continue}
+    cfg[f.key]=f.type==='number'?n:raw;if(f.bind){$(f.bind).value=raw}
+  }
+  if(bad)return;
+  try{const x=await fetch('/api/product-config',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({code:CODE,config:cfg})});
+    if(!x.ok)throw new Error(x.status);PCFG=await x.json();closeCfg();toast('✓ Saved '+CODE.toUpperCase()+' config'+(cfg.quantity?' · quantity '+cfg.quantity:''));run()}
+  catch(err){toast('Config save failed: '+err+' – is serve_nocache.py running?',true)}
+}
+$('cfgbtn').onclick=()=>openCfg();$('cfgform').onsubmit=saveCfg;$('cfgcancel').onclick=closeCfg;
+$('cfgmask').addEventListener('mousedown',e=>{if(e.target===$('cfgmask'))closeCfg()});
+addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('cfgmask').hidden)closeCfg()});
+const needCfg=()=>{if(ASSET==='C'&&!qty())openCfg('needed')};
+// ---- light / dark switch (remembered; defaults to the system setting) ----
+function setTheme(t,fromUser){
+  document.documentElement.dataset.theme=t;
+  $('themebtn').textContent=t==='dark'?'☀ Light':'🌙 Dark';$('themebtn').setAttribute('aria-pressed',String(t==='light'));
+  if(fromUser){try{localStorage.setItem('theme',t)}catch(e){}}
+  run();
+}
+$('themebtn').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark',true);
+$('themebtn').textContent=document.documentElement.dataset.theme==='dark'?'☀ Light':'🌙 Dark';
+// ---- resizable charts block: drag the handle under the charts (or use the arrow keys); the height is remembered ----
+(()=>{
+  const grip=$('chartgrip'),root=document.documentElement.style;let h0=0,y0=0,raf=0;
+  const clamp=v=>Math.max(120,Math.min(Math.round(innerHeight*0.9),Math.round(v)));
+  const set=v=>{if(v==null){root.removeProperty('--chartH')}else{root.setProperty('--chartH',clamp(v)+'px')}cancelAnimationFrame(raf);raf=requestAnimationFrame(()=>run())};
+  const save=()=>{try{const v=root.getPropertyValue('--chartH');v?localStorage.setItem('chartH',v):localStorage.removeItem('chartH')}catch(e){}};
+  try{const v=localStorage.getItem('chartH');if(v)root.setProperty('--chartH',v)}catch(e){}
+  grip.addEventListener('pointerdown',e=>{try{grip.setPointerCapture(e.pointerId)}catch(_){}grip.classList.add('drag');h0=$('c').clientHeight;y0=e.clientY;e.preventDefault()});
+  grip.addEventListener('pointermove',e=>{if(grip.classList.contains('drag'))set(h0+(e.clientY-y0))});
+  const end=()=>{if(grip.classList.contains('drag')){grip.classList.remove('drag');save()}};
+  grip.addEventListener('pointerup',end);grip.addEventListener('pointercancel',end);
+  grip.addEventListener('dblclick',()=>{set(null);save()});
+  grip.addEventListener('keydown',e=>{const d=e.key==='ArrowUp'?-24:e.key==='ArrowDown'?24:0;if(!d)return;e.preventDefault();set($('c').clientHeight+d);save()});
+})();
+// Save the current result(s) for later review: A, and B too when Compare is on.
+const stamp=t=>$('day').value+' '+fmt(t);
+function recordOf(slot){
+  const P=slot==='A'?LAST.P:LAST.PB,S=slot==='A'?LAST.A:LAST.B;if(!P||!S)return null;
+  const trades=withCum(P).map(x=>({side:x.s==='B'?'BUY':'SELL',entry_ts:stamp(x.st),entry_px:x.entry,exit_ts:x.open?'open':stamp(x.et),exit_px:x.exit,pips:+x.pips.toFixed(2),alt:x.alt==null?null:+x.alt.toFixed(2),cum_net:+x.cum_net.toFixed(2),cum_alt:+x.cum_alt.toFixed(2),added:!!x.added}));
+  return {day:$('day').value,code:CODE,slot,strategy:S.k,
+    params:{side:S.side||'both',add_at:+$('addat').value||0,add_size:+$('addsz').value||1,max_adds:+$('addmax').value||1,quantity:qty(),pip:PIPV(),n:S.n,mode:S.mins>0?'m':'n',minutes:S.mins||0,tp:+$('tpp').value,sl:+$('slp').value,comm:+$('comm').value,stop_at:$('stopat').value,start:fmt(startT),ref:R0,step:+$('d').value,hold:+$('hold').value,freq_k:+$('freqk').value,stall:+$('stall').value},
+    as_of:fmt(LAST.eUpto),
+    stats:{trades:trades.length,closed:P.closed.length,win_pct:P.closed.length?Math.round(P.wins/P.closed.length*100):0,total_pips:+P.total.toFixed(2),alt_total_pips:+P.altTotal.toFixed(2),pnl_amount:qty()?+(P.total*PIPV()*qty()).toFixed(6):null,closed_pips:+P.net.toFixed(2),open_pips:P.open?+P.open.pips.toFixed(2):0},
+    note:$('note').value,trades};
+}
+let toastT=null;
+function toast(msg,bad){const t=$('toast');t.textContent=msg;t.className='show'+(bad?' err':'');clearTimeout(toastT);toastT=setTimeout(()=>t.className='',bad?5000:3500)}
+async function saveResult(){
+  const btn=$('save'),label='💾 Save result';
+  if(!LAST){toast('Nothing to save yet – load a day and run a strategy first',true);return}
+  const recs=[recordOf('A'),recordOf('B')].filter(Boolean);
+  btn.disabled=true;btn.textContent='Saving…';btn.className='';
+  try{
+    const ids=[];
+    for(const r of recs){const x=await fetch('/api/results',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(r)});if(!x.ok)throw new Error('server returned '+x.status);ids.push((await x.json()).id)}
+    const msg='Saved '+recs.map(r=>r.strategy+(r.params.mode==='m'?' '+r.params.minutes+'m':' n='+r.params.n)+' · '+r.stats.total_pips+' pips (alt '+r.stats.alt_total_pips+')').join('  +  ')+' · '+$('day').value;
+    $('savemsg').textContent=msg;toast('✓ '+msg);
+    btn.textContent='✓ Saved';btn.className='ok';
+    await listSaved(ids);
+  }catch(e){
+    $('savemsg').textContent='Save failed: '+e;toast('Save failed: '+e+' – is serve_nocache.py running?',true);
+    btn.textContent='✗ Failed';btn.className='err';
+  }
+  btn.disabled=false;setTimeout(()=>{btn.textContent=label;btn.className=''},2000);
+}
+let SAVED=[];
+async function listSaved(flashIds){
+  try{SAVED=await (await fetch('/api/results',{cache:'no-store'})).json()}catch(e){return}
+  const rows=SAVED.slice().reverse().map(r=>`<tr data-id="${r.id}"><td>${r.saved_at.slice(5,16).replace('T',' ')}</td><td>${r.day}</td><td>${(r.code||'gbp').toUpperCase()} ${r.strategy}${r.slot==='B'?' (B)':''}${r.params.side==='B'?' · buy only':r.params.side==='S'?' · sell only':''} ${r.params.mode==='m'?r.params.minutes+'m':'n='+r.params.n}</td><td>${r.params.tp}/${r.params.sl}/${r.params.comm}${r.params.add_at?' +add '+r.params.add_at:''}</td><td>${r.stats.trades}</td><td>${r.stats.win_pct}%</td><td>${altH(r.stats.total_pips)}</td><td>${altH(r.stats.alt_total_pips)}</td><td>${(r.note||'').replace(/</g,'&lt;')}</td><td><button onclick="loadSaved('${r.id}')">Load</button> <button onclick="delSaved('${r.id}')">✕</button></td></tr>`).join('');
+  $('saved').innerHTML=SAVED.length?`<div style="margin:6px 0 2px"><b>Saved results</b> (${SAVED.length})</div><div style="overflow:auto;max-height:260px;background:var(--panel);border-radius:8px"><table style="width:100%;border-collapse:collapse;font:11px ui-monospace,monospace;white-space:nowrap"><tr><th align=left>Saved</th><th align=left>Day</th><th align=left>Strategy</th><th align=left>TP/SL/comm</th><th align=left>Trades</th><th align=left>Win</th><th align=left>Total</th><th align=left>Alt</th><th align=left>Note</th><th></th></tr>${rows}</table></div>`:'';
+  (flashIds||[]).forEach(id=>{const row=$('saved').querySelector('tr[data-id="'+id+'"]');if(row){row.classList.add('flash');row.scrollIntoView({block:'nearest'})}});
+}
+async function loadSaved(id){ // restore the day, strategy and settings of a saved result and re-run it
+  const r=SAVED.find(x=>x.id===id);if(!r)return;const p=r.params;
+  $('strat').value=r.strategy;$('sidemode').value=p.side||'both';$('brkn').value=p.n;$('lbmode').value=p.mode||'n';if(p.mode==='m')$('lbmin').value=p.minutes;$('tpp').value=p.tp;$('slp').value=p.sl;$('comm').value=p.comm;$('stopat').value=p.stop_at;
+  $('d').value=p.step;$('addat').value=p.add_at||0;$('addsz').value=p.add_size||1;$('addmax').value=p.max_adds||1;$('hold').value=p.hold;$('freqk').value=p.freq_k;$('stall').value=p.stall;$('cmp').checked=false;
+  if(r.code&&r.code!==CODE){CODE=r.code;ASSET=TYPES[CODE]||'F';$('inst').value=CODE;await fillDays(r.day)}
+  PIPAUTO=false;$('pip').value=p.pip||0.0001;
+  $('day').value=r.day;await loadDay(r.day,true);
+  const [h,m,sec]=p.start.split(':').map(Number);startT=dayStart+((h*60+m)*60+(sec||0))*1000;setStart(startT,p.ref);
+  $('savemsg').textContent='Loaded '+r.strategy+(p.mode==='m'?' '+p.minutes+'m':' n='+p.n)+' for '+r.day+(r.note?' – '+r.note:'');
+}
+async function delSaved(id){if(!confirm('Delete this saved result?'))return;await fetch('/api/results?id='+id,{method:'DELETE'});listSaved()}
+$('save').onclick=saveResult;
+// Day selection: quote ticks come from /api/ticks (served from the _price_capture.jsonl files).
+const todayStr=new Date().toLocaleDateString('en-CA');
+async function loadDay(day,keep){
+  stopPlay();loaded=false;$('live').textContent='loading '+day+' (the first load of a day can take ~20 s)…';
+  let j;try{j=await (await fetch('/api/ticks?code='+CODE+'&day='+day,{cache:'no-store'})).json()}catch(e){j={error:String(e)}}
+  if(!Array.isArray(j)){$('live').textContent='no data: '+(j.error||'');return}
+  const st=startT,r0=R0;DATA=resample(j,+$('freq').value);prep();byTn=-1;liveMarks=null;loaded=true;
+  if(!DATA.length){$('live').textContent='no quotes for '+day;run();return}
+  $('scrub').value=1000;if(!keep)setPip(DATA[0].m);liveMarks=null;
+  if(keep&&st>=DATA[0].t&&st<=DATA[DATA.length-1].t)setStart(st,r0);else setStart(DATA[0].t,DATA[0].m);
+  $('live').textContent=day+' · '+DATA.length+' ticks'+(day===todayStr?' · live':'');freqInfo();
+}
+async function fillDays(keep){
+  let ds=[];try{ds=await (await fetch('/api/days?code='+CODE,{cache:'no-store'})).json()}catch(e){}
+  DAYS=ds;const prev=keep||$('day').value;
+  const wd=d=>new Date(d+'T12:00:00').toLocaleDateString('en-GB',{weekday:'short'});
+  $('day').innerHTML=ds.slice().reverse().map(d=>`<option value="${d}">${d} ${wd(d)}${/Sat|Sun/.test(wd(d))?' · weekend':''}</option>`).join('');
+  if(ds.includes(prev))$('day').value=prev;
+}
+async function init(){
+  try{const j=await (await fetch('/api/instruments',{cache:'no-store'})).json();
+    j.instruments.forEach(i=>TYPES[i.code]=i.type);if(j.sample_seconds&&[...$('freq').options].some(o=>+o.value===j.sample_seconds))$('freq').value=j.sample_seconds;
+    const grp=(t,l)=>`<optgroup label="${l}">`+j.instruments.filter(i=>i.type===t).map(i=>`<option value="${i.code}">${i.code.toUpperCase()}</option>`).join('')+'</optgroup>';
+    $('inst').innerHTML=grp('F','Forex')+grp('C','Crypto');
+    const sr=j.sources||{};
+    if(!j.feed_ok)badge('● no live quote source (API and Z: files both failing)',css('--dn'));
+    else if(sr.F==='file'||sr.C==='file')badge('● quotes API down · live prices from the Z: file backup',css('--ref'));
+  }catch(e){}
+  if(!TYPES[CODE]){TYPES[CODE]='F';$('inst').innerHTML+=`<option>${CODE}</option>`}
+  $('inst').value=CODE;ASSET=TYPES[CODE]||'F';
+  try{PCFG=await (await fetch('/api/product-config',{cache:'no-store'})).json()}catch(e){}
+  await fillDays();
+  if(!DAYS.length){$('live').textContent='no capture days found (is serve_nocache.py running?)';return}
+  const qd=new URLSearchParams(location.search).get('day');if(qd&&DAYS.includes(qd))$('day').value=qd;
+  $('day').onchange=()=>loadDay($('day').value);
+  $('inst').onchange=async()=>{CODE=$('inst').value;ASSET=TYPES[CODE]||'F';PIPAUTO=true;await fillDays();await loadDay($('day').value);needCfg()};
+  const move=k=>{const i=DAYS.indexOf($('day').value)+k;if(i>=0&&i<DAYS.length){$('day').value=DAYS[i];loadDay(DAYS[i])}};
+  $('dprev').onclick=()=>move(-1);$('dnext').onclick=()=>move(1);$('dreload').onclick=()=>loadDay($('day').value,true);
+  await loadDay($('day').value);needCfg();
+}
+init();listSaved();
+setInterval(poll,1000);
+</script><script src="/ep060-nav.js"></script></body></html>

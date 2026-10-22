@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "gates": [
+    {
+      "gate": "manifest_structure",
+      "passed": true,
+      "output": "44 tasks and task paths"
+    },
+    {
+      "gate": "environment",
+      "passed": true,
+      "output": "environment template and secret boundary validation passed\n"
+    },
+    {
+      "gate": "migrations",
+      "passed": true,
+      "output": "validated 7 ordered migrations\n"
+    },
+    {
+      "gate": "health",
+      "passed": true,
+      "output": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.000s\n\nOK\n"
+    }
+  ]
+}

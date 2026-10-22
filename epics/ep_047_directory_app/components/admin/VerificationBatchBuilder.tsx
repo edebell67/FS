@@ -120,7 +120,7 @@ export function VerificationBatchBuilder({ businesses, allowPartial }: { busines
           {business.validationStatus === "validated" ? "Validated" : "Partial — outstanding fields"}
         </span></td>
         <td className="p-2">email: {business.email || "not configured"}</td>
-        <td className="p-2">{business.email ? "individually ready" : "not ready"}</td>
+        <td className="p-2">{business.email ? <span className="rounded bg-amber-100 px-2 py-1 font-medium text-amber-900">verification_to_send</span> : "not ready"}</td>
       </tr>)}</tbody>
     </table>{businesses.length === 0 && <p className="p-6 text-center text-slate-500">No active businesses have a validated or partially validated calculated status.</p>}</div>
   </section>;

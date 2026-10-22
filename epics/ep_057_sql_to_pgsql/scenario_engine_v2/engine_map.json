@@ -1,0 +1,1873 @@
+{
+ "page_version": "v2.65.24",
+ "summary": {
+  "compute": {
+   "pending": 37,
+   "ported": 12,
+   "provisional": 1,
+   "ported_partial": 2
+  },
+  "data": {
+   "pending": 24
+  },
+  "split": {
+   "pending": 10
+  },
+  "view": {
+   "stays_in_page": 76
+  },
+  "live": {
+   "refused_headless": 14
+  },
+  "state": {
+   "pending": 29
+  }
+ },
+ "rows": [
+  {
+   "name": "syncTpSlScenarios",
+   "line": 1497,
+   "lines": 22,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "isMetricAwareCriteria",
+   "line": 1519,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "liveChartCacheKey",
+   "line": 1536,
+   "lines": 6,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "restoreLiveChartCache",
+   "line": 1542,
+   "lines": 20,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "paintLiveChartCache",
+   "line": 1562,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "scheduleLiveChartCacheFallback",
+   "line": 1571,
+   "lines": 12,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "cacheLiveChartResponse",
+   "line": 1584,
+   "lines": 32,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "ensureHistoricalDataLoaded",
+   "line": 1617,
+   "lines": 19,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "availableDates",
+   "line": 1771,
+   "lines": 12,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "triggerSelectedTimeRefresh",
+   "line": 1896,
+   "lines": 9,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updateAutoRefreshTop1Status",
+   "line": 1936,
+   "lines": 6,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "finishAutomaticTop1Refresh",
+   "line": 1942,
+   "lines": 18,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "resetAutomaticRankSchedule",
+   "line": 1972,
+   "lines": 22,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "setReturnType",
+   "line": 2077,
+   "lines": 41,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "setReturnType",
+   "line": 2123,
+   "lines": 64,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "syncLiveAltReporting",
+   "line": 2188,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "savePortfolios",
+   "line": 2196,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "movePortfolio",
+   "line": 2201,
+   "lines": 13,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "saveCriteriaWorkspaces",
+   "line": 2215,
+   "lines": 5,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "savePortfolioWorkspaceToPostgres",
+   "line": 2228,
+   "lines": 29,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "restorePortfolioWorkspaceFromPostgres",
+   "line": 2258,
+   "lines": 26,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "currentPortfolioViewConfig",
+   "line": 2285,
+   "lines": 19,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "persistPortfolioViewConfig",
+   "line": 2305,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "applyPortfolioViewConfig",
+   "line": 2315,
+   "lines": 55,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "loadLivePortfolioStore",
+   "line": 2371,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "livePortfolioModelsForDate",
+   "line": 2382,
+   "lines": 31,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "autoPinLivePortfolioStrategies",
+   "line": 2414,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "loadOverlayRuleLibrary",
+   "line": 2424,
+   "lines": 18,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "assignedPortfolioOverlayRule",
+   "line": 2443,
+   "lines": 5,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "activePortfolioOverlayRule",
+   "line": 2449,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "syncAssignedOverlayRuleUI",
+   "line": 2454,
+   "lines": 20,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "overlayRuleSummary",
+   "line": 2475,
+   "lines": 14,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "overlayRuleMetricValue",
+   "line": 2490,
+   "lines": 20,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderOverlayRuleLibrary",
+   "line": 2511,
+   "lines": 52,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "beginEditNamedOverlayRule",
+   "line": 2564,
+   "lines": 28,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "cancelEditNamedOverlayRule",
+   "line": 2593,
+   "lines": 7,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "overlayRuleCandidate",
+   "line": 2601,
+   "lines": 106,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "asOfCorrelation",
+   "line": 2708,
+   "lines": 16,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "assignedOverlayTradeCacheKey",
+   "line": 2725,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "ensureAssignedOverlayTradeData",
+   "line": 2729,
+   "lines": 32,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "timeOfDayMinutes",
+   "line": 2762,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "curvePointAtOrBefore",
+   "line": 2767,
+   "lines": 11,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "sourceTradeFlipResults",
+   "line": 2779,
+   "lines": 25,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "applyAssignedOverlayTradeResults",
+   "line": 2805,
+   "lines": 67,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "assignedRuleTarget",
+   "line": 2873,
+   "lines": 19,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "openOverlayRuleLibrary",
+   "line": 2893,
+   "lines": 5,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "configFromOverlayEditor",
+   "line": 2899,
+   "lines": 16,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "openNamedOverlayRuleSave",
+   "line": 2916,
+   "lines": 15,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "saveNamedOverlayRule",
+   "line": 2932,
+   "lines": 40,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "assignOverlayRule",
+   "line": 2973,
+   "lines": 24,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderLivePortfolioTransition",
+   "line": 2998,
+   "lines": 27,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "isLiveModePortfolio",
+   "line": 3026,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "isLiveModeArmed",
+   "line": 3030,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "syncStrategyRemovalButtons",
+   "line": 3035,
+   "lines": 20,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "syncLiveModeUI",
+   "line": 3056,
+   "lines": 58,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "liveActivationRulesReady",
+   "line": 3119,
+   "lines": 8,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "liveActivationRuleLabel",
+   "line": 3128,
+   "lines": 15,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "syncLiveActivationReview",
+   "line": 3144,
+   "lines": 41,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "showLiveActivationReview",
+   "line": 3186,
+   "lines": 25,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "activateLiveModeFromReview",
+   "line": 3212,
+   "lines": 93,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "toggleLiveMode",
+   "line": 3306,
+   "lines": 50,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "loadLivePortfolioRulesIntoForm",
+   "line": 3357,
+   "lines": 29,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "isRuleManagedLivePortfolio",
+   "line": 3387,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "liveRuleSummary",
+   "line": 3391,
+   "lines": 21,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "appendRuleDetailsSection",
+   "line": 3413,
+   "lines": 30,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "showLivePortfolioRuleDetails",
+   "line": 3444,
+   "lines": 52,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "editLivePortfolioRules",
+   "line": 3497,
+   "lines": 8,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "syncLivePortfolioScreenState",
+   "line": 3506,
+   "lines": 35,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "saveLivePortfolioRules",
+   "line": 3542,
+   "lines": 45,
+   "inventory_kind": "mixed",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "portfolioScenarioConfig",
+   "line": 3588,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "capturePortfolioScenario",
+   "line": 3592,
+   "lines": 11,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "markPortfolioFixed",
+   "line": 3604,
+   "lines": 12,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "applyDisplayTheme",
+   "line": 3617,
+   "lines": 11,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "removeModelFromPortfolio",
+   "line": 3629,
+   "lines": 15,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "deletePortfolio",
+   "line": 3645,
+   "lines": 4,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "deleteSelectedPortfolios",
+   "line": 3650,
+   "lines": 9,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "removePortfolios",
+   "line": 3660,
+   "lines": 26,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "setCatalogueOptions",
+   "line": 3687,
+   "lines": 9,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "populateCataloguePortfolioOptions",
+   "line": 3697,
+   "lines": 9,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "addCatalogueModel",
+   "line": 3707,
+   "lines": 21,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderStrategyCatalogue",
+   "line": 3729,
+   "lines": 39,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "loadStrategyCatalogue",
+   "line": 3769,
+   "lines": 19,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "shortStrategyDescription",
+   "line": 3789,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "moveModelBetweenPortfolios",
+   "line": 3799,
+   "lines": 22,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "getMergedPortfolioModels",
+   "line": 3822,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updatePortfolioMergeUI",
+   "line": 3832,
+   "lines": 19,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderPortfolioTabs",
+   "line": 3852,
+   "lines": 50,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "getPersistedPortfolioViewCache",
+   "line": 3903,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "persistPortfolioView",
+   "line": 3914,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "rememberPortfolioView",
+   "line": 3924,
+   "lines": 17,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "getLastPortfolioView",
+   "line": 3942,
+   "lines": 16,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "loadPortfolioData",
+   "line": 3959,
+   "lines": 40,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "fetchPortfolioData",
+   "line": 4000,
+   "lines": 58,
+   "inventory_kind": "engine",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "refreshActivePortfolioView",
+   "line": 4063,
+   "lines": 19,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "syncPortfolioViewRefresh",
+   "line": 4083,
+   "lines": 8,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "repopulateActivePortfolioFromCriteria",
+   "line": 4096,
+   "lines": 14,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "activatePortfolio",
+   "line": 4111,
+   "lines": 140,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderPortfolioList",
+   "line": 4295,
+   "lines": 147,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "openPortfolioModal",
+   "line": 4443,
+   "lines": 9,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "uniquePortfolioName",
+   "line": 4453,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "createSimilarPortfolio",
+   "line": 4461,
+   "lines": 25,
+   "inventory_kind": "mixed",
+   "category": "state",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderSimilarStrategyOptions",
+   "line": 4487,
+   "lines": 29,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "openSimilarStrategyModal",
+   "line": 4517,
+   "lines": 18,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "init",
+   "line": 4536,
+   "lines": 87,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "LIVE_DATE",
+   "line": 4631,
+   "lines": 14,
+   "inventory_kind": "engine",
+   "category": "live",
+   "status": "refused_headless",
+   "python_target": null
+  },
+  {
+   "name": "setLiveBadge",
+   "line": 4646,
+   "lines": 11,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "refreshLiveData",
+   "line": 4658,
+   "lines": 115,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "getSelectedTimeNoteEntries",
+   "line": 4774,
+   "lines": 6,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "openSelectionNotesModal",
+   "line": 4781,
+   "lines": 24,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "tradeDateRange",
+   "line": 4807,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "openTradesModal",
+   "line": 4815,
+   "lines": 151,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setupTradesModal",
+   "line": 4967,
+   "lines": 18,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setSectionCollapsed",
+   "line": 4987,
+   "lines": 8,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "collapseStorageKey",
+   "line": 4996,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "updateCollapseAllControl",
+   "line": 5001,
+   "lines": 11,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setAllSectionsCollapsed",
+   "line": 5013,
+   "lines": 8,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setupCollapsibleSections",
+   "line": 5022,
+   "lines": 23,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "startLiveRefresh",
+   "line": 5046,
+   "lines": 8,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "syncLiveRefreshInterval",
+   "line": 5055,
+   "lines": 8,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setupDateTabs",
+   "line": 5064,
+   "lines": 16,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setRankingCriteria",
+   "line": 5084,
+   "lines": 146,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updateScenarioUI",
+   "line": 5231,
+   "lines": 13,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderModalScenarioCards",
+   "line": 5245,
+   "lines": 44,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "updateDateLabelAndTitle",
+   "line": 5290,
+   "lines": 23,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setSplitMode",
+   "line": 5314,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "syncSplitModeControls",
+   "line": 5324,
+   "lines": 18,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "getMetricKeys",
+   "line": 5344,
+   "lines": 13,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.metric_keys"
+  },
+  {
+   "name": "getStrategyFamily",
+   "line": 5358,
+   "lines": 8,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.strategy_family_of"
+  },
+  {
+   "name": "updateStrategyFamilyOptions",
+   "line": 5367,
+   "lines": 4,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "getScenarioCandidates",
+   "line": 5372,
+   "lines": 37,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.scenario_candidates"
+  },
+  {
+   "name": "modelSearchTerms",
+   "line": 5410,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "getEligibleModels",
+   "line": 5414,
+   "lines": 62,
+   "inventory_kind": "mixed",
+   "category": "compute",
+   "status": "provisional",
+   "python_target": "instance.Engine.eligible"
+  },
+  {
+   "name": "getExactSearchModel",
+   "line": 5477,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "loadModelSearchFromDatabase",
+   "line": 5487,
+   "lines": 57,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "loadDeepLinkModelsFromDatabase",
+   "line": 5545,
+   "lines": 46,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "getReplayTimelineModels",
+   "line": 5592,
+   "lines": 21,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "pointInTimeAtReplayHead",
+   "line": 5614,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "clockMinutes",
+   "line": 5625,
+   "lines": 6,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "replayClockTime",
+   "line": 5632,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "nextAutomaticTop1Minute",
+   "line": 5637,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "selectedTimeRankCount",
+   "line": 5645,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "retainSelectedTimeLeaders",
+   "line": 5649,
+   "lines": 26,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "applySelectedTime",
+   "line": 5676,
+   "lines": 53,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "pointInTimeRequestOptions",
+   "line": 5730,
+   "lines": 18,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "pointInTimeContextKey",
+   "line": 5749,
+   "lines": 5,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "scheduleAutomaticTop1Refresh",
+   "line": 5755,
+   "lines": 47,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "renderPointInTimeHistory",
+   "line": 5803,
+   "lines": 34,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "refreshPointInTimeHistory",
+   "line": 5838,
+   "lines": 26,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "refreshPointInTimeSelection",
+   "line": 5865,
+   "lines": 204,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "schedulePointInTimeSelection",
+   "line": 6069,
+   "lines": 26,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updatePointInTimeToggleUI",
+   "line": 6096,
+   "lines": 30,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "getMaxFrames",
+   "line": 6127,
+   "lines": 5,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "switchDate",
+   "line": 6133,
+   "lines": 84,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updateDeltaButtonsUI",
+   "line": 6218,
+   "lines": 47,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setReplaySpeed",
+   "line": 6269,
+   "lines": 16,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "togglePlay",
+   "line": 6286,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "startReplay",
+   "line": 6294,
+   "lines": 13,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "pauseReplay",
+   "line": 6308,
+   "lines": 11,
+   "inventory_kind": "mixed",
+   "category": "split",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "startPlaybackLoop",
+   "line": 6320,
+   "lines": 16,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "step",
+   "line": 6337,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "seekToPct",
+   "line": 6348,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "updateScrubberUI",
+   "line": 6359,
+   "lines": 42,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "storedHourlyColumns",
+   "line": 6420,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "persistHourlyColumns",
+   "line": 6428,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderHourlyColumnPanel",
+   "line": 6432,
+   "lines": 29,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "hourlyMetricCell",
+   "line": 6462,
+   "lines": 9,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderHourlyRows",
+   "line": 6472,
+   "lines": 32,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "hourlyMoney",
+   "line": 6505,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "hourlyTone",
+   "line": 6510,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "hourlyIntervalLabel",
+   "line": 6514,
+   "lines": 5,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderHourlyFamilyTabs",
+   "line": 6520,
+   "lines": 12,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "syncHourlyProducts",
+   "line": 6533,
+   "lines": 6,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "loadHourlyReport",
+   "line": 6540,
+   "lines": 36,
+   "inventory_kind": "mixed",
+   "category": "data",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "openHourlyReport",
+   "line": 6577,
+   "lines": 17,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "closeHourlyReport",
+   "line": 6595,
+   "lines": 5,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "updateChartLockControlState",
+   "line": 6601,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "applyChartLock",
+   "line": 6612,
+   "lines": 29,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setupEventListeners",
+   "line": 6642,
+   "lines": 628,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "getBasePoint",
+   "line": 7271,
+   "lines": 14,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.base_point"
+  },
+  {
+   "name": "getReplayHeadPoint",
+   "line": 7286,
+   "lines": 7,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.head_point"
+  },
+  {
+   "name": "updateRibbon",
+   "line": 7294,
+   "lines": 86,
+   "inventory_kind": "mixed",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.ribbon"
+  },
+  {
+   "name": "renderCards",
+   "line": 7381,
+   "lines": 149,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "setupCanvas",
+   "line": 7531,
+   "lines": 13,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "computeTradeOverlaySignals",
+   "line": 7562,
+   "lines": 143,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.overlay_signals"
+  },
+  {
+   "name": "pairOverlayTrades",
+   "line": 7708,
+   "lines": 35,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.pair_overlay_trades"
+  },
+  {
+   "name": "computeSplitTargetSignal",
+   "line": 7746,
+   "lines": 38,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.split_target_signal"
+  },
+  {
+   "name": "modelPointAtOrBeforeTime",
+   "line": 7785,
+   "lines": 11,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.point_at_or_before"
+  },
+  {
+   "name": "selectedTimeJoinAt",
+   "line": 7797,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.selected_time_join_at"
+  },
+  {
+   "name": "selectedTimeModelEligibleAt",
+   "line": 7802,
+   "lines": 4,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported",
+   "python_target": "core_ported.selected_time_eligible_at"
+  },
+  {
+   "name": "selectedTimePointEligible",
+   "line": 7807,
+   "lines": 3,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "pending",
+   "python_target": null
+  },
+  {
+   "name": "computeLeaderRotation",
+   "line": 7815,
+   "lines": 159,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported_partial",
+   "python_target": "core_ported.leader_rotation"
+  },
+  {
+   "name": "computeMultiSplitRotation",
+   "line": 7978,
+   "lines": 176,
+   "inventory_kind": "engine",
+   "category": "compute",
+   "status": "ported_partial",
+   "python_target": "core_ported.multi_split_rotation"
+  },
+  {
+   "name": "drawLeaderSignalBadge",
+   "line": 8155,
+   "lines": 16,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "showTargetPulse",
+   "line": 8172,
+   "lines": 11,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawTradeValueLabel",
+   "line": 8184,
+   "lines": 20,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "updateOverlayTradeSummary",
+   "line": 8205,
+   "lines": 27,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "openOverlayTradesModal",
+   "line": 8233,
+   "lines": 118,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawSignalBadge",
+   "line": 8352,
+   "lines": 29,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawChart",
+   "line": 8382,
+   "lines": 264,
+   "inventory_kind": "view",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "scheduleDashboardUtilityRuntime",
+   "line": 8648,
+   "lines": 9,
+   "inventory_kind": "mixed",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawBaselineMarker",
+   "line": 8658,
+   "lines": 15,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawReplayCursor",
+   "line": 8674,
+   "lines": 15,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "renderDeltaLine",
+   "line": 8690,
+   "lines": 15,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawPointLabel",
+   "line": 8706,
+   "lines": 10,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  },
+  {
+   "name": "drawGridAndAxes",
+   "line": 8717,
+   "lines": 46,
+   "inventory_kind": "engine",
+   "category": "view",
+   "status": "stays_in_page",
+   "python_target": null
+  }
+ ]
+}

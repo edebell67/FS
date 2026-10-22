@@ -13,6 +13,7 @@ import { format } from "date-fns";
 import { getBusinessByRef } from "@/lib/db/queries/directory";
 import { getBusinessForEdit } from "@/lib/db/queries/businesses";
 import { getBusinessTimeline, getPipelineStages } from "@/lib/db/queries/pipeline";
+import { getBusinessOutreachResponses } from "@/lib/db/queries/crm";
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { moveStageAction } from "../../pipeline/actions";
 import { updateBusinessAction } from "./actions";
@@ -35,12 +36,13 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
   const business = await getBusinessByRef(businessRef);
   if (!business) notFound();
 
-  const [timeline, stages, validation, latestDelivery, editable, latestPreviewMessage] = await Promise.all([
+  const [timeline, stages, validation, latestDelivery, editable, latestPreviewMessage, outreachResponses] = await Promise.all([
     getBusinessTimeline(business.id), getPipelineStages(), getBusinessValidationDetail(business.id),
     canManageVerification(user.role) ? getLatestDeliveryForBusiness(business.id) : Promise.resolve(null),
     getBusinessForEdit(businessRef),
     canManageVerification(user.role) && business.stageKey === "ready_for_preview"
       ? getLatestPreviewMessageForBusiness(business.id) : Promise.resolve(null),
+    getBusinessOutreachResponses(business.id),
   ]);
 
   return (
@@ -250,6 +252,28 @@ export default async function AdminBusinessDetailPage({ params }: PageProps) {
               </button>
             </div>
           </form>
+        </section>
+      )}
+
+      {outreachResponses.length > 0 && (
+        <section className="mt-10">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">Outreach responses</h2>
+          <ol className="space-y-3">
+            {outreachResponses.map((response) => (
+              <li key={response.id} className="rounded-lg border border-slate-200 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <span className="rounded-full bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700">
+                    {response.classification.replace(/_/g, " ")}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {format(response.receivedAt, "d MMM yyyy, HH:mm")} · {response.channel}
+                  </span>
+                </div>
+                <p className="mt-2 whitespace-pre-wrap text-sm text-slate-700">{response.originalBody}</p>
+                {response.notes && <p className="mt-2 text-xs text-slate-500">{response.notes}</p>}
+              </li>
+            ))}
+          </ol>
         </section>
       )}
 

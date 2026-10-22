@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "run_id": "00000000-0000-4000-8000-000000000102",
+  "source": "combined_trades_closed",
+  "status": "passed",
+  "input_count": 3,
+  "accepted_count": 2,
+  "unchanged_count": 0,
+  "quarantined_count": 1,
+  "watermark": {
+    "timestamp": "2026-08-23T11:00:00Z",
+    "stable_id": "g2"
+  },
+  "notes": "Deterministic WF-102 evidence fixture; production run IDs and timestamps are runtime-generated."
+}

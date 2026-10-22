@@ -1,0 +1,9 @@
+{
+  "schema_version": 1,
+  "source": "combined_trades_closed",
+  "stable_id": "bad-model-1",
+  "reason_code": "invalid DNA model",
+  "replay_state": "pending",
+  "raw_payload_redacted": true,
+  "replay_instruction": "Correct the source model mapping, retain the original run lineage, then replay by quarantine_id."
+}

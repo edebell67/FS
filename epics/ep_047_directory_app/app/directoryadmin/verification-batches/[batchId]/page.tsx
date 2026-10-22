@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { requireAdminUserForPage } from "@/lib/auth/require";
 import { canManageVerification } from "@/lib/verification/repository";
 import { getVerificationBatch } from "@/lib/verification/batches";
+import { VerificationBatchSendPanel } from "@/components/admin/VerificationBatchSendPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +22,7 @@ export default async function VerificationBatchPage({ params }: { params: Promis
       <p>Status: <strong>{batch.status}</strong> · individually ready: <strong>{batch.readyCount}/{batch.totalCount}</strong> · batch send readiness: <strong>{batchReady ? "ready" : "not ready"}</strong></p>
       <p className="mt-1 text-slate-600">Outbound delivery: {batch.delivery.reason} Raw secure tokens are intentionally not retained in this audit view.</p>
     </div>
+    <VerificationBatchSendPanel batchId={batch.id} readyCount={batch.readyCount} canSend={batch.delivery.canSend} reason={batch.delivery.reason} />
     <div role="region" aria-label="Verification batch items" tabIndex={0} className="mt-5 overflow-x-auto"><table className="min-w-max w-full text-left text-sm"><thead>
       <tr className="border-b"><th className="p-2">Business</th><th className="p-2">Recipient route</th><th className="p-2">Expiry</th><th className="p-2">Status</th><th className="p-2">Individual readiness</th></tr>
     </thead><tbody>{batch.items.map((item) => <tr key={item.id} className="border-b">

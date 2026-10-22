@@ -1,0 +1,247 @@
+{
+  "additionalProperties": false,
+  "properties": {
+    "asset_class": {
+      "anyOf": [
+        {
+          "maxLength": 40,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Asset Class"
+    },
+    "instrument": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Instrument"
+    },
+    "strategy_family": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Strategy Family"
+    },
+    "timeframe": {
+      "anyOf": [
+        {
+          "maxLength": 40,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Timeframe"
+    },
+    "trade_direction": {
+      "anyOf": [
+        {
+          "enum": [
+            "long",
+            "short",
+            "both"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Trade Direction"
+    },
+    "min_win_rate": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Win Rate"
+    },
+    "min_annualized_return": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Annualized Return"
+    },
+    "annualized_return_unit": {
+      "anyOf": [
+        {
+          "enum": [
+            "fraction/year",
+            "money/year"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Annualized Return Unit"
+    },
+    "max_drawdown": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Drawdown"
+    },
+    "max_drawdown_unit": {
+      "anyOf": [
+        {
+          "enum": [
+            "fraction",
+            "money"
+          ],
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Max Drawdown Unit"
+    },
+    "min_sharpe": {
+      "anyOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Sharpe"
+    },
+    "min_profit_factor": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Profit Factor"
+    },
+    "min_evidence_confidence": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Evidence Confidence"
+    },
+    "min_quality_score": {
+      "anyOf": [
+        {
+          "maximum": 100,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Quality Score"
+    },
+    "min_track_record_years": {
+      "anyOf": [
+        {
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Min Track Record Years"
+    },
+    "regime": {
+      "anyOf": [
+        {
+          "maxLength": 80,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "default": null,
+      "title": "Regime"
+    },
+    "sort": {
+      "default": "quality_score",
+      "enum": [
+        "quality_score",
+        "annualized_return",
+        "win_rate",
+        "sharpe",
+        "max_drawdown"
+      ],
+      "title": "Sort",
+      "type": "string"
+    },
+    "direction": {
+      "default": "desc",
+      "enum": [
+        "asc",
+        "desc"
+      ],
+      "title": "Direction",
+      "type": "string"
+    }
+  },
+  "title": "StrategyQuery",
+  "type": "object"
+}

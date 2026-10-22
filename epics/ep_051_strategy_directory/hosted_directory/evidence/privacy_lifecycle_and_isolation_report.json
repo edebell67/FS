@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:17.086142+00:00",
+  "passed": true,
+  "checks": {
+    "tenant_isolation": true,
+    "watch_survives_export": true,
+    "saved_plan_replays_deterministically": true,
+    "collection_round_trip": true,
+    "history_requires_and_honours_consent": true,
+    "portable_export_contains_all_object_classes": true,
+    "delete_removes_scoped_objects": true,
+    "deletion_under_500ms": true,
+    "preference_inputs_explainable_and_resettable": true
+  },
+  "deletion_ms": 0.08750002598389983,
+  "retention_days": 90,
+  "hosted_controls": {
+    "forced_rls_migration": "migrations/003_private_intelligence_security.sql",
+    "least_privilege_purge": "migrations/007_retention_security_definer.sql",
+    "caller_has_no_private_table_or_column_privileges": true
+  }
+}

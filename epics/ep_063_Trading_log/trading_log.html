@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Trading Log</title>
+<script src="/ep060-nav.js"></script>
+<style>
+:root{color-scheme:dark}
+body{margin:0;background:#0d1117;color:#e6edf3;font:14px/1.5 ui-monospace,Consolas,monospace}
+main{padding:20px 24px;max-width:1100px}
+h1{margin:0 0 12px;font:700 20px system-ui,sans-serif}
+.bar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:12px;font:13px system-ui,sans-serif}
+.bar button{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 14px;cursor:pointer}
+.bar input,.bar select{background:#161b22;color:#e6edf3;border:1px solid #30363d;border-radius:6px;padding:6px 8px;font:13px system-ui,sans-serif}
+.bar button.on{background:#8fa0ff;color:#0d1117;border-color:#8fa0ff;font-weight:700}
+#status{color:#8b949e;margin-left:auto}
+ul{list-style:none;margin:0;padding:0;max-height:calc(50vh - 90px);overflow-y:auto}
+.sec{margin-bottom:12px;border:1px solid #263241;border-left:5px solid var(--c);border-radius:8px;overflow:hidden}
+.sec.open{--c:#3fb950}.sec.closed{--c:#8b949e}
+.sec summary{cursor:pointer;padding:10px 14px;font:700 14px system-ui,sans-serif;background:#161b22;list-style:none;display:flex;align-items:center;gap:10px;user-select:none}
+.sec summary::-webkit-details-marker{display:none}
+.sec summary::before{content:'▾';color:var(--c)}.sec:not([open]) summary::before{content:'▸'}
+.sec .dot{width:10px;height:10px;border-radius:50%;background:var(--c)}
+.cnt{margin-left:auto;background:var(--c);color:#0d1117;border-radius:10px;padding:0 10px;font-size:12px}
+h2.grp{font:700 15px system-ui,sans-serif;margin:18px 0 8px;padding:6px 12px;border-radius:6px;background:#1f2a44;color:#8fa0ff;letter-spacing:.05em;text-transform:uppercase}
+h2.grp.live{background:#3a2a10;color:#f0b24a}h3.pf{font:700 13px system-ui,sans-serif;margin:14px 0 6px;padding:4px 10px;border-left:4px solid #f0b24a;color:#f0b24a;background:#241c0c;border-radius:4px;letter-spacing:.05em}
+h2.grp small{font-weight:400;text-transform:none;opacity:.7}
+li{padding:6px 12px;border-bottom:1px solid #1b232e;white-space:pre-wrap;overflow-wrap:anywhere}
+li.closed{background:#161b22;color:#9aa7b4}
+.tag{color:#8fa0ff}.buy{color:#3fb950}.sell{color:#f85149}.pos{color:#3fb950}.neg{color:#f85149}
+.badge{background:#30363d;color:#e6edf3;border-radius:4px;padding:0 6px;font-size:12px}
+</style></head><body><main>
+<h1>Trading Log</h1>
+<div class="bar"><button data-t="all" class="on">All</button><button data-t="forex">Forex</button><button data-t="crypto">Crypto</button>
+<input id="f-model" placeholder="model" size="12"><input id="f-strategy" placeholder="strategy name" size="20"><select id="f-product"><option value="">all products</option></select>
+<select id="f-signal"><option value="">buy + sell</option><option value="buy">buy</option><option value="sell">sell</option></select>
+<span id="status">loading…</span></div>
+<h2 class="grp">Strategy trades</h2>
+<details class="sec open" open><summary><span class="dot"></span>Open orders <span class="cnt" id="n-log-open">0</span></summary><ul id="log-open"></ul></details>
+<details class="sec closed" open><summary><span class="dot"></span>Closed orders <span class="cnt" id="n-log-closed">0</span></summary><ul id="log-closed"></ul></details>
+<h2 class="grp live">Live trades <small>(combined_trade_live)</small></h2>
+<div id="live-groups"></div>
+</main>
+<script>
+var timer,type='all',st=document.getElementById('status');
+function esc(s){return String(s==null?'':s).replace(/[&<>]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;'}[c]})}
+function row(r){
+  var tag=type==='all'?'<span class="tag">['+esc(r.product_type)+']</span> - ':'';
+  var q=Math.round(r.quantity*1e6)/1e6, base=esc(r.model.toLowerCase())+'  '+esc(r.strategy)+'  <span class="'+esc(r.side)+'">'+esc(r.side)+'</span> '+q+' '+esc(r.product)+' '+r.entry_price;
+  if(r.status==='closed'){
+    var n=r.net_return==null?'':' <span class="'+(r.net_return>=0?'pos':'neg')+'">net '+r.net_return.toFixed(2)+'</span>';
+    return '<li class="closed">'+tag+esc(r.closed_at)+' <span class="badge">CLOSED'+(r.close_type?' · '+esc(r.close_type):'')+'</span> '+base+' → exit '+(r.exit_price==null?'':r.exit_price)+n+'</li>';
+  }
+  return '<li>'+tag+esc(r.created)+'  '+base+'</li>';
+}
+var liveClosed={};
+document.addEventListener('toggle',function(e){var d=e.target;if(d.dataset&&d.dataset.k)liveClosed[d.dataset.k]=!d.open},true);
+function renderLive(rows){
+  var pfs=['LIVE','LIVE_ALT'];rows.forEach(function(r){var p=r.portfolio||'(none)';if(pfs.indexOf(p)<0)pfs.push(p)});
+  document.getElementById('live-groups').innerHTML=pfs.map(function(p){
+    return '<h3 class="pf">'+esc(p)+'</h3>'+['open','closed'].map(function(s){
+      var rs=rows.filter(function(r){return (r.portfolio||'(none)')===p&&r.status===s}),k=p+'|'+s;
+      return '<details class="sec '+s+'" data-k="'+esc(k)+'"'+(liveClosed[k]?'':' open')+'><summary><span class="dot"></span>'+(s==='open'?'Open':'Closed')+' orders <span class="cnt">'+rs.length+'</span></summary><ul>'+(rs.map(row).join('')||'<li>None</li>')+'</ul></details>'}).join('')}).join('');
+}
+var fq='';function load(){
+  var t=type;
+  var qs='&'+['model','strategy','product','signal'].map(function(k){return k+'='+encodeURIComponent(document.getElementById('f-'+k).value)}).join('&');
+  fq=qs;
+  Promise.all(['trade_log','live_trade_log'].map(function(ep){
+    return fetch('/api/'+ep+'?type='+t+'&limit='+(ep==='live_trade_log'?200:50)+qs,{cache:'no-store'}).then(function(r){return r.json()})})).then(function(res){
+    if(t!==type||fq!==qs)return;
+    var d=res[0];
+    res.forEach(function(x){if(x.error)throw new Error(x.error)});
+    ['open','closed'].forEach(function(s){var rs=res[0].rows.filter(function(r){return r.status===s});
+      document.getElementById('log-'+s).innerHTML=rs.map(row).join('')||'<li>None</li>';
+      document.getElementById('n-log-'+s).textContent=rs.length});
+    renderLive(res[1].rows);
+    st.textContent='updated '+d.generated_at.slice(11)+' · auto-refresh 10s';
+  }).catch(function(e){st.textContent='error: '+e.message}).then(function(){clearTimeout(timer);timer=setTimeout(load,10000)});
+}
+document.querySelectorAll('.bar button').forEach(function(b){b.onclick=function(){
+  document.querySelectorAll('.bar button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');type=b.dataset.t;loadProducts();load()}});
+var deb;['model','strategy','product','signal'].forEach(function(k){var e=document.getElementById('f-'+k);
+  e.addEventListener(k==='model'||k==='strategy'?'input':'change',function(){clearTimeout(deb);deb=setTimeout(load,400)})});
+function loadProducts(){
+  fetch('/api/trade_log_products?type='+type).then(function(r){return r.json()}).then(function(d){
+    var sel=document.getElementById('f-product'),cur=sel.value;
+    sel.innerHTML='<option value="">all products</option>'+(d.products||[]).map(function(p){return '<option>'+esc(p)+'</option>'}).join('');
+    sel.value=(d.products||[]).indexOf(cur)>=0?cur:'';
+  }).catch(function(){});
+}
+loadProducts();load();
+</script></body></html>

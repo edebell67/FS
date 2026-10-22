@@ -1,0 +1,355 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:17:06.256866+00:00",
+  "passed": true,
+  "checks": {
+    "shadow_gate_passed": true,
+    "canary_gate_passed": true,
+    "promotion_active": true,
+    "rollback_restored_predecessor": true,
+    "rolled_back_candidate_retained": true
+  },
+  "gate_evidence": {
+    "metrics": {
+      "passed": true
+    },
+    "discovery": {
+      "passed": true,
+      "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+    },
+    "regime": {
+      "passed": true
+    },
+    "security": {
+      "passed": true,
+      "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+    },
+    "operations": {
+      "passed": true
+    },
+    "restore": {
+      "passed": true,
+      "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+    },
+    "acceptance": {
+      "passed": true
+    }
+  },
+  "shadow": {
+    "version": "intelligence-1.0.0",
+    "mode": "shadow",
+    "evidence": {
+      "metrics": {
+        "passed": true
+      },
+      "discovery": {
+        "passed": true,
+        "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+      },
+      "regime": {
+        "passed": true
+      },
+      "security": {
+        "passed": true,
+        "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+      },
+      "operations": {
+        "passed": true
+      },
+      "restore": {
+        "passed": true,
+        "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+      },
+      "acceptance": {
+        "passed": true
+      }
+    },
+    "decision": {
+      "promote": true,
+      "missing": [],
+      "failed": [],
+      "evaluated_at_monotonic": 431480.2689893
+    },
+    "staged_at": "2026-08-24T15:17:06.256663+00:00"
+  },
+  "canary": {
+    "version": "intelligence-1.1.0",
+    "mode": "canary",
+    "evidence": {
+      "metrics": {
+        "passed": true
+      },
+      "discovery": {
+        "passed": true,
+        "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+      },
+      "regime": {
+        "passed": true
+      },
+      "security": {
+        "passed": true,
+        "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+      },
+      "operations": {
+        "passed": true
+      },
+      "restore": {
+        "passed": true,
+        "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+      },
+      "acceptance": {
+        "passed": true
+      }
+    },
+    "decision": {
+      "promote": true,
+      "missing": [],
+      "failed": [],
+      "evaluated_at_monotonic": 431480.2690944
+    },
+    "staged_at": "2026-08-24T15:17:06.256746+00:00"
+  },
+  "promoted": {
+    "active": "intelligence-1.1.0",
+    "previous": "intelligence-1.0.0",
+    "versions": {
+      "intelligence-1.0.0": {
+        "version": "intelligence-1.0.0",
+        "mode": "public",
+        "evidence": {
+          "metrics": {
+            "passed": true
+          },
+          "discovery": {
+            "passed": true,
+            "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+          },
+          "regime": {
+            "passed": true
+          },
+          "security": {
+            "passed": true,
+            "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+          },
+          "operations": {
+            "passed": true
+          },
+          "restore": {
+            "passed": true,
+            "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+          },
+          "acceptance": {
+            "passed": true
+          }
+        },
+        "decision": {
+          "promote": true,
+          "missing": [],
+          "failed": [],
+          "evaluated_at_monotonic": 431480.2689893
+        },
+        "staged_at": "2026-08-24T15:17:06.256663+00:00"
+      },
+      "intelligence-1.1.0": {
+        "version": "intelligence-1.1.0",
+        "mode": "public",
+        "evidence": {
+          "metrics": {
+            "passed": true
+          },
+          "discovery": {
+            "passed": true,
+            "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+          },
+          "regime": {
+            "passed": true
+          },
+          "security": {
+            "passed": true,
+            "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+          },
+          "operations": {
+            "passed": true
+          },
+          "restore": {
+            "passed": true,
+            "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+          },
+          "acceptance": {
+            "passed": true
+          }
+        },
+        "decision": {
+          "promote": true,
+          "missing": [],
+          "failed": [],
+          "evaluated_at_monotonic": 431480.2690944
+        },
+        "staged_at": "2026-08-24T15:17:06.256746+00:00"
+      }
+    },
+    "audit": [
+      {
+        "action": "stage",
+        "version": "intelligence-1.0.0",
+        "mode": "shadow",
+        "promotable": true
+      },
+      {
+        "action": "promote",
+        "version": "intelligence-1.0.0",
+        "previous": null
+      },
+      {
+        "action": "stage",
+        "version": "intelligence-1.1.0",
+        "mode": "canary",
+        "promotable": true
+      },
+      {
+        "action": "promote",
+        "version": "intelligence-1.1.0",
+        "previous": "intelligence-1.0.0"
+      }
+    ]
+  },
+  "rolled_back": {
+    "active": "intelligence-1.0.0",
+    "previous": "intelligence-1.1.0",
+    "versions": {
+      "intelligence-1.0.0": {
+        "version": "intelligence-1.0.0",
+        "mode": "public",
+        "evidence": {
+          "metrics": {
+            "passed": true
+          },
+          "discovery": {
+            "passed": true,
+            "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+          },
+          "regime": {
+            "passed": true
+          },
+          "security": {
+            "passed": true,
+            "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+          },
+          "operations": {
+            "passed": true
+          },
+          "restore": {
+            "passed": true,
+            "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+          },
+          "acceptance": {
+            "passed": true
+          }
+        },
+        "decision": {
+          "promote": true,
+          "missing": [],
+          "failed": [],
+          "evaluated_at_monotonic": 431480.2689893
+        },
+        "staged_at": "2026-08-24T15:17:06.256663+00:00"
+      },
+      "intelligence-1.1.0": {
+        "version": "intelligence-1.1.0",
+        "mode": "public",
+        "evidence": {
+          "metrics": {
+            "passed": true
+          },
+          "discovery": {
+            "passed": true,
+            "basis": "exact canonical query corpus, protected slices and ten repeat runs"
+          },
+          "regime": {
+            "passed": true
+          },
+          "security": {
+            "passed": true,
+            "scan_id": "cae01926-68c2-4708-8a02-41a27556228f"
+          },
+          "operations": {
+            "passed": true
+          },
+          "restore": {
+            "passed": true,
+            "basis": "retained predecessor restored and promoted candidate retained for instant reversal"
+          },
+          "acceptance": {
+            "passed": true
+          }
+        },
+        "decision": {
+          "promote": true,
+          "missing": [],
+          "failed": [],
+          "evaluated_at_monotonic": 431480.2690944
+        },
+        "staged_at": "2026-08-24T15:17:06.256746+00:00"
+      }
+    },
+    "audit": [
+      {
+        "action": "stage",
+        "version": "intelligence-1.0.0",
+        "mode": "shadow",
+        "promotable": true
+      },
+      {
+        "action": "promote",
+        "version": "intelligence-1.0.0",
+        "previous": null
+      },
+      {
+        "action": "stage",
+        "version": "intelligence-1.1.0",
+        "mode": "canary",
+        "promotable": true
+      },
+      {
+        "action": "promote",
+        "version": "intelligence-1.1.0",
+        "previous": "intelligence-1.0.0"
+      },
+      {
+        "action": "rollback",
+        "version": "intelligence-1.0.0",
+        "retained": "intelligence-1.1.0"
+      }
+    ]
+  },
+  "audit": [
+    {
+      "action": "stage",
+      "version": "intelligence-1.0.0",
+      "mode": "shadow",
+      "promotable": true
+    },
+    {
+      "action": "promote",
+      "version": "intelligence-1.0.0",
+      "previous": null
+    },
+    {
+      "action": "stage",
+      "version": "intelligence-1.1.0",
+      "mode": "canary",
+      "promotable": true
+    },
+    {
+      "action": "promote",
+      "version": "intelligence-1.1.0",
+      "previous": "intelligence-1.0.0"
+    },
+    {
+      "action": "rollback",
+      "version": "intelligence-1.0.0",
+      "retained": "intelligence-1.1.0"
+    }
+  ],
+  "scope": "Local release-control drill; hosted infrastructure promotion uses the same immutable evidence contract."
+}

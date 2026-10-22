@@ -1,0 +1,8 @@
+# Ordered, immutable feature migration inventory; paths are relative to epic root.
+workstreams/WF-101/migrations/001_strategy_registry.sql
+workstreams/WF-102/migrations/001_canonical_ingestion.sql
+workstreams/WF-104/migrations/001_market_regime_foundation.sql
+workstreams/WF-201/migrations/001_strategy_stats.sql
+workstreams/WF-202/migrations/001_period_stats.sql
+workstreams/WF-401/migrations/001_regime_stats.sql
+workstreams/WF-403/relationship_schema.sql

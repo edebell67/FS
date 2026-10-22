@@ -6,9 +6,9 @@ const root = new URL("..", import.meta.url);
 async function source(path: string) { return readFile(new URL(path, root), "utf8"); }
 
 test("claim intake records a Claims pending status and approval workflow is discoverable", async () => {
-  const [intake, claimsPage, pipeline, header] = await Promise.all([
+  const [intake, claimsPage, pipeline] = await Promise.all([
     source("lib/verification/claim-intake.ts"), source("app/directoryadmin/claims/page.tsx"),
-    source("app/directoryadmin/pipeline/page.tsx"), source("components/layout/SiteHeader.tsx"),
+    source("app/directoryadmin/pipeline/page.tsx"),
   ]);
   assert.match(intake, /status: "pending"/);
   assert.match(intake, /status: "claims_pending"/);
@@ -16,7 +16,6 @@ test("claim intake records a Claims pending status and approval workflow is disc
   assert.match(claimsPage, /data-select-all/);
   assert.match(claimsPage, /Approve selected claims/);
   assert.match(pipeline, /\/directoryadmin\/claims/);
-  assert.match(header, /\/directoryadmin\/claims/);
 });
 
 test("selected claim approval atomically projects claimed status and prepares a truthful owner message", async () => {

@@ -2,6 +2,7 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { claimSuccessMessages } from "@/lib/db/schema";
 import { createGmailApiTransport } from "./delivery";
+import { escapeEmailHtml, renderTheTechPrincipleEmail } from "@/lib/email/brand";
 
 function recipients() { return (process.env.CLAIM_SUCCESS_RECIPIENT_ALLOWLIST ?? "").split(",").map((x) => x.trim().toLowerCase()).filter(Boolean); }
 export function claimSuccessDeliveryEnabled() {
@@ -22,7 +23,11 @@ export async function sendPreparedClaimSuccessMessages(messageIds: string[]) {
     if (!row.recipientAddress || !allowed.includes(row.recipientAddress.toLowerCase())) continue;
     try {
       const result = await transport.sendMessage({ from: "edward.bell@thetechprinciple.com", to: row.recipientAddress,
-        subject: row.subject, text: row.textBody, html: `<p>${row.textBody.replace(/\n/g, "<br />")}</p>` });
+        subject: row.subject, text: row.textBody, html: renderTheTechPrincipleEmail({
+          eyebrow: "Listing claim confirmed", heading: row.subject,
+          bodyHtml: row.textBody.split("\n\n").map((paragraph) => `<p style="margin:0 0 14px">${escapeEmailHtml(paragraph).replace(/\n/g, "<br>")}</p>`).join(""),
+          footerDetail: `thetechprinciple.com · Reply to this email for support or to update your contact preferences.<br><br>This is a service message about your business listing.<br><br>${escapeEmailHtml(process.env.VERIFICATION_SENDER_ADDRESS?.trim() || "[Registered business address — to be added]")}`,
+        }) });
       await db.update(claimSuccessMessages).set({ status: "sent", sentAt: new Date(), providerMessageId: result.messageId })
         .where(and(eq(claimSuccessMessages.id, row.id), isNull(claimSuccessMessages.sentAt)));
       sent++;

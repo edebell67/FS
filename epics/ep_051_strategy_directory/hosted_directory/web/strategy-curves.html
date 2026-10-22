@@ -1,0 +1,361 @@
+<!doctype html>
+<!-- Version 1.3.0 (2026-10-05): remembers filters/sort/view/period across the detail drill-down; cards link with from=curves. Version 1.2.0 (2026-10-05): sorting by Alt net return plots cumulative alt_net_return (from the trade ledger). Version 1.1.1 (2026-10-05): Buy | Sell split ignores the Signal filter so it matches the detail page. Version 1.1.0 (2026-10-05): shows 100 charts per page (was 24). Version 1.0.0 (2026-10-05): Strategy curves - the directory as a grid of equity curves, Single or Buy/Sell split. -->
+<!-- Version 2.2.2 (2026-08-28): configurable minimum closed trades for evidence-ready count; default 5. -->
+<!-- Version 2.2.1 (2026-08-28): moves refresh preferences into a closed floating settings control, outside document flow. -->
+<!-- Version 2.2.0 (2026-08-28): selectable data-only auto refresh, retaining visible results during polling. -->
+<!--
+ index.html — Connected Strategy Directory homepage.
+
+ VERSION HISTORY
+ v1.6.1 · 2026-08-27 · Renames the summary label to the clearer “Profitable strategies”.
+ v1.6.0 · 2026-08-27 · Applies the approved The Tech Principle intelligence visual system across the live directory homepage.
+ v1.5.0 · 2026-08-27 · Replaces the aggregate net-return headline with the percentage of selected-period strategies that are profitable.
+ v1.4.2 · 2026-08-26 · Confirms current-day default.
+ v1.4.1 · 2026-08-25 · Restores a persistent full-result directory summary.
+ v1.4.0 · 2026-08-24 · Adds non-destructive refresh progress.
+ v1.3.0 · 2026-08-24 · Links the intelligence finder.
+ v1.2.0 · 2026-08-24 · Defaults to current week and net return descending.
+ v1.1.0 · 2026-08-24 · Adds evidence filtering.
+ v1.0.0 · 2026-08-23 · Initial connected directory.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="api-base" content="" />
+    <title>Strategy curves</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/assets/styles.css?v=1.6.2" />
+    <script src="/assets/theme-toggle.js?v=1.0.0"></script>
+    <style>
+      :root { --ink:#171913; --muted:#71766c; --paper:#f1f2eb; --surface:#fafbf6; --line:#d8dbd0; --acid:#d8ff3f; --green:#2c744e; --red:#a14c40; --shadow:0 24px 70px #24271c1b; }
+      * { box-sizing:border-box; }
+      html,body { max-width:100%; overflow-x:hidden; }
+      body { margin:0; background:radial-gradient(circle at 76% 0,#d8ff3f12,transparent 32rem),var(--paper); color:var(--ink); font:14px Manrope,sans-serif; }
+      button,input,select { font:inherit; color:inherit; }
+      button { cursor:pointer; }
+      .shell { width:100%; max-width:none; margin:0; padding:0 0 90px; }
+      .top { position:sticky; top:0; z-index:30; min-height:68px; margin:0; padding:0 24px; border:0; border-bottom:1px solid var(--line); background:#f1f2ebee; backdrop-filter:blur(12px); display:flex; align-items:center; justify-content:space-between; }
+      .brand { position:relative; display:inline-flex; align-items:center; gap:10px; color:var(--ink); font:500 10px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; }
+      .brand::before { content:""; width:25px; height:25px; flex:none; border-radius:5px; background:var(--acid); transition:transform .5s cubic-bezier(.2,.8,.2,1); }
+      .brand::after { content:""; position:absolute; left:8px; top:8px; width:9px; height:9px; border-radius:1px; background:#0a0c0e; }
+      .brand:hover::before { transform:rotate(45deg); }
+      .nav-actions { gap:20px; align-items:center; }
+      .nav-actions a,.nav-actions span { color:var(--ink); font:500 9px "DM Mono",monospace; letter-spacing:.08em; text-transform:uppercase; text-decoration:none; }
+      .nav-actions a { border-bottom:1px solid transparent; }
+      .nav-actions a:hover { border-color:var(--ink); }
+      .nav-actions>span:last-child { color:var(--muted); }
+      .hero { min-height:0; margin:0; padding:34px max(24px,calc((100vw - 936px)/2)) 22px; border:0; border-radius:0; background:transparent; color:var(--ink); display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:40px; }
+      .hero .id { color:var(--muted); font:10px "DM Mono",monospace; letter-spacing:.11em; }
+      .hero h1 { max-width:760px; margin:10px 0 8px; color:var(--ink); font:700 clamp(34px,5vw,68px)/.94 Manrope,sans-serif; letter-spacing:-.065em; }
+      .hero p { max-width:72ch; margin:0; color:var(--muted); font-size:13px; line-height:1.6; }
+      .seal { width:116px; height:116px; border:1px solid var(--line); border-radius:50%; color:var(--green); background:transparent; font:500 9px/1.5 "DM Mono",monospace; }
+      .directory-summary,.period,.tools,.refresh-state,.grid { width:min(1180px,calc(100% - 48px)); margin-left:auto; margin-right:auto; }
+      .directory-summary { overflow:hidden; grid-template-columns:repeat(4,1fr); margin-top:0; margin-bottom:14px; padding:0; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .directory-summary article { min-height:94px; padding:20px 18px 16px; border:0; border-right:1px solid var(--line); background:transparent; }
+      .directory-summary article:last-child { border-right:0; }
+      .directory-summary span { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.1em; text-transform:uppercase; }
+      .directory-summary strong { margin-top:7px; color:var(--ink); font:700 30px/1 Manrope,sans-serif; letter-spacing:-.045em; }
+      .period { margin-top:0; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:none; }
+      .period-head { align-items:end; }
+      .period-head span,.period-dates label { color:var(--muted); font:9px "DM Mono",monospace; letter-spacing:.09em; text-transform:uppercase; }
+      .period-head h2 { margin:4px 0 0; color:var(--ink); font:700 17px Manrope,sans-serif; letter-spacing:-.03em; }
+      .period-presets { gap:6px; }
+      .period-presets button { min-height:34px; padding:7px 11px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:10px; }
+      .period-presets button.active { border-color:var(--ink); background:var(--ink); color:#fff; }
+      .period-dates { grid-template-columns:1fr 1fr auto auto; gap:8px; margin-top:12px; align-items:end; }
+      .period-dates input { min-height:42px; margin-top:5px; border:1px solid var(--line); border-radius:7px; background:transparent; }
+      .day-scroll { display:flex; gap:4px; }
+      .day-scroll button { min-width:38px; min-height:42px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--ink); font-size:16px; line-height:1; cursor:pointer; }
+      .day-scroll button:hover { border-color:var(--ink); }
+      #applyPeriod,#load { border:0; border-radius:8px; background:var(--acid); color:#171913; font-weight:700; }
+      .tools { display:grid; grid-template-columns:minmax(220px,1fr) repeat(4,minmax(120px,auto)) auto; gap:8px; margin-top:14px; padding:8px; border-radius:12px; background:var(--ink); box-shadow:var(--shadow); }
+      .tools input,.tools select { min-height:43px; border:1px solid #ffffff20; border-radius:7px; background:#ffffff0b; color:#fff; padding:8px 11px; }
+      .tools input::placeholder { color:#aeb3aa; }
+      .tools option { color:#171913; background:#fafbf6; }
+      .tools #load { min-width:128px; }
+      .refresh-state { margin-top:10px; color:var(--muted); font:9px "DM Mono",monospace; }
+      .progress-track { height:3px; border-radius:0; background:var(--line); }
+      .grid { grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin-top:15px; }
+      .card { min-width:0; min-height:176px; padding:18px; border:1px solid var(--line); border-radius:12px; background:var(--surface); color:var(--ink); box-shadow:none; transition:transform .2s,border-color .2s,box-shadow .2s; animation:directoryRise .35s both; }
+      .card:hover { transform:translateY(-3px); border-color:#9ca391; box-shadow:0 16px 36px #24271c14; }
+      .card-link { display:block; color:inherit; text-decoration:none; }
+      .assoc-btn { display:block; width:100%; margin-top:10px; padding:6px 0; border:0; border-top:1px solid var(--line); background:transparent; color:var(--green); font:9px "DM Mono",monospace; letter-spacing:.035em; text-align:left; cursor:pointer; }
+      .assoc-btn:hover { color:var(--ink); }
+      .card .id { color:var(--green); font:9px "DM Mono",monospace; letter-spacing:.035em; }
+      .family-panel { width:min(1180px,calc(100% - 48px)); margin:15px auto 0; }
+      .family-panel #familyBack { border:0; background:transparent; color:var(--green); font:10px "DM Mono",monospace; letter-spacing:.035em; cursor:pointer; padding:0 0 10px; }
+      .family-panel #familyBack:hover { color:var(--ink); }
+      .family-panel h3 { margin:0 0 12px; font:700 20px/1.2 Manrope,sans-serif; letter-spacing:-.03em; }
+      .family-table { width:100%; border-collapse:collapse; border:1px solid var(--line); border-radius:12px; overflow:hidden; background:var(--surface); }
+      .family-table th,.family-table td { padding:10px 14px; border-bottom:1px solid var(--line); text-align:right; font:12px "DM Mono",monospace; }
+      .family-table th:first-child,.family-table td:first-child { text-align:left; color:var(--green); }
+      .family-table thead th { text-align:right; color:var(--muted); font-weight:500; }
+      .family-table thead th:first-child { text-align:left; }
+      .family-table tfoot td { border-bottom:0; border-top:2px solid var(--line); font-weight:700; }
+      .card h2 { margin:13px 0 12px; color:var(--ink); font:700 18px/1.15 Manrope,sans-serif; letter-spacing:-.035em; }
+      .stats { grid-template-columns:repeat(4,1fr); gap:0; padding-top:11px; border-top:1px solid var(--line); }
+      .stat { padding:0 8px; border-right:1px solid var(--line); }
+      .stat:first-child { padding-left:0; }
+      .stat:last-child { border:0; }
+      .stat b { color:var(--ink); font:600 13px "DM Mono",monospace; }
+      .stat span,.evidence { color:var(--muted); font:8px "DM Mono",monospace; text-transform:uppercase; letter-spacing:.05em; }
+      .evidence { margin-top:15px; }
+      .notice { grid-column:1/-1; border:1px dashed var(--line); border-radius:10px; background:transparent; color:var(--muted); }
+      @keyframes directoryRise { from { opacity:0; transform:translateY(7px); } to { opacity:1; transform:none; } }
+      html[data-theme="dark"] { color-scheme:dark; --ink:#f2f4eb; --muted:#a2a79e; --paper:#151712; --surface:#20231c; --line:#3b4036; --shadow:0 24px 70px #0008; }
+      html[data-theme="dark"] body { background:radial-gradient(circle at 76% 0,#d8ff3f0b,transparent 32rem),var(--paper); }
+      html[data-theme="dark"] .top { background:#151712ee; }
+      html[data-theme="dark"] .period-presets button.active { background:#f2f4eb; color:#171913; }
+      html[data-theme="dark"] .card:hover { border-color:#72796b; box-shadow:0 16px 36px #0005; }
+      @media(max-width:980px) { .nav-actions>span:last-child { display:none; } .hero { padding-left:28px; padding-right:28px; } .directory-summary,.period,.tools,.refresh-state,.grid { width:calc(100% - 40px); } .tools { grid-template-columns:minmax(220px,1fr) repeat(2,minmax(110px,1fr)); } .tools #load { min-height:43px; } .grid { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+      @media(max-width:700px) { .top { min-height:60px; padding:0 16px; } .nav-actions { gap:10px; } .nav-actions a { font-size:8px; } .hero { grid-template-columns:1fr; padding:26px 16px 18px; } .hero h1 { font-size:39px; } .seal { display:none; } .directory-summary,.period,.tools,.refresh-state,.grid { width:calc(100% - 32px); } .directory-summary { grid-template-columns:repeat(2,1fr); } .directory-summary article:nth-child(2) { border-right:0; } .directory-summary article:nth-child(-n+2) { border-bottom:1px solid var(--line); } .period-head { align-items:flex-start; gap:14px; } .period-presets { overflow-x:auto; width:100%; } .period-presets button { flex:none; } .period-dates,.tools,.grid { grid-template-columns:1fr; } .tools { padding:10px; } .tools input,.tools select,.tools #load { width:100%; } .card { min-height:0; } }
+      @media(max-width:430px) { .brand { font-size:0; } .nav-actions a:nth-child(n+3) { display:none; } .directory-summary strong { font-size:25px; } .stats { grid-template-columns:repeat(2,1fr); row-gap:12px; } .stat:nth-child(2) { border-right:0; } }
+      @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; } }
+      .refresh-settings { position:fixed; right:144px; bottom:16px; z-index:100; color:var(--ink); }
+      .refresh-settings summary { display:flex; align-items:center; justify-content:center; width:44px; height:44px; border:1px solid var(--line); border-radius:50%; background:var(--surface); cursor:pointer; list-style:none; font-size:20px; }
+      .refresh-settings summary::-webkit-details-marker { display:none; }
+      .refresh-settings summary:focus-visible { outline:2px solid var(--ink); outline-offset:3px; }
+      .refresh-settings .auto-refresh-control { position:absolute; right:0; bottom:54px; width:200px; padding:16px; border:1px solid var(--line); border-radius:12px; background:var(--surface); box-shadow:0 6px 24px #0003; }
+      .refresh-settings:not([open]) .auto-refresh-control { display:none; }
+      .refresh-settings select,.refresh-settings input { display:block; margin-top:8px; width:100%; min-height:44px; color:var(--ink); background:var(--surface); }
+      @media(max-width:700px) { .refresh-settings { right:68px; bottom:12px; } }
+
+      .curve-grid { width:min(1180px,calc(100% - 56px)); margin:0 auto 48px; display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:14px; }
+      .curve-card { background:var(--surface); border:1px solid var(--line); border-radius:12px; padding:12px 12px 10px; color:var(--ink); text-decoration:none; display:block; min-width:0; }
+      .curve-card:hover { border-color:var(--ink); }
+      .curve-cap { display:flex; justify-content:space-between; gap:8px; font:500 10px "DM Mono",monospace; color:var(--muted); margin-bottom:6px; }
+      .curve-cap b { color:var(--ink); font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+      .curve-svg { width:100%; height:auto; display:block; }
+      .curve-svg .zero { stroke:var(--line); stroke-dasharray:3 3; }
+      .curve-svg text { fill:var(--muted); font:9px "DM Mono",monospace; }
+      .curve-svg .l-single { stroke:#7bd400; fill:none; stroke-width:1.8; }
+      .curve-svg .a-single { fill:#7bd40024; stroke:none; }
+      .curve-svg .l-buy { stroke:#22c55e; fill:none; stroke-width:1.6; }
+      .curve-svg .l-sell { stroke:#e5484d; fill:none; stroke-width:1.6; }
+      .curve-empty { height:120px; display:flex; align-items:center; justify-content:center; color:var(--muted); font:10px "DM Mono",monospace; text-align:center; }
+      .curve-legend { display:flex; gap:12px; font:9px "DM Mono",monospace; color:var(--muted); margin-top:4px; }
+      .curve-legend i { display:inline-block; width:8px; height:8px; border-radius:2px; margin-right:4px; }
+      #more { display:block; margin:0 auto 56px; min-height:44px; padding:0 22px; }
+      @media(max-width:700px) { .curve-grid { width:calc(100% - 32px); grid-template-columns:1fr; } }
+    </style>
+    <link rel="stylesheet" href="/assets/tech-principle-theme.css?v=1.1.0" />
+  </head>
+  <body>
+    <main class="shell">
+      <nav class="top">
+        <span class="brand">DNA / Strategy Curves</span>
+        <span class="nav-actions"><a href="/">Strategy directory</a><a href="/strategy-curves.html">Strategy curves</a><span>Evidence before allocation</span></span>
+      </nav>
+      <section class="hero">
+        <div>
+          <span class="id">CLOSED-TRADE EVIDENCE · EQUITY CURVES</span>
+          <h1>Every strategy,<br />as its equity curve.</h1>
+          <p>The directory as a wall of cumulative net-return curves. Switch every card between the single curve and the Buy | Sell split. Click a curve for its full trade ledger.</p>
+        </div>
+      </section>
+      <section class="period" aria-label="Evidence period">
+        <div class="period-head">
+          <div>
+            <span>Evidence window</span>
+            <h2 id="periodLabel">Current day</h2>
+          </div>
+          <div class="period-presets">
+            <button data-period="today" class="active">Current day</button
+            ><button data-period="week">Current week</button
+            ><button data-period="month">Current month</button
+            ><button data-period="all">All history</button>
+          </div>
+        </div>
+        <div class="period-dates">
+          <label>From<input type="date" id="dateFrom" /></label
+          ><label>To<input type="date" id="dateTo" /></label
+          ><span class="day-scroll"
+            ><button id="dayBack" type="button" aria-label="Shift period back one day" title="Shift back one day">‹</button
+            ><button id="dayForward" type="button" aria-label="Shift period forward one day" title="Shift forward one day">›</button
+          ></span
+          ><button id="applyPeriod">Apply selected period</button>
+        </div>
+      </section>
+      
+      <section class="tools">
+        <input id="search" placeholder="Search DNA_102001 or breakout_R_4_tp20_sl5" /><select id="productType" aria-label="Type">
+          <option value="forex" selected>Forex</option>
+          <option value="crypto">Crypto</option>
+        </select><select id="product" aria-label="Product">
+          <option value="">All products</option>
+        </select><select id="signal" aria-label="Signal">
+          <option value="" selected>BUY + SELL</option>
+          <option value="BUY">BUY only</option>
+          <option value="SELL">SELL only</option>
+        </select><select id="sort">
+          <option value="strategy_id">Strategy ID</option>
+          <option value="total_net_return" selected>Net return</option>
+          <option value="total_alt_net_return">Alt net return</option>
+          <option value="win_rate">Win rate</option>
+          <option value="profit_factor">Profit factor</option>
+          <option value="total_trades">Evidence volume</option></select
+        ><select id="direction">
+          <option value="asc">Ascending</option>
+          <option value="desc" selected>Descending</option></select
+        ><select id="curveMode" aria-label="Curve view"><option value="single" selected>Equity curve</option><option value="split">Buy | Sell split</option></select
+        ><button id="load">Refresh evidence</button>
+      </section>
+      <div class="refresh-state" id="refreshState" role="status" aria-live="polite">
+        <div class="refresh-copy"><span id="status">Connecting to the directory API…</span><span id="progressValue"></span></div>
+        <div class="progress-track" aria-hidden="true"><span id="progressBar"></span></div>
+      </div>
+      <section class="curve-grid" id="grid" aria-live="polite"></section>
+      <button id="more" type="button" hidden>Load more strategies</button>
+    </main>
+    <script src="/assets/button-feedback.js?v=1.0.0"></script>
+    <script src="/assets/api-client.js?v=1.5.0"></script>
+    <script src="/assets/period-filter.js?v=1.1.0"></script>
+    <script>
+      const PAGE_SIZE = 100, CONCURRENCY = 4;
+      const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+      const fmt = (n) => Number(n).toLocaleString("en-GB", { maximumFractionDigits: 0, signDisplay: "always" });
+      const $ = (sel) => document.querySelector(sel);
+      let generation = 0, page = 1, total = 0, shown = 0, mode = "single", running = 0;
+      const queue = [], cache = new Map();
+      const grid = $("#grid"), more = $("#more");
+      // Sorting by Alt net return plots the cumulative alt_net_return, treated exactly like net_return.
+      const metricKey = () => ($("#sort").value === "total_alt_net_return" ? "alt_net_return" : "net_return");
+
+      // Cumulative series. The Signal filter is applied to the trades client-side so the curve matches the filter chosen.
+      function series(points, signal, key) {
+        const pts = signal ? points.filter((p) => (p.signal || "").toUpperCase() === signal) : points;
+        let eq = 0, buy = 0, sell = 0;
+        return pts.map((p) => {
+          const v = Number(p[key]) || 0;
+          eq += v;
+          const side = (p.signal || "").toUpperCase();
+          if (side === "BUY") buy += v;
+          else if (side === "SELL") sell += v;
+          return { eq, buy, sell };
+        });
+      }
+      function draw(points, signal, view, key) {
+        const s = series(points, signal, key);
+        const label = key === "alt_net_return" ? "alt " : "";
+        if (!s.length) return '<div class="curve-empty">No closed trades in this window</div>';
+        const split = view === "split";
+        const vals = split ? [0, ...s.map((p) => p.buy), ...s.map((p) => p.sell)] : [0, ...s.map((p) => p.eq)];
+        const lo = Math.min(...vals), hi = Math.max(...vals), span = hi - lo || 1;
+        const W = 320, H = 150, l = 44, r = 8, t = 10, b = 14;
+        const x = (i) => l + (s.length === 1 ? (W - l - r) / 2 : (i * (W - l - r)) / (s.length - 1));
+        const y = (v) => t + ((hi - v) * (H - t - b)) / span;
+        const path = (k) => s.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p[k]).toFixed(1)}`).join(" ");
+        const z = y(0).toFixed(1);
+        const lines = split
+          ? `<path class="l-buy" d="${path("buy")}"/><path class="l-sell" d="${path("sell")}"/>`
+          : `<path class="a-single" d="${path("eq")} L${x(s.length - 1).toFixed(1)},${z} L${x(0).toFixed(1)},${z} Z"/><path class="l-single" d="${path("eq")}"/>`;
+        const last = s[s.length - 1];
+        const legend = split
+          ? `<div class="curve-legend"><span><i style="background:#22c55e"></i>Buy ${label}${fmt(last.buy)}</span><span><i style="background:#e5484d"></i>Sell ${label}${fmt(last.sell)}</span></div>`
+          : `<div class="curve-legend"><span>${s.length} trade${s.length === 1 ? "" : "s"} · ${label}${fmt(last.eq)}</span></div>`;
+        return `<svg class="curve-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Cumulative return"><line class="zero" x1="${l}" x2="${W - r}" y1="${z}" y2="${z}"/><text x="${l - 5}" y="${t + 3}" text-anchor="end">${fmt(hi)}</text><text x="${l - 5}" y="${H - b + 3}" text-anchor="end">${fmt(lo)}</text>${lines}</svg>${legend}`;
+      }
+      function paint(card) {
+        const data = cache.get(card.dataset.id);
+        if (data) // Split view always shows both sides (as the detail page does); the Signal filter only narrows the single curve.
+        card.querySelector(".curve-body").innerHTML = draw(data.points, mode === "split" ? "" : $("#signal").value, mode, metricKey());
+      }
+      function pump() {
+        while (running < CONCURRENCY && queue.length) {
+          const { card, gen } = queue.shift();
+          if (gen !== generation) continue;
+          running++;
+          // net_return: the cached equity-curve endpoint. alt_net_return only exists per trade, so use the trade ledger.
+          const alt = metricKey() === "alt_net_return";
+          (alt
+            ? DnaDirectoryApi.trades(card.dataset.id, { ...DnaPeriod.params(), limit: 5000 }).then((t) => ({
+                points: [...t.items].sort((a, b) => String(a.exit_time).localeCompare(String(b.exit_time))),
+              }))
+            : DnaDirectoryApi.equityCurve(card.dataset.id, DnaPeriod.params()))
+            .then((c) => { if (gen === generation) { cache.set(card.dataset.id, c); paint(card); } })
+            .catch((e) => { if (gen === generation) card.querySelector(".curve-body").innerHTML = `<div class="curve-empty">${esc(e.message)}</div>`; })
+            .finally(() => { running--; pump(); });
+        }
+      }
+      const observer = new IntersectionObserver((entries) => {
+        for (const e of entries) {
+          if (e.isIntersecting && !e.target.dataset.queued) {
+            e.target.dataset.queued = "1";
+            queue.push({ card: e.target, gen: generation });
+            observer.unobserve(e.target);
+          }
+        }
+        pump();
+      }, { rootMargin: "300px" });
+      function addCards(items) {
+        const qs = new URLSearchParams(DnaPeriod.params()).toString();
+        for (const x of items) {
+          const a = document.createElement("a");
+          a.className = "curve-card";
+          a.dataset.id = x.strategy_id;
+          a.href = `/strategy.html?id=${encodeURIComponent(x.strategy_id)}&${qs}&from=curves`;
+          a.innerHTML = `<div class="curve-cap"><b>${esc(x.descriptive_name || "Name pending")}</b><span>${esc(x.strategy_id)}</span></div><div class="curve-body"><div class="curve-empty">Loading curve…</div></div>`;
+          grid.appendChild(a);
+          observer.observe(a);
+        }
+        shown += items.length;
+      }
+      const STATE_KEY = "dna-curves-state";
+      const FIELDS = ["search", "productType", "product", "signal", "sort", "direction", "curveMode", "dateFrom", "dateTo"];
+      function saveState() {
+        try { sessionStorage.setItem(STATE_KEY, JSON.stringify(Object.fromEntries(FIELDS.map((f) => [f, $("#" + f).value])))); } catch {}
+      }
+      async function load(reset) {
+        if (reset) {
+          saveState(); generation++; page = 1; shown = 0; queue.length = 0; cache.clear(); grid.replaceChildren(); more.hidden = true; }
+        const gen = generation, status = $("#status"), bar = $("#progressBar");
+        status.textContent = "Loading strategies…";
+        bar.style.width = "40%";
+        try {
+          const p = await DnaDirectoryApi.list({
+            page_size: PAGE_SIZE, page, search: $("#search").value,
+            product_type: $("#productType").value, product: $("#product").value,
+            signal: $("#signal").value, sort: $("#sort").value,
+            direction: $("#direction").value, ...DnaPeriod.params(),
+          });
+          if (gen !== generation) return;
+          total = p.data.total;
+          addCards(p.data.items);
+          status.textContent = `${shown} of ${total} strategies · ${$("#periodLabel").textContent}`;
+          bar.style.width = "100%";
+          more.hidden = shown >= total;
+        } catch (e) {
+          if (gen === generation) { status.textContent = e.message; bar.style.width = "0"; }
+        }
+      }
+      async function loadProducts() {
+        const payload = await DnaDirectoryApi.products($("#productType").value);
+        $("#product").innerHTML = '<option value="">All products</option>' + payload.items.map((v) => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+      }
+      more.onclick = () => { page++; load(false); };
+      $("#load").onclick = () => load(true);
+      for (const id of ["sort", "direction", "signal", "product"]) $("#" + id).onchange = () => load(true);
+      $("#productType").onchange = () => { $("#product").value = ""; loadProducts().then(() => load(true)); };
+      $("#search").onkeydown = (e) => { if (e.key === "Enter") load(true); };
+      $("#curveMode").onchange = (e) => { mode = e.target.value; document.querySelectorAll(".curve-card").forEach(paint); };
+      document.addEventListener("periodchange", () => load(true));
+      // Restore the wall exactly as it was left (filters, sort, view, period) so the detail page's back link lands on it.
+      (async () => {
+        let saved = null;
+        try { saved = JSON.parse(sessionStorage.getItem(STATE_KEY) || "null"); } catch {}
+        if (saved) for (const f of ["search", "productType", "signal", "sort", "direction", "curveMode"]) if (saved[f] != null) $("#" + f).value = saved[f];
+        mode = $("#curveMode").value;
+        await loadProducts();
+        if (saved?.product) $("#product").value = saved.product;
+        if (saved?.dateFrom && saved?.dateTo) {
+          $("#dateFrom").value = saved.dateFrom;
+          $("#dateTo").value = saved.dateTo;
+          $("#applyPeriod").click();
+        } else DnaPeriod.setPreset("today");
+      })();
+    </script>
+<script src="/assets/ep060-nav.js"></script></body>
+</html>

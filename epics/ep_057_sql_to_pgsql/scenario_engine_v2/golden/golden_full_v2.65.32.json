@@ -1,0 +1,72 @@
+{
+ "page_version": "v2.65.32",
+ "captured": "2026-10-17",
+ "supersedes": "golden_manifest.json (hash-only, v2.65.24, structure undocumented)",
+ "method": "built-in browser on http://127.0.0.1:8765/top10_5min_equity_curves.html<url>; wait until getEligibleModels() total series length is unchanged for 3 s; payload = JSON.stringify(getEligibleModels().map(m => ({model: m.model, series: m.series.map(p => [p.time, p.net, p.buy, p.sell, p.alt_net ?? null, p.open ?? null, p.trades ?? null])}))); sha256 over its UTF-8 bytes (crypto.subtle).",
+ "engine_side": "tests/test_golden_sets.py builds the same payload from Engine.eligible() (integral floats printed as integers, compact separators) and compares the sha256 and the byte length.",
+ "sets": [
+  {
+   "id": "A",
+   "url": "?product_type=forex&product=all&scenario=top_net&date=2026-10-14&models=DNA_201700&models_only=1",
+   "sha256": "11dad99636b18dd99728abaaec2b6c484adf490d9c4236a0cca592dff0d50649",
+   "bytes": 10389,
+   "models": [
+    [
+     "DNA_201700",
+     335
+    ]
+   ],
+   "engine": {
+    "date": "2026-10-14",
+    "product_type": "forex",
+    "scenario": "top_net",
+    "models": [
+     "DNA_201700"
+    ],
+    "models_only": true,
+    "selected_time": false
+   }
+  },
+  {
+   "id": "B",
+   "url": "?product_type=forex&product=all&scenario=top_net&date=2026-10-14",
+   "sha256": "57a5a2789f6c92107ccd75a4da9320224fcb3129c37c7cd2f15d67e686cb8693",
+   "bytes": 10713,
+   "models": [
+    [
+     "DNA_200968",
+     335
+    ]
+   ],
+   "note": "the page opens a past date in selected-time mode (top 1 as of the head time), so it shows 1 model, not the scenario's 10",
+   "engine": {
+    "date": "2026-10-14",
+    "product_type": "forex",
+    "scenario": "top_net",
+    "models": [],
+    "models_only": false,
+    "selected_time": true
+   }
+  },
+  {
+   "id": "C",
+   "url": "?product_type=forex&product=all&scenario=top_buy_sell_net&date=2026-10-13",
+   "sha256": "de910557239a3918bfca853d344a16c15f1ceb4117bcfbd839a3889af4385c0a",
+   "bytes": 10255,
+   "models": [
+    [
+     "DNA_208518",
+     334
+    ]
+   ],
+   "engine": {
+    "date": "2026-10-13",
+    "product_type": "forex",
+    "scenario": "top_buy_sell_net",
+    "models": [],
+    "models_only": false,
+    "selected_time": true
+   }
+  }
+ ]
+}

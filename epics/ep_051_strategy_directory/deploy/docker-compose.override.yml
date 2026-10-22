@@ -1,0 +1,9 @@
+# EP051 local development override. Version 1.0.0 (2026-08-23).
+services:
+  directory:
+    environment: {EP051_ENVIRONMENT: development}
+  db:
+    ports: ["127.0.0.1:${EP051_DB_PORT:-5432}:5432"]
+  cache:
+    ports: ["127.0.0.1:${EP051_CACHE_PORT:-6379}:6379"]
+

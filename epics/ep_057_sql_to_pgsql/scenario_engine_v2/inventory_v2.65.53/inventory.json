@@ -1,0 +1,4576 @@
+{
+ "summary": {
+  "source": "top10_5min_equity_curves_source_v2.65.53.html",
+  "page_version": "v2.65.53",
+  "main_script_lines": [
+   1507,
+   9733
+  ],
+  "function_count": 216,
+  "state_vars": 289,
+  "top_level_wiring_statements": 5,
+  "by_kind": {
+   "engine": 115,
+   "view": 40,
+   "mixed": 61
+  },
+  "fetch_endpoints": [
+   "${API_BASE}/api/hourly_family_report?${query}",
+   "${API_BASE}/api/intelligence/rankings/target-days?${query}",
+   "${API_BASE}/api/model_trades?model=${encodeURIComponent(model)}&from=${from}&to=${to}&prod",
+   "${API_BASE}/api/overlay_rules",
+   "${API_BASE}/api/overlay_rules/assignments/${encodeURIComponent(portfolio)}",
+   "${API_BASE}/api/point_in_time_scenario?${query}",
+   "${API_BASE}/api/point_in_time_scenario_hours?${query}",
+   "${API_BASE}/api/portfolio_day?${query}",
+   "${API_BASE}/api/scenario_workspace",
+   "${API_BASE}/api/similar_strategies?date=${encodeURIComponent(currentDate)}&model=${encodeU",
+   "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(currentDate)}",
+   "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(date)}",
+   "${MODEL_SEARCH_API_BASE}/api/portfolio_day?${params.toString()}",
+   "${MODEL_SEARCH_API_BASE}/api/strategy_search?${params}",
+   "${MODEL_SEARCH_API_BASE}/api/strategy_search?${searchParams.toString()}",
+   "${MODEL_SEARCH_API_BASE}/api/strategy_search_day?${params}",
+   "${MODEL_SEARCH_API_BASE}/api/strategy_search_metrics?${params}",
+   "${location.origin}/api/live_portfolios",
+   "${location.origin}/api/live_portfolios/config"
+  ]
+ },
+ "functions": [
+  {
+   "name": "syncTpSlScenarios",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1581,
+   "end_line": 1602,
+   "lines": 22,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a405f8e4964418e9a113af5f7ba0ec9dbf6a239c3eb128ef5d5ca8623066af77"
+  },
+  {
+   "name": "isMetricAwareCriteria",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 1603,
+   "end_line": 1612,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "6f4aff2e5e5476f590d40c7bce7d0716a1b36db154b87cc4842aaf3b144a150e"
+  },
+  {
+   "name": "liveChartCacheKey",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1620,
+   "end_line": 1625,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2b3e521f9873dbf1f5d3a3c4aea74731201831a4f67d93ecb928a67e51115a65"
+  },
+  {
+   "name": "restoreLiveChartCache",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1626,
+   "end_line": 1645,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "f0bf7915ef90c0b980d1c4273825ce779dbfc55f0f0207634ed4b2b609b94240"
+  },
+  {
+   "name": "paintLiveChartCache",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1646,
+   "end_line": 1654,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "513c9167bae01138b3ddfa0737c0130b83b97fd646c3498f5b9a896979cb9cab"
+  },
+  {
+   "name": "scheduleLiveChartCacheFallback",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1655,
+   "end_line": 1666,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b2c96effa7e820c79ddb7f8d8e28605ce85705f1b8ebcdd095963c38eaf74f8e"
+  },
+  {
+   "name": "cacheLiveChartResponse",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1668,
+   "end_line": 1699,
+   "lines": 32,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "1acfdf01925164f668fb40495f1efe820cf330e83107cc70d62a0076e17d870e"
+  },
+  {
+   "name": "ensureHistoricalDataLoaded",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1701,
+   "end_line": 1719,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "dfce95e3a8ad71eec7adc4861998f1f2d0519b99338c037c0cb178b9dba7da39"
+  },
+  {
+   "name": "availableDates",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 1863,
+   "end_line": 1874,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "78577525c23e9f88427ed952615e156e5eb3fd26594a3012f405c63c94392bac"
+  },
+  {
+   "name": "triggerSelectedTimeRefresh",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 1999,
+   "end_line": 2007,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0424e3138e23f90737213ea820c9e0e356f9cca7aba60758a70727396fa78056"
+  },
+  {
+   "name": "updateAutoRefreshTop1Status",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2040,
+   "end_line": 2045,
+   "lines": 6,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "57b50e783bd39a102f52ae37a4fc581562ff62d775c1132de8b0ce962315aeed"
+  },
+  {
+   "name": "finishAutomaticTop1Refresh",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2046,
+   "end_line": 2063,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "68d0a7be3531aeff7e71bc887ecbcee77c77508ffaa6eac0657fc4f383af2774"
+  },
+  {
+   "name": "resetAutomaticRankSchedule",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2076,
+   "end_line": 2097,
+   "lines": 22,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d0b47ad7ac2336b4a30c35184e627410dc11c5487c03c360c43731f5abb0b249"
+  },
+  {
+   "name": "setReturnType",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2181,
+   "end_line": 2221,
+   "lines": 41,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "1e1e74342b2e2df2c1bbb827452ce793a081b25d414e85639af082f2ea0a415f"
+  },
+  {
+   "name": "setReturnType",
+   "ordinal": 2,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2227,
+   "end_line": 2290,
+   "lines": 64,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "733bf54b775ce59c4507302b968070e26198ab3c46c057da9c1666db6fc13d00"
+  },
+  {
+   "name": "syncLiveAltReporting",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2292,
+   "end_line": 2298,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ca4f2b6f4f9febba7ffc6b43dd3841427e91a68415a2ea4ea86b7baa58e5bb8c"
+  },
+  {
+   "name": "savePortfolios",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2300,
+   "end_line": 2303,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "c6943d36b1ac3c4568dd514ba3c3a7522b5c73e640ce0e61ceb6c9ef13b5dbad"
+  },
+  {
+   "name": "applySearchModelsToActivePortfolio",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2305,
+   "end_line": 2321,
+   "lines": 17,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2469fd0a117e80daa786aadf8a0440865f6969a7b4c69751044951822046785b"
+  },
+  {
+   "name": "movePortfolio",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2323,
+   "end_line": 2335,
+   "lines": 13,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "1b795595ff5d35fff385168674f7c73f69ba8bf30702bceaf0863b8db807e871"
+  },
+  {
+   "name": "saveCriteriaWorkspaces",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2337,
+   "end_line": 2341,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "a744ee80c0c36fd54758ead0b82c6df0d1ab77a7635e4badb7b1a95ab50c8252"
+  },
+  {
+   "name": "savePortfolioWorkspaceToPostgres",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2350,
+   "end_line": 2378,
+   "lines": 29,
+   "dom_refs": 3,
+   "fetches": [
+    "${API_BASE}/api/scenario_workspace"
+   ],
+   "storage": true,
+   "body_sha256": "431673e4912b88593de0901bdafce47c7a3509ae35a4ce7f0aee2d081e18f1b8"
+  },
+  {
+   "name": "restorePortfolioWorkspaceFromPostgres",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2380,
+   "end_line": 2405,
+   "lines": 26,
+   "dom_refs": 1,
+   "fetches": [
+    "${API_BASE}/api/scenario_workspace"
+   ],
+   "storage": true,
+   "body_sha256": "ea26657b03ba05636dfd7db1566a9bbe2a66ad8558dcc371dcc69a4d52f25633"
+  },
+  {
+   "name": "currentPortfolioViewConfig",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2407,
+   "end_line": 2429,
+   "lines": 23,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b492c35321a35845bd1441e5b95402509a02a77c60bb9bc08236506e3a0d2555"
+  },
+  {
+   "name": "persistPortfolioViewConfig",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2431,
+   "end_line": 2439,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "12c3a713fda455f6fd3ba1e99020e9ce6928e234d8d93f4d20ca74018a712e7f"
+  },
+  {
+   "name": "applyPortfolioViewConfig",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2441,
+   "end_line": 2500,
+   "lines": 60,
+   "dom_refs": 17,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b9571984a9e78904a637c87bc0cc4b39d7dda25aba7a373d58341bd4c1616e56"
+  },
+  {
+   "name": "loadLivePortfolioStore",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2502,
+   "end_line": 2511,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [
+    "${location.origin}/api/live_portfolios"
+   ],
+   "storage": false,
+   "body_sha256": "b3c5f7bd162581d4115c0ed7eb1bc044fa925d787e1c7239ed0ffda4ff1f88c1"
+  },
+  {
+   "name": "livePortfolioModelsForDate",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2513,
+   "end_line": 2543,
+   "lines": 31,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "296684e465f6c889b11aeaee08ad64f11ff7e2ea2265f3fa093a56cfb60628e6"
+  },
+  {
+   "name": "autoPinLivePortfolioStrategies",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2545,
+   "end_line": 2553,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "3884d8ce098a5932d67778185a34687bd40f4c707f76bebc5163b415027778f4"
+  },
+  {
+   "name": "loadOverlayRuleLibrary",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2555,
+   "end_line": 2572,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [
+    "${API_BASE}/api/overlay_rules"
+   ],
+   "storage": false,
+   "body_sha256": "c996b68e5f11adf6ac98ec5f2bc1cf6cdf27f037a1c02adfe450a16752066693"
+  },
+  {
+   "name": "assignedPortfolioOverlayRule",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2574,
+   "end_line": 2578,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "19512513e415b644e054c43c148d94911daa22a64b24e5202d2ab6ff96d2d629"
+  },
+  {
+   "name": "activePortfolioOverlayRule",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2580,
+   "end_line": 2583,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0e13bb750e53b0ace5f34e76be5cf4651a7ccc272e7c8dc23877b98f941b82e4"
+  },
+  {
+   "name": "syncAssignedOverlayRuleUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2585,
+   "end_line": 2604,
+   "lines": 20,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "642edaf888b554135d17fff3108b3125582b4ac9acb7156d8d641d13bd8be800"
+  },
+  {
+   "name": "overlayRuleSummary",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2606,
+   "end_line": 2619,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4d935de45167f3e4415706c07d39385e86e29d8b094434b5b4442d1a9f008640"
+  },
+  {
+   "name": "overlayRuleMetricValue",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2621,
+   "end_line": 2640,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0ac608c9c93cd8cfb7def1cf947533b05cfb2d3ab500bdb146d8d4a6f67785f3"
+  },
+  {
+   "name": "renderOverlayRuleLibrary",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2642,
+   "end_line": 2693,
+   "lines": 52,
+   "dom_refs": 40,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "70c0297876f232cbe22da959a65474133e25d1d8244b9884b232eef1925301e5"
+  },
+  {
+   "name": "beginEditNamedOverlayRule",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2695,
+   "end_line": 2722,
+   "lines": 28,
+   "dom_refs": 33,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "93366049ae37e7d6f5717680738eb51ccedc941e965f907c4e193982d6ce7005"
+  },
+  {
+   "name": "cancelEditNamedOverlayRule",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2724,
+   "end_line": 2730,
+   "lines": 7,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "437fa4f6566d190e7713e4f1ae1aabdc0718e9afddefaec1b41ea86cf1815d88"
+  },
+  {
+   "name": "overlayRuleCandidate",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2732,
+   "end_line": 2837,
+   "lines": 106,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0e8c51e28bbdbbe6f01a43226ed2a2a86b68f90da38a8bfd571fee7639a59ee5"
+  },
+  {
+   "name": "asOfCorrelation",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2839,
+   "end_line": 2854,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a887d520c63f07b63669a69af78d86018e1c5fc2b8c4e4c739c3401d538e8caf"
+  },
+  {
+   "name": "assignedOverlayTradeCacheKey",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2856,
+   "end_line": 2858,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "3dee5722064fdf5392e49df182d8b64f4e07a06d9bd263ebe9c41520ded017b9"
+  },
+  {
+   "name": "ensureAssignedOverlayTradeData",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2860,
+   "end_line": 2891,
+   "lines": 32,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a447f7558c929f5518d97e8487e816da1ce74c18b453d8efdd1d84e10bb0ecaa"
+  },
+  {
+   "name": "timeOfDayMinutes",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2893,
+   "end_line": 2896,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "04ecbc8a122d7985f5627eb816d10e2477fdca5ef5116c06ac30ae9e80490e0f"
+  },
+  {
+   "name": "curvePointAtOrBefore",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2898,
+   "end_line": 2908,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "33d10328535a8d014b049572f9845033f9340b67cedb4699333e9241874e0e62"
+  },
+  {
+   "name": "sourceTradeFlipResults",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2910,
+   "end_line": 2934,
+   "lines": 25,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4de76a84bf963b192a724cbbb0155811fc1421c3e2da29b6b4448a37256f3511"
+  },
+  {
+   "name": "applyAssignedOverlayTradeResults",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2936,
+   "end_line": 3002,
+   "lines": 67,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "e29e4e9e3e567cbbbb8825c99dc77d9adbf4b943da25bc1617b4962b4b09fe06"
+  },
+  {
+   "name": "assignedRuleTarget",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3004,
+   "end_line": 3022,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4d8bc73d37cbc29fe6684678a28d6f3f8f0867e91d6c90a9edb7e464f7550f79"
+  },
+  {
+   "name": "openOverlayRuleLibrary",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3024,
+   "end_line": 3028,
+   "lines": 5,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d03f55081e8e78cd82a8cc61d91131d8a552ce6ce0d41502e2b9786715ab091e"
+  },
+  {
+   "name": "configFromOverlayEditor",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3030,
+   "end_line": 3045,
+   "lines": 16,
+   "dom_refs": 16,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7cce9b2309b6f36172a92a9e2bd7bb2154ea56684a89cf9e4757096cb60e618a"
+  },
+  {
+   "name": "openNamedOverlayRuleSave",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3047,
+   "end_line": 3061,
+   "lines": 15,
+   "dom_refs": 17,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "f8dfd7454e3e540532bf797ceb341a4b9496081b02646fbb68edfe8edb461817"
+  },
+  {
+   "name": "saveNamedOverlayRule",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3063,
+   "end_line": 3102,
+   "lines": 40,
+   "dom_refs": 21,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "88344ea40de1356780d44c63eb320cc4ff57b19002477850413287651ae9d96b"
+  },
+  {
+   "name": "assignOverlayRule",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3104,
+   "end_line": 3127,
+   "lines": 24,
+   "dom_refs": 8,
+   "fetches": [
+    "${API_BASE}/api/overlay_rules/assignments/${encodeURIComponent(portfolio)}"
+   ],
+   "storage": false,
+   "body_sha256": "aa2b307a1fb6edcfa046f37ab6403cf8ca4def0b4287ceef8daacbc808acdf0e"
+  },
+  {
+   "name": "renderLivePortfolioTransition",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3129,
+   "end_line": 3155,
+   "lines": 27,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7977ae78ae3b4f5efece7bc2d033212fe3fc0dbd6d71c1c73911f1518ea5a4e3"
+  },
+  {
+   "name": "isLiveModePortfolio",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3157,
+   "end_line": 3159,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "905a673e7f2fe9e795018d49d62c6edeb682c61decb2bc505871ffa6c1f0868f"
+  },
+  {
+   "name": "isLiveModeArmed",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3161,
+   "end_line": 3164,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "574470f326782511dcf27287523b6c7367a6dc254bc8811f6dfeb65172688723"
+  },
+  {
+   "name": "syncStrategyRemovalButtons",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3166,
+   "end_line": 3187,
+   "lines": 22,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "82455088bc56d3af7a825187b84a5ec145497aaf81c8a5eac95c3a622cf6acad"
+  },
+  {
+   "name": "syncLiveModeUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3189,
+   "end_line": 3246,
+   "lines": 58,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b6c027046633d799607e279fa9a2f33bb80e722dcb5875c7ea85d33bb6071ce1"
+  },
+  {
+   "name": "liveActivationRulesReady",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3252,
+   "end_line": 3259,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2522927244a11373e26f7c0e20a70ee2a5b0956e047a536505049ad02ef9d337"
+  },
+  {
+   "name": "liveActivationRuleLabel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3261,
+   "end_line": 3275,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0884806ff6e89176047c7f9dfa2dfae07d491c71606ebc871482a824e68c1302"
+  },
+  {
+   "name": "syncLiveActivationReview",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3277,
+   "end_line": 3317,
+   "lines": 41,
+   "dom_refs": 44,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "e9051d0e80a62875b00aa59bfbb27cdcb937c1eb9c9de8e556ff2cc591d79ddf"
+  },
+  {
+   "name": "showLiveActivationReview",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3319,
+   "end_line": 3343,
+   "lines": 25,
+   "dom_refs": 27,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "5c233953ddea1657f38fd88531f5a66b474af7ca0b85f008d8b7786c104b384e"
+  },
+  {
+   "name": "activateLiveModeFromReview",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3345,
+   "end_line": 3437,
+   "lines": 93,
+   "dom_refs": 38,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false,
+   "body_sha256": "18091fd686a7379dcb74df55536c63b03478c8bc67cddd72513ef81d5cea6da4"
+  },
+  {
+   "name": "toggleLiveMode",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3439,
+   "end_line": 3488,
+   "lines": 50,
+   "dom_refs": 3,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false,
+   "body_sha256": "4741c130372e1830c1084c8e934daab6f7b221ed5ef882a3d390081f4436beee"
+  },
+  {
+   "name": "loadLivePortfolioRulesIntoForm",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3490,
+   "end_line": 3518,
+   "lines": 29,
+   "dom_refs": 19,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "356c799dfedd63049db66eb27d1b108c3a7f04fc3afc0b35ff4685a99ad94100"
+  },
+  {
+   "name": "isRuleManagedLivePortfolio",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3520,
+   "end_line": 3522,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b7259213d164616f89de11dd108d24a0803e393f4c0b95302e03591ceadde229"
+  },
+  {
+   "name": "liveRuleSummary",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3524,
+   "end_line": 3544,
+   "lines": 21,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "04b1ac27c3bdc400d034d2816472dbf1da9e9db29fb32689c262f17b5432d453"
+  },
+  {
+   "name": "appendRuleDetailsSection",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3546,
+   "end_line": 3575,
+   "lines": 30,
+   "dom_refs": 18,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "749fe0f2a5ab18636b159222c61d024237ef2b89941233e2b78a9571c26fd41c"
+  },
+  {
+   "name": "showLivePortfolioRuleDetails",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3577,
+   "end_line": 3628,
+   "lines": 52,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "916031c5f6bac149a443b2cbfe98100b3c69a879fd2e4c3bbee078de57e147c4"
+  },
+  {
+   "name": "editLivePortfolioRules",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3630,
+   "end_line": 3637,
+   "lines": 8,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "852415975720c4aa48f231b6f64181b2d2d8f13be4c3ad16b6bf645707fff9b0"
+  },
+  {
+   "name": "syncLivePortfolioScreenState",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3639,
+   "end_line": 3673,
+   "lines": 35,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "53808fea757a8e938eabc0fe98a29b9534f94f2fcfe3dc356d6093269d44a078"
+  },
+  {
+   "name": "saveLivePortfolioRules",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3675,
+   "end_line": 3719,
+   "lines": 45,
+   "dom_refs": 24,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false,
+   "body_sha256": "f2f3e11c3d5a336c3a43d2e2783ef607e5b7bf7437719876c1a4b551bd34b083"
+  },
+  {
+   "name": "portfolioScenarioConfig",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3721,
+   "end_line": 3723,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "12445ab2ba31a0a1935595588911980dd49f57ff9245290389f10167cb223980"
+  },
+  {
+   "name": "capturePortfolioScenario",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3725,
+   "end_line": 3735,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "3648bbd5e013029d97a2214c83215f2cddf360e9b98adcbd587b9099f9e9eb1e"
+  },
+  {
+   "name": "markPortfolioFixed",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3737,
+   "end_line": 3748,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4ad681c27f042125d44ecdc802f40be61baf0679f23ad67fd71d647f2d89f876"
+  },
+  {
+   "name": "applyDisplayTheme",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3750,
+   "end_line": 3760,
+   "lines": 11,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "099720fb772978937e0eeb6ecfa850917267186d861e4499c9047d625f89bb7d"
+  },
+  {
+   "name": "removeModelFromPortfolio",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3762,
+   "end_line": 3776,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d9f6ffc705d794aca41a55114889d3e8669186a0099a3b33191bbcea3f6406af"
+  },
+  {
+   "name": "deletePortfolio",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3778,
+   "end_line": 3781,
+   "lines": 4,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "00d287aacb9bd88d22cdb00278fa9866c97e2b3fe3902868b3d48a863cd01cfd"
+  },
+  {
+   "name": "deleteSelectedPortfolios",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3783,
+   "end_line": 3791,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "cf304b8e902cd2f737c06dcb8daff8e9baa9689afa8b7c06a1f51896050db2ea"
+  },
+  {
+   "name": "removePortfolios",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3793,
+   "end_line": 3818,
+   "lines": 26,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "1cf5fe970bf437b8b8fd3db36e1e60f5d92fa87c88c1c8d1fddca34c5bc69321"
+  },
+  {
+   "name": "setCatalogueOptions",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3820,
+   "end_line": 3828,
+   "lines": 9,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "efdff6b94c60146f696c2ac41119f2d5027972c030a23d6e6272314bc52ec455"
+  },
+  {
+   "name": "populateCataloguePortfolioOptions",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3830,
+   "end_line": 3838,
+   "lines": 9,
+   "dom_refs": 6,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7d2eb79d909df49a34b7424f65bd90eb5dee7f38e762e2d1d010d1292313d2f8"
+  },
+  {
+   "name": "addCatalogueModel",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3840,
+   "end_line": 3860,
+   "lines": 21,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "cb2f5ddbc82f976e701eb0098ee6bbbab0aa0c85313fce619440697df0553148"
+  },
+  {
+   "name": "renderStrategyCatalogue",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3862,
+   "end_line": 3900,
+   "lines": 39,
+   "dom_refs": 17,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ff92dcd7e891eb4cbf61872f7ff5e1b85eef735f0c434bd7b4ef41453fa30247"
+  },
+  {
+   "name": "loadStrategyCatalogue",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3902,
+   "end_line": 3920,
+   "lines": 19,
+   "dom_refs": 2,
+   "fetches": [
+    "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(currentDate)}"
+   ],
+   "storage": false,
+   "body_sha256": "8d6f84c32879b16661f29685a159915876204e212f070be340f631b4c3fb6721"
+  },
+  {
+   "name": "shortStrategyDescription",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3922,
+   "end_line": 3930,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ede81d499fb889bf7b2a6cfd4f5235625c4c64f758948eff0e4b850030e088f7"
+  },
+  {
+   "name": "moveModelBetweenPortfolios",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3932,
+   "end_line": 3953,
+   "lines": 22,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ff895b642526a51495da5aeef061021fe7cb8f8d127db96a8b3dbb3b4fa7ebc5"
+  },
+  {
+   "name": "getMergedPortfolioModels",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3955,
+   "end_line": 3963,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2b8b8d63971326b81cd40754ad74282ef3ca48eb54541698a12fe9ea20ac0f55"
+  },
+  {
+   "name": "updatePortfolioMergeUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3965,
+   "end_line": 3983,
+   "lines": 19,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "90be4f005bad01ac3c994824d8ce49e1557082d17f2420434839bf860fb5e3e4"
+  },
+  {
+   "name": "renderPortfolioTabs",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3985,
+   "end_line": 4037,
+   "lines": 53,
+   "dom_refs": 8,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "9127f5b28db20aa32f0fdab6f4bc6c8831a634006a06603b6946bd434257f30a"
+  },
+  {
+   "name": "getPersistedPortfolioViewCache",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4039,
+   "end_line": 4048,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "e49903f496726d2caea532f081e64777457a87ba55ca8cf2d528ef2054d0cfa5"
+  },
+  {
+   "name": "persistPortfolioView",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4050,
+   "end_line": 4058,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "65168434cad323119c21456c8cebb506931b78cd465fd9bcb62a6e327671f810"
+  },
+  {
+   "name": "rememberPortfolioView",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4060,
+   "end_line": 4076,
+   "lines": 17,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "27a085527c7369625aa661f4ace6385ab020347373fde633e1e6d862b1e2867e"
+  },
+  {
+   "name": "getLastPortfolioView",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4078,
+   "end_line": 4093,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "27c52bee9289494950a4880524a44edbd7d3477e67d266009b032edc7c7fa8ff"
+  },
+  {
+   "name": "loadPortfolioData",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4095,
+   "end_line": 4134,
+   "lines": 40,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "59dff1fc29e52e099249b6f64efb49afc44e38d1b8e7144821312b51b05c2bf0"
+  },
+  {
+   "name": "fetchPortfolioData",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4136,
+   "end_line": 4193,
+   "lines": 58,
+   "dom_refs": 0,
+   "fetches": [
+    "${API_BASE}/api/portfolio_day?${query}"
+   ],
+   "storage": false,
+   "body_sha256": "5155064bb29c5630d2d4fa01293de10560bb2a6c70928d782d1087858d99e59e"
+  },
+  {
+   "name": "refreshActivePortfolioView",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4199,
+   "end_line": 4217,
+   "lines": 19,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d95550c839e6c07b76ce11c53b31f10473a5348f16b7b8c5a8ebcfcb8b4e5d9f"
+  },
+  {
+   "name": "syncPortfolioViewRefresh",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4219,
+   "end_line": 4226,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "1dac8b76d550cd2879fad6bdf86e5bf3a7de0c8acbc82b61ced99adc0455d423"
+  },
+  {
+   "name": "repopulateActivePortfolioFromCriteria",
+   "ordinal": 1,
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4232,
+   "end_line": 4245,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a506c31c6bb56af44c7207b8fa7074511d7b7b25f477494f746114490ff0e733"
+  },
+  {
+   "name": "activatePortfolio",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4247,
+   "end_line": 4426,
+   "lines": 180,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "1dd7e00cf9c10866d6d3b0d92dd1ec09673ac07c5fbe50cb90bfd001b84f10ce"
+  },
+  {
+   "name": "renderPortfolioList",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4471,
+   "end_line": 4617,
+   "lines": 147,
+   "dom_refs": 82,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "990de8e0b5d0b57ecc471ef99c8dd5d4e8ec8c7347a68b800a544ab5be9f5f90"
+  },
+  {
+   "name": "openPortfolioModal",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4619,
+   "end_line": 4627,
+   "lines": 9,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a091a6ec2230cd90e3d34592db2258a70fc22709234e4dcb8060ed78c566106e"
+  },
+  {
+   "name": "uniquePortfolioName",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4629,
+   "end_line": 4635,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "58a99411c8b05885c63b6cd8569889d175f4ec5f05858f315b3da4b05b1ccadc"
+  },
+  {
+   "name": "createSimilarPortfolio",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4637,
+   "end_line": 4661,
+   "lines": 25,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "444ce0a84baac9d6b8c94a5abbad84e43f75d69eb042590f5012e273516fcc7f"
+  },
+  {
+   "name": "renderSimilarStrategyOptions",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4663,
+   "end_line": 4691,
+   "lines": 29,
+   "dom_refs": 16,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "e05a421cd73bea4f05177dc47d8fb94646b09824e6a3e23e8056ef8e9d7d50d6"
+  },
+  {
+   "name": "openSimilarStrategyModal",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4693,
+   "end_line": 4710,
+   "lines": 18,
+   "dom_refs": 7,
+   "fetches": [
+    "${API_BASE}/api/similar_strategies?date=${encodeURIComponent(currentDate)}&model=${encodeU"
+   ],
+   "storage": false,
+   "body_sha256": "985fc1698b3239e15cf999e6eb244e89ac089ec63f88cb465b72f5716e397cf7"
+  },
+  {
+   "name": "init",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4712,
+   "end_line": 4796,
+   "lines": 85,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b113751a3a2fcce968b240d47d84733e53bd80dfea90ea9eecfe42f6f5850e2c"
+  },
+  {
+   "name": "LIVE_DATE",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 4805,
+   "end_line": 4818,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b863d6c6b83510b735ed3a69a6e304703d308a614de0105f9454b8988d4cfdd8"
+  },
+  {
+   "name": "setLiveBadge",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4820,
+   "end_line": 4830,
+   "lines": 11,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "71330c89b93cc54aa136cd8512fdad656a98be036eed989112dfdc5e485f8a2b"
+  },
+  {
+   "name": "refreshLiveData",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4832,
+   "end_line": 4946,
+   "lines": 115,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "fc406ca6894563a7f90939b28413262b94e269a06695429ebcc686eb6a5a6136"
+  },
+  {
+   "name": "getSelectedTimeNoteEntries",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4948,
+   "end_line": 4953,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "51e659eb86dfd70ac13e3a51d1c9e1d400de44a2f16ae8e9f9f78dd01bd7c2f6"
+  },
+  {
+   "name": "openSelectionNotesModal",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4955,
+   "end_line": 4978,
+   "lines": 24,
+   "dom_refs": 22,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "67980fed6f765cccb0ba869d17d94ba54ff6b0ed790ba9d092eb6e864a328adf"
+  },
+  {
+   "name": "tradeDateRange",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4981,
+   "end_line": 4987,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "edca8eee8074bdfe2d28933f232d1b56e94acb72ff9264c96c3486315d24130a"
+  },
+  {
+   "name": "openTradesModal",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4989,
+   "end_line": 5139,
+   "lines": 151,
+   "dom_refs": 33,
+   "fetches": [
+    "${API_BASE}/api/model_trades?model=${encodeURIComponent(model)}&from=${from}&to=${to}&prod"
+   ],
+   "storage": false,
+   "body_sha256": "f82d92ddcf2f52c84b0acd477901c25b926e0a5ee6d48fe4faf029f18aca5799"
+  },
+  {
+   "name": "setupTradesModal",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5141,
+   "end_line": 5158,
+   "lines": 18,
+   "dom_refs": 23,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "dc7dac567295474dce44b9e61b6174007ecc7e2745af2cd183df495f3d2a4c63"
+  },
+  {
+   "name": "setSectionCollapsed",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5161,
+   "end_line": 5168,
+   "lines": 8,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4534c2a635495101b992707714dbfaa981b2c0a76ddd56b9b1b16a5ed655d278"
+  },
+  {
+   "name": "collapseStorageKey",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5170,
+   "end_line": 5173,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "959522accc5799a2e7fab111ecda65964e0c94c498cef91331751bec6a473044"
+  },
+  {
+   "name": "updateCollapseAllControl",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5175,
+   "end_line": 5185,
+   "lines": 11,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4d3ea3da4f90e3212bbb5cba7b02e0ef2e6a094a57a36ad894ef7f8557913f6a"
+  },
+  {
+   "name": "setAllSectionsCollapsed",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5187,
+   "end_line": 5194,
+   "lines": 8,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "cdaf266f50202c7373c1312fb8246f251775954386a925b627a0bc9d9bffbc00"
+  },
+  {
+   "name": "setupCollapsibleSections",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5196,
+   "end_line": 5218,
+   "lines": 23,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "48a59bebe1bbb60a3000336c22fd644f3a666b645e44e4e2af5cf2cf6bb6a170"
+  },
+  {
+   "name": "startLiveRefresh",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5220,
+   "end_line": 5227,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4599ee882a12f39a57011f72183cc39a6b084317b476321541c4c4045b3e29fd"
+  },
+  {
+   "name": "syncLiveRefreshInterval",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5229,
+   "end_line": 5236,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b86cefe7e5df9fd7456bc20a8b60aec6bd1e2f484b83968a3b539999deaa2ff3"
+  },
+  {
+   "name": "setupDateTabs",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5238,
+   "end_line": 5253,
+   "lines": 16,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "76ed85ba2c1191f3befb69e5a6f413b09c8bb4c65488189ec319bae42d0a8dbe"
+  },
+  {
+   "name": "setRankingCriteria",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5258,
+   "end_line": 5403,
+   "lines": 146,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c5f7a650adaf339db74bc4c24ff51078315c760fa83365422c97bae2a158d080"
+  },
+  {
+   "name": "updateScenarioUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5405,
+   "end_line": 5417,
+   "lines": 13,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d7d448cc7ac92c7d4948a67bfacc2a4e5481be3c26c2da963326fb7466a41144"
+  },
+  {
+   "name": "renderModalScenarioCards",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5419,
+   "end_line": 5462,
+   "lines": 44,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "8db11278d9dcc77d7b51e0a27e717e8eefc4381ec1a775846d7a1538133e2b56"
+  },
+  {
+   "name": "updateDateLabelAndTitle",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5464,
+   "end_line": 5490,
+   "lines": 27,
+   "dom_refs": 10,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7e9c2d41e93cf8aa4d345992d35ce4ba611e88ba14fb25af441384d681c3a920"
+  },
+  {
+   "name": "setSplitMode",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5492,
+   "end_line": 5500,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "1e310dc2bb1beb154bf477249e071fa6f5206db85fc34fb76e0b514c85b47f31"
+  },
+  {
+   "name": "syncSplitModeControls",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5502,
+   "end_line": 5520,
+   "lines": 19,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "bce7b0e55f649ada512fc572b8f5ab2f661dac5264e1c0d046b6f203362c37c8"
+  },
+  {
+   "name": "getMetricKeys",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5523,
+   "end_line": 5535,
+   "lines": 13,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "71e8514f16b560b32185deaedb3a40b0be8c4c5fdf64e4c48da6f5123311a048"
+  },
+  {
+   "name": "getStrategyFamily",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5537,
+   "end_line": 5544,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "02a3b6bc63c19680d4ed7abf6f6c8219792ac919ff43a689e81b3626a6684467"
+  },
+  {
+   "name": "updateStrategyFamilyOptions",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5546,
+   "end_line": 5549,
+   "lines": 4,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "1f8b76c3d7aba495b1f2aa0310bfc3edae4acbf562ea3e575efdf37b9031795d"
+  },
+  {
+   "name": "getScenarioCandidates",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5551,
+   "end_line": 5587,
+   "lines": 37,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2b21dc8304a29b6d644764b31106e420d01aa3c075344bfff4edefb41c3d7f59"
+  },
+  {
+   "name": "modelSearchTerms",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5589,
+   "end_line": 5591,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ba4f415df7d746673072a8e4a7075228c7ce2995903cf00b97ac2142985069fa"
+  },
+  {
+   "name": "clearModelSearchState",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5593,
+   "end_line": 5602,
+   "lines": 10,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "19dd18100df0c6ffb25f3fd40b066ff62c7b2ab4e27a738b8b21e40bfbaba7e9"
+  },
+  {
+   "name": "getEligibleModels",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5604,
+   "end_line": 5685,
+   "lines": 82,
+   "dom_refs": 10,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "aaa6975e97dcbefd3cb6d6105b4a64e74e7472a402cbbcef976e7bd53aa23e83"
+  },
+  {
+   "name": "getExactSearchModel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5687,
+   "end_line": 5695,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "39bde9cdb975203f1739e4c193842c18eb4ddbe0ef20398b201427edf989591a"
+  },
+  {
+   "name": "hydrateStrategySearchMetrics",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5697,
+   "end_line": 5759,
+   "lines": 63,
+   "dom_refs": 2,
+   "fetches": [
+    "${MODEL_SEARCH_API_BASE}/api/strategy_search_metrics?${params}"
+   ],
+   "storage": false,
+   "body_sha256": "689c3526907c3ad325fbee2191a9b7dacaa4b5f592172224ea6d52daab56a6b1"
+  },
+  {
+   "name": "loadModelSearchFromDatabase",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5761,
+   "end_line": 5953,
+   "lines": 193,
+   "dom_refs": 13,
+   "fetches": [
+    "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(date)}",
+    "${MODEL_SEARCH_API_BASE}/api/portfolio_day?${params.toString()}",
+    "${MODEL_SEARCH_API_BASE}/api/strategy_search?${params}",
+    "${MODEL_SEARCH_API_BASE}/api/strategy_search?${searchParams.toString()}",
+    "${MODEL_SEARCH_API_BASE}/api/strategy_search_day?${params}"
+   ],
+   "storage": false,
+   "body_sha256": "d6b359b97423a49df9a2439cd8136d01013f546c5b9b4f90f0737ae1b719bfda"
+  },
+  {
+   "name": "loadDeepLinkModelsFromDatabase",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5955,
+   "end_line": 6029,
+   "lines": 75,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "03c0b08744da8f9221341a1de2c35bc65c220a5548c19a1639f131ba3f61f8d7"
+  },
+  {
+   "name": "getReplayTimelineModels",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6031,
+   "end_line": 6061,
+   "lines": 31,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "225b812dd491a3061f2dd43383d86ec4588b2d7fa02baaa7cf97ac9036a2e217"
+  },
+  {
+   "name": "pointInTimeAtReplayHead",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6063,
+   "end_line": 6072,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "9a3dc924bbd9fae3cfd22a6e1e5668894cbd430e4f35882b492466a611fb8605"
+  },
+  {
+   "name": "clockMinutes",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6074,
+   "end_line": 6079,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "80e0629043892b9ee97b148072eefd6a13fa409f484620ba9b3d424f99c034bc"
+  },
+  {
+   "name": "replayClockTime",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6081,
+   "end_line": 6084,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "220f1bf0293f8bfa0d5c2291a39a1c1092d4d5497446a6cc30f8e151f60bf062"
+  },
+  {
+   "name": "nextAutomaticTop1Minute",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6086,
+   "end_line": 6092,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "880bd299f3bcfabd11c0dc4246995c90787bd5a1801ca2f5ad33b4c393873513"
+  },
+  {
+   "name": "selectedTimeRankCount",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6094,
+   "end_line": 6096,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "00783da6edfc17ee802b99e1ab724a47b56198c0a1b7dec05eae3bae83fbff5d"
+  },
+  {
+   "name": "retainSelectedTimeLeaders",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6098,
+   "end_line": 6123,
+   "lines": 26,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "338b0d17b20f76c87ea26815368ab86f545f15952022954da3cd600bbef20fc8"
+  },
+  {
+   "name": "applySelectedTime",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6125,
+   "end_line": 6173,
+   "lines": 49,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c99e0fdb6c68de7424bcb58a7f31a89f15a3ee3f6d6932fee45ae629c2f7b77a"
+  },
+  {
+   "name": "pointInTimeRequestOptions",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6175,
+   "end_line": 6192,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a0eef4b25285339100a1357282b610f44b45b6374e8d4b8450cc1a8f1147fffb"
+  },
+  {
+   "name": "pointInTimeContextKey",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6194,
+   "end_line": 6198,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7b5e0101d6958b08354c0d2666045209bb465cd917a9ae490818c70bfab0d773"
+  },
+  {
+   "name": "scheduleAutomaticTop1Refresh",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6200,
+   "end_line": 6246,
+   "lines": 47,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "927f99934a32cfafd0ee05c60e2208e669cd90ff9a1fcbe97bb6a5fa28e9a2a3"
+  },
+  {
+   "name": "renderPointInTimeHistory",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6248,
+   "end_line": 6281,
+   "lines": 34,
+   "dom_refs": 8,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "5507f2e8d142c64ddbad1a43c75c0a29fe4a458ee29928d69c867d6146626415"
+  },
+  {
+   "name": "refreshPointInTimeHistory",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6283,
+   "end_line": 6308,
+   "lines": 26,
+   "dom_refs": 4,
+   "fetches": [
+    "${API_BASE}/api/point_in_time_scenario_hours?${query}"
+   ],
+   "storage": false,
+   "body_sha256": "9228401f4d29416eaa31e59ccabb554888cda566525a5edfb4da3de5e8856e79"
+  },
+  {
+   "name": "refreshPointInTimeSelection",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6310,
+   "end_line": 6520,
+   "lines": 211,
+   "dom_refs": 11,
+   "fetches": [
+    "${API_BASE}/api/point_in_time_scenario?${query}"
+   ],
+   "storage": false,
+   "body_sha256": "981e3f172bde92c63f4ae9726dffc62e5634768d1136764cf536ba4f731596e5"
+  },
+  {
+   "name": "schedulePointInTimeSelection",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6521,
+   "end_line": 6546,
+   "lines": 26,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "8bbe3cb54c0d3a37277f9a3bbdaf68465717493a8921bf1b5ecc20eb5dd91a2d"
+  },
+  {
+   "name": "updatePointInTimeToggleUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6548,
+   "end_line": 6577,
+   "lines": 30,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c287329ce2d42b4954d0462b1815cc10909815bae17858990d71e80aaa2f22ca"
+  },
+  {
+   "name": "getMaxFrames",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6579,
+   "end_line": 6583,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2ca260bbedbabd7c5c6a50237b9435574043af3159881fbc6ff92a868dadfd7b"
+  },
+  {
+   "name": "switchDate",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6585,
+   "end_line": 6673,
+   "lines": 89,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "e253293b132635a19cf6a83f8e29b7f775cca25c791cc21bf993b305f2e3007b"
+  },
+  {
+   "name": "updateDeltaButtonsUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6675,
+   "end_line": 6721,
+   "lines": 47,
+   "dom_refs": 24,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d0d31b952401feb88077f32543d52a8cbeb076ee6d58fe5d1dbaae34ce5d4f8f"
+  },
+  {
+   "name": "setReplaySpeed",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6726,
+   "end_line": 6741,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "627241e7665d9a3eb747afbb4a33241a069f08752bb56f92baf683fd686001e8"
+  },
+  {
+   "name": "togglePlay",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6743,
+   "end_line": 6749,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b10120b4770e55957ea2425aa4d9aec8062f7b3e3965269833a0eb8d07eee99c"
+  },
+  {
+   "name": "startReplay",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6751,
+   "end_line": 6763,
+   "lines": 13,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "8b57c3a355e81b293d371d95a492180a94262571428c03255ca9647c77de8bae"
+  },
+  {
+   "name": "pauseReplay",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6765,
+   "end_line": 6775,
+   "lines": 11,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "803ddc8ccbc139a4550c1f9e4e102ed1854a0fe5387e466e6b6f4e0af21c6b96"
+  },
+  {
+   "name": "startPlaybackLoop",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6777,
+   "end_line": 6792,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ab1bff932eb2c497ca7a66c60e00b94250058e256af5240463a615f4e2f9a565"
+  },
+  {
+   "name": "step",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6794,
+   "end_line": 6803,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "bfc5cb84a0aed9ccd03730e865789c97e99716c95c0146ea82e6493016475e9b"
+  },
+  {
+   "name": "seekToPct",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6805,
+   "end_line": 6814,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "65ff489375470603d637880f805dcf24986144b722f69ad9f05743fa6aed69f3"
+  },
+  {
+   "name": "updateScrubberUI",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6816,
+   "end_line": 6857,
+   "lines": 42,
+   "dom_refs": 18,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c3850909a8ee00ca0b4428143e8ae44cc4b9074a071081fe1c2977d2d29bc383"
+  },
+  {
+   "name": "storedHourlyColumns",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 6877,
+   "end_line": 6880,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "c2ff62596da1257a8c382c9c9cc924ac8299d64a181d6b2b0692df261499daf2"
+  },
+  {
+   "name": "persistHourlyColumns",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6885,
+   "end_line": 6887,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "640c18d91a9acbbf27032a09b8c90b24b11b1efa5b4f67e82304abcdd603ffe0"
+  },
+  {
+   "name": "renderHourlyColumnPanel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6889,
+   "end_line": 6917,
+   "lines": 29,
+   "dom_refs": 6,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "562f4448bb55a100d8f87ac4e4e9a4cd10b2f8ee0cd7653b154641e8d495be63"
+  },
+  {
+   "name": "hourlyMetricCell",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6919,
+   "end_line": 6927,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "67c8e8095aad58e67d8f75f86c376461c7120e0d5546d4ff33d6dcc0cab8fbed"
+  },
+  {
+   "name": "renderHourlyRows",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6929,
+   "end_line": 6960,
+   "lines": 32,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "ee4e659ea4c6934700880da26379d5d1d5d991a6e62880a18127635f9c1bd460"
+  },
+  {
+   "name": "hourlyMoney",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6962,
+   "end_line": 6965,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0ca76bf60c75a343711fe84d0c3cf7ae8e75a98a8460a298dadd8c2c7d358787"
+  },
+  {
+   "name": "hourlyTone",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6967,
+   "end_line": 6969,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7c4eb361cb7880b927d3cc32bbe9d0db090a0505694395a1232ee7d3934424ff"
+  },
+  {
+   "name": "hourlyIntervalLabel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6971,
+   "end_line": 6975,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "38f53147d3ffd5b56e12f4c8cb37fcc7b2ff58eb2b2198ee4f87f47d79f25425"
+  },
+  {
+   "name": "renderHourlyFamilyTabs",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6977,
+   "end_line": 6988,
+   "lines": 12,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "900b70deeb0f96d85bc672dd54f113befdbd15df00feb2b519aa8fec574f0838"
+  },
+  {
+   "name": "syncHourlyProducts",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6990,
+   "end_line": 6995,
+   "lines": 6,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "41d30259d728e0d037d888005288d2eb5e6c6ae8f70ad9ffc3b0c3848e06d6bc"
+  },
+  {
+   "name": "loadHourlyReport",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6997,
+   "end_line": 7032,
+   "lines": 36,
+   "dom_refs": 15,
+   "fetches": [
+    "${API_BASE}/api/hourly_family_report?${query}"
+   ],
+   "storage": false,
+   "body_sha256": "ebe23847e11d0c2deedcaff2fa9cb0a6aefd99c69e3d790ae54289e8204c652e"
+  },
+  {
+   "name": "openHourlyReport",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 7034,
+   "end_line": 7050,
+   "lines": 17,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "d4b2715372c13fc49d78a087bc1842d7a827cad3899f04a5ca7e001c7254c275"
+  },
+  {
+   "name": "closeHourlyReport",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 7052,
+   "end_line": 7056,
+   "lines": 5,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "f983e57f89c6b5412f531f3950b2fcbdd32cb4b20475244c63c094e3ce9aafd7"
+  },
+  {
+   "name": "openTargetRanking",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 7058,
+   "end_line": 7062,
+   "lines": 5,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "380de303bbc3c3a618088372a43f7438d954eaceeea0e2528a6c2cbec237d0da"
+  },
+  {
+   "name": "targetDaysCacheKey",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7064,
+   "end_line": 7066,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "9bd8f73c3d9872730d46c2420992d1561aa313e6886f4c3d8a9bec69376c7a0b"
+  },
+  {
+   "name": "renderTargetDaysRanking",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 7068,
+   "end_line": 7107,
+   "lines": 40,
+   "dom_refs": 13,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "3c32e168cf0c22adf800e643775efaf761ab696be5e58410837f41a9bf1169d9"
+  },
+  {
+   "name": "loadTargetDaysRanking",
+   "ordinal": 1,
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7109,
+   "end_line": 7153,
+   "lines": 45,
+   "dom_refs": 4,
+   "fetches": [
+    "${API_BASE}/api/intelligence/rankings/target-days?${query}"
+   ],
+   "storage": true,
+   "body_sha256": "93865248e0fad88ae6e8a6acd39b3d05753345df77d19af217edba935255d759"
+  },
+  {
+   "name": "selectTargetRankingStrategy",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7155,
+   "end_line": 7162,
+   "lines": 8,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "aca342b10a9d998faa7d5af8750b1510956b0b6caae4dfe3fdceeb45d842d786"
+  },
+  {
+   "name": "prewarmTargetDaysRanking",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7164,
+   "end_line": 7182,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [
+    "${API_BASE}/api/intelligence/rankings/target-days?${query}"
+   ],
+   "storage": true,
+   "body_sha256": "a1eb87e43729d5be8d9de97990890de1db7acb2cf4b733aea6ee50710ed0747c"
+  },
+  {
+   "name": "updateChartLockControlState",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7184,
+   "end_line": 7193,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7adef8284b0c627646d70718c288b01cd50f03952bcc6acd7df3a53fecd58942"
+  },
+  {
+   "name": "applyChartLock",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7195,
+   "end_line": 7223,
+   "lines": 29,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "21dc47871e33f37fe82ba963ed8a91c2a358d34550d0bdff5a30dd5ed5d2a491"
+  },
+  {
+   "name": "setupEventListeners",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7225,
+   "end_line": 7925,
+   "lines": 701,
+   "dom_refs": 160,
+   "fetches": [],
+   "storage": true,
+   "body_sha256": "ad43ad1880c8e835cdda113b8bbf9249b580f05ab9504d6754bd65a10414b7c0"
+  },
+  {
+   "name": "getBasePoint",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7927,
+   "end_line": 7940,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "898b2b11ece6d095ffed5a3f5e791e233677bfbd5ea1609fdfca349574a7f5be"
+  },
+  {
+   "name": "getReplayHeadPoint",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7942,
+   "end_line": 7948,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "6777a77e8ea3ee901913d30e2f7839bf8b0d9b4513235d6c5547933e34e55f2b"
+  },
+  {
+   "name": "updateRibbon",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7950,
+   "end_line": 8035,
+   "lines": 86,
+   "dom_refs": 24,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "bfd6149fa98c15f332288ff1cebcce95b0af6232a98fc7c396df0d8885f281c2"
+  },
+  {
+   "name": "renderCards",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8037,
+   "end_line": 8213,
+   "lines": 177,
+   "dom_refs": 23,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "5f74967682e694356bd90b9c9437c2f0a171f6b9d963916e56670d522684cd59"
+  },
+  {
+   "name": "setupCanvas",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 8215,
+   "end_line": 8227,
+   "lines": 13,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "e873305eae4900fe5ec5bb9962c3039c85d66c3d8cfe7e2373398ed01b8a838d"
+  },
+  {
+   "name": "computeTradeOverlaySignals",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8246,
+   "end_line": 8388,
+   "lines": 143,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "12f079470ae5ddf3afb5034124ce34170bac4552176d2baee972a07b6f78205c"
+  },
+  {
+   "name": "pairOverlayTrades",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8392,
+   "end_line": 8426,
+   "lines": 35,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "4b1eee97cd2dffa4adcef5fe85cf1a79a9758cd3a514196c5999e589ca58ce20"
+  },
+  {
+   "name": "computeSplitTargetSignal",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8430,
+   "end_line": 8467,
+   "lines": 38,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "317ada9db9a8ee56fd4ed760d2f8a6399f8812a301f04b3123bde739cdd7f447"
+  },
+  {
+   "name": "modelPointAtOrBeforeTime",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8469,
+   "end_line": 8479,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "7621822fdf0180f15ec9ccf407c0342813daff6cb4c9c19230fc9d5ce94d0261"
+  },
+  {
+   "name": "modelBaselinePoint",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8481,
+   "end_line": 8500,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c0458e357bfcd8f3f27eee7e067970fd05e4e0e2b53f7612c8acb53acd2ddc83"
+  },
+  {
+   "name": "modelDeltaSeries",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8502,
+   "end_line": 8512,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "0b7c2888fad05b361266426bef43f546d069b9b0431575fa5b5fab2a16cba979"
+  },
+  {
+   "name": "selectedTimeJoinAt",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8514,
+   "end_line": 8517,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "c0dc6e941384b18e3f8f9c440f9ef88f5cf8574c418c612980b51d8cfb18e3b5"
+  },
+  {
+   "name": "selectedTimeModelEligibleAt",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8519,
+   "end_line": 8522,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "600c45642f49b8bfd0c2ada9fb230e4503907335c9d7eb3ad0de36ea4c0b901c"
+  },
+  {
+   "name": "selectedTimePointEligible",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8524,
+   "end_line": 8526,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "152e3c39eb6c12f8e0d8d2c82a03ee083a161b3d2f74b536572c729377408412"
+  },
+  {
+   "name": "computeLeaderRotation",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8532,
+   "end_line": 8690,
+   "lines": 159,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a6d57b96d221c13430d364e0069c75e6321d54334ef7f410159970e293232d1f"
+  },
+  {
+   "name": "computeMultiSplitRotation",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8695,
+   "end_line": 8870,
+   "lines": 176,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "efd6ca11f6125fdc4b4f7e0fdfbbfa8e853c56935ab236a18e294d5844056bac"
+  },
+  {
+   "name": "drawLeaderSignalBadge",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8872,
+   "end_line": 8887,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "3266397aae90b4cf79f88d681c6b855474eba25a015a1ba96a12d415274577da"
+  },
+  {
+   "name": "showTargetPulse",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8889,
+   "end_line": 8899,
+   "lines": 11,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "768df69e5b7e154b534e68b56f9346bc1d074bb790980e0951e35196026a76de"
+  },
+  {
+   "name": "drawTradeValueLabel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8901,
+   "end_line": 8920,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "b80a51f940200ad7516f58565180b301dc69f58a0cea6e6b71ebf54726af7dc5"
+  },
+  {
+   "name": "updateOverlayTradeSummary",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 8922,
+   "end_line": 8948,
+   "lines": 27,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "80da880292f296c84a974aea8c36194ae3d99c3f858f16a4e43fd6f2879d8300"
+  },
+  {
+   "name": "openOverlayTradesModal",
+   "ordinal": 1,
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8950,
+   "end_line": 9067,
+   "lines": 118,
+   "dom_refs": 21,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "a0b745fbaa403bdfd0550a3787fb2bd9107c5ce6abca6ca034e804b84fe588b9"
+  },
+  {
+   "name": "drawSignalBadge",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9069,
+   "end_line": 9097,
+   "lines": 29,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "41bcb85b273fdfbd19612416d162c91858eb46ba365e5bbdec0ba47354ff1acb"
+  },
+  {
+   "name": "drawChart",
+   "ordinal": 1,
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 9099,
+   "end_line": 9371,
+   "lines": 273,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "cd7c155e6e94e9ac4f41e872b821f7f8d76dbc798a8e75466da0a6fee125587a"
+  },
+  {
+   "name": "scheduleDashboardUtilityRuntime",
+   "ordinal": 1,
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 9374,
+   "end_line": 9382,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "2047f654825618bb65087ff5d6ce1eb6d811d9d93a2dcf70ea4865b0bf12473a"
+  },
+  {
+   "name": "drawBaselineMarker",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9384,
+   "end_line": 9398,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "5c171677bd785c160acc955ff56a815f3911c32b1512cdfdba91eeda8b1f88c5"
+  },
+  {
+   "name": "drawReplayCursor",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9400,
+   "end_line": 9414,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "60aa927440b9531985d281b106162a47225e6b52715efab89c3e4b3ec166593c"
+  },
+  {
+   "name": "renderDeltaLine",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9416,
+   "end_line": 9430,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "fdb2e5dcdf869c3c1fc9ac8f7fbd4f7adab058ab51d4772e27c700cf243abf5e"
+  },
+  {
+   "name": "drawPointLabel",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9432,
+   "end_line": 9441,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "f22bfc48ec6d1e0a1ecb01361f46f63d68dab420455681b0c8cf636671203cc8"
+  },
+  {
+   "name": "drawGridAndAxes",
+   "ordinal": 1,
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 9443,
+   "end_line": 9488,
+   "lines": 46,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false,
+   "body_sha256": "6c05fd623e4e216bb26b969bfe3764528d4f142ec47fd6dbeaeb8947d45afd93"
+  }
+ ],
+ "state": [
+  {
+   "name": "API_BASE",
+   "decl": "const",
+   "line": 1509
+  },
+  {
+   "name": "MODEL_SEARCH_API_BASE",
+   "decl": "const",
+   "line": 1511
+  },
+  {
+   "name": "SCENARIOS_CATALOGUE",
+   "decl": "const",
+   "line": 1512
+  },
+  {
+   "name": "MOMENTUM_SCENARIO_IDS",
+   "decl": "const",
+   "line": 1521
+  },
+  {
+   "name": "ALL_CRITERIA_DATA",
+   "decl": "const",
+   "line": 1522
+  },
+  {
+   "name": "FAMILY_TOP_FIVE_SCENARIOS",
+   "decl": "const",
+   "line": 1558
+  },
+  {
+   "name": "TP_SL_SCENARIO_IDS",
+   "decl": "const",
+   "line": 1580
+  },
+  {
+   "name": "ALL_DATE_DATA",
+   "decl": "const",
+   "line": 1614
+  },
+  {
+   "name": "LIVE_CHART_CACHE_PREFIX",
+   "decl": "const",
+   "line": 1615
+  },
+  {
+   "name": "LIVE_CHART_CACHE_TTL_MS",
+   "decl": "const",
+   "line": 1616
+  },
+  {
+   "name": "LIVE_CHART_CACHE_MAX_BYTES",
+   "decl": "const",
+   "line": 1617
+  },
+  {
+   "name": "initialLiveDataAvailable",
+   "decl": "let",
+   "line": 1618
+  },
+  {
+   "name": "liveChartDataLoadedKeys",
+   "decl": "const",
+   "line": 1619
+  },
+  {
+   "name": "cachedProductsForLive",
+   "decl": "let",
+   "line": 1667
+  },
+  {
+   "name": "historicalCurveLoads",
+   "decl": "const",
+   "line": 1700
+  },
+  {
+   "name": "currentReturnType",
+   "decl": "let",
+   "line": 1723
+  },
+  {
+   "name": "currentCriteria",
+   "decl": "let",
+   "line": 1724
+  },
+  {
+   "name": "mainScenarioCriteria",
+   "decl": "let",
+   "line": 1725
+  },
+  {
+   "name": "portfolioCriteria",
+   "decl": "let",
+   "line": 1726
+  },
+  {
+   "name": "portfolioViewConfigs",
+   "decl": "let",
+   "line": 1727
+  },
+  {
+   "name": "mainScenarioViewConfig",
+   "decl": "let",
+   "line": 1728
+  },
+  {
+   "name": "portfolioScenarioConfigs",
+   "decl": "let",
+   "line": 1731
+  },
+  {
+   "name": "currentProductType",
+   "decl": "let",
+   "line": 1733
+  },
+  {
+   "name": "currentProduct",
+   "decl": "let",
+   "line": 1735
+  },
+  {
+   "name": "currentStrategyFamily",
+   "decl": "let",
+   "line": 1736
+  },
+  {
+   "name": "modelLimit",
+   "decl": "let",
+   "line": 1737
+  },
+  {
+   "name": "portfolios",
+   "decl": "let",
+   "line": 1738
+  },
+  {
+   "name": "livePortfolioStore",
+   "decl": "let",
+   "line": 1739
+  },
+  {
+   "name": "livePortfolioActiveModels",
+   "decl": "const",
+   "line": 1740
+  },
+  {
+   "name": "overlayRuleLibrary",
+   "decl": "let",
+   "line": 1741
+  },
+  {
+   "name": "assignedOverlayTradeCache",
+   "decl": "const",
+   "line": 1742
+  },
+  {
+   "name": "assignedOverlayTradeRequests",
+   "decl": "const",
+   "line": 1743
+  },
+  {
+   "name": "useAssignedOverlayRule",
+   "decl": "let",
+   "line": 1744
+  },
+  {
+   "name": "overlayRuleLibraryRequest",
+   "decl": "let",
+   "line": 1745
+  },
+  {
+   "name": "pendingNamedOverlayRuleConfig",
+   "decl": "let",
+   "line": 1746
+  },
+  {
+   "name": "editingNamedOverlayRuleId",
+   "decl": "let",
+   "line": 1747
+  },
+  {
+   "name": "activePortfolioName",
+   "decl": "let",
+   "line": 1748
+  },
+  {
+   "name": "liveModePriorChartLock",
+   "decl": "let",
+   "line": 1749
+  },
+  {
+   "name": "liveModeRequestInFlight",
+   "decl": "let",
+   "line": 1750
+  },
+  {
+   "name": "liveModeStatusMessages",
+   "decl": "let",
+   "line": 1751
+  },
+  {
+   "name": "portfolioModels",
+   "decl": "let",
+   "line": 1752
+  },
+  {
+   "name": "pendingFilterDataRefresh",
+   "decl": "let",
+   "line": 1753
+  },
+  {
+   "name": "lastChartFallbackModels",
+   "decl": "let",
+   "line": 1754
+  },
+  {
+   "name": "lastChartFallbackContext",
+   "decl": "let",
+   "line": 1755
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE",
+   "decl": "const",
+   "line": 1758
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE_MAX",
+   "decl": "const",
+   "line": 1759
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE_STORAGE_KEY",
+   "decl": "const",
+   "line": 1760
+  },
+  {
+   "name": "PORTFOLIO_VIEW_PERSIST_MAX",
+   "decl": "const",
+   "line": 1761
+  },
+  {
+   "name": "PORTFOLIO_VIEW_REQUESTS",
+   "decl": "const",
+   "line": 1762
+  },
+  {
+   "name": "persistedPortfolioViewCache",
+   "decl": "let",
+   "line": 1763
+  },
+  {
+   "name": "PORTFOLIO_LAST_VIEW_CACHE",
+   "decl": "const",
+   "line": 1764
+  },
+  {
+   "name": "portfolioTargetModel",
+   "decl": "let",
+   "line": 1765
+  },
+  {
+   "name": "portfolioMergeSelection",
+   "decl": "const",
+   "line": 1766
+  },
+  {
+   "name": "similarStrategyPayload",
+   "decl": "let",
+   "line": 1767
+  },
+  {
+   "name": "strategyCatalogue",
+   "decl": "let",
+   "line": 1768
+  },
+  {
+   "name": "strategyCatalogueDate",
+   "decl": "let",
+   "line": 1769
+  },
+  {
+   "name": "displayTheme",
+   "decl": "let",
+   "line": 1770
+  },
+  {
+   "name": "liveRefreshSequence",
+   "decl": "let",
+   "line": 1771
+  },
+  {
+   "name": "liveRefreshTimer",
+   "decl": "let",
+   "line": 1772
+  },
+  {
+   "name": "liveRefreshIntervalMs",
+   "decl": "let",
+   "line": 1773
+  },
+  {
+   "name": "portfolioViewRefreshTimer",
+   "decl": "let",
+   "line": 1774
+  },
+  {
+   "name": "portfolioViewRefreshInFlight",
+   "decl": "let",
+   "line": 1775
+  },
+  {
+   "name": "PORTFOLIO_VIEW_REFRESH_MS",
+   "decl": "const",
+   "line": 1778
+  },
+  {
+   "name": "currentDate",
+   "decl": "let",
+   "line": 1781
+  },
+  {
+   "name": "splitMode",
+   "decl": "let",
+   "line": 1782
+  },
+  {
+   "name": "modelSearchLoadedModels",
+   "decl": "let",
+   "line": 1784
+  },
+  {
+   "name": "modelSearchNoCurveMatches",
+   "decl": "let",
+   "line": 1785
+  },
+  {
+   "name": "modelSearchResolvedQuery",
+   "decl": "let",
+   "line": 1786
+  },
+  {
+   "name": "modelSearchResolvedMessage",
+   "decl": "let",
+   "line": 1787
+  },
+  {
+   "name": "pinnedComparisonModels",
+   "decl": "const",
+   "line": 1788
+  },
+  {
+   "name": "modelSearchRequestSequence",
+   "decl": "let",
+   "line": 1789
+  },
+  {
+   "name": "modelSearchTimer",
+   "decl": "let",
+   "line": 1790
+  },
+  {
+   "name": "deepLinkModel",
+   "decl": "let",
+   "line": 1791
+  },
+  {
+   "name": "deepLinkModels",
+   "decl": "let",
+   "line": 1792
+  },
+  {
+   "name": "deepLinkModelsOnly",
+   "decl": "let",
+   "line": 1793
+  },
+  {
+   "name": "deepLinkModelRequestSequence",
+   "decl": "let",
+   "line": 1794
+  },
+  {
+   "name": "deepLinkDate",
+   "decl": "let",
+   "line": 1795
+  },
+  {
+   "name": "selectedModelIndex",
+   "decl": "let",
+   "line": 1796
+  },
+  {
+   "name": "baselineFrameIndex",
+   "decl": "let",
+   "line": 1797
+  },
+  {
+   "name": "currentFrameIndex",
+   "decl": "let",
+   "line": 1798
+  },
+  {
+   "name": "minWinRate",
+   "decl": "let",
+   "line": 1799
+  },
+  {
+   "name": "visibleModels",
+   "decl": "let",
+   "line": 1800
+  },
+  {
+   "name": "scenarioRemovedModels",
+   "decl": "const",
+   "line": 1803
+  },
+  {
+   "name": "POINT_IN_TIME_SELECTION_STORAGE_KEY",
+   "decl": "const",
+   "line": 1804
+  },
+  {
+   "name": "SELECTED_TIME_RANK_STORAGE_KEY",
+   "decl": "const",
+   "line": 1805
+  },
+  {
+   "name": "pointInTimeSelectionPreference",
+   "decl": "let",
+   "line": 1806
+  },
+  {
+   "name": "pointInTimeMode",
+   "decl": "let",
+   "line": 1807
+  },
+  {
+   "name": "top1AtTimePreviousPointInTimeMode",
+   "decl": "let",
+   "line": 1808
+  },
+  {
+   "name": "pointInTimeModels",
+   "decl": "let",
+   "line": 1809
+  },
+  {
+   "name": "pointInTimeTimelineModels",
+   "decl": "let",
+   "line": 1813
+  },
+  {
+   "name": "pointInTimeRequestSequence",
+   "decl": "let",
+   "line": 1814
+  },
+  {
+   "name": "pointInTimeRequestedKey",
+   "decl": "let",
+   "line": 1815
+  },
+  {
+   "name": "pointInTimeDebounceTimer",
+   "decl": "let",
+   "line": 1816
+  },
+  {
+   "name": "pointInTimeHours",
+   "decl": "let",
+   "line": 1817
+  },
+  {
+   "name": "pointInTimeHistoryKey",
+   "decl": "let",
+   "line": 1818
+  },
+  {
+   "name": "pointInTimeHistorySequence",
+   "decl": "let",
+   "line": 1819
+  },
+  {
+   "name": "pointInTimeHistoryAt",
+   "decl": "let",
+   "line": 1820
+  },
+  {
+   "name": "pendingExplicitTop1Time",
+   "decl": "let",
+   "line": 1821
+  },
+  {
+   "name": "selectedTimeLeaderHistory",
+   "decl": "const",
+   "line": 1822
+  },
+  {
+   "name": "selectedTimeLeaderHistoryContext",
+   "decl": "let",
+   "line": 1823
+  },
+  {
+   "name": "selectedTimeExplicitRefresh",
+   "decl": "let",
+   "line": 1824
+  },
+  {
+   "name": "autoRefreshTop1Enabled",
+   "decl": "let",
+   "line": 1825
+  },
+  {
+   "name": "autoRefreshTop1Minutes",
+   "decl": "let",
+   "line": 1826
+  },
+  {
+   "name": "autoRefreshTop1Direction",
+   "decl": "let",
+   "line": 1827
+  },
+  {
+   "name": "autoRefreshTop1Rank",
+   "decl": "let",
+   "line": 1828
+  },
+  {
+   "name": "autoRefreshTop1LastMinute",
+   "decl": "let",
+   "line": 1829
+  },
+  {
+   "name": "autoRefreshTop1NextMinute",
+   "decl": "let",
+   "line": 1830
+  },
+  {
+   "name": "autoRefreshTop1Context",
+   "decl": "let",
+   "line": 1831
+  },
+  {
+   "name": "autoRefreshTop1RequestAt",
+   "decl": "let",
+   "line": 1832
+  },
+  {
+   "name": "showNetDelta",
+   "decl": "let",
+   "line": 1835
+  },
+  {
+   "name": "showBuyDelta",
+   "decl": "let",
+   "line": 1836
+  },
+  {
+   "name": "showSellDelta",
+   "decl": "let",
+   "line": 1837
+  },
+  {
+   "name": "showTradeMarkers",
+   "decl": "let",
+   "line": 1838
+  },
+  {
+   "name": "showTradeValues",
+   "decl": "let",
+   "line": 1839
+  },
+  {
+   "name": "lastOverlayTrades",
+   "decl": "let",
+   "line": 1840
+  },
+  {
+   "name": "exitThreshold",
+   "decl": "let",
+   "line": 1841
+  },
+  {
+   "name": "overlayTopX",
+   "decl": "let",
+   "line": 1842
+  },
+  {
+   "name": "dailyTarget",
+   "decl": "let",
+   "line": 1843
+  },
+  {
+   "name": "hourlyReportFamily",
+   "decl": "let",
+   "line": 1844
+  },
+  {
+   "name": "hourlyReportDate",
+   "decl": "let",
+   "line": 1845
+  },
+  {
+   "name": "hourlyReportTimer",
+   "decl": "let",
+   "line": 1846
+  },
+  {
+   "name": "hourlyReportRequest",
+   "decl": "let",
+   "line": 1847
+  },
+  {
+   "name": "hourlyReportPayload",
+   "decl": "let",
+   "line": 1848
+  },
+  {
+   "name": "hourlyReportInterval",
+   "decl": "let",
+   "line": 1849
+  },
+  {
+   "name": "chartLocked",
+   "decl": "let",
+   "line": 1853
+  },
+  {
+   "name": "isPlaying",
+   "decl": "let",
+   "line": 1858
+  },
+  {
+   "name": "replayInterval",
+   "decl": "let",
+   "line": 1859
+  },
+  {
+   "name": "replaySpeed",
+   "decl": "let",
+   "line": 1860
+  },
+  {
+   "name": "BASE_INTERVAL_MS",
+   "decl": "const",
+   "line": 1861
+  },
+  {
+   "name": "returnTypeNetBtn",
+   "decl": "const",
+   "line": 1877
+  },
+  {
+   "name": "returnTypeAltBtn",
+   "decl": "const",
+   "line": 1878
+  },
+  {
+   "name": "openScenarioModalBtn",
+   "decl": "const",
+   "line": 1879
+  },
+  {
+   "name": "closeScenarioModalBtn",
+   "decl": "const",
+   "line": 1880
+  },
+  {
+   "name": "closeScenarioModalFooterBtn",
+   "decl": "const",
+   "line": 1881
+  },
+  {
+   "name": "scenarioModal",
+   "decl": "const",
+   "line": 1882
+  },
+  {
+   "name": "modalScenarioCards",
+   "decl": "const",
+   "line": 1883
+  },
+  {
+   "name": "scenarioSearchInput",
+   "decl": "const",
+   "line": 1884
+  },
+  {
+   "name": "activeScenarioIcon",
+   "decl": "const",
+   "line": 1885
+  },
+  {
+   "name": "activeScenarioName",
+   "decl": "const",
+   "line": 1886
+  },
+  {
+   "name": "activeCriteriaLabel",
+   "decl": "const",
+   "line": 1887
+  },
+  {
+   "name": "dateTabsContainer",
+   "decl": "const",
+   "line": 1889
+  },
+  {
+   "name": "productTypeFilter",
+   "decl": "const",
+   "line": 1890
+  },
+  {
+   "name": "productFilter",
+   "decl": "const",
+   "line": 1891
+  },
+  {
+   "name": "strategyFamilyFilter",
+   "decl": "const",
+   "line": 1892
+  },
+  {
+   "name": "modelLimitFilter",
+   "decl": "const",
+   "line": 1893
+  },
+  {
+   "name": "modelSearchInput",
+   "decl": "const",
+   "line": 1894
+  },
+  {
+   "name": "modelSearchStatus",
+   "decl": "const",
+   "line": 1895
+  },
+  {
+   "name": "portfolioTabs",
+   "decl": "const",
+   "line": 1896
+  },
+  {
+   "name": "portfolioModal",
+   "decl": "const",
+   "line": 1897
+  },
+  {
+   "name": "savePortfolioWorkspaceBtn",
+   "decl": "const",
+   "line": 1898
+  },
+  {
+   "name": "portfolioWorkspaceSaveStatus",
+   "decl": "const",
+   "line": 1899
+  },
+  {
+   "name": "overlayRuleLibraryModal",
+   "decl": "const",
+   "line": 1900
+  },
+  {
+   "name": "overlayRuleNameModal",
+   "decl": "const",
+   "line": 1901
+  },
+  {
+   "name": "liveRuleStatus",
+   "decl": "const",
+   "line": 1902
+  },
+  {
+   "name": "livePortfolioTransitionBanner",
+   "decl": "const",
+   "line": 1903
+  },
+  {
+   "name": "portfolioList",
+   "decl": "const",
+   "line": 1904
+  },
+  {
+   "name": "mergePortfolioForm",
+   "decl": "const",
+   "line": 1905
+  },
+  {
+   "name": "mergePortfolioBtn",
+   "decl": "const",
+   "line": 1906
+  },
+  {
+   "name": "mergePortfolioSummary",
+   "decl": "const",
+   "line": 1907
+  },
+  {
+   "name": "mergePortfolioCount",
+   "decl": "const",
+   "line": 1908
+  },
+  {
+   "name": "selectAllPortfoliosBtn",
+   "decl": "const",
+   "line": 1909
+  },
+  {
+   "name": "deleteSelectedPortfoliosBtn",
+   "decl": "const",
+   "line": 1910
+  },
+  {
+   "name": "strategyCataloguePanel",
+   "decl": "const",
+   "line": 1911
+  },
+  {
+   "name": "strategyCatalogueResults",
+   "decl": "const",
+   "line": 1912
+  },
+  {
+   "name": "catalogPortfolioFilter",
+   "decl": "const",
+   "line": 1913
+  },
+  {
+   "name": "catalogTypeFilter",
+   "decl": "const",
+   "line": 1914
+  },
+  {
+   "name": "catalogProductFilter",
+   "decl": "const",
+   "line": 1915
+  },
+  {
+   "name": "catalogFamilyFilter",
+   "decl": "const",
+   "line": 1916
+  },
+  {
+   "name": "catalogWindowFilter",
+   "decl": "const",
+   "line": 1917
+  },
+  {
+   "name": "catalogTpFilter",
+   "decl": "const",
+   "line": 1918
+  },
+  {
+   "name": "catalogSlFilter",
+   "decl": "const",
+   "line": 1919
+  },
+  {
+   "name": "similarStrategyModal",
+   "decl": "const",
+   "line": 1920
+  },
+  {
+   "name": "similarStrategyContext",
+   "decl": "const",
+   "line": 1921
+  },
+  {
+   "name": "similarStrategyOptions",
+   "decl": "const",
+   "line": 1922
+  },
+  {
+   "name": "themeToggle",
+   "decl": "const",
+   "line": 1923
+  },
+  {
+   "name": "openTargetRankingBtn",
+   "decl": "const",
+   "line": 1924
+  },
+  {
+   "name": "targetRankingModal",
+   "decl": "const",
+   "line": 1925
+  },
+  {
+   "name": "targetRankingTarget",
+   "decl": "const",
+   "line": 1926
+  },
+  {
+   "name": "targetRankingReturnType",
+   "decl": "const",
+   "line": 1927
+  },
+  {
+   "name": "targetRankingProductType",
+   "decl": "const",
+   "line": 1928
+  },
+  {
+   "name": "targetRankingState",
+   "decl": "const",
+   "line": 1929
+  },
+  {
+   "name": "targetRankingBody",
+   "decl": "const",
+   "line": 1930
+  },
+  {
+   "name": "targetRankingScope",
+   "decl": "const",
+   "line": 1931
+  },
+  {
+   "name": "targetRankingRequestSequence",
+   "decl": "let",
+   "line": 1932
+  },
+  {
+   "name": "openHourlyReportBtn",
+   "decl": "const",
+   "line": 1933
+  },
+  {
+   "name": "hourlyReportModal",
+   "decl": "const",
+   "line": 1934
+  },
+  {
+   "name": "hourlyProductType",
+   "decl": "const",
+   "line": 1935
+  },
+  {
+   "name": "hourlyProduct",
+   "decl": "const",
+   "line": 1936
+  },
+  {
+   "name": "hourlyInterval",
+   "decl": "const",
+   "line": 1937
+  },
+  {
+   "name": "hourlyFamilyTabs",
+   "decl": "const",
+   "line": 1938
+  },
+  {
+   "name": "hourlyReportHead",
+   "decl": "const",
+   "line": 1939
+  },
+  {
+   "name": "hourlyReportBody",
+   "decl": "const",
+   "line": 1940
+  },
+  {
+   "name": "hourlyReportSummary",
+   "decl": "const",
+   "line": 1941
+  },
+  {
+   "name": "hourlyColumnToggle",
+   "decl": "const",
+   "line": 1942
+  },
+  {
+   "name": "hourlyColumnPanel",
+   "decl": "const",
+   "line": 1943
+  },
+  {
+   "name": "activeDateLabel",
+   "decl": "const",
+   "line": 1944
+  },
+  {
+   "name": "winRateDisplayBadge",
+   "decl": "const",
+   "line": 1945
+  },
+  {
+   "name": "replayStartBadge",
+   "decl": "const",
+   "line": 1946
+  },
+  {
+   "name": "cardsGridTitle",
+   "decl": "const",
+   "line": 1947
+  },
+  {
+   "name": "canvas",
+   "decl": "const",
+   "line": 1948
+  },
+  {
+   "name": "ctx",
+   "decl": "const",
+   "line": 1949
+  },
+  {
+   "name": "tooltip",
+   "decl": "const",
+   "line": 1950
+  },
+  {
+   "name": "modelCardsContainer",
+   "decl": "const",
+   "line": 1951
+  },
+  {
+   "name": "pinAllModelsBtn",
+   "decl": "const",
+   "line": 1952
+  },
+  {
+   "name": "unpinAllModelsBtn",
+   "decl": "const",
+   "line": 1953
+  },
+  {
+   "name": "metricAll",
+   "decl": "const",
+   "line": 1955
+  },
+  {
+   "name": "metricBuy",
+   "decl": "const",
+   "line": 1956
+  },
+  {
+   "name": "metricSell",
+   "decl": "const",
+   "line": 1957
+  },
+  {
+   "name": "metricTriSplit",
+   "decl": "const",
+   "line": 1958
+  },
+  {
+   "name": "metricMultiSplit",
+   "decl": "const",
+   "line": 1959
+  },
+  {
+   "name": "showAllBtn",
+   "decl": "const",
+   "line": 1961
+  },
+  {
+   "name": "hideAllBtn",
+   "decl": "const",
+   "line": 1962
+  },
+  {
+   "name": "clearHiddenBtn",
+   "decl": "const",
+   "line": 1963
+  },
+  {
+   "name": "clearAllStrategiesBtn",
+   "decl": "const",
+   "line": 1964
+  },
+  {
+   "name": "playBtn",
+   "decl": "const",
+   "line": 1967
+  },
+  {
+   "name": "playIcon",
+   "decl": "const",
+   "line": 1968
+  },
+  {
+   "name": "playBtnText",
+   "decl": "const",
+   "line": 1969
+  },
+  {
+   "name": "stepBackBtn",
+   "decl": "const",
+   "line": 1970
+  },
+  {
+   "name": "stepFwdBtn",
+   "decl": "const",
+   "line": 1971
+  },
+  {
+   "name": "restartBtn",
+   "decl": "const",
+   "line": 1972
+  },
+  {
+   "name": "speed1x",
+   "decl": "const",
+   "line": 1973
+  },
+  {
+   "name": "speed025x",
+   "decl": "const",
+   "line": 1974
+  },
+  {
+   "name": "speed05x",
+   "decl": "const",
+   "line": 1975
+  },
+  {
+   "name": "speed3x",
+   "decl": "const",
+   "line": 1976
+  },
+  {
+   "name": "speed10x",
+   "decl": "const",
+   "line": 1977
+  },
+  {
+   "name": "replayTimeBadge",
+   "decl": "const",
+   "line": 1979
+  },
+  {
+   "name": "replayProgressPercent",
+   "decl": "const",
+   "line": 1980
+  },
+  {
+   "name": "baselineTimeBadge",
+   "decl": "const",
+   "line": 1981
+  },
+  {
+   "name": "selectedTimeForm",
+   "decl": "const",
+   "line": 1982
+  },
+  {
+   "name": "selectedTimeRankSelect",
+   "decl": "const",
+   "line": 1983
+  },
+  {
+   "name": "selectedTimeInput",
+   "decl": "const",
+   "line": 1984
+  },
+  {
+   "name": "applySelectedTimeBtn",
+   "decl": "const",
+   "line": 1985
+  },
+  {
+   "name": "autoRefreshTop1Toggle",
+   "decl": "const",
+   "line": 1986
+  },
+  {
+   "name": "autoRefreshTop1Interval",
+   "decl": "const",
+   "line": 1987
+  },
+  {
+   "name": "autoRefreshTop1DirectionSelect",
+   "decl": "const",
+   "line": 1988
+  },
+  {
+   "name": "autoRefreshTop1RankSelect",
+   "decl": "const",
+   "line": 1989
+  },
+  {
+   "name": "autoRefreshTop1Status",
+   "decl": "const",
+   "line": 1990
+  },
+  {
+   "name": "savedSelectedTimeRank",
+   "decl": "const",
+   "line": 1991
+  },
+  {
+   "name": "setBaseAtHeadBtn",
+   "decl": "const",
+   "line": 2012
+  },
+  {
+   "name": "resetBaselineBtn",
+   "decl": "const",
+   "line": 2013
+  },
+  {
+   "name": "chartLockBtn",
+   "decl": "const",
+   "line": 2014
+  },
+  {
+   "name": "chartLockIcon",
+   "decl": "const",
+   "line": 2015
+  },
+  {
+   "name": "chartLockLabel",
+   "decl": "const",
+   "line": 2016
+  },
+  {
+   "name": "liveModeBtn",
+   "decl": "const",
+   "line": 2017
+  },
+  {
+   "name": "liveModeLabel",
+   "decl": "const",
+   "line": 2018
+  },
+  {
+   "name": "scrubberTrack",
+   "decl": "const",
+   "line": 2020
+  },
+  {
+   "name": "scrubberFill",
+   "decl": "const",
+   "line": 2021
+  },
+  {
+   "name": "scrubberThumb",
+   "decl": "const",
+   "line": 2022
+  },
+  {
+   "name": "baselineMarker",
+   "decl": "const",
+   "line": 2023
+  },
+  {
+   "name": "baselineBadge",
+   "decl": "const",
+   "line": 2024
+  },
+  {
+   "name": "winRateSlider",
+   "decl": "const",
+   "line": 2026
+  },
+  {
+   "name": "winRateValBadge",
+   "decl": "const",
+   "line": 2027
+  },
+  {
+   "name": "toggleNetDeltaBtn",
+   "decl": "const",
+   "line": 2030
+  },
+  {
+   "name": "pointInTimeToggle",
+   "decl": "const",
+   "line": 2031
+  },
+  {
+   "name": "pointInTimeStatus",
+   "decl": "const",
+   "line": 2032
+  },
+  {
+   "name": "pointInTimeHistoryPanel",
+   "decl": "const",
+   "line": 2145
+  },
+  {
+   "name": "pointInTimeHistoryStatus",
+   "decl": "const",
+   "line": 2146
+  },
+  {
+   "name": "pointInTimeHistoryRows",
+   "decl": "const",
+   "line": 2147
+  },
+  {
+   "name": "pointInTimeHistoryNearViewport",
+   "decl": "let",
+   "line": 2148
+  },
+  {
+   "name": "toggleBuyDeltaBtn",
+   "decl": "const",
+   "line": 2158
+  },
+  {
+   "name": "toggleSellDeltaBtn",
+   "decl": "const",
+   "line": 2159
+  },
+  {
+   "name": "netDeltaCheck",
+   "decl": "const",
+   "line": 2160
+  },
+  {
+   "name": "buyDeltaCheck",
+   "decl": "const",
+   "line": 2161
+  },
+  {
+   "name": "sellDeltaCheck",
+   "decl": "const",
+   "line": 2162
+  },
+  {
+   "name": "toggleTradeMarkersBtn",
+   "decl": "const",
+   "line": 2163
+  },
+  {
+   "name": "tradeMarkersCheck",
+   "decl": "const",
+   "line": 2164
+  },
+  {
+   "name": "ribbonModelName",
+   "decl": "const",
+   "line": 2166
+  },
+  {
+   "name": "ribbonProduct",
+   "decl": "const",
+   "line": 2167
+  },
+  {
+   "name": "ribbonStrategy",
+   "decl": "const",
+   "line": 2168
+  },
+  {
+   "name": "ribbonTotNet",
+   "decl": "const",
+   "line": 2169
+  },
+  {
+   "name": "ribbonBuyNet",
+   "decl": "const",
+   "line": 2170
+  },
+  {
+   "name": "ribbonSellNet",
+   "decl": "const",
+   "line": 2171
+  },
+  {
+   "name": "totalNetLabel",
+   "decl": "const",
+   "line": 2172
+  },
+  {
+   "name": "buyNetLabel",
+   "decl": "const",
+   "line": 2173
+  },
+  {
+   "name": "sellNetLabel",
+   "decl": "const",
+   "line": 2174
+  },
+  {
+   "name": "indicatorBar",
+   "decl": "const",
+   "line": 2175
+  },
+  {
+   "name": "portfolioWorkspaceStorageKeys",
+   "decl": "const",
+   "line": 2343
+  },
+  {
+   "name": "liveActivationModal",
+   "decl": "const",
+   "line": 3248
+  },
+  {
+   "name": "liveActivationForm",
+   "decl": "const",
+   "line": 3249
+  },
+  {
+   "name": "liveActivationRule",
+   "decl": "const",
+   "line": 3250
+  },
+  {
+   "name": "LIVE_REFRESH_MS",
+   "decl": "const",
+   "line": 4801
+  },
+  {
+   "name": "LIVE_MODE_REFRESH_MS",
+   "decl": "const",
+   "line": 4802
+  },
+  {
+   "name": "HOURLY_REPORT_FAMILIES",
+   "decl": "const",
+   "line": 6859
+  },
+  {
+   "name": "HOURLY_COLUMN_PREF_KEY",
+   "decl": "const",
+   "line": 6864
+  },
+  {
+   "name": "HOURLY_METRICS",
+   "decl": "const",
+   "line": 6865
+  },
+  {
+   "name": "HOURLY_COLUMNS",
+   "decl": "const",
+   "line": 6871
+  },
+  {
+   "name": "hourlyVisibleColumns",
+   "decl": "let",
+   "line": 6881
+  },
+  {
+   "name": "timeAxisPoints",
+   "decl": "let",
+   "line": 8229
+  },
+  {
+   "name": "dashboardUtilityRuntimeScheduled",
+   "decl": "let",
+   "line": 9373
+  }
+ ],
+ "wiring": [
+  {
+   "line": 4228,
+   "text": "document.addEventListener('visibilitychange', () => {"
+  },
+  {
+   "line": 4431,
+   "text": "window.addEventListener('storage', event => {"
+  },
+  {
+   "line": 9491,
+   "text": "canvas.addEventListener('mousemove', e => {"
+  },
+  {
+   "line": 9640,
+   "text": "canvas.addEventListener('mouseleave', () => {"
+  },
+  {
+   "line": 9646,
+   "text": "window.addEventListener('pageshow', async () => {"
+  }
+ ]
+}

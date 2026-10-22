@@ -1,0 +1,3913 @@
+{
+ "summary": {
+  "source": "epics\\ep_057_sql_to_pgsql\\scenario_engine_v2\\top10_5min_equity_curves_source_v2.65.24.html",
+  "main_script_lines": [
+   1424,
+   8975
+  ],
+  "function_count": 205,
+  "state_vars": 272,
+  "top_level_wiring_statements": 5,
+  "by_kind": {
+   "engine": 110,
+   "view": 38,
+   "mixed": 57
+  },
+  "fetch_endpoints": [
+   "${API_BASE}/api/hourly_family_report?${query}",
+   "${API_BASE}/api/model_trades?model=${encodeURIComponent(model)}&from=${from}&to=${to}&prod",
+   "${API_BASE}/api/overlay_rules",
+   "${API_BASE}/api/overlay_rules/assignments/${encodeURIComponent(portfolio)}",
+   "${API_BASE}/api/point_in_time_scenario?${query}",
+   "${API_BASE}/api/point_in_time_scenario_hours?${query}",
+   "${API_BASE}/api/portfolio_day?${params.toString()}",
+   "${API_BASE}/api/portfolio_day?${params}",
+   "${API_BASE}/api/portfolio_day?${query}",
+   "${API_BASE}/api/scenario_workspace",
+   "${API_BASE}/api/similar_strategies?date=${encodeURIComponent(currentDate)}&model=${encodeU",
+   "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(currentDate)}",
+   "${location.origin}/api/live_portfolios",
+   "${location.origin}/api/live_portfolios/config"
+  ]
+ },
+ "functions": [
+  {
+   "name": "syncTpSlScenarios",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1497,
+   "end_line": 1518,
+   "lines": 22,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "isMetricAwareCriteria",
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 1519,
+   "end_line": 1528,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "liveChartCacheKey",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1536,
+   "end_line": 1541,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "restoreLiveChartCache",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1542,
+   "end_line": 1561,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "paintLiveChartCache",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1562,
+   "end_line": 1570,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "scheduleLiveChartCacheFallback",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1571,
+   "end_line": 1582,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "cacheLiveChartResponse",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1584,
+   "end_line": 1615,
+   "lines": 32,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "ensureHistoricalDataLoaded",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1617,
+   "end_line": 1635,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "availableDates",
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 1771,
+   "end_line": 1782,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "triggerSelectedTimeRefresh",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 1896,
+   "end_line": 1904,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateAutoRefreshTop1Status",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 1936,
+   "end_line": 1941,
+   "lines": 6,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "finishAutomaticTop1Refresh",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 1942,
+   "end_line": 1959,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "resetAutomaticRankSchedule",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 1972,
+   "end_line": 1993,
+   "lines": 22,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setReturnType",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2077,
+   "end_line": 2117,
+   "lines": 41,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setReturnType",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2123,
+   "end_line": 2186,
+   "lines": 64,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "syncLiveAltReporting",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2188,
+   "end_line": 2194,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "savePortfolios",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2196,
+   "end_line": 2199,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "movePortfolio",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2201,
+   "end_line": 2213,
+   "lines": 13,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "saveCriteriaWorkspaces",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2215,
+   "end_line": 2219,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "savePortfolioWorkspaceToPostgres",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2228,
+   "end_line": 2256,
+   "lines": 29,
+   "dom_refs": 3,
+   "fetches": [
+    "${API_BASE}/api/scenario_workspace"
+   ],
+   "storage": true
+  },
+  {
+   "name": "restorePortfolioWorkspaceFromPostgres",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2258,
+   "end_line": 2283,
+   "lines": 26,
+   "dom_refs": 1,
+   "fetches": [
+    "${API_BASE}/api/scenario_workspace"
+   ],
+   "storage": true
+  },
+  {
+   "name": "currentPortfolioViewConfig",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2285,
+   "end_line": 2303,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "persistPortfolioViewConfig",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2305,
+   "end_line": 2313,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "applyPortfolioViewConfig",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2315,
+   "end_line": 2369,
+   "lines": 55,
+   "dom_refs": 14,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "loadLivePortfolioStore",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2371,
+   "end_line": 2380,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [
+    "${location.origin}/api/live_portfolios"
+   ],
+   "storage": false
+  },
+  {
+   "name": "livePortfolioModelsForDate",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2382,
+   "end_line": 2412,
+   "lines": 31,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "autoPinLivePortfolioStrategies",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2414,
+   "end_line": 2422,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "loadOverlayRuleLibrary",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2424,
+   "end_line": 2441,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [
+    "${API_BASE}/api/overlay_rules"
+   ],
+   "storage": false
+  },
+  {
+   "name": "assignedPortfolioOverlayRule",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2443,
+   "end_line": 2447,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "activePortfolioOverlayRule",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2449,
+   "end_line": 2452,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncAssignedOverlayRuleUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2454,
+   "end_line": 2473,
+   "lines": 20,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "overlayRuleSummary",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2475,
+   "end_line": 2488,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "overlayRuleMetricValue",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2490,
+   "end_line": 2509,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderOverlayRuleLibrary",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2511,
+   "end_line": 2562,
+   "lines": 52,
+   "dom_refs": 40,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "beginEditNamedOverlayRule",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2564,
+   "end_line": 2591,
+   "lines": 28,
+   "dom_refs": 33,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "cancelEditNamedOverlayRule",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2593,
+   "end_line": 2599,
+   "lines": 7,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "overlayRuleCandidate",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2601,
+   "end_line": 2706,
+   "lines": 106,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "asOfCorrelation",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2708,
+   "end_line": 2723,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "assignedOverlayTradeCacheKey",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2725,
+   "end_line": 2727,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "ensureAssignedOverlayTradeData",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2729,
+   "end_line": 2760,
+   "lines": 32,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "timeOfDayMinutes",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2762,
+   "end_line": 2765,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "curvePointAtOrBefore",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2767,
+   "end_line": 2777,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "sourceTradeFlipResults",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2779,
+   "end_line": 2803,
+   "lines": 25,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "applyAssignedOverlayTradeResults",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2805,
+   "end_line": 2871,
+   "lines": 67,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "assignedRuleTarget",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 2873,
+   "end_line": 2891,
+   "lines": 19,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openOverlayRuleLibrary",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2893,
+   "end_line": 2897,
+   "lines": 5,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "configFromOverlayEditor",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2899,
+   "end_line": 2914,
+   "lines": 16,
+   "dom_refs": 16,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openNamedOverlayRuleSave",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2916,
+   "end_line": 2930,
+   "lines": 15,
+   "dom_refs": 17,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "saveNamedOverlayRule",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2932,
+   "end_line": 2971,
+   "lines": 40,
+   "dom_refs": 21,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "assignOverlayRule",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 2973,
+   "end_line": 2996,
+   "lines": 24,
+   "dom_refs": 8,
+   "fetches": [
+    "${API_BASE}/api/overlay_rules/assignments/${encodeURIComponent(portfolio)}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "renderLivePortfolioTransition",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 2998,
+   "end_line": 3024,
+   "lines": 27,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "isLiveModePortfolio",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3026,
+   "end_line": 3028,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "isLiveModeArmed",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3030,
+   "end_line": 3033,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncStrategyRemovalButtons",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3035,
+   "end_line": 3054,
+   "lines": 20,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncLiveModeUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3056,
+   "end_line": 3113,
+   "lines": 58,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "liveActivationRulesReady",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3119,
+   "end_line": 3126,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "liveActivationRuleLabel",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3128,
+   "end_line": 3142,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncLiveActivationReview",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3144,
+   "end_line": 3184,
+   "lines": 41,
+   "dom_refs": 44,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "showLiveActivationReview",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3186,
+   "end_line": 3210,
+   "lines": 25,
+   "dom_refs": 27,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "activateLiveModeFromReview",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3212,
+   "end_line": 3304,
+   "lines": 93,
+   "dom_refs": 38,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false
+  },
+  {
+   "name": "toggleLiveMode",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3306,
+   "end_line": 3355,
+   "lines": 50,
+   "dom_refs": 3,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false
+  },
+  {
+   "name": "loadLivePortfolioRulesIntoForm",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3357,
+   "end_line": 3385,
+   "lines": 29,
+   "dom_refs": 19,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "isRuleManagedLivePortfolio",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3387,
+   "end_line": 3389,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "liveRuleSummary",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3391,
+   "end_line": 3411,
+   "lines": 21,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "appendRuleDetailsSection",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3413,
+   "end_line": 3442,
+   "lines": 30,
+   "dom_refs": 18,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "showLivePortfolioRuleDetails",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3444,
+   "end_line": 3495,
+   "lines": 52,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "editLivePortfolioRules",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3497,
+   "end_line": 3504,
+   "lines": 8,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncLivePortfolioScreenState",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3506,
+   "end_line": 3540,
+   "lines": 35,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "saveLivePortfolioRules",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3542,
+   "end_line": 3586,
+   "lines": 45,
+   "dom_refs": 24,
+   "fetches": [
+    "${location.origin}/api/live_portfolios/config"
+   ],
+   "storage": false
+  },
+  {
+   "name": "portfolioScenarioConfig",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3588,
+   "end_line": 3590,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "capturePortfolioScenario",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3592,
+   "end_line": 3602,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "markPortfolioFixed",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3604,
+   "end_line": 3615,
+   "lines": 12,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "applyDisplayTheme",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3617,
+   "end_line": 3627,
+   "lines": 11,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "removeModelFromPortfolio",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3629,
+   "end_line": 3643,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "deletePortfolio",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3645,
+   "end_line": 3648,
+   "lines": 4,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "deleteSelectedPortfolios",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3650,
+   "end_line": 3658,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "removePortfolios",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3660,
+   "end_line": 3685,
+   "lines": 26,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "setCatalogueOptions",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3687,
+   "end_line": 3695,
+   "lines": 9,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "populateCataloguePortfolioOptions",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3697,
+   "end_line": 3705,
+   "lines": 9,
+   "dom_refs": 6,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "addCatalogueModel",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3707,
+   "end_line": 3727,
+   "lines": 21,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderStrategyCatalogue",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3729,
+   "end_line": 3767,
+   "lines": 39,
+   "dom_refs": 17,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "loadStrategyCatalogue",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3769,
+   "end_line": 3787,
+   "lines": 19,
+   "dom_refs": 2,
+   "fetches": [
+    "${API_BASE}/api/strategy_catalog?date=${encodeURIComponent(currentDate)}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "shortStrategyDescription",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3789,
+   "end_line": 3797,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "moveModelBetweenPortfolios",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 3799,
+   "end_line": 3820,
+   "lines": 22,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getMergedPortfolioModels",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3822,
+   "end_line": 3830,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updatePortfolioMergeUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3832,
+   "end_line": 3850,
+   "lines": 19,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderPortfolioTabs",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 3852,
+   "end_line": 3901,
+   "lines": 50,
+   "dom_refs": 8,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "getPersistedPortfolioViewCache",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3903,
+   "end_line": 3912,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "persistPortfolioView",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3914,
+   "end_line": 3922,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "rememberPortfolioView",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3924,
+   "end_line": 3940,
+   "lines": 17,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "getLastPortfolioView",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3942,
+   "end_line": 3957,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "loadPortfolioData",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 3959,
+   "end_line": 3998,
+   "lines": 40,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "fetchPortfolioData",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4000,
+   "end_line": 4057,
+   "lines": 58,
+   "dom_refs": 0,
+   "fetches": [
+    "${API_BASE}/api/portfolio_day?${query}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "refreshActivePortfolioView",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4063,
+   "end_line": 4081,
+   "lines": 19,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncPortfolioViewRefresh",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4083,
+   "end_line": 4090,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "repopulateActivePortfolioFromCriteria",
+   "async": true,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4096,
+   "end_line": 4109,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "activatePortfolio",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4111,
+   "end_line": 4250,
+   "lines": 140,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "renderPortfolioList",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4295,
+   "end_line": 4441,
+   "lines": 147,
+   "dom_refs": 82,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openPortfolioModal",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4443,
+   "end_line": 4451,
+   "lines": 9,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "uniquePortfolioName",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4453,
+   "end_line": 4459,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "createSimilarPortfolio",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4461,
+   "end_line": 4485,
+   "lines": 25,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderSimilarStrategyOptions",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4487,
+   "end_line": 4515,
+   "lines": 29,
+   "dom_refs": 16,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openSimilarStrategyModal",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4517,
+   "end_line": 4534,
+   "lines": 18,
+   "dom_refs": 7,
+   "fetches": [
+    "${API_BASE}/api/similar_strategies?date=${encodeURIComponent(currentDate)}&model=${encodeU"
+   ],
+   "storage": false
+  },
+  {
+   "name": "init",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4536,
+   "end_line": 4622,
+   "lines": 87,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "LIVE_DATE",
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 4631,
+   "end_line": 4644,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setLiveBadge",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4646,
+   "end_line": 4656,
+   "lines": 11,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "refreshLiveData",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4658,
+   "end_line": 4772,
+   "lines": 115,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getSelectedTimeNoteEntries",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4774,
+   "end_line": 4779,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openSelectionNotesModal",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4781,
+   "end_line": 4804,
+   "lines": 24,
+   "dom_refs": 22,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "tradeDateRange",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4807,
+   "end_line": 4813,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openTradesModal",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 4815,
+   "end_line": 4965,
+   "lines": 151,
+   "dom_refs": 33,
+   "fetches": [
+    "${API_BASE}/api/model_trades?model=${encodeURIComponent(model)}&from=${from}&to=${to}&prod"
+   ],
+   "storage": false
+  },
+  {
+   "name": "setupTradesModal",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4967,
+   "end_line": 4984,
+   "lines": 18,
+   "dom_refs": 23,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setSectionCollapsed",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 4987,
+   "end_line": 4994,
+   "lines": 8,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "collapseStorageKey",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 4996,
+   "end_line": 4999,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateCollapseAllControl",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5001,
+   "end_line": 5011,
+   "lines": 11,
+   "dom_refs": 12,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setAllSectionsCollapsed",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5013,
+   "end_line": 5020,
+   "lines": 8,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "setupCollapsibleSections",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5022,
+   "end_line": 5044,
+   "lines": 23,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "startLiveRefresh",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5046,
+   "end_line": 5053,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncLiveRefreshInterval",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5055,
+   "end_line": 5062,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setupDateTabs",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5064,
+   "end_line": 5079,
+   "lines": 16,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setRankingCriteria",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5084,
+   "end_line": 5229,
+   "lines": 146,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateScenarioUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5231,
+   "end_line": 5243,
+   "lines": 13,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderModalScenarioCards",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5245,
+   "end_line": 5288,
+   "lines": 44,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateDateLabelAndTitle",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5290,
+   "end_line": 5312,
+   "lines": 23,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setSplitMode",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5314,
+   "end_line": 5322,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncSplitModeControls",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5324,
+   "end_line": 5341,
+   "lines": 18,
+   "dom_refs": 6,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getMetricKeys",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5344,
+   "end_line": 5356,
+   "lines": 13,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getStrategyFamily",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5358,
+   "end_line": 5365,
+   "lines": 8,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateStrategyFamilyOptions",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5367,
+   "end_line": 5370,
+   "lines": 4,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getScenarioCandidates",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5372,
+   "end_line": 5408,
+   "lines": 37,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "modelSearchTerms",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5410,
+   "end_line": 5412,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getEligibleModels",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5414,
+   "end_line": 5475,
+   "lines": 62,
+   "dom_refs": 8,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getExactSearchModel",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5477,
+   "end_line": 5485,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "loadModelSearchFromDatabase",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5487,
+   "end_line": 5543,
+   "lines": 57,
+   "dom_refs": 6,
+   "fetches": [
+    "${API_BASE}/api/portfolio_day?${params.toString()}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "loadDeepLinkModelsFromDatabase",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5545,
+   "end_line": 5590,
+   "lines": 46,
+   "dom_refs": 4,
+   "fetches": [
+    "${API_BASE}/api/portfolio_day?${params}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "getReplayTimelineModels",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5592,
+   "end_line": 5612,
+   "lines": 21,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "pointInTimeAtReplayHead",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5614,
+   "end_line": 5623,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "clockMinutes",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5625,
+   "end_line": 5630,
+   "lines": 6,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "replayClockTime",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5632,
+   "end_line": 5635,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "nextAutomaticTop1Minute",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5637,
+   "end_line": 5643,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "selectedTimeRankCount",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5645,
+   "end_line": 5647,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "retainSelectedTimeLeaders",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5649,
+   "end_line": 5674,
+   "lines": 26,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "applySelectedTime",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5676,
+   "end_line": 5728,
+   "lines": 53,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "pointInTimeRequestOptions",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5730,
+   "end_line": 5747,
+   "lines": 18,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "pointInTimeContextKey",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 5749,
+   "end_line": 5753,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "scheduleAutomaticTop1Refresh",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5755,
+   "end_line": 5801,
+   "lines": 47,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderPointInTimeHistory",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 5803,
+   "end_line": 5836,
+   "lines": 34,
+   "dom_refs": 8,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "refreshPointInTimeHistory",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5838,
+   "end_line": 5863,
+   "lines": 26,
+   "dom_refs": 4,
+   "fetches": [
+    "${API_BASE}/api/point_in_time_scenario_hours?${query}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "refreshPointInTimeSelection",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 5865,
+   "end_line": 6068,
+   "lines": 204,
+   "dom_refs": 11,
+   "fetches": [
+    "${API_BASE}/api/point_in_time_scenario?${query}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "schedulePointInTimeSelection",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6069,
+   "end_line": 6094,
+   "lines": 26,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updatePointInTimeToggleUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6096,
+   "end_line": 6125,
+   "lines": 30,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getMaxFrames",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6127,
+   "end_line": 6131,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "switchDate",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6133,
+   "end_line": 6216,
+   "lines": 84,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateDeltaButtonsUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6218,
+   "end_line": 6264,
+   "lines": 47,
+   "dom_refs": 24,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setReplaySpeed",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6269,
+   "end_line": 6284,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "togglePlay",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6286,
+   "end_line": 6292,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "startReplay",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6294,
+   "end_line": 6306,
+   "lines": 13,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "pauseReplay",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6308,
+   "end_line": 6318,
+   "lines": 11,
+   "dom_refs": 4,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "startPlaybackLoop",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6320,
+   "end_line": 6335,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "step",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6337,
+   "end_line": 6346,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "seekToPct",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6348,
+   "end_line": 6357,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateScrubberUI",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6359,
+   "end_line": 6400,
+   "lines": 42,
+   "dom_refs": 18,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "storedHourlyColumns",
+   "async": false,
+   "kind": "engine",
+   "arrow": true,
+   "start_line": 6420,
+   "end_line": 6423,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "persistHourlyColumns",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6428,
+   "end_line": 6430,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "renderHourlyColumnPanel",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6432,
+   "end_line": 6460,
+   "lines": 29,
+   "dom_refs": 6,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "hourlyMetricCell",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6462,
+   "end_line": 6470,
+   "lines": 9,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderHourlyRows",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6472,
+   "end_line": 6503,
+   "lines": 32,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "hourlyMoney",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6505,
+   "end_line": 6508,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "hourlyTone",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6510,
+   "end_line": 6512,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "hourlyIntervalLabel",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6514,
+   "end_line": 6518,
+   "lines": 5,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderHourlyFamilyTabs",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6520,
+   "end_line": 6531,
+   "lines": 12,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "syncHourlyProducts",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6533,
+   "end_line": 6538,
+   "lines": 6,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "loadHourlyReport",
+   "async": true,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6540,
+   "end_line": 6575,
+   "lines": 36,
+   "dom_refs": 15,
+   "fetches": [
+    "${API_BASE}/api/hourly_family_report?${query}"
+   ],
+   "storage": false
+  },
+  {
+   "name": "openHourlyReport",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6577,
+   "end_line": 6593,
+   "lines": 17,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "closeHourlyReport",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 6595,
+   "end_line": 6599,
+   "lines": 5,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateChartLockControlState",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 6601,
+   "end_line": 6610,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "applyChartLock",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6612,
+   "end_line": 6640,
+   "lines": 29,
+   "dom_refs": 5,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setupEventListeners",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 6642,
+   "end_line": 7269,
+   "lines": 628,
+   "dom_refs": 150,
+   "fetches": [],
+   "storage": true
+  },
+  {
+   "name": "getBasePoint",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7271,
+   "end_line": 7284,
+   "lines": 14,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "getReplayHeadPoint",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7286,
+   "end_line": 7292,
+   "lines": 7,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateRibbon",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7294,
+   "end_line": 7379,
+   "lines": 86,
+   "dom_refs": 24,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderCards",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 7381,
+   "end_line": 7529,
+   "lines": 149,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "setupCanvas",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 7531,
+   "end_line": 7543,
+   "lines": 13,
+   "dom_refs": 2,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "computeTradeOverlaySignals",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7562,
+   "end_line": 7704,
+   "lines": 143,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "pairOverlayTrades",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7708,
+   "end_line": 7742,
+   "lines": 35,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "computeSplitTargetSignal",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7746,
+   "end_line": 7783,
+   "lines": 38,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "modelPointAtOrBeforeTime",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7785,
+   "end_line": 7795,
+   "lines": 11,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "selectedTimeJoinAt",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7797,
+   "end_line": 7800,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "selectedTimeModelEligibleAt",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7802,
+   "end_line": 7805,
+   "lines": 4,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "selectedTimePointEligible",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7807,
+   "end_line": 7809,
+   "lines": 3,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "computeLeaderRotation",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7815,
+   "end_line": 7973,
+   "lines": 159,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "computeMultiSplitRotation",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 7978,
+   "end_line": 8153,
+   "lines": 176,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawLeaderSignalBadge",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8155,
+   "end_line": 8170,
+   "lines": 16,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "showTargetPulse",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8172,
+   "end_line": 8182,
+   "lines": 11,
+   "dom_refs": 7,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawTradeValueLabel",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8184,
+   "end_line": 8203,
+   "lines": 20,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "updateOverlayTradeSummary",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 8205,
+   "end_line": 8231,
+   "lines": 27,
+   "dom_refs": 9,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "openOverlayTradesModal",
+   "async": true,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8233,
+   "end_line": 8350,
+   "lines": 118,
+   "dom_refs": 21,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawSignalBadge",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8352,
+   "end_line": 8380,
+   "lines": 29,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawChart",
+   "async": false,
+   "kind": "view",
+   "arrow": false,
+   "start_line": 8382,
+   "end_line": 8645,
+   "lines": 264,
+   "dom_refs": 3,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "scheduleDashboardUtilityRuntime",
+   "async": false,
+   "kind": "mixed",
+   "arrow": false,
+   "start_line": 8648,
+   "end_line": 8656,
+   "lines": 9,
+   "dom_refs": 1,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawBaselineMarker",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8658,
+   "end_line": 8672,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawReplayCursor",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8674,
+   "end_line": 8688,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "renderDeltaLine",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8690,
+   "end_line": 8704,
+   "lines": 15,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawPointLabel",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8706,
+   "end_line": 8715,
+   "lines": 10,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  },
+  {
+   "name": "drawGridAndAxes",
+   "async": false,
+   "kind": "engine",
+   "arrow": false,
+   "start_line": 8717,
+   "end_line": 8762,
+   "lines": 46,
+   "dom_refs": 0,
+   "fetches": [],
+   "storage": false
+  }
+ ],
+ "state": [
+  {
+   "name": "API_BASE",
+   "decl": "const",
+   "line": 1426
+  },
+  {
+   "name": "SCENARIOS_CATALOGUE",
+   "decl": "const",
+   "line": 1428
+  },
+  {
+   "name": "MOMENTUM_SCENARIO_IDS",
+   "decl": "const",
+   "line": 1437
+  },
+  {
+   "name": "ALL_CRITERIA_DATA",
+   "decl": "const",
+   "line": 1438
+  },
+  {
+   "name": "FAMILY_TOP_FIVE_SCENARIOS",
+   "decl": "const",
+   "line": 1474
+  },
+  {
+   "name": "TP_SL_SCENARIO_IDS",
+   "decl": "const",
+   "line": 1496
+  },
+  {
+   "name": "ALL_DATE_DATA",
+   "decl": "const",
+   "line": 1530
+  },
+  {
+   "name": "LIVE_CHART_CACHE_PREFIX",
+   "decl": "const",
+   "line": 1531
+  },
+  {
+   "name": "LIVE_CHART_CACHE_TTL_MS",
+   "decl": "const",
+   "line": 1532
+  },
+  {
+   "name": "LIVE_CHART_CACHE_MAX_BYTES",
+   "decl": "const",
+   "line": 1533
+  },
+  {
+   "name": "initialLiveDataAvailable",
+   "decl": "let",
+   "line": 1534
+  },
+  {
+   "name": "liveChartDataLoadedKeys",
+   "decl": "const",
+   "line": 1535
+  },
+  {
+   "name": "cachedProductsForLive",
+   "decl": "let",
+   "line": 1583
+  },
+  {
+   "name": "historicalCurveLoads",
+   "decl": "const",
+   "line": 1616
+  },
+  {
+   "name": "currentReturnType",
+   "decl": "let",
+   "line": 1639
+  },
+  {
+   "name": "currentCriteria",
+   "decl": "let",
+   "line": 1640
+  },
+  {
+   "name": "mainScenarioCriteria",
+   "decl": "let",
+   "line": 1641
+  },
+  {
+   "name": "portfolioCriteria",
+   "decl": "let",
+   "line": 1642
+  },
+  {
+   "name": "portfolioViewConfigs",
+   "decl": "let",
+   "line": 1643
+  },
+  {
+   "name": "mainScenarioViewConfig",
+   "decl": "let",
+   "line": 1644
+  },
+  {
+   "name": "portfolioScenarioConfigs",
+   "decl": "let",
+   "line": 1647
+  },
+  {
+   "name": "currentProductType",
+   "decl": "let",
+   "line": 1649
+  },
+  {
+   "name": "currentProduct",
+   "decl": "let",
+   "line": 1651
+  },
+  {
+   "name": "currentStrategyFamily",
+   "decl": "let",
+   "line": 1652
+  },
+  {
+   "name": "modelLimit",
+   "decl": "let",
+   "line": 1653
+  },
+  {
+   "name": "portfolios",
+   "decl": "let",
+   "line": 1654
+  },
+  {
+   "name": "livePortfolioStore",
+   "decl": "let",
+   "line": 1655
+  },
+  {
+   "name": "livePortfolioActiveModels",
+   "decl": "const",
+   "line": 1656
+  },
+  {
+   "name": "overlayRuleLibrary",
+   "decl": "let",
+   "line": 1657
+  },
+  {
+   "name": "assignedOverlayTradeCache",
+   "decl": "const",
+   "line": 1658
+  },
+  {
+   "name": "assignedOverlayTradeRequests",
+   "decl": "const",
+   "line": 1659
+  },
+  {
+   "name": "useAssignedOverlayRule",
+   "decl": "let",
+   "line": 1660
+  },
+  {
+   "name": "overlayRuleLibraryRequest",
+   "decl": "let",
+   "line": 1661
+  },
+  {
+   "name": "pendingNamedOverlayRuleConfig",
+   "decl": "let",
+   "line": 1662
+  },
+  {
+   "name": "editingNamedOverlayRuleId",
+   "decl": "let",
+   "line": 1663
+  },
+  {
+   "name": "activePortfolioName",
+   "decl": "let",
+   "line": 1664
+  },
+  {
+   "name": "liveModePriorChartLock",
+   "decl": "let",
+   "line": 1665
+  },
+  {
+   "name": "liveModeRequestInFlight",
+   "decl": "let",
+   "line": 1666
+  },
+  {
+   "name": "liveModeStatusMessages",
+   "decl": "let",
+   "line": 1667
+  },
+  {
+   "name": "portfolioModels",
+   "decl": "let",
+   "line": 1668
+  },
+  {
+   "name": "pendingFilterDataRefresh",
+   "decl": "let",
+   "line": 1669
+  },
+  {
+   "name": "lastChartFallbackModels",
+   "decl": "let",
+   "line": 1670
+  },
+  {
+   "name": "lastChartFallbackContext",
+   "decl": "let",
+   "line": 1671
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE",
+   "decl": "const",
+   "line": 1674
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE_MAX",
+   "decl": "const",
+   "line": 1675
+  },
+  {
+   "name": "PORTFOLIO_VIEW_CACHE_STORAGE_KEY",
+   "decl": "const",
+   "line": 1676
+  },
+  {
+   "name": "PORTFOLIO_VIEW_PERSIST_MAX",
+   "decl": "const",
+   "line": 1677
+  },
+  {
+   "name": "PORTFOLIO_VIEW_REQUESTS",
+   "decl": "const",
+   "line": 1678
+  },
+  {
+   "name": "persistedPortfolioViewCache",
+   "decl": "let",
+   "line": 1679
+  },
+  {
+   "name": "PORTFOLIO_LAST_VIEW_CACHE",
+   "decl": "const",
+   "line": 1680
+  },
+  {
+   "name": "portfolioTargetModel",
+   "decl": "let",
+   "line": 1681
+  },
+  {
+   "name": "portfolioMergeSelection",
+   "decl": "const",
+   "line": 1682
+  },
+  {
+   "name": "similarStrategyPayload",
+   "decl": "let",
+   "line": 1683
+  },
+  {
+   "name": "strategyCatalogue",
+   "decl": "let",
+   "line": 1684
+  },
+  {
+   "name": "strategyCatalogueDate",
+   "decl": "let",
+   "line": 1685
+  },
+  {
+   "name": "displayTheme",
+   "decl": "let",
+   "line": 1686
+  },
+  {
+   "name": "liveRefreshSequence",
+   "decl": "let",
+   "line": 1687
+  },
+  {
+   "name": "liveRefreshTimer",
+   "decl": "let",
+   "line": 1688
+  },
+  {
+   "name": "liveRefreshIntervalMs",
+   "decl": "let",
+   "line": 1689
+  },
+  {
+   "name": "portfolioViewRefreshTimer",
+   "decl": "let",
+   "line": 1690
+  },
+  {
+   "name": "portfolioViewRefreshInFlight",
+   "decl": "let",
+   "line": 1691
+  },
+  {
+   "name": "PORTFOLIO_VIEW_REFRESH_MS",
+   "decl": "const",
+   "line": 1694
+  },
+  {
+   "name": "currentDate",
+   "decl": "let",
+   "line": 1697
+  },
+  {
+   "name": "splitMode",
+   "decl": "let",
+   "line": 1698
+  },
+  {
+   "name": "modelSearchLoadedModels",
+   "decl": "let",
+   "line": 1700
+  },
+  {
+   "name": "pinnedComparisonModels",
+   "decl": "const",
+   "line": 1701
+  },
+  {
+   "name": "modelSearchRequestSequence",
+   "decl": "let",
+   "line": 1702
+  },
+  {
+   "name": "modelSearchTimer",
+   "decl": "let",
+   "line": 1703
+  },
+  {
+   "name": "deepLinkModel",
+   "decl": "let",
+   "line": 1704
+  },
+  {
+   "name": "deepLinkModels",
+   "decl": "let",
+   "line": 1705
+  },
+  {
+   "name": "deepLinkModelsOnly",
+   "decl": "let",
+   "line": 1706
+  },
+  {
+   "name": "deepLinkDate",
+   "decl": "let",
+   "line": 1707
+  },
+  {
+   "name": "selectedModelIndex",
+   "decl": "let",
+   "line": 1708
+  },
+  {
+   "name": "baselineFrameIndex",
+   "decl": "let",
+   "line": 1709
+  },
+  {
+   "name": "currentFrameIndex",
+   "decl": "let",
+   "line": 1710
+  },
+  {
+   "name": "minWinRate",
+   "decl": "let",
+   "line": 1711
+  },
+  {
+   "name": "visibleModels",
+   "decl": "let",
+   "line": 1712
+  },
+  {
+   "name": "scenarioRemovedModels",
+   "decl": "const",
+   "line": 1715
+  },
+  {
+   "name": "POINT_IN_TIME_SELECTION_STORAGE_KEY",
+   "decl": "const",
+   "line": 1716
+  },
+  {
+   "name": "SELECTED_TIME_RANK_STORAGE_KEY",
+   "decl": "const",
+   "line": 1717
+  },
+  {
+   "name": "pointInTimeSelectionPreference",
+   "decl": "let",
+   "line": 1718
+  },
+  {
+   "name": "pointInTimeMode",
+   "decl": "let",
+   "line": 1719
+  },
+  {
+   "name": "top1AtTimePreviousPointInTimeMode",
+   "decl": "let",
+   "line": 1720
+  },
+  {
+   "name": "pointInTimeModels",
+   "decl": "let",
+   "line": 1721
+  },
+  {
+   "name": "pointInTimeRequestSequence",
+   "decl": "let",
+   "line": 1722
+  },
+  {
+   "name": "pointInTimeRequestedKey",
+   "decl": "let",
+   "line": 1723
+  },
+  {
+   "name": "pointInTimeDebounceTimer",
+   "decl": "let",
+   "line": 1724
+  },
+  {
+   "name": "pointInTimeHours",
+   "decl": "let",
+   "line": 1725
+  },
+  {
+   "name": "pointInTimeHistoryKey",
+   "decl": "let",
+   "line": 1726
+  },
+  {
+   "name": "pointInTimeHistorySequence",
+   "decl": "let",
+   "line": 1727
+  },
+  {
+   "name": "pointInTimeHistoryAt",
+   "decl": "let",
+   "line": 1728
+  },
+  {
+   "name": "pendingExplicitTop1Time",
+   "decl": "let",
+   "line": 1729
+  },
+  {
+   "name": "selectedTimeLeaderHistory",
+   "decl": "const",
+   "line": 1730
+  },
+  {
+   "name": "selectedTimeLeaderHistoryContext",
+   "decl": "let",
+   "line": 1731
+  },
+  {
+   "name": "selectedTimeExplicitRefresh",
+   "decl": "let",
+   "line": 1732
+  },
+  {
+   "name": "autoRefreshTop1Enabled",
+   "decl": "let",
+   "line": 1733
+  },
+  {
+   "name": "autoRefreshTop1Minutes",
+   "decl": "let",
+   "line": 1734
+  },
+  {
+   "name": "autoRefreshTop1Direction",
+   "decl": "let",
+   "line": 1735
+  },
+  {
+   "name": "autoRefreshTop1Rank",
+   "decl": "let",
+   "line": 1736
+  },
+  {
+   "name": "autoRefreshTop1LastMinute",
+   "decl": "let",
+   "line": 1737
+  },
+  {
+   "name": "autoRefreshTop1NextMinute",
+   "decl": "let",
+   "line": 1738
+  },
+  {
+   "name": "autoRefreshTop1Context",
+   "decl": "let",
+   "line": 1739
+  },
+  {
+   "name": "autoRefreshTop1RequestAt",
+   "decl": "let",
+   "line": 1740
+  },
+  {
+   "name": "showNetDelta",
+   "decl": "let",
+   "line": 1743
+  },
+  {
+   "name": "showBuyDelta",
+   "decl": "let",
+   "line": 1744
+  },
+  {
+   "name": "showSellDelta",
+   "decl": "let",
+   "line": 1745
+  },
+  {
+   "name": "showTradeMarkers",
+   "decl": "let",
+   "line": 1746
+  },
+  {
+   "name": "showTradeValues",
+   "decl": "let",
+   "line": 1747
+  },
+  {
+   "name": "lastOverlayTrades",
+   "decl": "let",
+   "line": 1748
+  },
+  {
+   "name": "exitThreshold",
+   "decl": "let",
+   "line": 1749
+  },
+  {
+   "name": "overlayTopX",
+   "decl": "let",
+   "line": 1750
+  },
+  {
+   "name": "dailyTarget",
+   "decl": "let",
+   "line": 1751
+  },
+  {
+   "name": "hourlyReportFamily",
+   "decl": "let",
+   "line": 1752
+  },
+  {
+   "name": "hourlyReportDate",
+   "decl": "let",
+   "line": 1753
+  },
+  {
+   "name": "hourlyReportTimer",
+   "decl": "let",
+   "line": 1754
+  },
+  {
+   "name": "hourlyReportRequest",
+   "decl": "let",
+   "line": 1755
+  },
+  {
+   "name": "hourlyReportPayload",
+   "decl": "let",
+   "line": 1756
+  },
+  {
+   "name": "hourlyReportInterval",
+   "decl": "let",
+   "line": 1757
+  },
+  {
+   "name": "chartLocked",
+   "decl": "let",
+   "line": 1761
+  },
+  {
+   "name": "isPlaying",
+   "decl": "let",
+   "line": 1766
+  },
+  {
+   "name": "replayInterval",
+   "decl": "let",
+   "line": 1767
+  },
+  {
+   "name": "replaySpeed",
+   "decl": "let",
+   "line": 1768
+  },
+  {
+   "name": "BASE_INTERVAL_MS",
+   "decl": "const",
+   "line": 1769
+  },
+  {
+   "name": "returnTypeNetBtn",
+   "decl": "const",
+   "line": 1785
+  },
+  {
+   "name": "returnTypeAltBtn",
+   "decl": "const",
+   "line": 1786
+  },
+  {
+   "name": "openScenarioModalBtn",
+   "decl": "const",
+   "line": 1787
+  },
+  {
+   "name": "closeScenarioModalBtn",
+   "decl": "const",
+   "line": 1788
+  },
+  {
+   "name": "closeScenarioModalFooterBtn",
+   "decl": "const",
+   "line": 1789
+  },
+  {
+   "name": "scenarioModal",
+   "decl": "const",
+   "line": 1790
+  },
+  {
+   "name": "modalScenarioCards",
+   "decl": "const",
+   "line": 1791
+  },
+  {
+   "name": "scenarioSearchInput",
+   "decl": "const",
+   "line": 1792
+  },
+  {
+   "name": "activeScenarioIcon",
+   "decl": "const",
+   "line": 1793
+  },
+  {
+   "name": "activeScenarioName",
+   "decl": "const",
+   "line": 1794
+  },
+  {
+   "name": "activeCriteriaLabel",
+   "decl": "const",
+   "line": 1795
+  },
+  {
+   "name": "dateTabsContainer",
+   "decl": "const",
+   "line": 1797
+  },
+  {
+   "name": "productTypeFilter",
+   "decl": "const",
+   "line": 1798
+  },
+  {
+   "name": "productFilter",
+   "decl": "const",
+   "line": 1799
+  },
+  {
+   "name": "strategyFamilyFilter",
+   "decl": "const",
+   "line": 1800
+  },
+  {
+   "name": "modelLimitFilter",
+   "decl": "const",
+   "line": 1801
+  },
+  {
+   "name": "modelSearchInput",
+   "decl": "const",
+   "line": 1802
+  },
+  {
+   "name": "modelSearchStatus",
+   "decl": "const",
+   "line": 1803
+  },
+  {
+   "name": "portfolioTabs",
+   "decl": "const",
+   "line": 1804
+  },
+  {
+   "name": "portfolioModal",
+   "decl": "const",
+   "line": 1805
+  },
+  {
+   "name": "savePortfolioWorkspaceBtn",
+   "decl": "const",
+   "line": 1806
+  },
+  {
+   "name": "portfolioWorkspaceSaveStatus",
+   "decl": "const",
+   "line": 1807
+  },
+  {
+   "name": "overlayRuleLibraryModal",
+   "decl": "const",
+   "line": 1808
+  },
+  {
+   "name": "overlayRuleNameModal",
+   "decl": "const",
+   "line": 1809
+  },
+  {
+   "name": "liveRuleStatus",
+   "decl": "const",
+   "line": 1810
+  },
+  {
+   "name": "livePortfolioTransitionBanner",
+   "decl": "const",
+   "line": 1811
+  },
+  {
+   "name": "portfolioList",
+   "decl": "const",
+   "line": 1812
+  },
+  {
+   "name": "mergePortfolioForm",
+   "decl": "const",
+   "line": 1813
+  },
+  {
+   "name": "mergePortfolioBtn",
+   "decl": "const",
+   "line": 1814
+  },
+  {
+   "name": "mergePortfolioSummary",
+   "decl": "const",
+   "line": 1815
+  },
+  {
+   "name": "mergePortfolioCount",
+   "decl": "const",
+   "line": 1816
+  },
+  {
+   "name": "selectAllPortfoliosBtn",
+   "decl": "const",
+   "line": 1817
+  },
+  {
+   "name": "deleteSelectedPortfoliosBtn",
+   "decl": "const",
+   "line": 1818
+  },
+  {
+   "name": "strategyCataloguePanel",
+   "decl": "const",
+   "line": 1819
+  },
+  {
+   "name": "strategyCatalogueResults",
+   "decl": "const",
+   "line": 1820
+  },
+  {
+   "name": "catalogPortfolioFilter",
+   "decl": "const",
+   "line": 1821
+  },
+  {
+   "name": "catalogTypeFilter",
+   "decl": "const",
+   "line": 1822
+  },
+  {
+   "name": "catalogProductFilter",
+   "decl": "const",
+   "line": 1823
+  },
+  {
+   "name": "catalogFamilyFilter",
+   "decl": "const",
+   "line": 1824
+  },
+  {
+   "name": "catalogWindowFilter",
+   "decl": "const",
+   "line": 1825
+  },
+  {
+   "name": "catalogTpFilter",
+   "decl": "const",
+   "line": 1826
+  },
+  {
+   "name": "catalogSlFilter",
+   "decl": "const",
+   "line": 1827
+  },
+  {
+   "name": "similarStrategyModal",
+   "decl": "const",
+   "line": 1828
+  },
+  {
+   "name": "similarStrategyContext",
+   "decl": "const",
+   "line": 1829
+  },
+  {
+   "name": "similarStrategyOptions",
+   "decl": "const",
+   "line": 1830
+  },
+  {
+   "name": "themeToggle",
+   "decl": "const",
+   "line": 1831
+  },
+  {
+   "name": "openHourlyReportBtn",
+   "decl": "const",
+   "line": 1832
+  },
+  {
+   "name": "hourlyReportModal",
+   "decl": "const",
+   "line": 1833
+  },
+  {
+   "name": "hourlyProductType",
+   "decl": "const",
+   "line": 1834
+  },
+  {
+   "name": "hourlyProduct",
+   "decl": "const",
+   "line": 1835
+  },
+  {
+   "name": "hourlyInterval",
+   "decl": "const",
+   "line": 1836
+  },
+  {
+   "name": "hourlyFamilyTabs",
+   "decl": "const",
+   "line": 1837
+  },
+  {
+   "name": "hourlyReportHead",
+   "decl": "const",
+   "line": 1838
+  },
+  {
+   "name": "hourlyReportBody",
+   "decl": "const",
+   "line": 1839
+  },
+  {
+   "name": "hourlyReportSummary",
+   "decl": "const",
+   "line": 1840
+  },
+  {
+   "name": "hourlyColumnToggle",
+   "decl": "const",
+   "line": 1841
+  },
+  {
+   "name": "hourlyColumnPanel",
+   "decl": "const",
+   "line": 1842
+  },
+  {
+   "name": "activeDateLabel",
+   "decl": "const",
+   "line": 1843
+  },
+  {
+   "name": "winRateDisplayBadge",
+   "decl": "const",
+   "line": 1844
+  },
+  {
+   "name": "replayStartBadge",
+   "decl": "const",
+   "line": 1845
+  },
+  {
+   "name": "cardsGridTitle",
+   "decl": "const",
+   "line": 1846
+  },
+  {
+   "name": "canvas",
+   "decl": "const",
+   "line": 1847
+  },
+  {
+   "name": "ctx",
+   "decl": "const",
+   "line": 1848
+  },
+  {
+   "name": "tooltip",
+   "decl": "const",
+   "line": 1849
+  },
+  {
+   "name": "modelCardsContainer",
+   "decl": "const",
+   "line": 1850
+  },
+  {
+   "name": "metricAll",
+   "decl": "const",
+   "line": 1852
+  },
+  {
+   "name": "metricBuy",
+   "decl": "const",
+   "line": 1853
+  },
+  {
+   "name": "metricSell",
+   "decl": "const",
+   "line": 1854
+  },
+  {
+   "name": "metricTriSplit",
+   "decl": "const",
+   "line": 1855
+  },
+  {
+   "name": "metricMultiSplit",
+   "decl": "const",
+   "line": 1856
+  },
+  {
+   "name": "showAllBtn",
+   "decl": "const",
+   "line": 1858
+  },
+  {
+   "name": "hideAllBtn",
+   "decl": "const",
+   "line": 1859
+  },
+  {
+   "name": "clearHiddenBtn",
+   "decl": "const",
+   "line": 1860
+  },
+  {
+   "name": "clearAllStrategiesBtn",
+   "decl": "const",
+   "line": 1861
+  },
+  {
+   "name": "playBtn",
+   "decl": "const",
+   "line": 1864
+  },
+  {
+   "name": "playIcon",
+   "decl": "const",
+   "line": 1865
+  },
+  {
+   "name": "playBtnText",
+   "decl": "const",
+   "line": 1866
+  },
+  {
+   "name": "stepBackBtn",
+   "decl": "const",
+   "line": 1867
+  },
+  {
+   "name": "stepFwdBtn",
+   "decl": "const",
+   "line": 1868
+  },
+  {
+   "name": "restartBtn",
+   "decl": "const",
+   "line": 1869
+  },
+  {
+   "name": "speed1x",
+   "decl": "const",
+   "line": 1870
+  },
+  {
+   "name": "speed025x",
+   "decl": "const",
+   "line": 1871
+  },
+  {
+   "name": "speed05x",
+   "decl": "const",
+   "line": 1872
+  },
+  {
+   "name": "speed3x",
+   "decl": "const",
+   "line": 1873
+  },
+  {
+   "name": "speed10x",
+   "decl": "const",
+   "line": 1874
+  },
+  {
+   "name": "replayTimeBadge",
+   "decl": "const",
+   "line": 1876
+  },
+  {
+   "name": "replayProgressPercent",
+   "decl": "const",
+   "line": 1877
+  },
+  {
+   "name": "baselineTimeBadge",
+   "decl": "const",
+   "line": 1878
+  },
+  {
+   "name": "selectedTimeForm",
+   "decl": "const",
+   "line": 1879
+  },
+  {
+   "name": "selectedTimeRankSelect",
+   "decl": "const",
+   "line": 1880
+  },
+  {
+   "name": "selectedTimeInput",
+   "decl": "const",
+   "line": 1881
+  },
+  {
+   "name": "applySelectedTimeBtn",
+   "decl": "const",
+   "line": 1882
+  },
+  {
+   "name": "autoRefreshTop1Toggle",
+   "decl": "const",
+   "line": 1883
+  },
+  {
+   "name": "autoRefreshTop1Interval",
+   "decl": "const",
+   "line": 1884
+  },
+  {
+   "name": "autoRefreshTop1DirectionSelect",
+   "decl": "const",
+   "line": 1885
+  },
+  {
+   "name": "autoRefreshTop1RankSelect",
+   "decl": "const",
+   "line": 1886
+  },
+  {
+   "name": "autoRefreshTop1Status",
+   "decl": "const",
+   "line": 1887
+  },
+  {
+   "name": "savedSelectedTimeRank",
+   "decl": "const",
+   "line": 1888
+  },
+  {
+   "name": "setBaseAtHeadBtn",
+   "decl": "const",
+   "line": 1909
+  },
+  {
+   "name": "resetBaselineBtn",
+   "decl": "const",
+   "line": 1910
+  },
+  {
+   "name": "chartLockBtn",
+   "decl": "const",
+   "line": 1911
+  },
+  {
+   "name": "chartLockIcon",
+   "decl": "const",
+   "line": 1912
+  },
+  {
+   "name": "chartLockLabel",
+   "decl": "const",
+   "line": 1913
+  },
+  {
+   "name": "liveModeBtn",
+   "decl": "const",
+   "line": 1914
+  },
+  {
+   "name": "liveModeLabel",
+   "decl": "const",
+   "line": 1915
+  },
+  {
+   "name": "scrubberTrack",
+   "decl": "const",
+   "line": 1917
+  },
+  {
+   "name": "scrubberFill",
+   "decl": "const",
+   "line": 1918
+  },
+  {
+   "name": "scrubberThumb",
+   "decl": "const",
+   "line": 1919
+  },
+  {
+   "name": "baselineMarker",
+   "decl": "const",
+   "line": 1920
+  },
+  {
+   "name": "baselineBadge",
+   "decl": "const",
+   "line": 1921
+  },
+  {
+   "name": "winRateSlider",
+   "decl": "const",
+   "line": 1923
+  },
+  {
+   "name": "winRateValBadge",
+   "decl": "const",
+   "line": 1924
+  },
+  {
+   "name": "toggleNetDeltaBtn",
+   "decl": "const",
+   "line": 1927
+  },
+  {
+   "name": "pointInTimeToggle",
+   "decl": "const",
+   "line": 1928
+  },
+  {
+   "name": "pointInTimeStatus",
+   "decl": "const",
+   "line": 1929
+  },
+  {
+   "name": "pointInTimeHistoryPanel",
+   "decl": "const",
+   "line": 2041
+  },
+  {
+   "name": "pointInTimeHistoryStatus",
+   "decl": "const",
+   "line": 2042
+  },
+  {
+   "name": "pointInTimeHistoryRows",
+   "decl": "const",
+   "line": 2043
+  },
+  {
+   "name": "pointInTimeHistoryNearViewport",
+   "decl": "let",
+   "line": 2044
+  },
+  {
+   "name": "toggleBuyDeltaBtn",
+   "decl": "const",
+   "line": 2054
+  },
+  {
+   "name": "toggleSellDeltaBtn",
+   "decl": "const",
+   "line": 2055
+  },
+  {
+   "name": "netDeltaCheck",
+   "decl": "const",
+   "line": 2056
+  },
+  {
+   "name": "buyDeltaCheck",
+   "decl": "const",
+   "line": 2057
+  },
+  {
+   "name": "sellDeltaCheck",
+   "decl": "const",
+   "line": 2058
+  },
+  {
+   "name": "toggleTradeMarkersBtn",
+   "decl": "const",
+   "line": 2059
+  },
+  {
+   "name": "tradeMarkersCheck",
+   "decl": "const",
+   "line": 2060
+  },
+  {
+   "name": "ribbonModelName",
+   "decl": "const",
+   "line": 2062
+  },
+  {
+   "name": "ribbonProduct",
+   "decl": "const",
+   "line": 2063
+  },
+  {
+   "name": "ribbonStrategy",
+   "decl": "const",
+   "line": 2064
+  },
+  {
+   "name": "ribbonTotNet",
+   "decl": "const",
+   "line": 2065
+  },
+  {
+   "name": "ribbonBuyNet",
+   "decl": "const",
+   "line": 2066
+  },
+  {
+   "name": "ribbonSellNet",
+   "decl": "const",
+   "line": 2067
+  },
+  {
+   "name": "totalNetLabel",
+   "decl": "const",
+   "line": 2068
+  },
+  {
+   "name": "buyNetLabel",
+   "decl": "const",
+   "line": 2069
+  },
+  {
+   "name": "sellNetLabel",
+   "decl": "const",
+   "line": 2070
+  },
+  {
+   "name": "indicatorBar",
+   "decl": "const",
+   "line": 2071
+  },
+  {
+   "name": "portfolioWorkspaceStorageKeys",
+   "decl": "const",
+   "line": 2221
+  },
+  {
+   "name": "liveActivationModal",
+   "decl": "const",
+   "line": 3115
+  },
+  {
+   "name": "liveActivationForm",
+   "decl": "const",
+   "line": 3116
+  },
+  {
+   "name": "liveActivationRule",
+   "decl": "const",
+   "line": 3117
+  },
+  {
+   "name": "LIVE_REFRESH_MS",
+   "decl": "const",
+   "line": 4627
+  },
+  {
+   "name": "LIVE_MODE_REFRESH_MS",
+   "decl": "const",
+   "line": 4628
+  },
+  {
+   "name": "HOURLY_REPORT_FAMILIES",
+   "decl": "const",
+   "line": 6402
+  },
+  {
+   "name": "HOURLY_COLUMN_PREF_KEY",
+   "decl": "const",
+   "line": 6407
+  },
+  {
+   "name": "HOURLY_METRICS",
+   "decl": "const",
+   "line": 6408
+  },
+  {
+   "name": "HOURLY_COLUMNS",
+   "decl": "const",
+   "line": 6414
+  },
+  {
+   "name": "hourlyVisibleColumns",
+   "decl": "let",
+   "line": 6424
+  },
+  {
+   "name": "timeAxisPoints",
+   "decl": "let",
+   "line": 7545
+  },
+  {
+   "name": "dashboardUtilityRuntimeScheduled",
+   "decl": "let",
+   "line": 8647
+  }
+ ],
+ "wiring": [
+  {
+   "line": 4092,
+   "text": "document.addEventListener('visibilitychange', () => {"
+  },
+  {
+   "line": 4255,
+   "text": "window.addEventListener('storage', event => {"
+  },
+  {
+   "line": 8765,
+   "text": "canvas.addEventListener('mousemove', e => {"
+  },
+  {
+   "line": 8903,
+   "text": "canvas.addEventListener('mouseleave', () => {"
+  },
+  {
+   "line": 8909,
+   "text": "window.addEventListener('pageshow', async () => {"
+  }
+ ]
+}

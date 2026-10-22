@@ -1,6 +1,12 @@
 // lib/db/schema.ts — Drizzle schema for the directory application.
 //
 // VERSION HISTORY
+// v1.2.0 · 2026-08-10 · Adds message_versions, outreach_responses, and
+//   commercial_opportunities for the EP043 CRM reporting layer, plus
+//   verification_deliveries.message_version_id linking outbound sends to a
+//   frozen version. Everything else the CRM reads (businesses,
+//   verification_batches/items, pipeline_stages, stage_transitions,
+//   verification_deliveries) already existed.
 // v1.1.0 · 2026-08-05 · Adds durable hashed owner-review links, decisions, and page responses.
 // v1.0.0 · 2026-08-05 · Version history added; file predates this convention.
 //
@@ -549,6 +555,11 @@ export const verificationDeliveries = pgTable(
     channel: text("channel").notNull().default("email"),
     recipientAddress: text("recipient_address").notNull(),
     templateVersion: text("template_version").notNull(),
+    // Links this send to a frozen MessageVersion row for EP043 CRM
+    // reporting (message-version comparison). Nullable because deliveries
+    // predating the CRM's message-versioning tables have no version to
+    // point at.
+    messageVersionId: uuid("message_version_id").references(() => messageVersions.id),
     actorUserId: uuid("actor_user_id").references(() => users.id),
     status: text("status").notNull().default("prepared"),
     deliveryMode: text("delivery_mode").notNull().default("disabled"),
@@ -588,6 +599,146 @@ export const verificationDeliveryEvents = pgTable(
   (table) => ({
     byDelivery: index("verification_delivery_events_delivery_idx")
       .on(table.deliveryId, table.occurredAt),
+  })
+);
+
+// --- EP048 consumer lead capture and controlled lead access -----------------
+//
+// Consumer contact details are stored only in job_leads and are never selected
+// for public cards. A business can receive those details only through a paid,
+// server-side access grant; the attribution row is append-only business outcome
+// evidence, not a reason to expose contact data early.
+export const jobLeads = pgTable(
+  "job_leads",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone"),
+    location: text("location").notNull(),
+    tradeRequested: text("trade_requested").notNull(),
+    sizeOfWork: text("size_of_work").notNull(),
+    budget: doublePrecision("budget").notNull(),
+    status: text("status").notNull().default("open"), // open | assigned | completed | withdrawn
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byPublicFeed: index("job_leads_public_feed_idx").on(table.status, table.createdAt),
+    byTradeLocation: index("job_leads_trade_location_idx").on(table.tradeRequested, table.location),
+  })
+);
+
+export const leadAccessGrants = pgTable(
+  "lead_access_grants",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    leadId: uuid("lead_id").notNull().references(() => jobLeads.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    price: doublePrecision("price").notNull(),
+    status: text("status").notNull().default("pending"), // pending | paid | refunded | cancelled
+    paymentReference: text("payment_reference"),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    oneBusinessPerLead: uniqueIndex("lead_access_grants_business_lead_uidx").on(table.leadId, table.businessId),
+    byBusinessStatus: index("lead_access_grants_business_status_idx").on(table.businessId, table.status),
+  })
+);
+
+export const leadAttributions = pgTable(
+  "lead_attributions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    leadId: uuid("lead_id").notNull().references(() => jobLeads.id, { onDelete: "cascade" }),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    accessGrantId: uuid("access_grant_id").notNull().unique().references(() => leadAccessGrants.id, { onDelete: "restrict" }),
+    status: text("status").notNull().default("contacted"), // contacted | quoted | won
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byLead: index("lead_attributions_lead_idx").on(table.leadId, table.createdAt),
+    byBusiness: index("lead_attributions_business_idx").on(table.businessId, table.status),
+  })
+);
+
+// --- CRM: message versioning, response tracking, commercial opportunities --
+//
+// EP043 CRM reporting layer (workstream/600_workflow/ep043/EP043_crm_business_
+// outreach_workflow.html). Business/batch/pipeline/outbound-delivery data
+// already exists above (businesses, verification_batches, pipeline_stages,
+// stage_transitions, verification_deliveries) — the CRM reads all of that
+// read-only. These three tables are what was missing: a frozen/versioned
+// message template, a place to record and classify inbound replies, and
+// commercial (claim/activation/service revenue) outcomes.
+
+export const messageVersions = pgTable(
+  "message_versions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    templateName: text("template_name").notNull(), // e.g. "claim_listing", "preview_followup"
+    versionNumber: integer("version_number").notNull(),
+    subject: text("subject").notNull(),
+    body: text("body").notNull(),
+    campaignRef: text("campaign_ref"),
+    dateIntroduced: timestamp("date_introduced", { withTimezone: true }).notNull().defaultNow(),
+    dateRetired: timestamp("date_retired", { withTimezone: true }),
+    createdByUserId: uuid("created_by_user_id").references(() => users.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    // Versions are frozen: a template can have many versions, but never two
+    // rows claiming the same version number for the same template name.
+    templateVersion: uniqueIndex("message_versions_template_version_uidx").on(table.templateName, table.versionNumber),
+    byTemplate: index("message_versions_template_idx").on(table.templateName),
+  })
+);
+
+export const outreachResponses = pgTable(
+  "outreach_responses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }),
+    deliveryId: uuid("delivery_id").references(() => verificationDeliveries.id),
+    batchItemId: uuid("batch_item_id").references(() => verificationBatchItems.id),
+    messageVersionId: uuid("message_version_id").references(() => messageVersions.id),
+    channel: text("channel").notNull().default("email"),
+    originalBody: text("original_body").notNull(),
+    // positive | interested | wants_info | listing_claim_interest |
+    // website_interest | follow_up_later | wrong_contact | not_interested |
+    // already_has_supplier | no_longer_trading | unsubscribe | other
+    classification: text("classification").notNull(),
+    receivedAt: timestamp("received_at", { withTimezone: true }).notNull().defaultNow(),
+    recordedByUserId: uuid("recorded_by_user_id").references(() => users.id),
+    notes: text("notes"),
+  },
+  (table) => ({
+    byBusiness: index("outreach_responses_business_idx").on(table.businessId, table.receivedAt),
+    byClassification: index("outreach_responses_classification_idx").on(table.classification, table.receivedAt),
+    byMessageVersion: index("outreach_responses_message_version_idx").on(table.messageVersionId),
+    byBatchItem: index("outreach_responses_batch_item_idx").on(table.batchItemId),
+  })
+);
+
+export const commercialOpportunities = pgTable(
+  "commercial_opportunities",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    businessId: uuid("business_id").notNull().references(() => businesses.id, { onDelete: "cascade" }).unique(),
+    // listing_claimed | preview_sent | preview_viewed | activated | converted
+    stage: text("stage").notNull().default("listing_claimed"),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }),
+    activationValue: doublePrecision("activation_value"),
+    activatedAt: timestamp("activated_at", { withTimezone: true }),
+    serviceType: text("service_type"),
+    serviceValue: doublePrecision("service_value"),
+    convertedAt: timestamp("converted_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    byStage: index("commercial_opportunities_stage_idx").on(table.stage),
   })
 );
 

@@ -1,0 +1,86 @@
+{
+ "page": "top10_5min_equity_curves_source_v2.65.32.html",
+ "summary": {
+  "metric_keys": {
+   "cases": 2,
+   "pass": 2,
+   "js_error": 0
+  },
+  "utils_clock": {
+   "cases": 345,
+   "pass": 345,
+   "js_error": 0
+  },
+  "utils_text": {
+   "cases": 64,
+   "pass": 64,
+   "js_error": 0
+  },
+  "utils_state": {
+   "cases": 3176,
+   "pass": 3176,
+   "js_error": 0
+  },
+  "utils_frames": {
+   "cases": 101,
+   "pass": 101,
+   "js_error": 0
+  },
+  "utils_auto": {
+   "cases": 3456,
+   "pass": 3456,
+   "js_error": 0
+  },
+  "utils_search": {
+   "cases": 120,
+   "pass": 120,
+   "js_error": 0
+  },
+  "data_live": {
+   "cases": 247,
+   "pass": 247,
+   "js_error": 0
+  },
+  "data_portfolio": {
+   "cases": 535,
+   "pass": 535,
+   "js_error": 0
+  },
+  "data_search": {
+   "cases": 80,
+   "pass": 80,
+   "js_error": 0
+  },
+  "data_trades": {
+   "cases": 97,
+   "pass": 97,
+   "js_error": 0
+  },
+  "data_catalog": {
+   "cases": 31,
+   "pass": 31,
+   "js_error": 0
+  },
+  "data_pitsel": {
+   "cases": 1403,
+   "pass": 1403,
+   "js_error": 0
+  }
+ },
+ "failures": {},
+ "js_only_keys": {
+  "metric_keys": [],
+  "utils_clock": [],
+  "utils_text": [],
+  "utils_state": [],
+  "utils_frames": [],
+  "utils_auto": [],
+  "utils_search": [],
+  "data_live": [],
+  "data_portfolio": [],
+  "data_search": [],
+  "data_trades": [],
+  "data_catalog": [],
+  "data_pitsel": []
+ }
+}

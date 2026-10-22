@@ -15,7 +15,7 @@ import {
   previewReadyMessage, preparePreviewMessage, sendPreparedPreviewMessage, previewDeliveryEnabled,
 } from "@/lib/verification/preview-delivery";
 
-const SYSTEM_ACTOR_ID = "00000000-0000-0000-0000-000000000000";
+const SYSTEM_ACTOR_ID = null;
 
 /**
  * Called by the Render Cron Job after each generation run (and safe to call

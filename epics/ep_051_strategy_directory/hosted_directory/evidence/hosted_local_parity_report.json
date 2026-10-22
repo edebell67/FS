@@ -1,0 +1,33 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:12:17.616729+00:00",
+  "passed": true,
+  "sample_size": 3,
+  "sample_strategy_ids": [
+    "DNA_100001",
+    "DNA_100002",
+    "DNA_100003"
+  ],
+  "snapshot_digest": "2f51115a4bf20df131fff6452dbbf495d6c194361b9fc16526eaf89bc96c03f1",
+  "checks": [
+    {
+      "strategy_id": "DNA_100001",
+      "profile_equal": true,
+      "period_curve_equal": true,
+      "points": 5
+    },
+    {
+      "strategy_id": "DNA_100002",
+      "profile_equal": true,
+      "period_curve_equal": true,
+      "points": 4
+    },
+    {
+      "strategy_id": "DNA_100003",
+      "profile_equal": true,
+      "period_curve_equal": true,
+      "points": 4
+    }
+  ],
+  "basis": "The same content-addressed local profile/series payload was promoted through the hosted Snapshot and repository contract; sampled period curves were independently rebased before comparison."
+}

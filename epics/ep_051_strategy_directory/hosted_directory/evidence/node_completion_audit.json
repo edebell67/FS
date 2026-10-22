@@ -1,0 +1,776 @@
+{
+  "schema_version": "1.0.0",
+  "generated_at": "2026-08-24T15:17:09.391568+00:00",
+  "passed": true,
+  "automated_tests": {
+    "passed": true,
+    "summary": "81 passed, 1 warning in 1.56s"
+  },
+  "node_count": 42,
+  "nodes": {
+    "IL-110": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/ingestion.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_ingestion.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-120": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/models.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "contracts/strategy-intelligence-profile.schema.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-130": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/metrics.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_foundation.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-140": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/robustness.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_robustness.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/intelligence_methodology_and_model_card.md",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-150": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/repository.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "migrations/004_hosted_intelligence_snapshot.sql",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_security_and_hosted_parity.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/hosted_local_parity_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-160": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "contracts/openapi.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "web/api-client.js",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_ui_contract.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-210": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_comparative_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/intelligence_methodology_and_model_card.md",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-220": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_comparative_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-230": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_comparative_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/discovery_ranking_variance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-240": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_batch_series.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-250": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_comparative_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-260": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "web/compare.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_security_and_hosted_parity.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-310": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/discovery.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "contracts/strategy-query.schema.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligent_discovery.py",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-320": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/main.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "web/index.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligent_discovery.py",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-330": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/discovery.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "assurance/discovery_corpus.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/discovery_ranking_variance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-340": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/discovery.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligent_discovery.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/discovery_ranking_variance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-350": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/comparative.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "app/intelligence/discovery.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/discovery_ranking_variance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-360": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "web/intelligence.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_ui_contract.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-410": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/main.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "migrations/003_private_intelligence_security.sql",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_security_and_hosted_parity.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-420": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/user.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "migrations/007_retention_security_definer.sql",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/security_scan/report.md",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-430": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/user.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "web/account.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-440": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/user.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "migrations/005_comparative_intelligence_schema.sql",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-450": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "web/builder.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "app/intelligence/user.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-460": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/user.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_user_and_regime_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-510": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "sync/ecb_market_features.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "runtime/market_features.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_market_feature_pipeline.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-520": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/regime.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_user_and_regime_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/regime_confidence_calibration_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-530": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/main.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "web/regimes.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/operations_observability_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-540": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/regime.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "assurance/run_regime_walk_forward.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/regime_walk_forward_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-550": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "app/intelligence/regime.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_user_and_regime_intelligence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/regime_walk_forward_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-560": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "web/regimes.html",
+          "present_and_passing": true
+        },
+        {
+          "path": "app/intelligence/regime.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/intelligence_methodology_and_model_card.md",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-610": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "assurance/run_data_quality.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/data_quality_reconciliation_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "tests/test_intelligence_assurance.py",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-620": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "assurance/run_discovery_variance.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/discovery_ranking_variance_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "assurance/discovery_corpus.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-630": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "assurance/run_regime_walk_forward.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "assurance/run_regime_calibration.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/regime_walk_forward_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/regime_confidence_calibration_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-640": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "security/threat-model.md",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/security_scan/report.md",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/privacy_lifecycle_and_isolation_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-650": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "assurance/run_load_test.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "assurance/run_operations_evidence.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/intelligence_load_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/operations_observability_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-660": {
+      "percent_complete": 100,
+      "status": "complete",
+      "evidence": [
+        {
+          "path": "assurance/run_release_drill.py",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/release_canary_rollback_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/browser_acceptance_report.json",
+          "present_and_passing": true
+        },
+        {
+          "path": "evidence/intelligence_assurance_report.json",
+          "present_and_passing": true
+        }
+      ]
+    },
+    "IL-100": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-110",
+        "IL-120",
+        "IL-130",
+        "IL-140",
+        "IL-150",
+        "IL-160"
+      ]
+    },
+    "IL-200": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-210",
+        "IL-220",
+        "IL-230",
+        "IL-240",
+        "IL-250",
+        "IL-260"
+      ]
+    },
+    "IL-300": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-310",
+        "IL-320",
+        "IL-330",
+        "IL-340",
+        "IL-350",
+        "IL-360"
+      ]
+    },
+    "IL-400": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-410",
+        "IL-420",
+        "IL-430",
+        "IL-440",
+        "IL-450",
+        "IL-460"
+      ]
+    },
+    "IL-500": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-510",
+        "IL-520",
+        "IL-530",
+        "IL-540",
+        "IL-550",
+        "IL-560"
+      ]
+    },
+    "IL-600": {
+      "percent_complete": 100,
+      "status": "complete",
+      "children": [
+        "IL-610",
+        "IL-620",
+        "IL-630",
+        "IL-640",
+        "IL-650",
+        "IL-660"
+      ]
+    }
+  }
+}

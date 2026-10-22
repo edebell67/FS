@@ -1,0 +1,28 @@
+{
+    "dataset_id": "golden_001",
+    "methodology_version": "v1.0.0",
+    "description": "Baseline dataset for verifying metric dictionary calculations.",
+    "trades": [
+        {"guid": "t1", "net_return": 100.0, "exit_time": "2026-08-01T10:00:00Z"},
+        {"guid": "t2", "net_return": -50.0, "exit_time": "2026-08-01T11:00:00Z"},
+        {"guid": "t3", "net_return": 200.0, "exit_time": "2026-08-02T10:00:00Z"},
+        {"guid": "t4", "net_return": 0.0,   "exit_time": "2026-08-03T10:00:00Z"},
+        {"guid": "t5", "net_return": -25.0, "exit_time": "2026-08-04T10:00:00Z"}
+    ],
+    "expected_metrics": {
+        "total_trades": 5,
+        "wins": 2,
+        "losses": 2,
+        "breakevens": 1,
+        "win_rate": 0.4,
+        "total_net_return": 225.0,
+        "gross_profit": 300.0,
+        "gross_loss": 75.0,
+        "profit_factor": 4.0,
+        "average_trade": 45.0,
+        "average_win": 150.0,
+        "average_loss": -37.5,
+        "payoff_ratio": 4.0,
+        "expectancy": 45.0
+    }
+}
