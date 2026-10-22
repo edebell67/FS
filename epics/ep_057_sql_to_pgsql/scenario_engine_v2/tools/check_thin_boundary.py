@@ -24,7 +24,7 @@ sys.path.insert(0, str(ROOT / "tools"))
 import build_inventory  # noqa: E402
 import controller_wrappers as cw  # noqa: E402
 
-VERSION = "v2.65.55"
+VERSION = "v2.65.56"
 SOURCE = ROOT / f"top10_5min_equity_curves_source_{VERSION}.html"
 BUILT = ROOT / f"top10_5min_equity_curves_engine_client_{VERSION}.html"
 
@@ -38,6 +38,7 @@ BOUNDARY = {
     "deleteSelectedPortfolios": "UI glue: a confirm() dialog, then removePortfolios (delegated)",
     "activePortfolioOverlayRule": "a lookup the redraw / rotation paths call per frame: a synchronous engine call each time would cost more than it saves",
     "assignedPortfolioOverlayRule": "as above",
+    "syncTargetRankingProducts": "Target leaders instrument list: DOM only",
     "updateSelectedTimeButtonLabel": "caption of the selected-time button (DOM only)",
     "applySearchModelsToActivePortfolio": "adds global search matches to the active portfolio and saves it: portfolio-store / DOM glue on a user action",
     "hydrateStrategySearchMetrics": "progressive metric fetch for search results through the fast API: browser-side, after first paint",

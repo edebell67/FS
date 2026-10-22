@@ -37,8 +37,8 @@ from engine.page import LivePortfolioRefused, Page  # noqa: E402
 from engine.page_state import FIELDS, PageState, js_state_code  # noqa: E402
 
 ap = argparse.ArgumentParser()
-ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.55.html"))
-ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.55" / "inventory.json"))
+ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.56.html"))
+ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.56" / "inventory.json"))
 ap.add_argument("--methods", default="")
 ap.add_argument("--cases", type=int, default=150)
 ns = ap.parse_args()
@@ -275,7 +275,7 @@ class RecordingTransport:
 # ---------------------------------------------------------------------------------------------------------------- random states
 DATES = ["2026-10-13", "2026-10-14", "2026-10-15"]
 CRITERIA = ["top_net", "top_alt_net", "top_win", "top1_at_time", "top3_momentum_net", "family_leaders", "top5_breakout", "top3_tp3_sl3"]
-TIED_LEADERS = "touched_rank_one_30m"   # page v2.65.55 scenario: its request depends on the rank <select>, which the wrapper-mode JS context does not carry; drawn from its own stream (direct mode only) so no other case moves
+TIED_LEADERS = "touched_rank_one_30m"   # page v2.65.56 scenario: its request depends on the rank <select>, which the wrapper-mode JS context does not carry; drawn from its own stream (direct mode only) so no other case moves
 
 
 _TIED_RNG = random.Random(11)
@@ -426,7 +426,7 @@ def rand_case(rng: random.Random, method: str):
     elif method == "update_auto_refresh_status":
         args = rng.choice([[], [""], ["Checking top #1 at 10:00"], ["On"]])
     elif method == "refresh_live_data_filter_change":
-        args = [rng.choice([st.current_date, "2026-10-13"]), "rank" if (not os.environ.get("DIFF_WRAPPERS") and _TIED_RNG.random() < 0.5) else "limit"]   # page v2.65.55: the selected top count can change while the request is out
+        args = [rng.choice([st.current_date, "2026-10-13"]), "rank" if (not os.environ.get("DIFF_WRAPPERS") and _TIED_RNG.random() < 0.5) else "limit"]   # page v2.65.56: the selected top count can change while the request is out
     elif method == "refresh_live_data_twice":
         args = [st.current_date, rng.choice([st.current_date, "2026-10-13"]), rng.choice(["same", "change_filter"])]
     elif method == "refresh_point_in_time_selection":

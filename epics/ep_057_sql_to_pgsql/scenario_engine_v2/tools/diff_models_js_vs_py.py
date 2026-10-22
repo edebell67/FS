@@ -73,7 +73,7 @@ _FLAG_RNG = random.Random(13)   # its own stream, so the flag does not move any 
 
 def mkmodel(rng, mid=None):
     m = {"model": mid or rng.choice(IDS), "color": "#112233"}
-    if _FLAG_RNG.random() < 0.25:   # page v2.65.55: curves decided per snapshot by the data service skip the final-P&L distinctness filter
+    if _FLAG_RNG.random() < 0.25:   # page v2.65.56: curves decided per snapshot by the data service skip the final-P&L distinctness filter
         m["timeline_distinct"] = _FLAG_RNG.choice([True, True, 1, "x", False, 0, None])
     if rng.random() < 0.9:
         m["product"] = rng.choice(["gbp", "EUR", "gbp", "Eur"])
@@ -160,7 +160,7 @@ def make_case(rng, method):
             if st.active_portfolio and m in st.portfolio_models and rng.random() < 0.7:   # a pending model that the portfolio filters would drop
                 st.min_win_rate = 50
                 m["win_rate"] = m["alt_win_rate"] = 1
-    if _POOL_RNG.random() < 0.25:   # page v2.65.55: selected-time mode whose as-of list is still empty shows the scenario cohort; searches and pins on the tied-#1 scenario
+    if _POOL_RNG.random() < 0.25:   # page v2.65.56: selected-time mode whose as-of list is still empty shows the scenario cohort; searches and pins on the tied-#1 scenario
         st.update({"pit_mode": True, "deep_link_only": False, "active_portfolio": None, "min_win_rate": 0, "product_type": "all", "product": "all", "strategy_family": "all",
                    "pit_models": _POOL_RNG.choice([None, []]), "current_criteria": _POOL_RNG.choice([crit, "touched_rank_one_30m"])})
     snap = st.snapshot()
