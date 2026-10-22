@@ -65,7 +65,7 @@ async function __lc(fx, name, c) { return { state: null, ret: c.pairs.map(p => M
 IDS = ["M1", "m2", "M10", "DNA_201700", "DNA_20170", "dna_201700", "breakout_R_1", "Breakout-2", "a b", "A_b", "a_B", "M-1", "M_1", "x.y", "Z9", "z9"]
 STRATS = ["breakout", "breakout_R", "breakout_R_Rev", "breakout_Rev", "breakout_r_rev_5", "breakout_rev_2", "other", "", None]
 NUMS = [0, 0.0, 1.0, 1.004, 1.006, 2.5, -0.005, 7.25, -3, None, "4.5", "x"]
-CRIT = ["top_net", "top_win", "top5_breakout", "top3_tp3_sl3", "top3_momentum_net", "top1_at_time", "family_leaders", "NET_RETURN"]
+CRIT = ["top_net", "top_win", "top5_breakout", "top3_tp3_sl3", "top3_momentum_net", "top1_at_time", "family_leaders", "NET_RETURN", "touched_rank_one_30m"]
 
 
 def mkmodel(rng, mid=None):
@@ -101,6 +101,9 @@ def tied(rng, models):
 
 def mklist(rng, lo=0, hi=5):
     return [mkmodel(rng) for _ in range(rng.randint(lo, hi))]
+
+
+_POOL_RNG = random.Random(5)   # its own stream, so these cases do not move any other
 
 
 def make_case(rng, method):
@@ -152,6 +155,9 @@ def make_case(rng, method):
             if st.active_portfolio and m in st.portfolio_models and rng.random() < 0.7:   # a pending model that the portfolio filters would drop
                 st.min_win_rate = 50
                 m["win_rate"] = m["alt_win_rate"] = 1
+    if _POOL_RNG.random() < 0.25:   # page v2.65.54: selected-time mode whose as-of list is still empty shows the scenario cohort; searches and pins on the tied-#1 scenario
+        st.update({"pit_mode": True, "deep_link_only": False, "active_portfolio": None, "min_win_rate": 0, "product_type": "all", "product": "all", "strategy_family": "all",
+                   "pit_models": _POOL_RNG.choice([None, []]), "current_criteria": _POOL_RNG.choice([crit, "touched_rank_one_30m"])})
     snap = st.snapshot()
     criteria = {}
     for key in {crit, f"{crit}_net", f"{crit}_alt", "top_net"}:

@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page.py — the page's state transitions (portfolios, scenario / date navigation, replay, auto-add scheduling, live data and point-in-time refresh) as a headless controller.
 #
 # VERSION HISTORY
+# v1.14.0 · 2026-10-22 · refresh_live_data follows page v2.65.54: leader_limit in the request (selected top count for touched_rank_one_30m) and a response for another count is stale.
 # v1.13.0 · 2026-10-21 · clear_model_search_state (page clearModelSearchState): used by apply_selected_time and activate_portfolio, which now also forget the search's no-curve matches and conclusion.
 # v1.12.0 · 2026-10-20 · the model search follows page v2.65.36: it records what it concluded (search_resolved_query / _message) and redraws the date label, ribbon, cards and chart when nothing matched.
 # v1.11.1 · 2026-10-19 · switch_date re-runs the model search for 3+ characters of any ID or strategy-name text (page v2.65.35).
@@ -949,16 +950,18 @@ class Page:
         s.live_refresh_sequence += 1
         seq = s.live_refresh_sequence
         req = (s.product_type, s.product, s.strategy_family, s.model_limit, s.return_type, s.current_criteria)
+        leader_limit = pu.selected_time_rank_count(s.rank_select_value) if s.current_criteria == "touched_rank_one_30m" else 1   # page v2.65.54
         pending = self.client.begin_refresh_live_data(target_date, product_type=s.product_type, product=s.product,
                                                       strategy_family=s.strategy_family, limit=s.model_limit,
-                                                      criteria=s.current_criteria, return_type=s.return_type)
-        ctx = {"seq": seq, "req": list(req), "target_date": target_date, "skip": bool(skip_portfolio_refresh)}
+                                                      criteria=s.current_criteria, return_type=s.return_type, leader_limit=leader_limit)
+        ctx = {"seq": seq, "req": list(req), "target_date": target_date, "skip": bool(skip_portfolio_refresh), "leader_limit": leader_limit}
         return Pending(lambda: self._apply_live(ctx, pending), issued=pending.issued)
 
     def _apply_live(self, ctx, pending):
         """The half of refreshLiveData that runs once the answer is in. `ctx` is what the page's closure captured when the request went out
         (so a browser copy can carry it across the fetch: see command.py begin / finish)."""
         seq, req, target_date, skip_portfolio_refresh = ctx["seq"], tuple(ctx["req"]), ctx["target_date"], ctx["skip"]
+        leader_limit = ctx.get("leader_limit", 1)
 
         def apply():
             s = self.s
@@ -969,6 +972,8 @@ class Page:
             # a newer request or a changed filter makes this response stale
             if seq != s.live_refresh_sequence or req != (s.product_type, s.product, s.strategy_family, s.model_limit, s.return_type,
                                                            s.current_criteria):
+                return None
+            if req[5] == "touched_rank_one_30m" and leader_limit != pu.selected_time_rank_count(s.rank_select_value):   # the selected top count changed while the request was out
                 return None
             on_target = s.current_date == target_date
             was_at_end = on_target and (s.frame < 0 or s.frame >= self.max_frames() - 1)

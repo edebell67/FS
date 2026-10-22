@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/replay_models.py · which models are on screen and how long the replay is: getScenarioCandidates, getEligibleModels, getReplayTimelineModels, pointInTimeAtReplayHead, getMaxFrames.
 #
 # VERSION HISTORY
+# v1.7.0 · 2026-10-22 · get_eligible_models follows page v2.65.54: scenario cohort while the selected-time ranking loads; no pinned cards on the tied-#1 scenario.
 # v1.6.0 · 2026-10-21 · get_eligible_models follows page v2.65.53: Find model stays global inside a portfolio (replaces the v2.65.50 membership filter), pending-metrics search results pass the portfolio filters, no colour fallback for searched models.
 # v1.5.0 · 2026-10-21 · get_eligible_models: with an active portfolio, searched and pinned models are limited to its members (page v2.65.50 portfolio-based Find model).
 # v1.4.0 · 2026-10-21 · get_replay_timeline_models returns the displayed (eligible) cohort first, as page v2.65.39.
@@ -129,8 +130,8 @@ def get_eligible_models(s, client) -> list[dict]:
     keys = core.metric_keys(s.return_type)
     if s.deep_link_only:
         scenario_models = []
-    elif s.pit_mode:
-        scenario_models = s.pit_models if js_truthy(s.pit_models) or s.pit_models == [] else []
+    elif s.pit_mode:   # v2.65.54: keep the selected scenario on screen while the as-of ranking is still loading
+        scenario_models = s.pit_models if isinstance(s.pit_models, list) and len(s.pit_models) else get_scenario_candidates(s, client, s.current_criteria)
     elif not s.active_portfolio:
         scenario_models = get_scenario_candidates(s, client, s.current_criteria)
     else:
@@ -174,7 +175,7 @@ def get_eligible_models(s, client) -> list[dict]:
             models = direct
     elif query and len(terms) == 1 and not pinned:
         models = [m for m in scenario_models if query in _lower(m.get("model"))]
-    if not s.active_portfolio and (not query or direct):   # v2.65.51: a portfolio does not mix pinned cards into the chart
+    if not s.active_portfolio and s.current_criteria != "touched_rank_one_30m" and (not query or direct):   # v2.65.51: a portfolio does not mix pinned cards into the chart
         for model_id, pm in pinned.items():
             index = next((i for i, m in enumerate(models) if _s(m.get("model")) == model_id), -1)
             if index < 0:

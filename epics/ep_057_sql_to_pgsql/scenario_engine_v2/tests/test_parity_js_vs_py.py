@@ -34,8 +34,8 @@ def _server_up():
 pytestmark = pytest.mark.skipif(not (shutil.which("node") and _server_up()), reason="needs node and the :8765 server")
 
 
-SNAPSHOT = ROOT / "top10_5min_equity_curves_source_v2.65.53.html"
-INVENTORY = ROOT / "inventory_v2.65.53" / "inventory.json"
+SNAPSHOT = ROOT / "top10_5min_equity_curves_source_v2.65.54.html"
+INVENTORY = ROOT / "inventory_v2.65.54" / "inventory.json"
 
 
 def _run(extra):
@@ -184,7 +184,7 @@ def test_data_portfolio_matches_page(results):
     _all_pass(results, "data_portfolio", 340)
 
 
-@pytest.mark.skip(reason="page v2.65.53+ added a localStorage cache, an early deep-link request and the fast API to these two loaders; the engine copies are parity-verified against v2.65.38 and are not delegated (engine_map_v2.65.53.json marks them stays_in_page)")
+@pytest.mark.skip(reason="page v2.65.54+ added a localStorage cache, an early deep-link request and the fast API to these two loaders; the engine copies are parity-verified against v2.65.38 and are not delegated (engine_map_v2.65.54.json marks them stays_in_page)")
 def test_data_search_and_deep_link_match_page(results):
     _all_pass(results, "data_search", 80)
 

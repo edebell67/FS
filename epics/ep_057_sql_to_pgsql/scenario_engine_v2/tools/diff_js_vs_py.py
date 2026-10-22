@@ -580,8 +580,10 @@ def main():
         args = [minute, interval] if inc is None else [minute, interval, inc]
         add("utils_clock", "nextAutomaticTop1Minute", {}, args, pu.next_automatic_top1_minute(minute, interval, True if inc is None else inc))
     for model in ({}, {"comparisonRole": "selected-time #1", "joined_at": "10:00"}, {"comparisonRole": "selected-time #2", "selectedAt": "18:30"},
-                  {"comparisonRole": "other", "joined_at": "10:00"}):
-        for point in ({"time": "09:55"}, {"time": "10:00"}, {"time": "18:35"}, {}, None):
+                  {"comparisonRole": "other", "joined_at": "10:00"},
+                  {"leader_intervals": []}, {"leader_intervals": [{"start": "09:30", "end": "10:00"}]}, {"leader_intervals": [{"start": "10:00"}], "joined_at": "18:00"},
+                  {"leader_intervals": [{"start": "00:00", "end": "09:55"}, {"start": "18:30", "end": "19:00"}]}, {"leader_intervals": None, "joined_at": "10:00"}):
+        for point in ({"time": "09:55"}, {"time": "10:00"}, {"time": "18:35"}, {"time": "09:30:15"}, {"time": "24:00"}, {}, None):
             add("utils_clock", "__eligible", {}, [model, point], pu.selected_time_point_eligible(model, point, core.selected_time_join_at(model)))
     for v in ("", "a", "a b", "a,b;c  d", " a , a ,b ", "DNA_1,dna_1", None, "x;;y,,z", "\t a\nb "):
         add("utils_text", "modelSearchTerms", {}, [v], pu.model_search_terms(v))
@@ -658,7 +660,10 @@ def main():
         g = {"modelSearchInput": {"value": text}, "modelSearchLoadedModels": ld, "__candidates": av if mode == "scenario" else [],
              "activePortfolioName": "P" if mode == "portfolio" else None, "portfolioModels": av if mode == "portfolio" else [],
              "pointInTimeMode": mode == "pit", "pointInTimeModels": av if mode == "pit" else []}
-        add("utils_search", "__exact", g, [], pu.exact_search_model(text, ld, av))
+        if mode == "pit":
+            g["__candidates"] = pool   # page v2.65.54: an empty selected-time list falls back to the scenario candidates
+        scen = pool if mode == "pit" else (av if mode == "scenario" else [])
+        add("utils_search", "__exact", g, [], pu.exact_search_model(text, ld, pu.exact_search_available("P" if mode == "portfolio" else None, av if mode == "portfolio" else [], mode == "pit", av if mode == "pit" else [], scen)))
 
     # ---- data layer: DataClient vs the page's own fetchers, both fed the same fixture responses ----
     class FakeTransport:

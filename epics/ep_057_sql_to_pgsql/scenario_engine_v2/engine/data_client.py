@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/data_client.py — headless data layer: the page's fetchers (live day, portfolio day, model search, deep links, catalogue, rules, source trades, historical curves) over an injectable transport.
 #
 # VERSION HISTORY
+# v1.6.0 · 2026-10-22 · the live-day request carries leader_limit (page v2.65.54).
 # v1.x · 2026-10-19 · load_model_search follows page v2.65.35 (strategy names via /api/strategy_catalog, first 100 matches).
 # v1.5.0 · 2026-10-18 · `ops`: every write to the page-owned view caches (viewSet / viewTouch / viewDelete / persist / remember) is recorded in order so a browser copy can replay it on its own caches.
 # v1.4.1 · 2026-10-17 · records the persistPortfolioView view call (browser copy replays it).
@@ -161,19 +162,19 @@ class DataClient:
             return f"{criteria}_{'alt' if return_type == 'ALT' else 'net'}"
         return criteria
 
-    def live_day_url(self, target_date, product_type, product, strategy_family, limit, criteria, return_type) -> str:
+    def live_day_url(self, target_date, product_type, product, strategy_family, limit, criteria, return_type, leader_limit=1) -> str:
         scenario = self.live_scenario(criteria, return_type)
         metric = "alt" if return_type == "ALT" else "net"
         return (f"{self.api}/api/live_day?date={encode_uri_component(target_date)}&product_type={encode_uri_component(product_type)}"
                 f"&product={encode_uri_component(product)}&strategy_family={encode_uri_component(strategy_family)}&limit={pu.js_str(limit)}"
-                f"&scenario={encode_uri_component(scenario)}&display_metric={metric}")
+                f"&scenario={encode_uri_component(scenario)}&display_metric={metric}&leader_limit={pu.js_str(leader_limit)}")
 
     def begin_refresh_live_data(self, target_date, *, product_type="all", product="all", strategy_family="all", limit=10,
-                                criteria="top_net", return_type="NET") -> Pending:
+                                criteria="top_net", return_type="NET", leader_limit=1) -> Pending:
         """Issue the live-day request now; finish() files the scenario arrays under criteria_data."""
         if not self.live_date:
             return resolved({"ok": False, "reason": "no live date"})
-        url = self.live_day_url(target_date, product_type, product, strategy_family, limit, criteria, return_type)
+        url = self.live_day_url(target_date, product_type, product, strategy_family, limit, criteria, return_type, leader_limit)
         try:
             resp, err = self._get(url), None
         except Exception as e:  # noqa: BLE001

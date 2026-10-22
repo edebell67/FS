@@ -37,8 +37,8 @@ from engine.page import LivePortfolioRefused, Page  # noqa: E402
 from engine.page_state import FIELDS, PageState, js_state_code  # noqa: E402
 
 ap = argparse.ArgumentParser()
-ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.53.html"))
-ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.53" / "inventory.json"))
+ap.add_argument("page", nargs="?", default=str(ROOT / "top10_5min_equity_curves_source_v2.65.54.html"))
+ap.add_argument("--inventory", default=str(ROOT / "inventory_v2.65.54" / "inventory.json"))
 ap.add_argument("--methods", default="")
 ap.add_argument("--cases", type=int, default=150)
 ns = ap.parse_args()
@@ -52,7 +52,7 @@ PAGE_FUNCS = [
     "createSimilarPortfolio", "repopulateActivePortfolioFromCriteria", "livePortfolioModelsForDate", "autoPinLivePortfolioStrategies",
     "syncPortfolioViewRefresh", "refreshActivePortfolioView", "currentPortfolioViewConfig", "applyPortfolioViewConfig",
     "persistPortfolioViewConfig", "applyChartLock", "updateAutoRefreshTop1Status", "resetAutomaticRankSchedule", "scheduleAutomaticTop1Refresh",
-    "clearModelSearchState", "schedulePointInTimeSelection", "applySelectedTime", "triggerSelectedTimeRefresh", "startReplay", "pauseReplay", "switchDate",
+    "clearModelSearchState", "selectedTimeRankCount", "schedulePointInTimeSelection", "applySelectedTime", "triggerSelectedTimeRefresh", "startReplay", "pauseReplay", "switchDate",
     "setRankingCriteria", "activatePortfolio", "assignedPortfolioOverlayRule", "activePortfolioOverlayRule",
     # dependencies, real
     "refreshLiveData", "fetchPortfolioData", "loadPortfolioData", "loadOverlayRuleLibrary", "ensureHistoricalDataLoaded", "syncTpSlScenarios",
@@ -145,7 +145,7 @@ async function __page(fx, name, c, args){
     } else if (name === '__twiceView') {
       const a = refreshActivePortfolioView(); const b = refreshActivePortfolioView(); await a; await b;
     } else if (name === '__filterLive') {
-      const a = refreshLiveData(args[0]); globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10; await a;
+      const a = refreshLiveData(args[0]); if (args[1] === 'rank') globalThis.selectedTimeRankSelect.value = globalThis.selectedTimeRankSelect.value === '2' ? '3' : '2'; else globalThis.modelLimit = globalThis.modelLimit !== 20 ? 20 : 10; await a;
     } else if (name === '__twiceHistory') {
       const a = __realRefreshHistory(); globalThis.pointInTimeHistoryKey = ''; const b = __realRefreshHistory();
       await a; await b;
@@ -275,8 +275,10 @@ class RecordingTransport:
 # ---------------------------------------------------------------------------------------------------------------- random states
 DATES = ["2026-10-13", "2026-10-14", "2026-10-15"]
 CRITERIA = ["top_net", "top_alt_net", "top_win", "top1_at_time", "top3_momentum_net", "family_leaders", "top5_breakout", "top3_tp3_sl3"]
+TIED_LEADERS = "touched_rank_one_30m"   # page v2.65.54 scenario: its request depends on the rank <select>, which the wrapper-mode JS context does not carry; drawn from its own stream (direct mode only) so no other case moves
 
 
+_TIED_RNG = random.Random(11)
 _SEARCH_RNG = random.Random(7)   # its own stream, so adding these fields did not move any other case
 
 
@@ -339,6 +341,8 @@ def rand_state(rng: random.Random) -> dict:
 
 def rand_case(rng: random.Random, method: str):
     snap = rand_state(rng)
+    if not os.environ.get("DIFF_WRAPPERS") and (method == "refresh_live_data_filter_change" or _TIED_RNG.random() < 0.15):
+        snap["current_criteria"] = TIED_LEADERS
     if method not in ("apply_selected_time", "activate_portfolio"):   # the search status is only the subject of these two; elsewhere getEligibleModels rewrites it on the page side first
         snap["model_search_status"] = ""
     st = PageState.from_snapshot(snap)
@@ -422,7 +426,7 @@ def rand_case(rng: random.Random, method: str):
     elif method == "update_auto_refresh_status":
         args = rng.choice([[], [""], ["Checking top #1 at 10:00"], ["On"]])
     elif method == "refresh_live_data_filter_change":
-        args = [rng.choice([st.current_date, "2026-10-13"])]
+        args = [rng.choice([st.current_date, "2026-10-13"]), "rank" if (not os.environ.get("DIFF_WRAPPERS") and _TIED_RNG.random() < 0.5) else "limit"]   # page v2.65.54: the selected top count can change while the request is out
     elif method == "refresh_live_data_twice":
         args = [st.current_date, rng.choice([st.current_date, "2026-10-13"]), rng.choice(["same", "change_filter"])]
     elif method == "refresh_point_in_time_selection":
@@ -489,10 +493,13 @@ def run_twice_live(page, st, date_a, date_b, mode):
     return None
 
 
-def run_filter_live(page, st, date):
+def run_filter_live(page, st, date, what="limit"):
     """One refreshLiveData call whose filter changes while the request is in flight: its answer must be dropped."""
     first = page.begin_refresh_live_data(date)
-    st.model_limit = 20 if st.model_limit != 20 else 10
+    if what == "rank":
+        st.rank_select_value = "3" if str(st.rank_select_value) == "2" else "2"
+    else:
+        st.model_limit = 20 if st.model_limit != 20 else 10
     page._await(first)
     page.settle()
     return None

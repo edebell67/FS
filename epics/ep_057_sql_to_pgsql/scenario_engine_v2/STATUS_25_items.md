@@ -58,3 +58,8 @@ Task files: `workstream/050_review/general/20261016_15*_ep057_*.md` and `2026101
 - Find model and selected-curve lookups reach the read-only fast API (:8767) through the runner's own origin (`EP057_FAST_API`).
 - Known equivalent mutant: the "No global search results" status text is unreachable (an empty result is caught by the earlier no-match branch).
 - NOT run: the tests that need :8765 (5 stub-parity errors, skipped parity groups): the server was not answering within 100 s (machine memory 94%).
+
+## Page v2.65.54 sync (2026-10-22)
+
+- Thin page rebuilt from v2.65.54 (tied #1 models every half hour, "#1 Every 30 Min" scenario). Ported: the live-day request carries `leader_limit` (the selected top count for that scenario) and an answer for another count is stale; `getEligibleModels` keeps the scenario cohort on screen while the selected-time ranking loads and takes no pinned cards on the tied scenario; `selectedTimePointEligible` honours `leader_intervals`; `getExactSearchModel`'s pool choice (`exact_search_available`). `updateSelectedTimeButtonLabel` stays in the page.
+- Harness note: the tied scenario is exercised in direct mode only (the wrapper-mode JS context does not carry the rank select); wrapper mode passes without it.

@@ -1,4 +1,5 @@
 // epics/ep_057_sql_to_pgsql/scenario_engine_v2/tools/js_runner.js — runs the page's real JS functions (extracted by inventory line range) in a Node VM.
+process.on("unhandledRejection", e => { if (process.env.DIFF_JS_REJECTIONS) require("fs").appendFileSync(process.env.DIFF_JS_REJECTIONS, "UNHANDLED: " + (e && e.stack ? e.stack.split("\n").slice(0, 4).join(" | ") : e) + "\n"); });
 //
 // VERSION HISTORY
 // v1.6.0 · 2026-10-17 · __imm (setImmediate) exposed so a stub can deliver each response as its own macrotask.
@@ -48,7 +49,7 @@ function makeContext(patches) {
     }
     src = src.replace(oldText, newText);
   }
-  const ctx = vm.createContext({ console, Math, Number, String, Map, Set, Array, JSON, Infinity, Date, URL, URLSearchParams, __imm: setImmediate });
+  const ctx = vm.createContext({ console: process.env.DIFF_JS_REJECTIONS ? { log() {}, warn: (...a) => require("fs").appendFileSync(process.env.DIFF_JS_REJECTIONS, "WARN: " + a.map(x => (x && x.stack ? x.stack.split("\n").slice(0, 3).join(" | ") : String(x))).join(" ") + "\n"), error: (...a) => require("fs").appendFileSync(process.env.DIFF_JS_REJECTIONS, "ERR: " + a.join(" ") + "\n") } : console, Math, Number, String, Map, Set, Array, JSON, Infinity, Date, URL, URLSearchParams, __imm: setImmediate });
   Object.assign(ctx, defaults, { assignedOverlayTradeCache: new Map() });
   // Stubs for browser-only collaborators: the assigned rule is a per-case global, max frames is supplied by the case.
   vm.runInContext('const __noop = () => {}; var pauseReplay = __noop, updateScrubberUI = __noop, updateRibbon = __noop, renderCards = __noop, drawChart = __noop, schedulePointInTimeSelection = __noop, persistPortfolioViewConfig = __noop, syncSplitModeControls = __noop, updateScenarioUI = __noop, updateDateLabelAndTitle = __noop, saveCriteriaWorkspaces = __noop, getEligibleModels = () => []; var localStorage = { setItem: __noop, getItem: () => null }; var refreshLiveData = () => Promise.resolve(); '

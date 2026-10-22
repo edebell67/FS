@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/engine/page_utils.py — small pure helpers ported from the page (replay clock, search terms, point-in-time request options, selected-time leaders, frame stepping).
 #
 # VERSION HISTORY
+# v1.2.0 · 2026-10-22 · selected_time_point_eligible honours leader_intervals; exact_search_available (page v2.65.54 pool choice).
 # v1.1.0 · 2026-10-17 · AutoTop1State + finish_automatic_top1_refresh, exact_search_model (differential-tested against the page JS).
 # v1.0.0 · 2026-10-17 · Initial version: clock/replay-time helpers, rule summary, scenario criteria helpers, point-in-time request options and context key, retainSelectedTimeLeaders, trade date range, frame step/seek, split-mode and return-type rules. Each is differential-tested against the page's JS except available_dates (unit test only).
 """Every function names the page function it ports. They take the page state they read as arguments (no globals)."""
@@ -83,7 +84,10 @@ def next_automatic_top1_minute(minute, interval, include_current=True) -> int:
 
 
 def selected_time_point_eligible(model: dict, point: dict | None, join_at) -> bool:
-    """selectedTimePointEligible; `join_at` = core_ported.selected_time_join_at(model)."""
+    """selectedTimePointEligible; `join_at` = core_ported.selected_time_join_at(model). A model carrying `leader_intervals` (page v2.65.54, tied #1 curves) is eligible only inside one of them."""
+    if isinstance((model or {}).get("leader_intervals"), list):
+        time = str((point or {}).get("time") or "")[:5]
+        return any(time >= str(iv.get("start") or "") and time < str(iv.get("end") or "24:00") for iv in model["leader_intervals"])
     return (not join_at) or str((point or {}).get("time") or "") >= join_at
 
 
@@ -310,6 +314,15 @@ def finish_automatic_top1_refresh(state: AutoTop1State, at, message="", head_tim
     status = f"{message}{next_label}" if message else f"On · checked {_tpl(at)}{next_label}"
     return {"status": status, "sched": head_time if (state.enabled and head_time) else None, "requestAt": state.request_at,
             "pending": state.pending_explicit_time, "explicit": state.explicit_refresh, "nextMinute": state.next_minute}
+
+
+def exact_search_available(active_portfolio, portfolio_models, pit_mode, pit_models, scenario_candidates) -> list[dict]:
+    """The models getExactSearchModel looks in (page v2.65.54): the active portfolio's, else the selected-time models, falling back to the scenario candidates while they are still empty."""
+    if active_portfolio:
+        return portfolio_models
+    if pit_mode:
+        return pit_models if pit_models else scenario_candidates
+    return scenario_candidates
 
 
 def exact_search_model(search_text, loaded_models: list[dict], available_models: list[dict]):
