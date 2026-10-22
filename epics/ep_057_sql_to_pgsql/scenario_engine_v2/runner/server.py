@@ -1,6 +1,7 @@
 # epics/ep_057_sql_to_pgsql/scenario_engine_v2/runner/server.py — HTTP service for the virtual race runner (port 8766): launch races, watch them, change the parallel cap, serve the dashboard.
 #
 # VERSION HISTORY
+# v1.10.1 · 2026-10-22 · /api/strategy_search_metrics (progressive win-rate details of search results) also goes to the fast API.
 # v1.10.0 · 2026-10-21 · the page's Find model / selected-curve calls (/api/strategy_search, /api/strategy_search_day, /api/portfolio_day) go to the read-only fast API (EP057_FAST_API, default :8767) through this origin (that service only allows CORS from :8765); the served page points its model API here.
 # v1.9.0 · 2026-10-19 · the data-service proxy shares ONE httpx client: a client per request cost 0.7-1.8 s of CA-bundle loading ON the event loop, which froze every engine call (and so the thin page) waiting behind a proxied request.
 # v1.8.0 · 2026-10-18 · the proxied shared menu script (ep060-nav.js) is sent with Cache-Control: no-cache so a menu change shows without a hard reload.
@@ -272,7 +273,7 @@ def create_app(manager: RaceManager | None = None, data_api: str | None = None, 
         return Response(content=html, media_type="text/html", headers={"Cache-Control": "no-store"})
 
     # ---- same-origin access to the data service (it only allows the 'null' origin for CORS) ----
-    FAST_PATHS = {"api/strategy_search", "api/strategy_search_day", "api/portfolio_day"}
+    FAST_PATHS = {"api/strategy_search", "api/strategy_search_day", "api/strategy_search_metrics", "api/portfolio_day"}
     FAST_API = os.environ.get("EP057_FAST_API", "http://127.0.0.1:8767").rstrip("/")
     proxy_client = httpx.AsyncClient(timeout=120.0)   # built once, here: constructing one loads the CA bundle (0.7-1.8 s) and must never happen on the event loop per request
     async def forward(request: Request, path: str) -> Response:

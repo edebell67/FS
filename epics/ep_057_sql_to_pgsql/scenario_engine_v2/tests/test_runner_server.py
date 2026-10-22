@@ -260,7 +260,7 @@ def test_find_model_calls_go_to_the_fast_api_and_the_served_page_points_at_this_
     monkeypatch.setenv("EP057_FAST_API", f"http://127.0.0.1:{fast.server_port}")
     try:
         c = TestClient(create_app(RaceManager(), data_api=f"http://127.0.0.1:{data.server_port}"))
-        for path in ("strategy_search", "strategy_search_day", "portfolio_day"):
+        for path in ("strategy_search", "strategy_search_day", "strategy_search_metrics", "portfolio_day"):
             assert c.get(f"/api/{path}?query=abc").json()["from"] == "fast"
         assert c.get("/api/live_day").json()["from"] == "data"   # everything else still goes to the data service
         page = c.get("/top10_5min_equity_curves_engine_client.html").text
